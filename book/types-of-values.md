@@ -1,694 +1,438 @@
-> When you are a Bear of Very Little Brain, and you Think of Things, you find
-> sometimes that a Thing which seemed very Thingish inside you is quite
-> different when it gets out into the open and has other people looking at it.
+# 值的类型
+
+> 当你是一头小脑袋的熊，而你在思考一些事情时，你有时会发现，一件在你心里看似"很事情"的事情，等它跑到光天化日之下、被别人审视一番之后，竟是全然不同的。
 >
-> <cite>A. A. Milne, <em>Winnie-the-Pooh</em></cite>
+> <cite>A. A. 米尔恩，<em>《小熊维尼》</em></cite>
 
-The past few chapters were huge, packed full of complex techniques and pages of
-code. In this chapter, there's only one new concept to learn and a scattering of
-straightforward code. You've earned a respite.
+过去几章都是沉甸甸的，里面塞满了复杂的技术与成页成页的代码。在本章中， 只有一个新概念要学，外加若干散落而直接的代码。你挣得了一份喘息。
 
-Lox is <span name="unityped">dynamically</span> typed. A single variable can
-hold a Boolean, number, or string at different points in time. At least, that's
-the idea. Right now, in clox, all values are numbers. By the end of the chapter,
-it will also support Booleans and `nil`. While those aren't super interesting,
-they force us to figure out how our value representation can dynamically handle
-different types.
+Lox 是<span name="unityped">动态</span>类型的。同一变量可以在不同时间点容纳不同的布尔值、数字或字符串。至少，理念是这样。眼下，在 clox 中， 所有值都是数字。一旦你读到本章末尾，它也会支持布尔值与 `nil`。虽然这两样东西并不多么引人入胜， 但它们会强迫我们搞清楚一个问题—— 我们的值表示如何动态地处理不同的类型。
 
 <aside name="unityped">
 
-There is a third category next to statically typed and dynamically typed:
-**unityped**. In that paradigm, all variables have a single type, usually a
-machine register integer. Unityped languages aren't common today, but some
-Forths and BCPL, the language that inspired C, worked like this.
+在静态类型与动态类型之外， 还有第三种： 单一类型（unityped）。 在那种范式里， 所有变量都拥有同一种类型， 通常是一个机器寄存器整数。当下独一类型的语言并不常见， 但某些 Forth 以及 BCPL——那门启发了 C 的语言—— 是这样运作的。
 
-As of this moment, clox is unityped.
+至于此时此刻，clox 就是独一类型的。
 
 </aside>
 
-## Tagged Unions
+## 标签联合
 
-The nice thing about working in C is that we can build our data structures from
-the raw bits up. The bad thing is that we *have* to do that. C doesn't give you
-much for free at compile time and even less at runtime. As far as C is
-concerned, the universe is an undifferentiated array of bytes. It's up to us to
-decide how many of those bytes to use and what they mean.
+在 C 里写代码的好处是， 我们可以从比特一级起手构建自己的数据结构。坏处则是， 我们必须这么做。C 在编译时给你的现成东西并不多， 运行时更少。就 C 而言， 这整个宇宙不过是一片未经分化的字节数组。 至少要拿出多少字节作何用、 它们代表什么， 都得由我们来决定。
 
-In order to choose a value representation, we need to answer two key questions:
+为了挑选一种值表示法， 我们需要回答两个关键问题：
 
-1.  **How do we represent the type of a value?** If you try to, say, multiply a
-    number by `true`, we need to detect that error at runtime and report it. In
-    order to do that, we need to be able to tell what a value's type is.
+1.  我们如何表示一个值的**类型？**假如你尝试用一个数去乘一个 `true`， 我们需要在运行时检测出这个错误并报告它。 为此， 我们需要能够分辨一个值的类型是什么。
 
-2.  **How do we store the value itself?** We need to not only be able to tell
-    that three is a number, but that it's different from the number four. I
-    know, seems obvious, right? But we're operating at a level where it's good
-    to spell these things out.
+2.  我们如何存储值本**身？**我们不仅需要能够知道 `三` 是一个数， 还要知道它与数 `四` 不同。 知道吧， 看起来显然易见， 对吧？ 可我们正在一个非常低层的维度上操作， 把这些事情一条摆出来总归是个好习惯。
 
-Since we're not just designing this language but building it ourselves, when
-answering these two questions we also have to keep in mind the implementer's
-eternal quest: to do it *efficiently*.
+既然我们不但是在设计这门语言， 而且还要亲手去打造它， 那么在回答这两个问题的同时， 我们还得时刻把实现者那个永恒的追求记在心头： 将这些信息尽可能高效地塞进尽可能少的比特里。
 
-Language hackers over the years have come up with a variety of clever ways to
-pack the above information into as few bits as possible. For now, we'll start
-with the simplest, classic solution: a **tagged union**. A value contains two
-parts: a type "tag", and a payload for the actual value. To store the value's
-type, we define an enum for each kind of value the VM supports.
+这些年来， 语言黑客们想出了种种巧妙的方法， 尽可能地把上述信息塞进少量比特之中。 眼下， 我们从最简单、 最经典的解决方案开始： **标签联合**（tagged union）。 一个值含两部分： 一个表示类型的 " 标签"， 外加一个用于装真正值的载荷。 为了存储值的类型， 我们为 VM 所支持的每一种值各自定义一个枚举。
 
 ^code value-type (2 before, 1 after)
 
 <aside name="user-types">
 
-The cases here cover each kind of value that has *built-in support in the VM*.
-When we get to adding classes to the language, each class the user defines
-doesn't need its own entry in this enum. As far as the VM is concerned, every
-instance of a class is the same type: "instance".
+这些分支覆盖了 _VM_ 本身内置支持的每一种值。当我们之后为语言添加类时， 用户定义的每一个类都不需要在这枚举里有自己的一行。就 VM 而言， 任何一个类的实例都属于同一种类型："实例"。
 
-In other words, this is the VM's notion of "type", not the user's.
+换言之， 这是 _VM**的 "类型" 概念， **而_ 非用户的。
 
 </aside>
 
-For now, we have only a couple of cases, but this will grow as we add strings,
-functions, and classes to clox. In addition to the type, we also need to store
-the data for the value -- the `double` for a number, `true` or `false` for a
-Boolean. We could define a struct with fields for each possible type.
+眼下， 我们只有几种分支， 但随着我们为 clox 添加字符串、 函数与类， 这张表会不断延伸_。 除了类型之外， 我们还需要存储值的数据—— 数用的 `double`、 `_true_` 或 `_false_` 用的布尔。 我们可以为每一种可能的类型各自定义一个字段的结构体。
 
-<img src="image/types-of-values/struct.png" alt="A struct with two fields laid next to each other in memory." />
+<img src="image/types-of-values/struct.png" alt="一份含两个字段的结构体， 两者彼此并排陈列于内存之中。" />
 
-But this is a waste of memory. A value can't simultaneously be both a number and
-a Boolean. So at any point in time, only one of those fields will be used. C
-lets you optimize this by defining a <span name="sum">union</span>. A union
-looks like a struct except that all of its fields overlap in memory.
+但这样极端地浪费内存。 一个值不可能同时又是数又是布尔。所以在任一时刻， 只有这些字段中的一个会被使用。C 允许你通过定义一个 <span name="sum"> 联合</span> 来优化这一点。 联合看起来类似结构体， 不过它的所有字段都在内存中相互覆盖_。
 
 <aside name="sum">
 
-If you're familiar with a language in the ML family, structs and unions in C
-roughly mirror the difference between product and sum types, between tuples
-and algebraic data types.
+如果你熟悉 ML 一脉的语言， _C_ 中的结构体与联合大致对应于 " 积类型" 与 " 和类型" 之间的区别， 以及元组与代数数据类型之间的区别。
 
 </aside>
 
-<img src="image/types-of-values/union.png" alt="A union with two fields overlapping in memory." />
+<img src="image/types-of-values/union.png" alt="一份拥两个字段但彼此覆盖的联合。" />
 
-The size of a union is the size of its largest field. Since the fields all reuse
-the same bits, you have to be very careful when working with them. If you store
-data using one field and then access it using <span
-name="reinterpret">another</span>, you will reinterpret what the underlying bits
-mean.
+联合的大小等于其最大字段的大小。由于字段都复用同一组比特， 使用它们时必须慎之又慎。 如果你用一个字段存储了数据， 接着又用 <span name="reinterpret"> 另一</span> 个字段去读访其值， 你就会重新诠释那些底层比特的含义了。
 
 <aside name="reinterpret">
 
-Using a union to interpret bits as different types is the quintessence of C. It
-opens up a number of clever optimizations and lets you slice and dice each byte
-of memory in ways that memory-safe languages disallow. But it is also wildly
-unsafe and will happily saw your fingers off if you don't watch out.
+用联合根据不同类型来解释同一组比特， 乃是 C 的精髓之一。 它开启了种种精明的优化， 让你可以按各种方式对内存的每一字节切切剁剁_—— 这是那些内存安全型语言所不允许的。 但它同时也野蛮地不安全， 若你不小心， 它会笑眯眯地把你的手指齐根锯断_。
 
 </aside>
 
-As the name "tagged union" implies, our new value representation combines these
-two parts into a single struct.
+就如 " 标签联合" 这个名词所暗示的那样， 我们的新值表示将这两部分合并进了一个结构体之中_。
 
 ^code value (2 before, 2 after)
 
-There's a field for the type tag, and then a second field containing the union
-of all of the underlying values. On a 64-bit machine with a typical C compiler,
-the layout looks like this:
+这里有一个用于类型的字段， 接着是一个含盖所有底层值的联合。在一台 64 位机器上配搭一款典型的 C 编译器， 其内存布局看起来如下：
 
 <aside name="as">
 
-A smart language hacker gave me the idea to use "as" for the name of the union
-field because it reads nicely, almost like a cast, when you pull the various
-values out.
+一位聪明的语言黑客提醒我用 "as" 作为联合字段的名字， 因为当把各种值取出时， 这几乎像一次类型转换般顺眼好读**。
 
 </aside>
 
-<img src="image/types-of-values/value.png" alt="The full value struct, with the type and as fields next to each other in memory." />
+<img src="image/types-of-values/value.png" alt="完整**的_ value 结构体， 其中的类型与 `as` 字段彼此并排呈现于内存中。" />
 
-The four-byte type tag comes first, then the union. Most architectures prefer
-values be aligned to their size. Since the union field contains an eight-byte
-double, the compiler adds four bytes of <span name="pad">padding</span> after
-the type field to keep that double on the nearest eight-byte boundary. That
-means we're effectively spending eight bytes on the type tag, which only needs
-to represent a number between zero and three. We could stuff the enum in a
-smaller size, but all that would do is increase the padding.
+四字节的类型标签在前， 接着是联合。大多数架构都倾向于将值对齐到其本身大小的边界上。由于联合字段含有一个八字节的 `double`， 编译器会在类型字段之后插入四个字节的 <span name="pad"> 填充</span>， 以使那个 `double` 对齐至最近的八字节边界。这意味着我们实际上在类型标签上花了八字节， 而实际上只需要 0 到 3 之间的一个数字就够了。 我们本可以把那个枚举塞进更小的类型里， 但那样的话只会增加填充而已_。
 
 <aside name="pad">
 
-We could move the tag field *after* the union, but that doesn't help much
-either. Whenever we create an array of Values -- which is where most of our
-memory usage for Values will be -- the C compiler will insert that same padding
-*between* each Value to keep the doubles aligned.
+我们本可以把标签字段移到联合之后， 但那也无济于事。无论何时我们创建一份 Values 数组—— 那也是我们大多数 Values 的使用场景——C 编译器都会在每一份 Value 之间插入同样的填充_， 以使那些 `double` 对齐_。
 
 </aside>
 
-So our Values are 16 bytes, which seems a little large. We'll improve it
-[later][optimization]. In the meantime, they're still small enough to store on
-the C stack and pass around by value. Lox's semantics allow that because the
-only types we support so far are **immutable**. If we pass a copy of a Value
-containing the number three to some function, we don't need to worry about the
-caller seeing modifications to the value. You can't "modify" three. It's three
-forever.
+于是我们的 Value 是 16 字节， 这看起来有些大。我们会 [ 之后 ][optimization] 再改善这一点。同时， 它们仍然小得足以在 C 栈上存放并以值传递_。Lox 的语义允许如此操作， 因为眼下我们所支持的类型都是不可变的。假如你把一份含数 `3` 的 Value 的拷贝传给了某个函数， 我们大可不必担心调用方会看到该值被修改。你不能**"改**变" 3 的值的。三永远是三。
 
 [optimization]: optimization.html
 
-## Lox Values and C Values
+## Lox 值与 C 值
 
-That's our new value representation, but we aren't done. Right now, the rest of
-clox assumes Value is an alias for `double`. We have code that does a straight C
-cast from one to the other. That code is all broken now. So sad.
+这便是我们新的值表示法， 但事情还远未完毕。眼下，clox 的其他部分假设 Value 是 `double` 的一个别名。 我们的代码里有很多直接把一者转换为另一者的 _C 强制转换。那些代码全都坏了。真糟。
 
-With our new representation, a Value can *contain* a double, but it's not
-*equivalent* to it. There is a mandatory conversion step to get from one to the
-other. We need to go through the code and insert those conversions to get clox
-working again.
+既然我们新的表示法下， 一个 Value 可以装有一个 `double`， 但 Value 并不等价于 `double`。从一者切到另一者之需经一道必要的转换步骤。我们需要翻一遍那些代码， 将这些转换插进去， 让 clox 再一次正常运作起来_。
 
-We'll implement these conversions as a handful of macros, one for each type and
-operation. First, to promote a native C value to a clox Value:
+我们将这些转换实现为几个宏， 一类一个宏。 首先将一个原生 C 值提升为一枚 clox 的 Value：
 
 ^code value-macros (1 before, 2 after)
 
-Each one of these takes a C value of the appropriate type and produces a Value
-that has the correct type tag and contains the underlying value. This hoists
-statically typed values up into clox's dynamically typed universe. In order to
-*do* anything with a Value, though, we need to unpack it and get the C value
-back out.
+这些宏各自接受一个相应类型的 C 值， 产生一个 Value—— 它带有正确的类型标签并装有底层的值。 这些宏将静态类型的值提升到了 clox 的动态类型宇宙之中_。 不过， 为了能够真正利用某个 Value 做点什么， 我们还需要将其拆箱， 取出其原始的 C 值回来_。
 
 ^code as-macros (1 before, 2 after)
 
 <aside name="as-null">
 
-There's no `AS_NIL` macro because there is only one `nil` value, so a Value with
-type `VAL_NIL` doesn't carry any extra data.
+这里没有 `AS_NIL` 宏， 因为 `nil` 只有一个值， 所以一枚类型为 `VAL_NIL` 的 Value 并不携带任何额外的数据。
 
 </aside>
 
-<span name="as-null">These</span> macros go in the opposite direction. Given a
-Value of the right type, they unwrap it and return the corresponding raw C
-value. The "right type" part is important! These macros directly access the
-union fields. If we were to do something like:
+<span name="as-null"> 这些</span> 宏走的是反向： 对一枚类型匹配的 Value， 它们将其拆开并返回对应的原生 _C_ 值。 _" 类型匹配" 这一部分很重要！ 这些宏直接访问了联合字段_。若我们做了类似这样的事：
 
 ```c
 Value value = BOOL_VAL(true);
 double number = AS_NUMBER(value);
 ```
 
-Then we may open a smoldering portal to the Shadow Realm. It's not safe to use
-any of the `AS_` macros unless we know the Value contains the appropriate type.
-To that end, we define a last few macros to check a Value's type.
+那么我们可能会打开一道通向阴影国度的灼热传送门。除非我们确知 Value 装有相应类型的值， 否则这些 `AS_` 宏使用起来都不安全_。为此， 我们再定义几个宏， 用于检查一个 Value 的类型。
 
 ^code is-macros (1 before, 2 after)
 
-<span name="universe">These</span> macros return `true` if the Value has that
-type. Any time we call one of the `AS_` macros, we need to guard it behind a
-call to one of these first. With these eight macros, we can now safely shuttle
-data between Lox's dynamic world and C's static one.
+<span name="universe"> 这些</span> 宏在 Value 具有相应类型时返回 `true`。每当我们调用其中一个 `AS_` 宏时， 都需要先以一次此处的调用作为护卫_。有了这八个宏， 我们便能够在 Lox 的动态世界与 C 的静态世界之间安全地搬运数据_。
 
 <aside name="universe">
 
-<img src="image/types-of-values/universe.png" alt="The earthly C firmament with the Lox heavens above.">
+<img src="image/types-of-values/universe.png" alt=" 人间的 C 苍穹， 其上方是 Lox 的天堂。" />
 
-The `_VAL` macros lift a C value into the heavens. The `AS_` macros bring it
-back down.
+`_*_VAL` 宏将一个 C 值提升至天上。`AS_` 宏则将其送回人间。
 
 </aside>
 
-## Dynamically Typed Numbers
+## 动态类型数字
 
-We've got our value representation and the tools to convert to and from it. All
-that's left to get clox running again is to grind through the code and fix every
-place where data moves across that boundary. This is one of those sections of
-the book that isn't exactly mind-blowing, but I promised I'd show you every
-single line of code, so here we are.
+我们已经有了自己的值表示法， 也有了在两边之间转换的工具。为了让 clox 再度正常运作起来， 剩下的事只是碾过那些代码， 修一修每一处数据跨过那道边界的地方_。这是本书中那些并不那么激动人心的部分之一_， 但我曾承诺要给你展示每一行必要的代码， 所以咱们就这样一步步走过来_。
 
-The first values we create are the constants generated when we compile number
-literals. After we convert the lexeme to a C double, we simply wrap it in a
-Value before storing it in the constant table.
+我们首先创建的值是编译数字字面量时产生的那些常量。在将词素转换为 C 中的一个 `double` 之后， 我们只需简单地将其包入一枚 Value 再存进常量表即可_。
 
 ^code const-number-val (1 before, 1 after)
 
-Over in the runtime, we have a function to print values.
+在运行时那边， 我们有一个用于打印值的函数。
 
 ^code print-number-value (1 before, 1 after)
 
-Right before we send the Value to `printf()`, we unwrap it and extract the
-double value. We'll revisit this function shortly to add the other types, but
-let's get our existing code working first.
+在我们将 Value 送入 `printf()` 之前， 我们先将其拆箱、 取出那个 double 值。我们很快便会回过头来扩展这个函数以容纳其他类型， 但先让已有的代码跑通再说。
 
-### Unary negation and runtime errors
+### 一元取负与运行时错误
 
-The next simplest operation is unary negation. It pops a value off the stack,
-negates it, and pushes the result. Now that we have other types of values, we
-can't assume the operand is a number anymore. The user could just as well do:
+次简单的运算是一元取负。 它从栈顶弹出一个值， 对其取负， 再把结果推回栈中。既然我们现在已有其他类型的值， 我们不能再假设运算对象是一个数了。用户完全可以这么干：
 
 ```lox
-print -false; // Uh...
+print -false; // 呃……
 ```
 
-We need to handle that gracefully, which means it's time for *runtime errors*.
-Before performing an operation that requires a certain type, we need to make
-sure the Value *is* that type.
+我们需要从容地处理这一情形_， 这意味着是时候祭出运行时错误了。在执行某一需要某特定类型的运算之前， 我们必须确保该 Value 确是该类型。
 
-For unary negation, the check looks like this:
+对一元取负而言， 其检查长这样：
 
 ^code op-negate (1 before, 1 after)
 
-First, we check to see if the Value on top of the stack is a number. If it's
-not, we report the runtime error and <span name="halt">stop</span> the
-interpreter. Otherwise, we keep going. Only after this validation do we unwrap
-the operand, negate it, wrap the result and push it.
+首先， 我们检查一下栈顶的那个 Value 是否为一个数。若不是， 我们报告一个运行时错误并 _<span name="halt"> 立刻 </span>_ 停止_ 解释器。否则， 我们继续向前。唯有在这段验证之后， 我们才将运算对象拆箱、 取负、 再将结果包装并推回栈中。
 
 <aside name="halt">
 
-Lox's approach to error-handling is rather... *spare*. All errors are fatal and
-immediately halt the interpreter. There's no way for user code to recover from
-an error. If Lox were a real language, this is one of the first things I would
-remedy.
+Lox 对错误的处理方式相当 …… 简朴_。所有错误都是致命的， 立刻便会停止解释器。User 代码无法从错误中_ 恢复_。若 Lox 是一门真正的语言， 这会是我首先想修的事之一_。
 
 </aside>
 
-To access the Value, we use a new little function.
+为了能够访问那枚 Value， 我们使用了一个新的小函数。
 
 ^code peek
 
-It returns a Value from the stack but doesn't <span name="peek">pop</span> it.
-The `distance` argument is how far down from the top of the stack to look: zero
-is the top, one is one slot down, etc.
+它返回栈中的一枚 Value 并不将其<span name="peek"> 弹出 _</span>。`distance` 参数指示查看距栈顶有多远：0 即栈顶，1 为其下一层， 依此类推。
 
 <aside name="peek">
 
-Why not just pop the operand and then validate it? We could do that. In later
-chapters, it will be important to leave operands on the stack to ensure the
-garbage collector can find them if a collection is triggered in the middle of
-the operation. I do the same thing here mostly out of habit.
+为什么不直接弹出运算对象， 再对其进行验证呢？ 我们本可以那么做。在之后的几章里， 将运算对象留在栈上会很重要—— 以确保如果一次收集触发于运算之中_， 垃圾收集器仍能找到它们。 我们这里也这样做， 主要是出于习惯_。
 
 </aside>
 
-We report the runtime error using a new function that we'll get a lot of mileage
-out of over the remainder of the book.
+我们通过一个新函数来报告这个运行时错误—— 这个函数在本书后面的章节里会被不断翻牌用上许多次。
 
 ^code runtime-error
 
-You've certainly *called* variadic functions -- ones that take a varying number
-of arguments -- in C before: `printf()` is one. But you may not have *defined*
-your own. This book isn't a C <span name="tutorial">tutorial</span>, so I'll
-skim over it here, but basically the `...` and `va_list` stuff let us pass an
-arbitrary number of arguments to `runtimeError()`. It forwards those on to
-`vfprintf()`, which is the flavor of `printf()` that takes an explicit
-`va_list`.
+你肯定调用过变参函数—— 那些可以接受任意数量参数的函数—— 比如 `printf()` 就是其中一个。但你可能并不自己定义过变参函数_。本书并不是一本 C 语言 <span name="tutorial"> 教程</span>， 所以这里我只大致掠过， 但其大意是：`...` 与 `va_list` 那套机制让我们可以向 `runtimeError()` 传入任意数量的参数。它会将其原样转交给 `vfprintf()`—— 这是一种接受显式 `va_list` 的 `printf()` 变体_。
 
 <aside name="tutorial">
 
-If you are looking for a C tutorial, I love *[The C Programming Language][kr]*,
-usually called "K&R" in honor of its authors. It's not entirely up to date, but
-the quality of the writing more than makes up for it.
+如果你正在寻找一本 C 教程， 我强烈推荐 《_[The C Programming Language][kr]》—— 为纪念其作者， 人们通常称之为 "K&R"。它有些部分或许已经有些过时， 但其写作的质量远远弥补了这一点。
 
 [kr]: https://www.cs.princeton.edu/~bwk/cbook.html
 
 </aside>
 
-Callers can pass a format string to `runtimeError()` followed by a number of
-arguments, just like they can when calling `printf()` directly. `runtimeError()`
-then formats and prints those arguments. We won't take advantage of that in this
-chapter, but later chapters will produce formatted runtime error messages that
-contain other data.
+调用方可以向 `runtimeError()` 传入一条格式字符串后再跟上若干参数， 正仿如直接调用 `printf()` 那般_。`runtimeError()` 接着便会格式化并打印那些参数。本章里我们尚不会派上这个用场， 但后续章节会产生带其他数据的格式化运行时错误消息_。
 
-After we show the hopefully helpful error message, we tell the user which <span
-name="stack">line</span> of their code was being executed when the error
-occurred. Since we left the tokens behind in the compiler, we look up the line
-in the debug information compiled into the chunk. If our compiler did its job
-right, that corresponds to the line of source code that the bytecode was
-compiled from.
+在展示完这条希望有助的错误消息之后， 我们会告诉用户他 、 当错误发生时正在执行的那行 <span name="stack"> 代码</span> 是他源代码中的哪一行。由于我们之前在编译器里留下了那些词素， 我们便在写进 chunk 的调试信息中查找对应的行号。若我们的编译器尽了本分 ， 那段行号就会对应到那条字节码所编译自的那一行源代码_。
 
-We look into the chunk's debug line array using the current bytecode instruction
-index *minus one*. That's because the interpreter advances past each instruction
-before executing it. So, at the point that we call `runtimeError()`, the failed
-instruction is the previous one.
+我们借由当前字节码指令索引**减一**_ 来查看 chunk 的调试行数组。这是因为_ 解释器在执行每条指令之前会先让指令的指针往前挪。于是， 当我们调用 `runtimeError()` 的时候， 那条失败的指令是前一条。
 
 <aside name="stack">
 
-Just showing the immediate line where the error occurred doesn't provide much
-context. Better would be a full stack trace. But we don't even have functions to
-call yet, so there is no call stack to trace.
+仅显示错误当场的那一行源码并不提供太多上下文。更佳的做法是给上一份完整的调用栈回溯。但我们眼下连函数都_ 还没有， 所以也就不存在可以回溯的调用栈。
 
 </aside>
 
-In order to use `va_list` and the macros for working with it, we need to bring
-in a standard header.
+为了能够使用 `va_list` 与对其进行操作的那些宏， 我们需要引入一个标准头文件_。
 
 ^code include-stdarg (1 after)
 
-With this, our VM can not only do the right thing when we negate numbers (like
-it used to before we broke it), but it also gracefully handles erroneous
-attempts to negate other types (which we don't have yet, but still).
+有了这一步， 我们的 VM 不仅能像之前那样在对数取负时做出正确的行为， 而且还能从容地应对对其它类型的错误取负尝试—— 虽然那些类型眼下还没有， 但仍然很难得。
 
-### Binary arithmetic operators
+### 二元算术运算符
 
-We have our runtime error machinery in place now, so fixing the binary operators
-is easier even though they're more complex. We support four binary operators
-today: `+`, `-`, `*`, and `/`. The only difference between them is which
-underlying C operator they use. To minimize redundant code between the four
-operators, we wrapped up the commonality in a big preprocessor macro that takes
-the operator token as a parameter.
+眼下我们已经搭建好了运行时错误的机器， 于是尽管元素更多， 修二元运算符却更加轻且容夏了一些_。当下我们支持四个二元运算符： `+`、`-`、`*` 与 `/`。它们之间唯一的区别在于底层使用了哪个 C 运算符。为了将四者之间的共同部分压到最小， 我们在一个包装全部共性的宏里接受运算符标记作为参数_。
 
-That macro seemed like overkill a [few chapters ago][], but we get the benefit
-from it today. It lets us add the necessary type checking and conversions in one
-place.
+那个宏在[ 几章之前 ][few chapters ago] 看起来或许有些多余， 但当下便显出了回报_。 它让我们可以在一个地方把所必须的类型检查与转换全都加上。
 
 [few chapters ago]: a-virtual-machine.html#binary-operators
 
 ^code binary-op (1 before, 2 after)
 
-Yeah, I realize that's a monster of a macro. It's not what I'd normally consider
-good C practice, but let's roll with it. The changes are similar to what we did
-for unary negate. First, we check that the two operands are both numbers. If
-either isn't, we report a runtime error and yank the ejection seat lever.
+嗯， 我懂， 这是一头宏猛兽。平时这算不上什么良好的 C 编程习惯， 但咱们先这么走起来_。其中的改动与之前为一元取负所做的大同小异_。首先， 我们检查那两个运算对象是否都是数字。若其中任一个不是， 我们便报告一个运行时错误， 并拉下那根弹射座椅的拉杆。
 
-If the operands are fine, we pop them both and unwrap them. Then we apply the
-given operator, wrap the result, and push it back on the stack. Note that we
-don't wrap the result by directly using `NUMBER_VAL()`. Instead, the wrapper to
-use is passed in as a macro <span name="macro">parameter</span>. For our
-existing arithmetic operators, the result is a number, so we pass in the
-`NUMBER_VAL` macro.
+若运算对象 _OK_， 我们便将它们两个都弹出并拆箱_。然后我们对它们施加所给定的运算符， 将结果包装再推回栈中。请注意， 我们并不直接使用 `NUMBER_VAL()` 来包装结果。取而代之， 包装用的宏被作为一个宏 <span name="macro"> 参数</span> 传进来_。对于我们现有的算术运算符， 其结果是一个数， 所以我们传入的是 `NUMBER_VAL` 宏。
 
 <aside name="macro">
 
-Did you know you can pass macros as parameters to macros? Now you do!
+你知道可以将宏作为参数传给另一个宏吗？ 现在你知道了_！
 
 </aside>
 
 ^code op-arithmetic (1 before, 1 after)
 
-Soon, I'll show you why we made the wrapping macro an argument.
+很快， 我们就会告诉你为什么我们将包装宏设为了一个参数**。
 
-## Two New Types
+## 两种新类型
 
-All of our existing clox code is back in working order. Finally, it's time to
-add some new types. We've got a running numeric calculator that now does a
-number of pointless paranoid runtime type checks. We can represent other types
-internally, but there's no way for a user's program to ever create a Value of
-one of those types.
+**所_ 有现有的 clox 代码都再一次跑通了。终于， 到了为新的类型添砖加瓦的时候。我们手头已经有一款跑得动的数字计算器， 里面加了一堆毫无意义的防御性运行时类型检查_。我们从内部已可表示其他类型， 但用户程序至今还找不到任何途径去亲手创建一枚别种类型的_ Value。
 
-Not until now, that is. We'll start by adding compiler support for the three new
-literals: `true`, `false`, and `nil`. They're all pretty simple, so we'll do all
-three in a single batch.
+而如今， 我们将从零开始改变_ 这一切。这一次， 我们先为编译器添加对三个新字面量的支持_： `true`、`false` 与 `nil`。这三者都非常简单， 于是我们打算一次性把它们全都搞定。
 
-With number literals, we had to deal with the fact that there are billions of
-possible numeric values. We attended to that by storing the literal's value in
-the chunk's constant table and emitting a bytecode instruction that simply
-loaded that constant. We could do the same thing for the new types. We'd store,
-say, `true`, in the constant table, and use an `OP_CONSTANT` to read it out.
+对数字字面量而言， 我们曾面对过如此之多的可能值而不得不费点周折_： 我们将那个字面量的值存进 chunk 的常量表中， 再发射一条字节码指令去简单地加载那个常量。对那些新类型我们本可以采用同样的做法_。 比如说， 我们把 `true` 存进常量表， 再用一条 `OP_CONSTANT` 把它读出来。
 
-But given that there are literally (heh) only three possible values we need to
-worry about with these new types, it's gratuitous -- and <span
-name="small">slow!</span> -- to waste a two-byte instruction and a constant
-table entry on them. Instead, we'll define three dedicated instructions to push
-each of these literals on the stack.
+但殊料这些新类型可能取的值在整整三种之内—— 算上那些双引号也就几种 —— 花一条两字节的指令与一个常量表条目去应付它们_， 实在太奢侈， 而且 <span name="small"> 太慢了 </span>！取而代之， 我们定义三条专门用于将这些字面量推上栈的指令_。
 
 <aside name="small" class="bottom">
 
-I'm not kidding about dedicated operations for certain constant values being
-faster. A bytecode VM spends much of its execution time reading and decoding
-instructions. The fewer, simpler instructions you need for a given piece of
-behavior, the faster it goes. Short instructions dedicated to common operations
-are a classic optimization.
+我没有在开玩笑—— 为某些常量值设定专门的指令确实更快_。一款字节码 VM 会将大量的执行时间花在读取与解码指令上。对某一段给定的行为需要的指令越少、 越简洁， 它跑得就越快。为常见运算设置短小的专用指令乃是一项经典优化。
 
-For example, the Java bytecode instruction set has dedicated instructions for
-loading 0.0, 1.0, 2.0, and the integer values from -1 through 5. (This ends up
-being a vestigial optimization given that most mature JVMs now JIT-compile the
-bytecode to machine code before execution anyway.)
+比如说，Java 字节码指令集为加载 0.0、1.0、2.0 以及 -1 到 5 之间的整数都设有专用指令。(由于大多数成熟的 JVM 眼下都会在执行之前将字节码 JIT 编译为机器码， 这最终沦为一项冗余的优化。_）_
 
 </aside>
 
 ^code literal-ops (1 before, 1 after)
 
-Our scanner already treats `true`, `false`, and `nil` as keywords, so we can
-skip right to the parser. With our table-based Pratt parser, we just need to
-slot parser functions into the rows associated with those keyword token types.
-We'll use the same function in all three slots. Here:
+我们的扫描器已经将 `true`、`false` 与 `nil` 视作关键字了， 于是我们可以直接进入解析阶段。 凭着我们表驱动的 Pratt 解析器， 我们只需将解析函数插入到与那些关键字类型对应的行里便可。 我们在这三个槽位中都使用同一个函数。这里：
 
 ^code table-false (1 before, 1 after)
 
-Here:
+这里：
 
 ^code table-true (1 before, 1 after)
 
-And here:
+还有这里：
 
 ^code table-nil (1 before, 1 after)
 
-When the parser encounters `false`, `nil`, or `true`, in prefix position, it
-calls this new parser function:
+当解析器碰到前缀位置的 `false`、`nil` 或 `true` 时， 它会调用这个新的解析函数：
 
 ^code parse-literal
 
-Since `parsePrecedence()` has already consumed the keyword token, all we need to
-do is output the proper instruction. We <span name="switch">figure</span> that
-out based on the type of token we parsed. Our front end can now compile Boolean
-and nil literals to bytecode. Moving down the execution pipeline, we reach the
-interpreter.
+既然 `parsePrecedence()` 已经消费了那个关键字 token， 我们所需要做的不过是输出恰当的指令_。我们 <span name="switch"> 据</span> 此推断出所解析的 token 类型即可。我们的前端现在已能将布尔与 `nil` 字面量编译为字节码了。沿着执行管道再往下走， 我们抵达解释器。
 
 <aside name="switch">
 
-We could have used separate parser functions for each literal and saved
-ourselves a switch but that felt needlessly verbose to me. I think it's mostly a
-matter of taste.
+我们本可以为每一个字面量各用一个独立的解析函数， 从而省下对 _switch` 的需要， 但那样的话对我来说似乎多余地啰嗦。这只是一个口味问题_。
 
 </aside>
 
 ^code interpret-literals (5 before, 1 after)
 
-This is pretty self-explanatory. Each instruction summons the appropriate value
-and pushes it onto the stack. We shouldn't forget our disassembler either.
+这再清楚不过了。每条指令各自召唤对应的值并将其推到栈上。我们也千万别忘了反汇编器。
 
 ^code disassemble-literals (2 before, 1 after)
 
-With this in place, we can run this Earth-shattering program:
+有了这一切， 我们便能运行一段足以震撼世界的程序了：
 
 ```lox
 true
 ```
 
-Except that when the interpreter tries to print the result, it blows up. We need
-to extend `printValue()` to handle the new types too:
+只不过当解释器尝试打印结果时， 它又崩了。我们还得扩展 `printValue()` 以容纳那些新类型：
 
 ^code print-value (1 before, 1 after)
 
-There we go! Now we have some new types. They just aren't very useful yet. Aside
-from the literals, you can't really *do* anything with them. It will be a while
-before `nil` comes into play, but we can start putting Booleans to work in the
-logical operators.
+搞定了！现在我们有了几种新类型。只不过它们目前还不怎么有用。除了字面量之外， 你实际上不能对它们做任何事**情。在很长一段时间**里_ `nil` 都不会派上用场， 但我们可以先拿布尔值去跑跑逻辑运算符。
 
-### Logical not and falsiness
+### 逻辑非与假值
 
-The simplest logical operator is our old exclamatory friend unary not.
+最简单的逻辑运算符是我们老朋友那个叹号朋友——一元取非运算符。
 
 ```lox
 print !true; // "false"
 ```
 
-This new operation gets a new instruction.
+这个新运算有一条新指令_。
 
 ^code not-op (1 before, 1 after)
 
-We can reuse the `unary()` parser function we wrote for unary negation to
-compile a not expression. We just need to slot it into the parsing table.
+我们可以复用之前为一元取负所写的 `unary()` 解析函数来编译一条取非表达**式。我们只需将其插入到解析表中即**可_。
 
 ^code table-not (1 before, 1 after)
 
-Because I knew we were going to do this, the `unary()` function already has a
-switch on the token type to figure out which bytecode instruction to output. We
-merely add another case.
+由于我早知会这么干， 那个 `unary()` 函数本身已经有一个对 token 类型的 switch 用于选定该发射哪条字节码指令_。我们只需再添一个 case 即可_。
 
 ^code compile-not (1 before, 3 after)
 
-That's it for the front end. Let's head over to the VM and conjure this
-instruction into life.
+前端到此为止。 咱们转战到 VM 去， 让这条指令化为现实。
 
 ^code op-not (1 before, 1 after)
 
-Like our previous unary operator, it pops the one operand, performs the
-operation, and pushes the result. And, as we did there, we have to worry about
-dynamic typing. Taking the logical not of `true` is easy, but there's nothing
-preventing an unruly programmer from writing something like this:
+与之前的一元运算符一样， 它弹出那唯一的运算对象， 执行运算， 再将结果推入栈中。 而 — 与之前的那一次一样 —— 我们也必须考虑动态类型的问题。对 `true` 取逻辑非很简单， 但没什么能阻止一位调皮的程序员写出如此之作：
 
 ```lox
 print !nil;
 ```
 
-For unary minus, we made it an error to negate anything that isn't a <span
-name="negate">number</span>. But Lox, like most scripting languages, is more
-permissive when it comes to `!` and other contexts where a Boolean is expected.
-The rule for how other types are handled is called "falsiness", and we implement
-it here:
+对一元取负我们把任何不是 <span name="negate"> 数字</span> 的值对其取负都视为错误。但 Lox，与大多数脚本语言一一样， 在 `!` 以及其他期待布尔的语境中更加宽容。对其它类型如何被识别如何如何被待遇的规则叫做 " 假值性"， 我们这样来实现它：
 
 <aside name="negate">
 
-Now I can't help but try to figure out what it would mean to negate other types
-of values. `nil` is probably its own negation, sort of like a weird pseudo-zero.
-Negating a string could, uh, reverse it?
+现在我忍不住地想弄明白对其他类型的值取负会是什么意思_。`nil` 或许是它自己的取负， 类似于一个奇怪的伪零。对字符串取负可以， 呃， 将它反转过来？
 
 </aside>
 
 ^code is-falsey
 
-Lox follows Ruby in that `nil` and `false` are falsey and every other value
-behaves like `true`. We've got a new instruction we can generate, so we also
-need to be able to *un*generate it in the disassembler.
+Lox 沿袭了 Ruby 的做法_：`nil` 与 `false` 是假值， 其他所有值都像 `true` 那般行事。我们已经有了一条新指令可以发射， 于是我们也需要能够在反汇编器中对其进行**反发****。
 
 ^code disassemble-not (2 before, 1 after)
 
-### Equality and comparison operators
+### 相等与比较运算符
 
-That wasn't too bad. Let's keep the momentum going and knock out the equality
-and comparison operators too: `==`, `!=`, `<`, `>`, `<=`, and `>=`. That covers
-all of the operators that return Boolean results except the logical operators
-`and` and `or`. Since those need to short-circuit (basically do a little
-control flow) we aren't ready for them yet.
+这倒也不**算_ 太难。咱们趁热打铁， 一并把相等与比较运算符也一并扫掉： `==`、`!=`、`<`、`>`、`<=` 与 `>=`。这也就覆盖了所有返回布尔结果的运算符， 除了逻辑运算符 `and` 与 `or` 不计在内。 由于那些需要短路求值（ 基本上属于一点控制流范畴）， 我们眼下还不具备条件。
 
-Here are the new instructions for those operators:
+这些运算符对应的新指令如下：
 
 ^code comparison-ops (1 before, 1 after)
 
-Wait, only three? What about `!=`, `<=`, and `>=`? We could create instructions
-for those too. Honestly, the VM would execute faster if we did, so we *should*
-do that if the goal is performance.
+等一下， 只有三条？ `!=`、`<=` 与 `>=` 哪去了_？ 我们本可以也为它们各创一条指令_。老实说， 若是为了追求性能，VM 执行起来会更快， 所以若性能是目标， 我们应该那么做。
 
-But my main goal is to teach you about bytecode compilers. I want you to start
-internalizing the idea that the bytecode instructions don't need to closely
-follow the user's source code. The VM has total freedom to use whatever
-instruction set and code sequences it wants as long as they have the right
-user-visible behavior.
+但我最主要的目标是教会你字节码编译的知识。我希望你开始把这些观念内化—— 字节码指令不必与用户源码一一对应_。 只要它们具有正确的用户可见行为，VM 可以完全自由地使用任意的指令集与代码序列。
 
-The expression `a != b` has the same semantics as `!(a == b)`, so the compiler
-is free to compile the former as if it were the latter. Instead of a dedicated
-`OP_NOT_EQUAL` instruction, it can output an `OP_EQUAL` followed by an `OP_NOT`.
-Likewise, `a <= b` is the <span name="same">same</span> as `!(a > b)` and `a >=
-b` is `!(a < b)`. Thus, we only need three new instructions.
+表达**式 `a != b` **具_ 有与 `!(a == b)` 相同的语义， 于是编译器可以自由地按后者来编译前者。取而代之一条专门的 `OP_NOT**EQUAL` 指令， **它_ 可以输出一条 `OP_EQUAL` 后跟着一条 `OP_NOT`。同理， `a <= b` <span name="same"> 即</span> `!(a > b)`， `a >= b` 即 `!(a < b)`。于是我们只需要三条新指令。
 
 <aside name="same" class="bottom">
 
-*Is* `a <= b` always the same as `!(a > b)`? According to [IEEE 754][], all
-comparison operators return false when an operand is NaN. That means `NaN <= 1`
-is false and `NaN > 1` is also false. But our desugaring assumes the latter is
-always the negation of the former.
+是不是 `a <= b` 一定等价于 `!(a > b)`？ 根据 [IEEE 754][]， 所有的比较运算符在某一运算对象为 NaN 时都返回假。这意味着 `NaN <= 1` 为假， `NaN > 1` 也为假。但在我们的脱糖路线中， 我们假设后者永远是前者的取反。
 
-For the book, we won't get hung up on this, but these kinds of details will
-matter in your real language implementations.
+在本书中， 我们不会纠缠于这些细节， 但在你真正实现某门语言的时候， 这些问题会变得很重要。
 
 [ieee 754]: https://en.wikipedia.org/wiki/IEEE_754
 
 </aside>
 
-Over in the parser, though, we do have six new operators to slot into the parse
-table. We use the same `binary()` parser function from before. Here's the row
-for `!=`:
+在解析器那边， 我们确实有六个新的运算符要安入解析表之中_。我们复用之前那个 `binary()` 解析函数。这里是 `!=` 对应的那一行：
 
 ^code table-equal (1 before, 1 after)
 
-The remaining five operators are a little farther down in the table.
+其余五个运算符在表中稍靠后几行_。
 
 ^code table-comparisons (1 before, 1 after)
 
-Inside `binary()` we already have a switch to generate the right bytecode for
-each token type. We add cases for the six new operators.
+在 `binary()` 内部， 我们已经有一个开关为每个 token 类型发射恰当字节码的代码了_。我们为这六个新运算符添上各自的 case 即可_。
 
 ^code comparison-operators (1 before, 1 after)
 
-The `==`, `<`, and `>` operators output a single instruction. The others output
-a pair of instructions, one to evalute the inverse operation, and then an
-`OP_NOT` to flip the result. Six operators for the price of three instructions!
+`==`、`<` 与 `>` 各发射一条指令_。其余三个则发射一对： 一条用于求与其反向运算的指令， 接着一条 `OP_NOT` 用于将结果翻转。六个运算符， 只付出三条指令的代价_！
 
-That means over in the VM, our job is simpler. Equality is the most general
-operation.
+这意味着到了 VM 这边， 我们的工作更加轻松了。相等比较是其中最通用的一项运算_。
 
 ^code interpret-equal (1 before, 1 after)
 
-You can evaluate `==` on any pair of objects, even objects of different types.
-There's enough complexity that it makes sense to shunt that logic over to a
-separate function. That function always returns a C `bool`, so we can safely
-wrap the result in a `BOOL_VAL`. The function relates to Values, so it lives
-over in the "value" module.
+你可以对任意一对对象 _—— 甚至类型不同的对象——施行 `==` 运算。该运算足够复杂， 合适于抽取出一个独立的函数。那个函数总是返回一个 C `bool`， 所以我们可以安全地将结果包入一枚 `BOOL_VAL` 之中_。这个函数针对的是 Values， 于是它栖身于 "value" 模块之中_。
 
 ^code values-equal-h (2 before, 1 after)
 
-And here's the implementation:
+以下是其实现：
 
 ^code values-equal
 
-First, we check the types. If the Values have <span
-name="equal">different</span> types, they are definitely not equal. Otherwise,
-we unwrap the two Values and compare them directly.
+首先， 我们检查类型。若两枚 Value 的 <span name="equal"> 类型不同</span>， 它们必然不等。否则， 我们将那两枚 Value 拆箱并直接比较它们 _。_
 
 <aside name="equal">
 
-Some languages have "implicit conversions" where values of different types may
-be considered equal if one can be converted to the other's type. For example,
-the number 0 is equivalent to the string "0" in JavaScript. This looseness was a
-large enough source of pain that JS added a separate "strict equality" operator,
-`===`.
+某些语言采用 _" 隐式转换"_， 即如果不同类型的值可以通过转换而视为等价， 则也被纳入相等性比较之中_。比如说，JavaScript 认为数 0 与字符串 "0" 等价。这种宽松性造成的痛苦足够多， 以致于 JS 又后加了一个 " 严格相等**性" 运算**符_ `===`。
 
-PHP considers the strings "1" and "01" to be equivalent because both can be
-converted to equivalent numbers, though the ultimate reason is because PHP was
-designed by a Lovecraftian Eldritch god to destroy the mind.
+PHP 认为字符串 "1" 与 "01" 是等价的， 因为两者都可以转换为相等的数值， 不过其根本原因是 PHP 乃由一位洛夫克莱弗特式的古神所设计， 旨在摧毁凡人的心智_。
 
-Most dynamically typed languages that have separate integer and floating-point
-number types consider values of different number types equal if the numeric
-values are the same (so, say, 1.0 is equal to 1), though even that seemingly
-innocuous convenience can bite the unwary.
+那些同时具有整数与浮点数类型的动态类型语言， 通常认为同一数值下不同类型的值是等价的（于是 1.0 等于 1）， 不过即使这种看起来无害的便利也会冷不防咬到不小心的人_。
 
 </aside>
 
-For each value type, we have a separate case that handles comparing the value
-itself. Given how similar the cases are, you might wonder why we can't simply
-`memcmp()` the two Value structs and be done with it. The problem is that
-because of padding and different-sized union fields, a Value contains unused
-bits. C gives no guarantee about what is in those, so it's possible that two
-equal Values actually differ in memory that isn't used.
+对于每一种值类型， 我们都有一条单独的 case 来负责比较值本身。鉴于那几个 case 如此相似， 你或许会奇怪为什么我们不直接对两枚 Value 结构体调用 `memcmp()` 一锤定音_。问题在于_ 由于填充与各字段大小不一致， 一枚 Value 包含着许多未被使用的比特。C 对这些未使用的比特保留着什么一点都不做保证， 最终便可能使得两枚本应等价的 Value 在内存中实际不同。
 
-<img src="image/types-of-values/memcmp.png" alt="The memory respresentations of two equal values that differ in unused bytes." />
+<img src="image/types-of-values/memcmp.png" alt=" 两枚等价 Value 的内存表示， 其中未使用的字节不同_。" />
 
-(You wouldn't believe how much pain I went through before learning this fact.)
+_（你不会相信我是在弄明白这件事实之前吃了多少苦头_。_）_
 
-Anyway, as we add more types to clox, this function will grow new cases. For
-now, these three are sufficient. The other comparison operators are easier since
-they work only on numbers.
+无论如何， 当我们为 clox 添加更多类型时， 这个函数会因此长出新 case。眼下， 这三个便已足够。其他比较运算符更加简单因为它们只适用于数字。
 
 ^code interpret-comparison (3 before, 1 after)
 
-We already extended the `BINARY_OP` macro to handle operators that return
-non-numeric types. Now we get to use that. We pass in `BOOL_VAL` since the
-result value type is Boolean. Otherwise, it's no different from plus or minus.
+我们之前曾扩展过 `BINARY_OP` 宏， 使其能够产出非数字类型的返回值。现在我们便派上了用场_。我们传入 `BOOL_VAL`， 因为结果值的类型是布尔。除此之外， 它与加或减并无二致。
 
-As always, the coda to today's aria is disassembling the new instructions.
+一切照例， 本日咏叹调的尾音是为那些新指令添上反汇编的支持_。
 
 ^code disassemble-comparison (2 before, 1 after)
 
-With that, our numeric calculator has become something closer to a general
-expression evaluator. Fire up clox and type in:
+有了这一切， 我们的数字计算器已经变成了更加贴近一款通用表达式求值器的东西。启动 clox 并输入这段吧：
 
 ```lox
 !(5 - 4 > 3 * 2 == !nil)
 ```
 
-OK, I'll admit that's maybe not the most *useful* expression, but we're making
-progress. We have one missing built-in type with its own literal form: strings.
-Those are much more complex because strings can vary in size. That tiny
-difference turns out to have implications so large that we give strings [their
-very own chapter][strings].
+好吧_， 我承认这或许不算最实用的表达**式， **但_ 咱们确实在进步。我们还缺一种自己带字面量形式的内置类型：字符串。那些东西要复杂得多， 因为字符串的大小是可变的。这一微不起眼的差别却牵引出如此宏大的影响_， 以致于我们要为字符串专门 [ 再开一章 ][strings] 给它们单独叙述。
 
 [strings]: strings.html
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1. We could reduce our binary operators even further than we did here. Which
-   other instructions can you eliminate, and how would the compiler cope with
-   their absence?
+1. 我们本可以进一步压缩二元运算符。还有哪些指令可以被删去， 而编译器如何应对那些_ 不再存在的指令_？
 
-2. Conversely, we can improve the speed of our bytecode VM by adding more
-   specific instructions that correspond to higher-level operations. What
-   instructions would you define to speed up the kind of user code we added
-   support for in this chapter?
+1. 逆而言之， 我们可以通过为更高层级的操作添加更具体的指令， 从而改善我们字节码 VM 的速度。针对本章中所添加的那些用户代码类型， 你会定义哪些指令来助推一把速度？
 
 </div>

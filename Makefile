@@ -5,9 +5,10 @@ TEST_SNAPSHOT := $(BUILD_DIR)/test.dart.snapshot
 
 default: book clox jlox
 
-# Run dart pub get on tool directory.
+# Run pub get on tool directory.
+# Dart 2.8.x uses `pub get`; Dart 2.10+ also accepts `dart pub get`.
 get:
-	@ cd ./tool; dart pub get
+	@ cd ./tool; (pub get 2>/dev/null || dart pub get)
 
 # Remove all build outputs and intermediate files.
 clean:

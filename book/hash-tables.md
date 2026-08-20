@@ -1,1094 +1,603 @@
-> Hash, x. There is no definition for this word -- nobody knows what hash is.
+# 哈希表
+
+> Hash, x. 词典查不到这个词条——谁都不知道 hash 是什么。
 >
-> <cite>Ambrose Bierce, <em>The Unabridged Devil's Dictionary</em></cite>
+> <cite>安布罗斯·比尔斯，<em>《魔鬼词典（未删节版）》</em></cite>
 
-Before we can add variables to our burgeoning virtual machine, we need some way
-to look up a value given a variable's name. Later, when we add classes, we'll
-also need a way to store fields on instances. The perfect data structure for
-these problems and others is a hash table.
+在能给我们这台初具规模的虚拟机添上变量之前， 我们需要一种方法， 能根据变量的名字找到其对应的值。之后， 当我们添加类时， 我们也需要在实例上存储字段的方法。这些问题以及其他许多问题的完美数据结构， 正是**哈希表**。
 
-You probably already know what a hash table is, even if you don't know it by
-that name. If you're a Java programmer, you call them "HashMaps". C# and Python
-users call them "dictionaries". In C++, it's an "unordered map". "Objects" in
-JavaScript and "tables" in Lua are hash tables under the hood, which is what
-gives them their flexibility.
+即使你不一定知道哈希表叫什么名字， 你大概也对它并不陌生。若你是 Java 程序员， 你称之为 "HashMaps"；C# 与 Python 用户则称之为 " 字典"；在 C++ 里它叫 " 无序映射"；JavaScript 中的 " 对象" 以及 Lua 中的 " 表 " 本质上都是哈希表—— 也正因如此， 它们才拥有如此之高的灵活性。
 
-A hash table, whatever your language calls it, associates a set of **keys** with
-a set of **values**. Each key/value pair is an **entry** in the table. Given a
-key, you can look up its corresponding value. You can add new key/value pairs
-and remove entries by key. If you add a new value for an existing key, it
-replaces the previous entry.
+不管你用的语言怎么称呼它， 一张哈希表都会将一套键与一套值关联起来。每一对键/值便是表中的一条记录。给定一个键， 你便可以查到与之对应的值。你可以添加新的键/值对， 也可以根据键删除记录。若你为一个已存在的键添加了一个新值， 它会取代之前的那条记录。
 
-Hash tables appear in so many languages because they are incredibly powerful.
-Much of this power comes from one metric: given a key, a hash table returns the
-corresponding value in <span name="constant">constant time</span>, *regardless
-of how many keys are in the hash table*.
+哈希表出现在如此之多的语言中， 原因在于它的威力实在惊人。这种威力的大部分来自一项指标：给定一个键， 哈希表 <span name="constant"> 会在常量时间</span> 内返回对应的值， 无视表中有多少个键。
 
 <aside name="constant">
 
-More specifically, the *average-case* lookup time is constant. Worst-case
-performance can be, well, worse. In practice, it's easy to avoid degenerate
-behavior and stay on the happy path.
+更准确地说， 查找的*平均情形**是常量时间。最坏情形的性能可能—— 嗯—— 会更糟。实践中， 避免退化性性能并保持在 " 好运道" 上并不难_。
 
 </aside>
 
-That's pretty remarkable when you think about it. Imagine you've got a big stack
-of business cards and I ask you to find a certain person. The bigger the pile
-is, the longer it will take. Even if the pile is nicely sorted and you've got
-the manual dexterity to do a binary search by hand, you're still talking
-*O(log n)*. But with a <span name="rolodex">hash table</span>, it takes the
-same time to find that business card when the stack has ten cards as when it has
-a million.
+_仔细想想这是多么了不起。设想你有一大摞名片， 我请你找一个特定的人。名片越多， 花的时间就越长。即使那摞名片排序整齐， 而你又有足够灵巧的手能进行手动二分查找， 那仍是 O(log n)。但凭借_ <span name="rolodex"> _哈希表</span>， 无论那摞名片有十张还是有一百万张， 找起来的速度都一样。
 
 <aside name="rolodex">
 
-Stuff all those cards in a Rolodex -- does anyone even remember those things
-anymore? -- with dividers for each letter, and you improve your speed
-dramatically. As we'll see, that's not too far from the trick a hash table uses.
+把那些名片全塞进一个旋转式名片簿里（ 谁还记得那玩意儿？）， 每个字母一隔， 你的查找速度会得到惊人的提升。正如我们将要看到的， 哈希表使用的那套把戏， 与此相去并不遥远。
 
 </aside>
 
-## An Array of Buckets
+## 一桶接一桶的数组
 
-A complete, fast hash table has a couple of moving parts. I'll introduce them
-one at a time by working through a couple of toy problems and their solutions.
-Eventually, we'll build up to a data structure that can associate any set of
-names with their values.
+一张完整的、 高速的哈希表有若干运动部件。我会通过一些玩具问题与它们的解决方案， 逐个地介绍它们。最后， 我们会搭起一个能将任意一套名字与其值关联起来的数据结构。
 
-For now, imagine if Lox was a *lot* more restricted in variable names. What if a
-variable's name could only be a <span name="basic">single</span> lowercase
-letter. How could we very efficiently represent a set of variable names and
-their values?
+此时此刻， 试想如果 Lox 的变量名受的约束更多一些。如果一个变量的名字只能是 <span name="basic"> 一个小写字母</span> 该如何？我们该如何高效地表示一套变量名与其值的集合呢_？
 
 <aside name="basic">
 
-This limitation isn't *too* far-fetched. The initial versions of BASIC out of
-Dartmouth allowed variable names to be only a single letter followed by one
-optional digit.
+_这一约束也不至于太离谱。达特茅斯学院的早期 BASIC 版本允许变量名只能是一个字母后跟着一个可选数字。
 
 </aside>
 
-With only 26 possible variables (27 if you consider underscore a "letter", I
-guess), the answer is easy. Declare a fixed-size array with 26 elements. We'll
-follow tradition and call each element a **bucket**. Each represents a variable
-with `a` starting at index zero. If there's a value in the array at some
-letter's index, then that key is present with that value. Otherwise, the bucket
-is empty and that key/value pair isn't in the data structure.
+由于只有 26 个可能的变量（若你把下划线也算作 "字母"， 那就是 27 个）， 答案很简单。声明一个固定大小的_ 26 _元素数组就行。我们沿用传统， 把每一个元素称为一桶。每一个桶代表一个变量， `a` 从下标零起始。若数组中某个字母位的下标上有一个值， 那么该键就存在， 并对应于那个值。否则， 该桶为空， 那对键/值就不在这个数据结构之中。
 
 <aside name="bucket">
 
-<img src="image/hash-tables/bucket-array.png" alt="A row of buckets, each
-labeled with a letter of the alphabet." />
+<img src="image/hash-tables/bucket-array.png" alt=" 一排桶， 每个都标有一个字母_。" />
 
 </aside>
 
-Memory usage is great -- just a single, reasonably sized <span
-name="bucket">array</span>. There's some waste from the empty buckets, but it's
-not huge. There's no overhead for node pointers, padding, or other stuff you'd
-get with something like a linked list or tree.
+_内存占用极佳—— 只有一个大小合理的_ <span name="bucket"> _数组</span>。空桶会带来一些浪费， 但并不多。没有指针、 填充等在链表或树之类数据结构中会碰到的额外开销。
 
-Performance is even better. Given a variable name -- its character -- you can
-subtract the ASCII value of `a` and use the result to index directly into the
-array. Then you can either look up the existing value or store a new value
-directly into that slot. It doesn't get much faster than that.
+性能更佳。给定一个变量名（ 其字符）， 你可以减去 `a` 的_ ASCII _值， 将其结果用作下标直接访问数组。然后你要么查找已存在的值， 要么直接将新值存进那个槽位。没什么能比这更快的了。
 
-This is sort of our Platonic ideal data structure. Lightning fast, dead simple,
-and compact in memory. As we add support for more complex keys, we'll have to
-make some concessions, but this is what we're aiming for. Even once you add in
-hash functions, dynamic resizing, and collision resolution, this is still the
-core of every hash table out there -- a contiguous array of buckets that you
-index directly into.
+这可以说是我们的 " 柏拉图式理想" 数据结构。快若闪电、 简单到极致、 内存又紧凑。当我们添加对更复杂键的支持时， 不免要作些妥协， 但这就是我们的追求目标。即使日后加上哈希函数、 动态扩容与冲突解决， 这仍然是每一张哈希表的核心—— 一段连续的桶数组， 你直接根据下标访问。
 
-### Load factor and wrapped keys
+### 装载因子与回卷键
 
-Confining Lox to single-letter variables would make our job as implementers
-easier, but it's probably no fun programming in a language that gives you only
-26 storage locations. What if we loosened it a little and allowed variables up
-to <span name="six">eight</span> characters long?
+将 Lox 的变量限为单字母会让我们作为实现者的工作轻松许多， 但在一门只给你 26 个存储位的语言里编程大概不怎么有趣。如果我们稍微放宽一点， 允许变量名最多 <span name="six"> 八个字符</span> 长呢_？
 
 <aside name="six">
 
-Again, this restriction isn't so crazy. Early linkers for C treated only the
-first six characters of external identifiers as meaningful. Everything after
-that was ignored. If you've ever wondered why the C standard library is so
-enamored of abbreviation -- looking at you, `strncmp()` -- it turns out it
-wasn't entirely because of the small screens (or teletypes!) of the day.
+_这一约束也不是那么离谱。早期面向 C 的链接器只把外部标识符的前六个字符视为有效， 其后的全被忽略。如果你一直在好奇为什么_ C _标准库那么热衷于缩写（ 就说你吧，`strncmp()`）， 其实这完全不是因为当时小屏幕（ 或电传 ！）的缘故_。
 
 </aside>
 
-That's small enough that we can pack all eight characters into a 64-bit integer
-and easily turn the string into a number. We can then use it as an array index.
-Or, at least, we could if we could somehow allocate a 295,148 *petabyte* array.
-Memory's gotten cheaper over time, but not quite *that* cheap. Even if we could
-make an array that big, it would be heinously wasteful. Almost every bucket
-would be empty unless users started writing way bigger Lox programs than we've
-anticipated.
+_这足够短， 于是我们可以把这八个字符打包成一个_ 64 _位整数， 轻而易举地把字符串变成数字。然后我们便可以将其用作数组下标。至少， 如果我们能想出办法分配一个 295,148 拍字节的数组的话。内存便宜了很多， 但还没便宜到那个程度。即使我们能做到那么大， 那样一份数组也会极其浪费。除非用户们一上手就写比我们预期大得多的 Lox 程序， 否则几乎每一个桶都会是空的。
 
-Even though our variable keys cover the full 64-bit numeric range, we clearly
-don't need an array that large. Instead, we allocate an array with more than
-enough capacity for the entries we need, but not unreasonably large. We map the
-full 64-bit keys down to that smaller range by taking the value modulo the size
-of the array. Doing that essentially folds the larger numeric range onto itself
-until it fits the smaller range of array elements.
+即使我们的变量键覆盖了完整 64 位数值范围， 显然我们不需要那么大的数组。取而代之， 我们分配一份大小不小但也不至于离谱的数组， 足够容纳我们所需的那些条目。我们将完整的 64 位键空间向下映射到这个较小的范围， 方法是取模数组大小。如此操作本质上是将较大的数值范围折叠回自己， 直至能装进较小的数组下标范围。
 
-For example, say we want to store "bagel". We allocate an array with eight
-elements, plenty enough to store it and more later. We treat the key string as a
-64-bit integer. On a little-endian machine like Intel, packing those characters
-into a 64-bit word puts the first letter, "b" (ASCII value 98), in the
-least-significant byte. We take that integer modulo the array size (<span
-name="power-of-two">8</span>) to fit it in the bounds and get a bucket index, 2.
-Then we store the value there as usual.
+比如说， 我们想存入 "bagel"。我们分配一个有八个元素的数组， 足以装下它以及未来的更多条目。我们把键字符串视为一个_ 64 _位整数。在一台类似 Intel 的小端机器上， 将这些字符打进一个 64 位字， 就会将首字母 "b"（ASCII 值_ 98） _放在最低有效字节中。我们将那个整数对数组大小（<span name="power-of-two"> 8 </span>）取模， 将其折叠进数组的边界， 得到桶下标_ 2。_然后我们像平常那样把值存进那里_。
 
 <aside name="power-of-two">
 
-I'm using powers of two for the array sizes here, but they don't need to be.
-Some styles of hash tables work best with powers of two, including the one we'll
-build in this book. Others prefer prime number array sizes or have other rules.
+_这里我用_ 2 _的幂作为数组大小， 但并不一定非 2 不可。某些哈希表实现的最佳配置是 2 的幂， 本书要构建的那一款也包括在内。其它风格则偏好素数大小的数组， 或拥有其它规矩。
 
 </aside>
 
-Using the array size as a modulus lets us map the key's numeric range down to
-fit an array of any size. We can thus control the number of buckets
-independently of the key range. That solves our waste problem, but introduces a
-new one. Any two variables whose key number has the same remainder when divided
-by the array size will end up in the same bucket. Keys can **collide**. For
-example, if we try to add "jam", it also ends up in bucket 2.
+以数组大小为模数让我们可以将键的数值空间向下折叠到任意大小的数组之中。于是我们便可以独立于键的范围控制桶的数目。这解决了浪费问题， 但也带来了一个新问题。任何两个变量， 只要它们的键值除以数组大小后的余数相同， 最终就会落入同一个桶。键与键之间**冲突**了。比如说， 如果我们想添加 "jam"， 它也会落入桶 2。
 
-<img src="image/hash-tables/collision.png" alt="'Bagel' and 'jam' both end up in bucket index 2." />
+<img src="image/hash-tables/collision.png" alt=" 'Bagel' 与 'jam' 都落入了桶下标_ 2 _之中。" />
 
-We have some control over this by tuning the array size. The bigger the array,
-the fewer the indexes that get mapped to the same bucket and the fewer the
-collisions that are likely to occur. Hash table implementers track this
-collision likelihood by measuring the table's **load factor**. It's defined as
-the number of entries divided by the number of buckets. So a hash table with
-five entries and an array of 16 elements has a load factor of 0.3125. The higher
-the load factor, the greater the chance of collisions.
+我们对此有些主动权—— 可以通过调整数组大小来改善。数组越大， 被映射到同一桶的下标越少，冲突发生的概率也越小。哈希表实现者通过测量该表的**装载因子**来追踪这一冲突倾向。它的定义是条目数与桶数的比值。于是， 一张含_ 5 _条条目与_ 16 _个元素数组的哈希表的装载因子为_ 0.3125。_装载因子越高， 冲突的可能性就越大。
 
-One way we mitigate collisions is by resizing the array. Just like the dynamic
-arrays we implemented earlier, we reallocate and grow the hash table's array as
-it fills up. Unlike a regular dynamic array, though, we won't wait until the
-array is *full*. Instead, we pick a desired load factor and grow the array when
-it goes over that.
+我们缓解冲突的一种方式是对数组进行扩容。与之前实现的动态数组一样， 我们在哈希表快被装满时重新分配并扩容。 然而与普通动态数组不同的是， 我们不会等到数组**完全装满**才动手。取而代之， 我们挑一个期待的装载因子， 在数组达到该阈值时便立即扩容。
 
-## Collision Resolution
+## 冲突解决
 
-Even with a very low load factor, collisions can still occur. The [*birthday
-paradox*][birthday] tells us that as the number of entries in the hash table
-increases, the chance of collision increases very quickly. We can pick a large
-array size to reduce that, but it's a losing game. Say we wanted to store a
-hundred items in a hash table. To keep the chance of collision below a
-still-pretty-high 10%, we need an array with at least 47,015 elements. To get
-the chance below 1% requires an array with 492,555 elements, over 4,000 empty
-buckets for each one in use.
+即使装载因子很低， 冲突仍然可能发生。[生日悖论_ *][birthday] _告诉我们， 随着哈希表中条目数的增加， 冲突的概率极快地上升。我们可以挑一个很大的数组大小来降低这一概率， 但这是一场输不起的战争。比如说， 我们想在一张哈希表中存一百项。为了让冲突概率保持在仍算不低的 10% 以下， 我们需要一份至少有 47,015 个元素的数组。为了将概率压到 1% 以下， 则需要有_ 492,555 _个元素的数组—— 每一个使用中的元素对应着_ 4000 _多个空桶。
 
 [birthday]: https://en.wikipedia.org/wiki/Birthday_problem
 
-A low load factor can make collisions <span name="pigeon">rarer</span>, but the
-[*pigeonhole principle*][pigeon] tells us we can never eliminate them entirely.
-If you've got five pet pigeons and four holes to put them in, at least one hole
-is going to end up with more than one pigeon. With 18,446,744,073,709,551,616
-different variable names, any reasonably sized array can potentially end up with
-multiple keys in the same bucket.
+_较低的装载因子可以使冲突更加_ <span name="pigeon"> _稀少</span>， 但 [鸽笼原则 *][pigeon] 告诉我们， 冲突永远不会完全消失。如果你有 5 只宠物鸽与 4 个鸽笼， 至少有一个笼子最终会装着不止一只鸽。对于 18,446,744,073,709,551,616 种不同的变量名， 任意一个大小合理的数组都有可能让多个键落入同一桶中。
 
 [pigeon]: https://en.wikipedia.org/wiki/Pigeonhole_principle
 
-Thus we still have to handle collisions gracefully when they occur. Users don't
-like it when their programming language can look up variables correctly only
-*most* of the time.
+_于是， 即使冲突真的发生了， 我们仍然需要从容地应对。若他们的程序设计语言只能在*大多数**时候正确地查到变量， 用户们可不会喜欢。
 
 <aside name="pigeon">
 
-Put these two funny-named mathematical rules together and you get this
-observation: Take a birdhouse containing 365 pigeonholes, and use each pigeon's
-birthday to assign it to a pigeonhole. You'll need only about 26 randomly chosen
-pigeons before you get a greater than 50% chance of two pigeons in the same box.
+把这两条有趣名字的数学定理放在一起， 你会得到这样一项观察：取一个装 365 个鸽笼的鸽舍， 用每只鸽子的生日来决定将它放进哪一个笼。你只需大约 26 只随机挑选的鸽子， 就会有_ 50% _以上的几率让两只鸽子落入同一笼。
 
-<img src="image/hash-tables/pigeons.png" alt="Two pigeons in the same hole." />
+<img src="image/hash-tables/pigeons.png" alt=" 两只鸽子落入同一笼。" />
 
 </aside>
 
-### Separate chaining
+### 链地址法
 
-Techniques for resolving collisions fall into two broad categories. The first is
-**separate chaining**. Instead of each bucket containing a single entry, we let
-it contain a collection of them. In the classic implementation, each bucket
-points to a linked list of entries. To look up an entry, you find its bucket and
-then walk the list until you find an entry with the matching key.
+解决冲突的技巧大致可以分为两类。第一类叫做**链地址法**。不再让每一个桶只装一条记录， 我们允许它装一套记录。在经典实现中， 每一个桶指向一条记录的链表。要查找一条记录， 你先找到它的桶， 接着沿链表逐个遍历， 直至找到一条键相匹的记录。
 
-<img src="image/hash-tables/chaining.png" alt="An array with eight buckets. Bucket 2 links to a chain of two nodes. Bucket 5 links to a single node." />
+<img src="image/hash-tables/chaining.png" alt=" 一个有八个桶的数组。桶 2 链向一条含两个节点的链表。桶 5 链向一个单节点。" />
 
-In catastrophically bad cases where every entry collides in the same bucket, the
-data structure degrades into a single unsorted linked list with *O(n)* lookup.
-In practice, it's easy to avoid that by controlling the load factor and how
-entries get scattered across buckets. In typical separate-chained hash tables,
-it's rare for a bucket to have more than one or two entries.
+在极端糟糕的情形下 —— 即每一条记录都冲突在同一桶中 —— 这个数据结构退化成一条单的无序链表， 查找性能变为 O(n)。实践中， 只要通过控制装载因子以及如何让条目均匀分散在各桶中， 便很容易避免这种情形。在典型的链地址哈希表中， 某一桶含超过一两条记录的情况很少出现。
 
-Separate chaining is conceptually simple -- it's literally an array of linked
-lists. Most operations are straightforward to implement, even deletion which, as
-we'll see, can be a pain. But it's not a great fit for modern CPUs. It has a lot
-of overhead from pointers and tends to scatter little linked list <span
-name="node">nodes</span> around in memory which isn't great for cache usage.
+链地址法概念上很简单—— 字面意义上就是一个装满链表的数组。大多数操作都直接好实现， 甚至包括删除（ 如我们将要看到的， 这可能有点麻烦）。但它与现代 CPU 并不十分合拍。它有大量的指针开销， 而那些链表节点又往往散落在内存各处—— 这对缓存的使用极不友好_。
 
 <aside name="node">
 
-There are a few tricks to optimize this. Many implementations store the first
-entry right in the bucket so that in the common case where there's only one, no
-extra pointer indirection is needed. You can also make each linked list node
-store a few entries to reduce the pointer overhead.
+_有几种优化手段。许多实现将第一条记录直接存在桶中， 这样在最常见的 "一桶一条" 情形下就不需要额外的指针间接。你也可以让每个链表节点存储若干条记录， 以降低指针的开销。
 
 </aside>
 
-### Open addressing
+### 开放寻址
 
-The other technique is <span name="open">called</span> **open addressing** or
-(confusingly) **closed hashing**. With this technique, all entries live directly
-in the bucket array, with one entry per bucket. If two entries collide in the
-same bucket, we find a different empty bucket to use instead.
+另一种技巧叫做 <span name="open"> **开放寻址**_</span>（ _也叫 " 闭式哈希"， 命名相当混乱）。使用该技巧时， 所有记录直接存在桶数组中， 一桶一条。若两条记录冲突在同一桶， 我们便找一个其他空桶来替用_。
 
 <aside name="open">
 
-It's called "open" addressing because the entry may end up at an address
-(bucket) outside of its preferred one. It's called "closed" hashing because all
-of the entries stay inside the array of buckets.
+_它叫 "开放" 寻址， 因为记录最终可能出现在其 " 首选" 之外的地址（桶）之中。它叫 "闭式" 哈希， 是因为所有记录都留在桶数组之内。
 
 </aside>
 
-Storing all entries in a single, big, contiguous array is great for keeping the
-memory representation simple and fast. But it makes all of the operations on the
-hash table more complex. When inserting an entry, its bucket may be full,
-sending us to look at another bucket. That bucket itself may be occupied and so
-on. This process of finding an available bucket is called **probing**, and the
-order that you examine buckets is a **probe sequence**.
+将所有记录存在一段大而连续的数组之中， 这对于保持内存表示的简单与高速十分有利。但也使哈希表的所有操作更为复杂。插入一条记录时， 它的桶可能已满， 从而要探向另一桶。该桶本身也可能已被占用， 于是如此循环往复。这种寻找可用桶的过程称为**探测**， 而探查各桶的顺序就叫一条**探测序列**。
 
-There are a <span name="probe">number</span> of algorithms for determining
-which buckets to probe and how to decide which entry goes in which bucket.
-There's been a ton of research here because even slight tweaks can have a large
-performance impact. And, on a data structure as heavily used as hash tables,
-that performance impact touches a very large number of real-world programs
-across a range of hardware capabilities.
+决定该探查哪些桶与如何决定哪条记录归属哪个桶的_ <span name="probe"> _算法</span> 有好几种。这方面有大量的研究， 因为即使是细微的调整也可能带来大幅的性能变化。而哈希表的使用如此广泛， 对它的性能调整会触及现实世界中数量众多的程序， 覆盖各种硬件平台。
 
 <aside name="probe">
 
-If you'd like to learn more (and you should, because some of these are really
-cool), look into "double hashing", "cuckoo hashing", "Robin Hood hashing", and
-anything those lead you to.
+如果你想了解更多（ 而且你确实应该了解， 因为这些方法中的某些极为精巧）， 可以了解 "双重哈希"" 布谷鸟哈希"" 罗宾汉哈希"， 以及那些引领你进一步的其他方法_。
 
 </aside>
 
-As usual in this book, we'll pick the simplest one that gets the job done
-efficiently. That's good old **linear probing**. When looking for an entry, we
-look in the first bucket its key maps to. If it's not in there, we look in the
-very next element in the array, and so on. If we reach the end, we wrap back
-around to the beginning.
+_一如本书的惯例， 我们挑选最简单且足以高效完事的那一种。那就是**线性探测**。当寻找一条记录时， 我们先看其键对应的第一个桶。若不在那儿， 便看数组中紧挨的下一桶， 如此往复。若到了末尾， 便回绕至开头继续。
 
-The good thing about linear probing is that it's cache friendly. Since you walk
-the array directly in memory order, it keeps the CPU's cache lines full and
-happy. The bad thing is that it's prone to **clustering**. If you have a lot of
-entries with numerically similar key values, you can end up with a lot of
-colliding, overflowing buckets right next to each other.
+线性探测的好处在于对缓存友好—— 你沿数组的存储顺序直接向下走， 这样 CPU 的缓存行始终是满的、 是开心的。坏处在于它倾向于**聚集**。如果你的键值在数值上彼此接近， 便有可能出现一大堆相邻冲突、 溢出的桶紧挨在一起的情形。
 
-Compared to separate chaining, open addressing can be harder to wrap your head
-around. I think of open addressing as similar to separate chaining except that
-the "list" of nodes is threaded through the bucket array itself. Instead of
-storing the links between them in pointers, the connections are calculated
-implicitly by the order that you look through the buckets.
+与链地址法相比， 开放寻址在理解上可能更绕些。我倾向于将开放寻址看作链地址的一种亲戚， 不过那些 "链表" 节点是穿在桶数组本身之中的。节点之间的 "链接" 不是用指针存储的， 而是通过遍历桶的顺序暗中计算出来的。
 
-The tricky part is that more than one of these implicit lists may be interleaved
-together. Let's walk through an example that covers all the interesting cases.
-We'll ignore values for now and just worry about a set of keys. We start with an
-empty array of 8 buckets.
+那些难点之一在于， 多条这种 "隐式链表" 可能会彼此交错缠在一起。让我们走一个例子， 覆盖所有那些有趣的情形。我们暂时不在意值， 只关心一套键。我们从一份有 8 个桶的空数组开始_。
 
-<img src="image/hash-tables/insert-1.png" alt="An array with eight empty buckets." class="wide" />
+<img src="image/hash-tables/insert-1.png" alt=" _一个有_ 8 _个空桶的数组。" class="wide" />
 
-We decide to insert "bagel". The first letter, "b" (ASCII value 98), modulo the
-array size (8) puts it in bucket 2.
+我们决定插入 "bagel"。首字母 "b"（ASCII 值 98） 除以数组大小_（8）_取模， 将其落入桶 2。
 
-<img src="image/hash-tables/insert-2.png" alt="Bagel goes into bucket 2." class="wide" />
+<img src="image/hash-tables/insert-2.png" alt="Bagel 落入桶 2。" class="wide" />
 
-Next, we insert "jam". That also wants to go in bucket 2 (106 mod 8 = 2), but
-that bucket's taken. We keep probing to the next bucket. It's empty, so we put
-it there.
+接下来， 我们插入 "jam"。它也想落入桶 2（106 mod 8 = 2）， 但桶 2 已经被占。我们继续探向下一个桶。那是空的， 于是我们把 "jam" 放在了那儿_。
 
-<img src="image/hash-tables/insert-3.png" alt="Jam goes into bucket 3, since 2 is full." class="wide" />
+<img src="image/hash-tables/insert-3.png" alt="Jam _落入桶 3， 因为 2 已满_。" class="wide" />
 
-We insert "fruit", which happily lands in bucket 6.
+_我们插入 "fruit"， 它顺理成章地落入桶 6。
 
-<img src="image/hash-tables/insert-4.png" alt="Fruit goes into bucket 6." class="wide" />
+<img src="image/hash-tables/insert-4.png" alt="Fruit 落入桶 6。" class="wide" />
 
-Likewise, "migas" can go in its preferred bucket 5.
+同理， "migas" 可以放进它首选的桶 5。
 
-<img src="image/hash-tables/insert-5.png" alt="Migas goes into bucket 5." class="wide" />
+<img src="image/hash-tables/insert-5.png" alt="Migas 落入桶 5。" class="wide" />
 
-When we try to insert "eggs", it also wants to be in bucket 5. That's full, so we
-skip to 6. Bucket 6 is also full. Note that the entry in there is *not* part of
-the same probe sequence. "Fruit" is in its preferred bucket, 6. So the 5 and 6
-sequences have collided and are interleaved. We skip over that and finally put
-"eggs" in bucket 7.
+当我们尝试插入 "eggs" 时， 它也想落进桶 5。那桶满了， 于是我们跳至桶 6。桶 6 也满了。请注意， 那里的那条记录并不属于同一条探测序列。_"fruit" _位于它首选的桶 6。于是， 5 与_ 6 _两条序列彼此交错了。我们跳过那些， 最终把 "eggs" 放进桶 7。
 
-<img src="image/hash-tables/insert-6.png" alt="Eggs goes into bucket 7 because 5 and 6 are full." class="wide" />
+<img src="image/hash-tables/insert-6.png" alt="Eggs 落入桶 7， 因为 5 与 6 均已满。" class="wide" />
 
-We run into a similar problem with "nuts". It can't land in 6 like it wants to.
-Nor can it go into 7. So we keep going. But we've reached the end of the array,
-so we wrap back around to 0 and put it there.
+我们碰上了一个类似的问题。"nuts" 无法像它所想的那样落入桶 6。也无法进入桶 7。于是我们继续向下。然而我们已经到了数组的末端， 于是回绕到桶 0， 把它放在了那儿_。
 
-<img src="image/hash-tables/insert-7.png" alt="Nuts wraps around to bucket 0 because 6 and 7 are full." class="wide" />
+<img src="image/hash-tables/insert-7.png" alt="Nuts _由于 6 与_ 7 _均已满， 回绕至桶 0。" class="wide" />
 
-In practice, the interleaving turns out to not be much of a problem. Even in
-separate chaining, we need to walk the list to check each entry's key because
-multiple keys can reduce to the same bucket. With open addressing, we need to do
-that same check, and that also covers the case where you are stepping over
-entries that "belong" to a different original bucket.
+实践中， 这种交错其实并不是什么大问题。即使在链地址法中， 我们也需要沿链表走， 一个个检查键， 因为多个键可能被约化到同一桶。对于开放寻址， 我们同样需要那步检查， 这也覆盖了跨越本 "属于" 别人之桶的那些记录的情形。
 
-## Hash Functions
+## 哈希函数
 
-We can now build ourselves a reasonably efficient table for storing variable
-names up to eight characters long, but that limitation is still annoying. In
-order to relax the last constraint, we need a way to take a string of any length
-and convert it to a fixed-size integer.
+此时我们已可以为最多 8 字符长的变量名构建一张尚算高效的表， 但这一长度限制仍然令人讨厌。为了解除最后这一约束， 我们需要一种方法， 能将任意长度的字符串转换为一个固定大小的整数。
 
-Finally, we get to the "hash" part of "hash table". A **hash function** takes
-some larger blob of data and "hashes" it to produce a fixed-size integer **hash
-code** whose value depends on all of the bits of the original data. A <span
-name="crypto">good</span> hash function has three main goals:
+终于， 我们要谈谈 " 哈希表" 中的 "哈希部分" 了。一**个哈希函数**将某一较大的数据块进行 " 哈希"， 产生一个固定大小的整数**哈希值**， 其值取决于原始数据的所有位。一个 <span name="crypto"> 好</span> 的哈希函数有三个主要目标_：
 
 <aside name="crypto">
 
-Hash functions are also used for cryptography. In that domain, "good" has a
-*much* more stringent definition to avoid exposing details about the data being
-hashed. We, thankfully, don't need to worry about those concerns for this book.
+_哈希函数同样用于密码学。在那一领域中， "好 "的定义要严苛得多， 以避免泄露所哈希数据的任何细节。对于本书而言， 幸运的是， 我们不需要考虑那些问题。
 
 </aside>
 
-*   **It must be *deterministic*.** The same input must always hash to the same
-    number. If the same variable ends up in different buckets at different
-    points in time, it's gonna get really hard to find it.
+*   **它必须是确定性的**。同一个输入必须总是被映射到同一数字。如果同一个变量在不同时刻落入不同桶， 找起它来就会异常地难。
 
-*   **It must be *uniform*.** Given a typical set of inputs, it should produce a
-    wide and evenly distributed range of output numbers, with as few clumps or
-    patterns as possible. We want it to <span name="scatter">scatter</span>
-    values across the whole numeric range to minimize collisions and clustering.
+*   **它必须均匀分布**。给定一组典型输入， 它应该产生一段宽阔且均匀分布在数值范围各段的输出， 尽可能少出现堆积或模式。我们要求其能_ <span name="scatter"> _把值撒散</span> 到整个数值范围之中， 以尽可能避免冲突与聚集。
 
-*   **It must be *fast*.** Every operation on the hash table requires us to hash
-    the key first. If hashing is slow, it can potentially cancel out the speed
-    of the underlying array storage.
+*   **它必须快**。哈希表上的每一次操作都要先对键进行哈希。如果哈希很慢， 它就有可能抵消掉底层数组存储所带来的速度优势。
 
 <aside name="scatter">
 
-One of the original names for a hash table was "scatter table" because it takes
-the entries and scatters them throughout the array. The word "hash" came from
-the idea that a hash function takes the input data, chops it up, and tosses it
-all together into a pile to come up with a single number from all of those bits.
+哈希表最早的名字之一叫做 " 散列表"（scatter table）， 因为它将各条记录散落到数组各段。而 "哈希" 这一词则源于这样一种想法： 哈希函数将输入数据切碎， 将它们全部扔进同一堆， 再从所有这些位中归纳出一个数字。
 
 </aside>
 
-There is a veritable pile of hash functions out there. Some are old and
-optimized for architectures no one uses anymore. Some are designed to be fast,
-others cryptographically secure. Some take advantage of vector instructions and
-cache sizes for specific chips, others aim to maximize portability.
+外面有一大堆哈希函数。有些很老， 为那些没人再用的架构做了优化；有些追求高速， 有些追求密码学上的安全；有些利用向量指令与缓存大小， 有些追求最大程度的可移植性。
 
-There are people out there for whom designing and evaluating hash functions is,
-like, their *jam*. I admire them, but I'm not mathematically astute enough to
-*be* one. So for clox, I picked a simple, well-worn hash function called
-[FNV-1a][] that's served me fine over the years. Consider <span
-name="thing">trying</span> out different ones in your code and see if they make
-a difference.
+有那么一群人， 设计并评价哈希函数是他们的最爱。我很佩服他们， 但我自己数学底子不够硬， 成不了那样的人。于是对_ clox， _我挑了一种简单而久经考验的哈希函数， 叫做 [FNV-1a][]， 它多年来一直为我服务良好。 建议_ <span name="thing"> _尝试_</span> _其他几种， 看看有什么不同。
 
 [fnv-1a]: http://www.isthe.com/chongo/tech/comp/fnv/
 
 <aside name="thing">
 
-Who knows, maybe hash functions could turn out to be your thing too?
+说不定哈希函数也会成为你的最爱呢？
 
 </aside>
 
-OK, that's a quick run through of buckets, load factors, open addressing,
-collision resolution, and hash functions. That's an awful lot of text and not a
-lot of real code. Don't worry if it still seems vague. Once we're done coding it
-up, it will all click into place.
+好了， 桶、 装载因子、 开放寻址、 冲突解决、 以及哈希函数—— 这些内容都过了一遍。文字太多， 代码太少。如果此刻仍有些模糊不必担心。等我们写完之后， 一切都会豁然开朗。
 
-## Building a Hash Table
+## 构建哈希表
 
-The great thing about hash tables compared to other classic techniques like
-balanced search trees is that the actual data structure is so simple. Ours goes
-into a new module.
+与其他经典技术比起来， 哈希表的精妙之处在于其实际的数据结构极为简单。我们那一款装进一个新模块之中。
 
 ^code table-h
 
-A hash table is an array of entries. As in our dynamic array earlier, we keep
-track of both the allocated size of the array (`capacity`) and the number of
-key/value pairs currently stored in it (`count`). The ratio of count to capacity
-is exactly the load factor of the hash table.
+一张哈希表是一个条目数组。与我们之前的动态数组一样， 我们同时记录着数组已分配的大小_（`capacity`） _与当前存在于其中的键/值对的数量（`count`）。前者与后者的比值， 正是该哈希表的装载因子。
 
-Each entry is one of these:
+每一条条目就是下面这个模样_：
 
 ^code entry (1 before, 2 after)
 
-It's a simple key/value pair. Since the key is always a <span
-name="string">string</span>, we store the ObjString pointer directly instead of
-wrapping it in a Value. It's a little faster and smaller this way.
+_它是一个简单的键/值对。由于键总是一 <span name="string"> 条字符串_</span>， _我们直接存储 ObjString 的指针， 而不是将其封装在一枚_ Value _之中。这样稍微快一些， 也节省一点内存。
 
 <aside name="string">
 
-In clox, we only need to support keys that are strings. Handling other types of
-keys doesn't add much complexity. As long as you can compare two objects for
-equality and reduce them to sequences of bits, it's easy to use them as hash
-keys.
+在 clox 中， 我们只需要支持字符串类型的键。处理其它类型的键也不会带来多少复杂度。只要你能够比较两个对象是否相等、 并将它们约化为一串比特， 把它们作为哈希键就很容易_。
 
 </aside>
 
-To create a new, empty hash table, we declare a constructor-like function.
+_为了创建一张新的空哈希表， 我们声明一个类似构造函数的函数_。
 
 ^code init-table-h (2 before, 2 after)
 
-We need a new implementation file to define that. While we're at it, let's get
-all of the pesky includes out of the way.
+_我们需要一个新的实现文件来定义它。顺便也把那些讨厌的 include 一次性都解决掉。
 
 ^code table-c
 
-As in our dynamic value array type, a hash table initially starts with zero
-capacity and a `NULL` array. We don't allocate anything until needed. Assuming
-we do eventually allocate something, we need to be able to free it too.
+与我们之前的动态值数组类似， 一张哈希表最初的大小为零、 数组为 `NULL`。我们在需要的时候才去分配。假设我们未来确实会去分配点什么， 我们还需要一个函数来释放它_。
 
 ^code free-table-h (1 before, 2 after)
 
-And its glorious implementation:
+_其辉煌的实现如此_：
 
 ^code free-table
 
-Again, it looks just like a dynamic array. In fact, you can think of a hash
-table as basically a dynamic array with a really strange policy for inserting
-items. We don't need to check for `NULL` here since `FREE_ARRAY()` already
-handles that gracefully.
+_它看起来又跟动态数组一模一样。事实上， 你可以把哈希表想象成一种本质上的动态数组， 只不过它有一套极其奇怪的插入策略。这里也不需要检查 `NULL`， 因为_ `FREE_ARRAY()` 已经从容地处理了这一情形。
 
-### Hashing strings
+### 字符串哈希
 
-Before we can start putting entries in the table, we need to, well, hash them.
-To ensure that the entries get distributed uniformly throughout the array, we
-want a good hash function that looks at all of the bits of the key string. If it
-looked at, say, only the first few characters, then a series of strings that all
-shared the same prefix would end up colliding in the same bucket.
+在我们能向表中添加条目之前， 我们需要对键进行哈希。为了确保那些条目能均匀地分布在数组各段， 我们要求一个好的哈希函数去查看键字符串的所有几位。如果它只看例如前几个字符， 那一串具有相同前缀的字符串就会全部冲突在同一桶中。
 
-On the other hand, walking the entire string to calculate the hash is kind of
-slow. We'd lose some of the performance benefit of the hash table if we had to
-walk the string every time we looked for a key in the table. So we'll do the
-obvious thing: cache it.
+另一方面， 为了算哈希值而把整条字符串走一遍有些慢。如果我们在表中每找一次键都得把键走一遍， 便会损失哈希表部分的性能优势。于是我们做了一件显然的事情：把它缓存起来。
 
-Over in the "object" module in ObjString, we add:
+在_ "object" _模块的_ ObjString _中， 我们添上：
 
 ^code obj-string-hash (1 before, 1 after)
 
-Each ObjString stores the hash code for its string. Since strings are immutable
-in Lox, we can calculate the hash code once up front and be certain that it will
-never get invalidated. Caching it eagerly makes a kind of sense: allocating the
-string and copying its characters over is already an *O(n)* operation, so it's a
-good time to also do the *O(n)* calculation of the string's hash.
+每一个 ObjString 都存有自己的哈希值。由于 Lox 中的字符串是不可变的， 我们可以一次性算好哈希值， 而不用担心它有一天会失效。急切地把它缓存起来是有道理的：为字符串分配内存并复制字符的过程本身就是一个 O(n) 操作， 正好顺手把字符串的哈希值这一个同样是 O(n) 的计算也一并完成。
 
-Whenever we call the internal function to allocate a string, we pass in its
-hash code.
+每当我们调用那个用于分配字符串的内部函数时， 我们会把其哈希值一并传过去。
 
 ^code allocate-string (1 after)
 
-That function simply stores the hash in the struct.
+那个函数只需将哈希值存入结构体即可_。
 
 ^code allocate-store-hash (1 before, 2 after)
 
-The fun happens over at the callers. `allocateString()` is called from two
-places: the function that copies a string and the one that takes ownership of an
-existing dynamically allocated string. We'll start with the first.
+_精彩的部分在调用方那儿_。`allocateString()` _有两个调用方：复制字符串的函数与获得现有动态分配字符串所有权的函数。我们先看第一个。
 
 ^code copy-string-hash (1 before, 1 after)
 
-No magic here. We calculate the hash code and then pass it along.
+这里没什么魔法。我们算出哈希值， 接着将其传出去。
 
 ^code copy-string-allocate (2 before, 1 after)
 
-The other string function is similar.
+另一个字符串函数也类似_。
 
 ^code take-string-hash (1 before, 1 after)
 
-The interesting code is over here:
+_有趣的代码在这儿：
 
 ^code hash-string
 
-This is the actual bona fide "hash function" in clox. The algorithm is called
-"FNV-1a", and is the shortest decent hash function I know. Brevity is certainly
-a virtue in a book that aims to show you every line of code.
+这就是 clox 中那个货真价实的 "哈希函数"。这个算法叫做 "FNV-1a"， 是我所知的最短的像点样子的哈希函数。在这样一本力图将每一行代码都呈现给你的书中， 简短无疑是一大美德。
 
-The basic idea is pretty simple, and many hash functions follow the same
-pattern. You start with some initial hash value, usually a constant with certain
-carefully chosen mathematical properties. Then you walk the data to be hashed.
-For each byte (or sometimes word), you mix the bits into the hash value somehow,
-and then scramble the resulting bits around some.
+其基本想法很简单， 许多哈希函数也遵循同一模式。你从某个初始哈希值开始， 通常是一个具有某些精心挑选的数学性质的常数。接着你遍历待哈希的数据。对于每一个字节（ 有时是字）， 你以某种方式将那些比特混入哈希值之中， 接着再对所产生的比特作一些搅乱。
 
-What it means to "mix" and "scramble" can get pretty sophisticated. Ultimately,
-though, the basic goal is *uniformity* -- we want the resulting hash values to
-be as widely scattered around the numeric range as possible to avoid collisions
-and clustering.
+什么叫 "混入" 与 "搅乱" 可以变得相当深奥。不过说到底， 其根本目标还是**均匀性** —— 我们希望产生的哈希值尽可能均匀地散布于整个数值范围之中， 以避免冲突与聚集。
 
-### Inserting entries
+### 插入条目
 
-Now that string objects know their hash code, we can start putting them into
-hash tables.
+如今字符串对象已知自己的哈希值， 我们便可以开始向哈希表中放东西了_。
 
 ^code table-set-h (1 before, 2 after)
 
-This function adds the given key/value pair to the given hash table. If an entry
-for that key is already present, the new value overwrites the old value. The
-function returns `true` if a new entry was added. Here's the implementation:
+_该函数将所给定的键/值对添加到所给定的哈希表中。若该键的条目已存在， 新值会覆盖旧值。若添加了一条新条目， 函数返回 `true`。以下是实现_：
 
 ^code table-set
 
-Most of the interesting logic is in `findEntry()` which we'll get to soon. That
-function's job is to take a key and figure out which bucket in the array it
-should go in. It returns a pointer to that bucket -- the address of the Entry in
-the array.
+_大部分有趣的逻辑在 `findEntry()` 之中， 我们很快会谈到它。那个函数的工作是接下一个键与一个桶数组， 并算出它究竟该归属哪一个桶。它返回一个指向那个桶的指针 —— 数组中对应那一个_ Entry _的地址。
 
-Once we have a bucket, inserting is straightforward. We update the hash table's
-size, taking care to not increase the count if we overwrote the value for an
-already-present key. Then we copy the key and value into the corresponding
-fields in the Entry.
+一旦手头有了一个桶， 插入便直接得多了。我们更新一下哈希表的大小， 并小心不为那些覆写已存在键的情形增加计数。接着我们将键与值分别复制进对应的 Entry 字段之中。
 
-We're missing a little something here, though. We haven't actually allocated the
-Entry array yet. Oops! Before we can insert anything, we need to make sure we
-have an array, and that it's big enough.
+我们还漏了一点小东西。我们其实还没有分配出 Entry 数组。哎呀！在能插入任何东西之前， 我们需要保证有一份数组， 而且大小足够_。
 
 ^code table-set-grow (1 before, 1 after)
 
-This is similar to the code we wrote a while back for growing a dynamic array.
-If we don't have enough capacity to insert an item, we reallocate and grow the
-array. The `GROW_CAPACITY()` macro takes an existing capacity and grows it by
-a multiple to ensure that we get amortized constant performance over a series
-of inserts.
+_这段代码与我们之前为动态数组扩容所写的很  相似。如果现有容量不够以插入一项， 我们便重新分配并扩容数组。这个 `GROWCAPACITY()` 宏接受一个旧容量并将其放大数倍， 以确保一连串插入的均摊常量级性能。
 
-The interesting difference here is that `TABLE_MAX_LOAD` constant.
+有趣的不同之处在于 `TABLE_MAX_LOAD` 这个常量_。
 
 ^code max-load (2 before, 1 after)
 
-This is how we manage the table's <span name="75">load</span> factor. We don't
-grow when the capacity is completely full. Instead, we grow the array before
-then, when the array becomes at least 75% full.
+_这就是我们如何管理该表的_ <span name="75"> _装载</span> 因子的方式。我们不是等到容量完全装满之后再动手。取而代之， 我们在数组装满程度达到 75% 时便开始扩容。
 
 <aside name="75">
 
-Ideal max load factor varies based on the hash function, collision-handling
-strategy, and typical keysets you'll see. Since a toy language like Lox doesn't
-have "real world" data sets, it's hard to optimize this, and I picked 75%
-somewhat arbitrarily. When you build your own hash tables, benchmark and tune
-this.
+理想的最大装载因子取决于所用的哈希函数、 冲突处理策略以及你会碰上的典型键集。由于 Lox 这样一种玩具语言并不有 "现实世界" 的数据集， 很难对此做优化， 我有些随意地选了 75%。当你动手构建自己的哈希表时， 记得跑基准、 加以调优。
 
 </aside>
 
-We'll get to the implementation of `adjustCapacity()` soon. First, let's look
-at that `findEntry()` function you've been wondering about.
+我们很快便会看到 `adjustCapacity()` 的实现。首先， 让我们看一下那个一直吊你胃口的 `findEntry()` 函数_。
 
 ^code find-entry
 
-This function is the real core of the hash table. It's responsible for taking a
-key and an array of buckets, and figuring out which bucket the entry belongs in.
-This function is also where linear probing and collision handling come into
-play. We'll use `findEntry()` both to look up existing entries in the hash
-table and to decide where to insert new ones.
+_这个函数是整张哈希表的真正核心。它负责接收一个键与一个桶数组， 并弄清楚这条记录该归于哪一桶。这个函数同时也是线性探测与冲突处理大显身手的地方。我们用 `findEntry()` 既来查找表中已存在的记录， 也来决定一条新记录应放在何处。
 
-For all that, there isn't much to it. First, we use modulo to map the key's hash
-code to an index within the array's bounds. That gives us a bucket index where,
-ideally, we'll be able to find or place the entry.
+这其实并不复杂。首先， 我们用取模将键的哈希值映射到数组边界内的一个下标。这便給了我们一个桶下标， 理想情况下我们能在那儿找到或放置这条记录。
 
-There are a few cases to check for:
+有几种情形需要检查：
 
-*   If the key for the Entry at that array index is `NULL`, then the bucket is
-    empty. If we're using `findEntry()` to look up something in the hash table,
-    this means it isn't there. If we're using it to insert, it means we've found
-    a place to add the new entry.
+*   如果该下标处_ Entry _的键为_ `NULL`， _那么这桶为空。若我们正在用_ `findEntry()` _查找表中的某物， 这意味着它不在。若我们正在用它插入， 这意味着我们找到一处可以放新条目的位置。
 
-*   If the key in the bucket is <span name="equal">equal</span> to the key we're
-    looking for, then that key is already present in the table. If we're doing a
-    lookup, that's good -- we've found the key we seek. If we're doing an insert,
-    this means we'll be replacing the value for that key instead of adding a new
-    entry.
+*   如果该桶的键 <span name="equal"> 与</span> 我们要找的键相等， 那么该键已经存在于表中。若正在查找， 那正合我意—— 我们找到了心仪的键。若正在插入， 这意味着我们将替换该键对应的值， 而不是添加一条新条目_。
 
 <aside name="equal">
 
-It looks like we're using `==` to see if two strings are equal. That doesn't
-work, does it? There could be two copies of the same string at different places
-in memory. Fear not, astute reader. We'll solve this further on. And, strangely
-enough, it's a hash table that provides the tool we need.
+_你看起来在用 `==` 比较两条字符串是否相等。那行不通吧？内存中可能有两份同名的字符串散落在不同位置。别担心， 眼尖的读者。我们很快就会解决这一问题。 奇怪的是， 解决之道正是一张哈希表。
 
 </aside>
 
-*   Otherwise, the bucket has an entry in it, but with a different key. This is
-    a collision. In that case, we start probing. That's what that `for` loop
-    does. We start at the bucket where the entry would ideally go. If that
-    bucket is empty or has the same key, we're done. Otherwise, we advance to
-    the next element -- this is the *linear* part of "linear probing" -- and
-    check there. If we go past the end of the array, that second modulo operator
-    wraps us back around to the beginning.
+*   否则， 这桶已有一条记录， 但键不同。这是一次冲突。此时， 我们开始探测。那就是那个 `for` 循环所做的事情。我们从这条记录首选的桶起始。若那桶为空或其键与我们要找的键相同， 便完事。否则， 我们向下走一步——这就是 "线性" 探测之 "线性" 之意—— 并在那儿再检查。若到了数组末端， 那第二个取模便会将我们回绕到头。
 
-We exit the loop when we find either an empty bucket or a bucket with the same
-key as the one we're looking for. You might be wondering about an infinite loop.
-What if we collide with *every* bucket? Fortunately, that can't happen thanks to
-our load factor. Because we grow the array as soon as it gets close to being
-full, we know there will always be empty buckets.
+当我们找到一个空桶或一个键与所查键相同的桶时， 我们便退出循环。你也许会担心出现无限循环：如果每一桶都冲突怎么办？幸运的是， 这种情况不会发生， 这有赖于我们的装载因子。由于我们在数组接近装满时便开始扩容， 我们知道总会有空桶可用。
 
-We return directly from within the loop, yielding a pointer to the found Entry
-so the caller can either insert something into it or read from it. Way back in
-`tableSet()`, the function that first kicked this off, we store the new entry in
-that returned bucket and we're done.
+我们直接在循环内部返回， 将一个指向所找到_ Entry _的指针交给调用方， 由它决定是向其中插入某物还是从其中读取某物。回到 `tableSet()` 那儿 —— 那个最初引发这一切的函数—— 我们将新条目存入那个返回的桶中， 大功告成。
 
-### Allocating and resizing
+### 分配与扩容
 
-Before we can put entries in the hash table, we do need a place to actually
-store them. We need to allocate an array of buckets. That happens in this
-function:
+在我们能向表中放东西之前， 我们确实需要一处存放之所。我们需要分配一段桶数组。这步骤发生于这个函数中_：
 
 ^code table-adjust-capacity
 
-We create a bucket array with `capacity` entries. After we allocate the array,
-we initialize every element to be an empty bucket and then store the array (and
-its capacity) in the hash table's main struct. This code is fine for when we
-insert the very first entry into the table, and we require the first allocation
-of the array. But what about when we already have one and we need to grow it?
+_我们创建一个有_ `capacity` _个元素的桶数组。在分配之后， 我们将每一个元素都初始化为一个空桶， 接着将该数组（及其大小） 存入哈希表的主结构之中。这对于首次向表中插入记录是 OK 的， 而且也就是首次为桶数组分配的时候。但如果我们已经有了一份， 又需要扩容呢？
 
-Back when we were doing a dynamic array, we could just use `realloc()` and let
-the C standard library copy everything over. That doesn't work for a hash table.
-Remember that to choose the bucket for each entry, we take its hash key *modulo
-the array size*. That means that when the array size changes, entries may end up
-in different buckets.
+想起我们之前做动态数组的时候， 我们可以直接用 `realloc()`， 让 C 标准库替我们把所有元素复制过去。这在哈希表上行不通。别忘了， 我们要为每一条记录根据其键对数组大小取模来挑选桶。这意味着当数组大小改变之后， 那些记录可能会落入不同的桶里。
 
-Those new buckets may have new collisions that we need to deal with. So the
-simplest way to get every entry where it belongs is to rebuild the table from
-scratch by re-inserting every entry into the new empty array.
+那些新桶可能会有新的冲突需要处理。于是， 最简单的做法就是从零开始按照每一条记录应有的新位置重新构建整张表_。
 
 ^code re-hash (2 before, 2 after)
 
-We walk through the old array front to back. Any time we find a non-empty
-bucket, we insert that entry into the new array. We use `findEntry()`, passing
-in the *new* array instead of the one currently stored in the Table. (This is
-why `findEntry()` takes a pointer directly to an Entry array and not the whole
-`Table` struct. That way, we can pass the new array and capacity before we've
-stored those in the struct.)
+_我们从旧数组的头开始逐桶遍历。一旦发现一个非空桶， 我们便将那条记录插入到新数组中。我们使用 `findEntry()`， 传入的是*新**数组——而不是当前存于_ Table _中的那个。（这便是为什么 `findEntry()` 接受的是直接指向 Entry 数组的指针， 而不是整个 `Table` 结构。这样， 我们便可以在将它们存入结构之前就传入新的数组与大小。）
 
-After that's done, we can release the memory for the old array.
+完成之后， 我们便可以释放旧数组的内存。
 
 ^code free-old-array (3 before, 1 after)
 
-With that, we have a hash table that we can stuff as many entries into as we
-like. It handles overwriting existing keys and growing itself as needed to
-maintain the desired load capacity.
+有了这一切， 我们便有了一张想装多少便装多少的哈希表。它能处理覆写已存在的键， 也会随数据增长而自动扩容， 以维持所期待的装载因子。
 
-While we're at it, let's also define a helper function for copying all of the
-entries of one hash table into another.
+趁着手热， 我们顺便再添一个用于将一张哈希表的所有条目复制到另一张的辅助函数。
 
 ^code table-add-all-h (1 before, 2 after)
 
-We won't need this until much later when we support method inheritance, but we
-may as well implement it now while we've got all the hash table stuff fresh in
-our minds.
+我们要等到很久之后才会用上这个， 到那时候我们会需要支持方法继承。不过既然眼下正忙着哈希表的事， 顺手把它实现了也不错。
 
 ^code table-add-all
 
-There's not much to say about this. It walks the bucket array of the source hash
-table. Whenever it finds a non-empty bucket, it adds the entry to the
-destination hash table using the `tableSet()` function we recently defined.
+这有什么好说的。它遍历源哈希表的桶数组。一旦发现一个非空桶， 它便用我们之前定义的_ `tableSet()` _函数将这条记录添加到目标表中。
 
-### Retrieving values
+### 取出值
 
-Now that our hash table contains some stuff, let's start pulling things back
-out. Given a key, we can look up the corresponding value, if there is one, with
-this function:
+如今我们的哈希表中已经装满了东西， 是时候开始把它们取出来了。给定一个键， 我们可以通过这个函数找出其对应的值（若有的话_）：
 
 ^code table-get-h (1 before, 1 after)
 
-You pass in a table and a key. If it finds an entry with that key, it returns
-`true`, otherwise it returns `false`. If the entry exists, the `value` output
-parameter points to the resulting value.
+_你向其传入一张表与一个键。若找到了该键对应的条目， 它返回 `true`；否则返回 `false`。若条目存在， `value` 这个输出参数会指向所找到的值。
 
-Since `findEntry()` already does the hard work, the implementation isn't bad.
+由于 `findEntry()` 已经做了那些苦差， 实现便不难看。
 
 ^code table-get
 
-If the table is completely empty, we definitely won't find the entry, so we
-check for that first. This isn't just an optimization -- it also ensures that we
-don't try to access the bucket array when the array is `NULL`. Otherwise, we let
-`findEntry()` work its magic. That returns a pointer to a bucket. If the bucket
-is empty, which we detect by seeing if the key is `NULL`, then we didn't find an
-Entry with our key. If `findEntry()` does return a non-empty Entry, then that's
-our match. We take the Entry's value and copy it to the output parameter so the
-caller can get it. Piece of cake.
+如果该表完全为空， 我们必然找不到这条记录， 于是先检查一下这一点。这并不只是一处优化—— 它也保证了我们不会在数组为 `NULL` 的情况下尝试访问桶数组。否则， 我们就把这苦差交给 `findEntry()`。它返回一个指向某桶的指针。如果这个桶为空（我们通过其键为_ `NULL` _来检测）， 那么我们并未找到与所查键相匹配的 Entry。若 `findEntry()` 返回的是一个非空 Entry， 那便是我们所找的。我们将该 Entry 的值复制到输出参数中， 调用方便可以拿到了。小菜一碟。
 
-### Deleting entries
+### 删除条目
 
-There is one more fundamental operation a full-featured hash table needs to
-support: removing an entry. This seems pretty obvious, if you can add things,
-you should be able to *un*-add them, right? But you'd be surprised how many
-tutorials on hash tables omit this.
+一张功能齐备的哈希表还需要支持一项基本操作：删除条目。如果你可以添加东西， 显然就应该可以 *撤 * 回* 它们吧？但你会意外地发现， 有多少关于哈希表的教程居然省略了这一点。
 
-I could have taken that route too. In fact, we use deletion in clox only in a
-tiny edge case in the VM. But if you want to actually understand how to
-completely implement a hash table, this feels important. I can sympathize with
-their desire to overlook it. As we'll see, deleting from a hash table that uses
-<span name="delete">open</span> addressing is tricky.
+我本可以也走那条路。事实上， 在_ clox _中， 我们只在_ VM _中一个极其边角的情形下才用上了删除。但如果你想真正弄明白如何完整实现一张哈希表， 这一点似乎很重要。我能理解他们想跳过这一节的心情。如我们即将看到的， 从使用 <span name="delete"> 开放</span> 寻址的哈希表中删除是有点棘手的。
 
 <aside name="delete">
 
-With separate chaining, deleting is as easy as removing a node from a linked
-list.
+对于链地址法， 删除就如同从链表中删去一个节点那般简单。
 
 </aside>
 
-At least the declaration is simple.
+至少声明部分是简单的。
 
 ^code table-delete-h (1 before, 1 after)
 
-The obvious approach is to mirror insertion. Use `findEntry()` to look up the
-entry's bucket. Then clear out the bucket. Done!
+最显而易见的做法是与插入操作对应。用 `findEntry()` 找到该条目所在的桶。接着清空它。完了！
 
-In cases where there are no collisions, that works fine. But if a collision has
-occurred, then the bucket where the entry lives may be part of one or more
-implicit probe sequences. For example, here's a hash table containing three keys
-all with the same preferred bucket, 2:
+在没有冲突的情况下， 这样做毫无问题。但若发生过冲突， 那条记录所在的桶可能是若干条隐式探测序列的一部分。比如说， 这儿有一张哈希表， 其中装满了三个首选桶都为_ 2 _的键：
 
-<img src="image/hash-tables/delete-1.png" alt="A hash table containing 'bagel' in bucket 2, 'biscuit' in bucket 3, and 'jam' in bucket 4." />
+<img src="image/hash-tables/delete-1.png" alt=" 一张哈希表， 装着 'bagel'（桶_ 2）、'biscuit'（_桶_ 3） _以及 'jam'（桶_ 4）。" />
 
-Remember that when we're walking a probe sequence to find an entry, we know
-we've reached the end of a sequence and that the entry isn't present when we hit
-an empty bucket. It's like the probe sequence is a list of entries and an empty
-entry terminates that list.
+_记得我们在沿一条探测序列寻找一条记录时， 若碰到一个空桶， 便意味着这条序列到头了，所查的那条不在表中。它就仿若探测序列是一条记录列表， 一个空条目就是这条链表的终结。
 
-If we delete "biscuit" by simply clearing the Entry, then we break that probe
-sequence in the middle, leaving the trailing entries orphaned and unreachable.
-Sort of like removing a node from a linked list without relinking the pointer
-from the previous node to the next one.
+若我们通过直接清空 Entry 来删除 "biscuit"， 那么我们会把那条探测序列从中间打断， 留下其后的那些记录孤悬着、 够不着。类似于从链表中删去一个节点， 却没有把前一节点的指针重新指向后一节点。
 
-If we later try to look for "jam", we'd start at "bagel", stop at the next
-empty Entry, and never find it.
+若之后我们尝试查找 "jam"， 便会从 "bagel" 起始， 在下一个空 Entry 处停下， 永远找不到它。
 
-<img src="image/hash-tables/delete-2.png" alt="The 'biscuit' entry has been deleted from the hash table, breaking the chain." />
+<img src="image/hash-tables/delete-2.png" alt=" 'biscuit' 已从哈希表中删除， 打断了那条链。" />
 
-To solve this, most implementations use a trick called <span
-name="tombstone">**tombstones**</span>. Instead of clearing the entry on
-deletion, we replace it with a special sentinel entry called a "tombstone". When
-we are following a probe sequence during a lookup, and we hit a tombstone, we
-*don't* treat it like an empty slot and stop iterating. Instead, we keep going
-so that deleting an entry doesn't break any implicit collision chains and we can
-still find entries after it.
+为了解决这一问题， 大多数实现都使用了一个叫做 <span name="tombstone"> **墓碑**</span> 的把戏。不是在删除时直接清空该条目， 我们将其替换为一个特殊的哨兵条目， 叫做 "墓碑"。在沿一条探测序列查找之中， 若碰到一个墓碑， 我们 *不* 会将其视为一个空槽而停下探测。取而代之， 我们会继续向下， 以确保删除一条记录不会打断任何隐式冲突链， 我们在它之后还能够找到那些记录_。
 
-<img src="image/hash-tables/delete-3.png" alt="Instead of deleting 'biscuit', it's replaced with a tombstone." />
+<img src="image/hash-tables/delete-3.png" alt=" 'biscuit' _并未被删除， 而是被换成了一座墓碑。" />
 
-The code looks like this:
+代码如此：
 
 ^code table-delete
 
-First, we find the bucket containing the entry we want to delete. (If we don't
-find it, there's nothing to delete, so we bail out.) We replace the entry with a
-tombstone. In clox, we use a `NULL` key and a `true` value to represent that,
-but any representation that can't be confused with an empty bucket or a valid
-entry works.
+首先， 我们找到装着想删的条目的那个桶。（如果找不到， 那么便没什么好删的， 直接走人就是。）我们将那条条目替换为一座墓碑。在 clox 中， 我们用一个 `NULL` 键与一个 `true` 值来表示它， 但任何不会与空桶或有效条目混淆的表示法都行_。
 
 <aside name="tombstone">
 
-<img src="image/hash-tables/tombstone.png" alt="A tombstone enscribed 'Here lies entry biscuit &rarr; 3.75, gone but not deleted'." />
+<img src="image/hash-tables/tombstone.png" alt=" _一座墓碑， 上刻 'Here lies entry biscuit &rarr; 3.75, gone but not deleted'。" />
 
 </aside>
 
-That's all we need to do to delete an entry. Simple and fast. But all of the
-other operations need to correctly handle tombstones too. A tombstone is a sort
-of "half" entry. It has some of the characteristics of a present entry, and some
-of the characteristics of an empty one.
+这就是删除一条记录所需做的全部。简单而高速。但其他操作也得能够正确地应对墓碑。一座墓碑是一种 "半截子" 的条目。它有一些已存在条目的特性， 也有一些空条目的特性。
 
-When we are following a probe sequence during a lookup, and we hit a tombstone,
-we note it and keep going.
+当我们沿一条探测序列查找之时， 若碰到一座墓碑， 我们记下它， 并继续向下。
 
 ^code find-tombstone (2 before, 2 after)
 
-The first time we pass a tombstone, we store it in this local variable:
+我们第一次经过一座墓碑时， 会将它存进这个局部变量之中_：
 
 ^code find-entry-tombstone (1 before, 1 after)
 
-If we reach a truly empty entry, then the key isn't present. In that case, if we
-have passed a tombstone, we return its bucket instead of the later empty one. If
-we're calling `findEntry()` in order to insert a node, that lets us treat the
-tombstone bucket as empty and reuse it for the new entry.
+_如果我们到了一个真正为空的条目， 那么所查的键不在表中。此时， 若我们曾经经过一座墓碑， 我们便返回那座墓碑所在的桶， 而不是之后那个空桶。如果我们正在用_ `findEntry()` _准备插入一条记录， 那样便可以把那座墓碑当作空槽来回收复用， 将新条目放进其中。
 
-Reusing tombstone slots automatically like this helps reduce the number of
-tombstones wasting space in the bucket array. In typical use cases where there
-is a mixture of insertions and deletions, the number of tombstones grows for a
-while and then tends to stabilize.
+这种自动回收墓碑槽位的做法有助于减少那些在桶数组中浪费空间的墓碑数量。在典型的插入与删除并存的使用情景下， 墓碑数量会先增多一段， 之后往往便会趋于稳定。
 
-Even so, there's no guarantee that a large number of deletes won't cause the
-array to be full of tombstones. In the very worst case, we could end up with
-*no* empty buckets. That would be bad because, remember, the only thing
-preventing an infinite loop in `findEntry()` is the assumption that we'll
-eventually hit an empty bucket.
+即使如此， 也没有什么保证能避免大量删除导致整桶数组都被墓碑占满的极端情形。在最坏的情况下， 我们可能会走到一个*没有**空桶可用的地步。这很糟， 因为别忘了， 保证 `findEntry()` 不会陷入无限循环的唯一前提就是我们最终能碰到一个空桶。
 
-So we need to be thoughtful about how tombstones interact with the table's load
-factor and resizing. The key question is, when calculating the load factor,
-should we treat tombstones like full buckets or empty ones?
+于是我们得细致地考量墓碑与该表装载因子及扩容的交互。关键问题在于： 在计算装载因子之时， 我们应该将墓碑视为满桶， 还是空桶呢？
 
-### Counting tombstones
+### 墓碑计数
 
-If we treat tombstones like full buckets, then we may end up with a bigger array
-than we probably need because it artificially inflates the load factor. There
-are tombstones we could reuse, but they aren't treated as unused so we end up
-growing the array prematurely.
+若我们将墓碑视为满桶， 那么数组可能会比我们实际需要的还大—— 因为装载因子被人为地拔高了。有些墓碑可以被回收复用， 却没有被当作未占用来计算， 于是我们便会过早扩容。
 
-But if we treat tombstones like empty buckets and *don't* include them in the
-load factor, then we run the risk of ending up with *no* actual empty buckets to
-terminate a lookup. An infinite loop is a much worse problem than a few extra
-array slots, so for load factor, we consider tombstones to be full buckets.
+但若我们将墓碑视为空桶而 *不* 将其纳入装载因子， 便有可能走到 *没有**任何真正空桶可以用作查找终止的地步。无限循环是一个比多几个额外数组槽位恶劣得多的问题， 于是对装载因子而言， 我们认为墓碑是满桶。
 
-That's why we don't reduce the count when deleting an entry in the previous
-code. The count is no longer the number of entries in the hash table, it's the
-number of entries plus tombstones. That implies that we increment the count
-during insertion only if the new entry goes into an entirely empty bucket.
+这便是我们在之前那段代码中删除条目时并不递减计数的原因。计数不再是该哈希表中的条目数， 而是条目数加上墓碑数。这意味着， 我们只在插入的新条目进入一个完全为空的桶之时才会递增计数。
 
 ^code set-increment-count (1 before, 2 after)
 
-If we are replacing a tombstone with a new entry, the bucket has already been
-accounted for and the count doesn't change.
+如果我们正在用一座墓碑替换一条新条目， 那个桶已经被计入， 计数不会改变。
 
-When we resize the array, we allocate a new array and re-insert all of the
-existing entries into it. During that process, we *don't* copy the tombstones
-over. They don't add any value since we're rebuilding the probe sequences
-anyway, and would just slow down lookups. That means we need to recalculate the
-count since it may change during a resize. So we clear it out:
+当我们对桶数组进行扩容时， 我们会申请一份新桶数组， 将现有条目重新插入其中。在这个过程中， 我们 *不* 会将墓碑复制过去。它们在如今重新搭建探测序列的过程中不添任何价值， 反而会拖慢查找的速度。这意味着我们需要重新计算一下计数， 因为扩容过程中它可能会变。于是我们将其清零：
 
 ^code resize-init-count (2 before, 1 after)
 
-Then each time we find a non-tombstone entry, we increment it.
+接着， 每找到一条非墓碑的条目， 我们便递增它一次。
 
 ^code resize-increment-count (1 before, 1 after)
 
-This means that when we grow the capacity, we may end up with *fewer* entries in
-the resulting larger array because all of the tombstones get discarded. That's a
-little wasteful, but not a huge practical problem.
+这意味着当我们扩容后， 最终得到的那份更大数组里的条目数可能会比扩容前*更少**—— 所有墓碑在扩容过程中都被丢弃了。这有些浪费， 但在实践中算不上大问题。
 
-I find it interesting that much of the work to support deleting entries is in
-`findEntry()` and `adjustCapacity()`. The actual delete logic is quite simple
-and fast. In practice, deletions tend to be rare, so you'd expect a hash table
-to do as much work as it can in the delete function and leave the other
-functions alone to keep them faster. With our tombstone approach, deletes are
-fast, but lookups get penalized.
+我觉得有趣的是， 为了支持删除条目所做的大部分工作其实落在 `findEntry()` 与 `adjustCapacity()` 两个函数中。真正执行删除的那段代码反而简单而高速。在实践中， 删除操作通常较少出现， 于是你大概会期望一张哈希表在删除函数里尽可能多地把活干完， 好让其他函数保持轻装， 以换取更高的速度。在我们这种墓碑路线下， 删除本身很快， 但查找会因此付出代价。
 
-I did a little benchmarking to test this out in a few different deletion
-scenarios. I was surprised to discover that tombstones did end up being faster
-overall compared to doing all the work during deletion to reinsert the affected
-entries.
+我跑几轮小型基准试了不同的删除场景， 意外地发现墓碑整体上比那些把所需的工作全部放进删除函数、 去重新插入受影响的那些记录的做法还要快。
 
-But if you think about it, it's not that the tombstone approach pushes the work
-of fully deleting an entry to other operations, it's more that it makes deleting
-*lazy*. At first, it does the minimal work to turn the entry into a tombstone.
-That can cause a penalty when later lookups have to skip over it. But it also
-allows that tombstone bucket to be reused by a later insert too. That reuse is a
-very efficient way to avoid the cost of rearranging all of the following
-affected entries. You basically recycle a node in the chain of probed entries.
-It's a neat trick.
+但细想一下， 这并不是墓碑路线把完整删除一条记录的工作推给了其他操作， 而是它使删除变得 *懒惰* 了。一开始， 它只做最低限度的工作把那条记录变成了一座墓碑。这会导致后续的查找不得不跨过它， 从而付出性能代价。但与此同时， 它也让那座墓碑槽有可能被后续的插入回收复用。这种回收就是一种极其高效的避免重新排列所有受影响后续条目的方法。你基本上在探测序列的链条上回收了一节节点。这是一个精巧的把戏。
 
-## String Interning
+## 字符串驻留
 
-We've got ourselves a hash table that mostly works, though it has a critical
-flaw in its center. Also, we aren't using it for anything yet. It's time to
-address both of those and, in the process, learn a classic technique used by
-interpreters.
+我们现在手头有了一张大致能用的哈希表， 但它核心有一处致命的漏洞。同时， 我们也暂时没有派上任何用场。是时候一并解决这两件事， 顺便学一招解释器的经典手段了。
 
-The reason the hash table doesn't totally work is that when `findEntry()` checks
-to see if an existing key matches the one it's looking for, it uses `==` to
-compare two strings for equality. That only returns true if the two keys are the
-exact same string in memory. Two separate strings with the same characters
-should be considered equal, but aren't.
+这张哈希表不完美的原因在于： `findEntry()` 在检查已存在键是否匹配时， 使用的是 `==` 来比较两条字符串是否相等。那只在两条键是内存中完全相同的字符串时才返回 _true_。两份字符相同却各自存在的不同字符串本应被视为相等， 却因此而不被认为等。
 
-Remember, back when we added strings in the last chapter, we added [explicit
-support to compare the strings character-by-character][equals] in order to get
-true value equality. We could do that in `findEntry()`, but that's <span
-name="hash-collision">slow</span>.
+记得我们在之前添加字符串的那章中， 为了让值相等具有正确的语义， 特意 [添加了逐字节比较的支持_ *][equals]。_我们可以那样在_ `findEntry()` _里干， 但_ <span name="hash-collision"> _那很慢</span>。
 
 [equals]: strings.html#operations-on-strings
 
 <aside name="hash-collision">
 
-In practice, we would first compare the hash codes of the two strings. That
-quickly detects almost all different strings -- it wouldn't be a very good hash
-function if it didn't. But when the two hashes are the same, we still have to
-compare characters to make sure we didn't have a hash collision on different
-strings.
+实践中， 我们会先比较两条字符串的哈希值。若哈希值不同， 两条字符串几乎一定不同—— 若频繁碰上这种情况， 这就算不上一个好的哈希函数了。但碰上哈希冲突之后， 我们仍得逐字符地检查以确保两条不同的字符串没有凑巧哈希到同一值。
 
 </aside>
 
-Instead, we'll use a technique called **string interning**. The core problem is
-that it's possible to have different strings in memory with the same characters.
-Those need to behave like equivalent values even though they are distinct
-objects. They're essentially duplicates, and we have to compare all of their
-bytes to detect that.
+取而代之， 我们将使用一种叫做**字符串驻留**的技巧。核心问题在于：内存中有可能存在多份具有同样字符的字符串。那些字符串需要被视为等价的值， 即使它们是彼此各自独立的对象。它们本质上是重复的， 而为了检测出这种重复， 我们就得逐字节地比较它们 。
 
-<span name="intern">String interning</span> is a process of deduplication. We
-create a collection of "interned" strings. Any string in that collection is
-guaranteed to be textually distinct from all others. When you intern a string,
-you look for a matching string in the collection. If found, you use that
-original one. Otherwise, the string you have is unique, so you add it to the
-collection.
+<span name="intern"> 字符串驻留</span> 是一个去重过程。我们创建一个 " 驻留" 字符串的集合。那个集合中的任何一条字符串， 都与其他所有在文本上各不相同。当你驻留一条字符串时， 你先在集合中找一下是否存在与之匹配的字符串。若找到了， 就用上那一条。若找不到， 说明你手上这条是独一无二的， 于是将它添加到集合中_。
 
 <aside name="intern">
 
-I'm guessing "intern" is short for "internal". I think the idea is that the
-language's runtime keeps its own "internal" collection of these strings, whereas
-other strings could be user created and floating around in memory. When you
-intern a string, you ask the runtime to add the string to that internal
-collection and return a pointer to it.
+_我猜_ "intern" _是_ "internal" _的缩写。我的理解是，该语言的运行时自己维护着一套 "内部" 的这些字符串集合， 而其他字符串则可能是用户自己创建、 散落于内存各段。当你驻留一条字符串时， 你就是请求运行时把该串添加到内部集合中， 并返回一个指向它的指针。
 
-Languages vary in how much string interning they do and how it's exposed to the
-user. Lua interns *all* strings, which is what clox will do too. Lisp, Scheme,
-Smalltalk, Ruby and others have a separate string-like type called "symbol" that
-is implicitly interned. (This is why they say symbols are "faster" in Ruby.)
-Java interns constant strings by default, and provides an API to let you
-explicitly intern any string you give it.
+各语言对驻留的接受程度各不相同。Lua 对 *所* 有字符串进行驻留， clox 也将如此。Lisp、Scheme、Smalltalk、Ruby 以及其他一些语言有一种叫做 "符号"(symbol)的类似字符串的类型， 它们是隐式驻留的。（这也是为什么人们说_ Ruby _中的符号更 "快 "的原因。）Java 对常量字符串默认进行驻留， 并提供一个 API 让你可以显式驻留任意给定的字符串。
 
 </aside>
 
-In this way, you know that each sequence of characters is represented by only
-one string in memory. This makes value equality trivial. If two strings point
-to the same address in memory, they are obviously the same string and must be
-equal. And, because we know strings are unique, if two strings point to
-different addresses, they must be distinct strings.
+按这样做， 你便知道每一段字符序列都在内存中仅有一份表示。这使得值相等变得浅显易见。如果两条字符串指向内存中同一位置， 它们显然是同一条字符串， 必定相等。而由于我们知道每条字符串都是独一无二的， 若两条字符串指向不同的地址， 它们必定是不同的字符串。
 
-Thus, pointer equality exactly matches value equality. Which in turn means that
-our existing `==` in `findEntry()` does the right thing. Or, at least, it will
-once we intern all the strings. In order to reliably deduplicate all strings,
-the VM needs to be able to find every string that's created. We do that by
-giving it a hash table to store them all.
+于是， 指针相等便精确地匹配了值相等。这反过来又意味着， 我们既有的那个 `findEntry()` 里的 `==` 便做了正确的事儿。至少， 它会在我们驻留了所有字符串之后如此。为了可靠地去重所有字符串_， VM _需要能够找到每一条已创建的字符串。我们通过给它一张哈希表来存放它们全部来做到这一点。
 
 ^code vm-strings (1 before, 1 after)
 
-As usual, we need an include.
+按惯例， 我们需要一个 include。
 
 ^code vm-include-table (1 before, 1 after)
 
-When we spin up a new VM, the string table is empty.
+当我们拉起一台新 VM 时， 字符串表为空。
 
 ^code init-strings (1 before, 1 after)
 
-And when we shut down the VM, we clean up any resources used by the table.
+当我们关闭 VM 时， 我们收拾这张表使用过的那些资源。
 
 ^code free-strings (1 before, 1 after)
 
-Some languages have a separate type or an explicit step to intern a string. For
-clox, we'll automatically intern every one. That means whenever we create a new
-unique string, we add it to the table.
+某些语言有一种单独的类型或一个显式的步骤来驻留一条字符串。对 clox， 我们将自动驻留每一条字符串。这意味着每当我们创建一条新的、 独一无二的字符串， 我们都会将其添加到那张表中_。
 
 ^code allocate-store-string (1 before, 1 after)
 
-We're using the table more like a hash *set* than a hash *table*. The keys are
-the strings and those are all we care about, so we just use `nil` for the
-values.
+_我们用这张表更像一个哈希 *集* 而不是哈希 *表**。键就是那些字符串， 也是我们唯一关心的东西， 于是我们对值只用 `nil`。
 
-This gets a string into the table assuming that it's unique, but we need to
-actually check for duplication before we get here. We do that in the two
-higher-level functions that call `allocateString()`. Here's one:
+这段假设该串是独一无二的便会将它添加到表中， 但我们还得在到达这儿之前实际地检查是否重复。我们在那些会调用 `allocateString()` 的高层函数里做这件事。这是其中一个_：
 
 ^code copy-string-intern (1 before, 1 after)
 
-When copying a string into a new LoxString, we look it up in the string table
-first. If we find it, instead of "copying", we just return a reference to that
-string. Otherwise, we fall through, allocate a new string, and store it in the
-string table.
+_在把一条字符串复制进一个新的 LoxString 之前， 我们先在字符串表中找一下。若找到了， 就不再" 复製"， 而是直接返回一个对该串的引用。否则， 我们落到下面去分配一条新字符串， 并将它存进字符串表。
 
-Taking ownership of a string is a little different.
+获取现有字符串所有权的路径有些不同_。
 
 ^code take-string-intern (1 before, 1 after)
 
-Again, we look up the string in the string table first. If we find it, before we
-return it, we free the memory for the string that was passed in. Since ownership
-is being passed to this function and we no longer need the duplicate string,
-it's up to us to free it.
+_同样， 我们先在字符串表中查找。若找到了， 在返回之前， 我们会释放传入的那份字符串所占用的内存。由于所有权已经转交给这个函数， 而我们不再需要那份重复的字符串， 自然应由我们来释放它。
 
-Before we get to the new function we need to write, there's one more include.
+在我们到达那个需要去写的新函数之前， 还有一个_ include _要处理。
 
 ^code object-include-table (1 before, 1 after)
 
-To look for a string in the table, we can't use the normal `tableGet()` function
-because that calls `findEntry()`, which has the exact problem with duplicate
-strings that we're trying to fix right now. Instead, we use this new function:
+在该表中查找字符串时， 我们不能用那个正常的 `tableGet()` 函数， 因为那个函数会调用 `findEntry()`， 而 _findEntry()` _正好有我们现在试图修的那个重复字符串问题。取而代之， 我们使用这个新函数：
 
 ^code table-find-string-h (1 before, 2 after)
 
-The implementation looks like so:
+实现如此_：
 
 ^code table-find-string
 
-It appears we have copy-pasted `findEntry()`. There is a lot of redundancy, but
-also a couple of key differences. First, we pass in the raw character array of
-the key we're looking for instead of an ObjString. At the point that we call
-this, we haven't created an ObjString yet.
+_看起来我们粘贴了_ `findEntry()` _的代码。有不少冗余， 但也有两处关键不同。首先， 我们传入的是键的原始字符数组， 而不是一个 ObjString。在我们调用这个函数的那一刻， 我们还没有创建出那个 ObjString 呢。
 
-Second, when checking to see if we found the key, we look at the actual strings.
-We first see if they have matching lengths and hashes. Those are quick to check
-and if they aren't equal, the strings definitely aren't the same.
+其次， 在检查是否找到了键之时， 我们看的是那些实际的字符串。我们先检查它们是否具有匹配的长度与哈希值。那些都是很快的检查， 若不相等， 这些字符串必定不同。
 
-If there is a hash collision, we do an actual character-by-character string
-comparison. This is the one place in the VM where we actually test strings for
-textual equality. We do it here to deduplicate strings and then the rest of the
-VM can take for granted that any two strings at different addresses in memory
-must have different contents.
+若碰上了哈希冲突， 我们便逐字符地对照。这是整款 VM 中唯一一处对字符串进行文本相等检查的地方。我们在此处去重字符串， 接着其余部分的 VM 便可以默认地以为： 内存地址不同的两条字符串一定具有不同的内容。
 
-In fact, now that we've interned all the strings, we can take advantage of it in
-the bytecode interpreter. When a user does `==` on two objects that happen to be
-strings, we don't need to test the characters any more.
+事实上， 如今我们已驻留了所有字符串， 我们在字节码解释器中可以顺便利用这一点。当用户对两个对象进行 `==` 比较、 而这两个对象恰好都是字符串之时， 我们就不用再逐字节检查了_。
 
 ^code equal (1 before, 1 after)
 
-We've added a little overhead when creating strings to intern them. But in
-return, at runtime, the equality operator on strings is much faster. With that,
-we have a full-featured hash table ready for us to use for tracking variables,
-instances, or any other key-value pairs that might show up.
+_我们在创建字符串时付出了一点开销去驻留它们。但作为回报， 字符串上的相等运算在运行时快了许多。有了这一切， 我们便有了一张功能齐备的哈希表， 随时可以用来追踪变量、 实例或任何其他可能冒出来的键/值对。
 
-We also sped up testing strings for equality. This is nice for when the user
-does `==` on strings. But it's even more critical in a dynamically typed
-language like Lox where method calls and instance fields are looked up by name
-at runtime. If testing a string for equality is slow, then that means looking up
-a method by name is slow. And if *that's* slow in your object-oriented language,
-then *everything* is slow.
+同时， 我们也加快了字符串相等的测试。这对于用户对字符串使用 `==` 很有帮助。但对一门类_ Lox _这样的动态类型语言而言， 这一点更为重要：方法调用与实例字段的查找都是按名字在运行时进行的。如果测试字符串是否相等的速度很慢， 那就意味着按名字查找方法的速度也慢。而在一门面向对象的语言中， *若* 那很慢， 便* 是* 一切都* 慢。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  In clox, we happen to only need keys that are strings, so the hash table we
-    built is hardcoded for that key type. If we exposed hash tables to Lox users
-    as a first-class collection, it would be useful to support different kinds
-    of keys.
+1.  在 clox 中， 我们恰好只需要支持字符串类型的键， 于是我们构建的那张哈希表被硬编码为只接受这种键类型。若我们将哈希表作为一阶对象暴露给 Lox 用户， 那么支持不同类型的键便会很有用。
 
-    Add support for keys of the other primitive types: numbers, Booleans, and
-    `nil`. Later, clox will support user-defined classes. If we want to support
-    keys that are instances of those classes, what kind of complexity does that
-    add?
+    为其他基本类型的键—— 数字、 布尔与_ `nil`—— _添加支持。之后 clox 将支持用户自己定义的类。若我们想让那些类的实例本身也能作为键， 那会带来什么样的复杂度_？
 
-1.  Hash tables have a lot of knobs you can tweak that affect their performance.
-    You decide whether to use separate chaining or open addressing. Depending on
-    which fork in that road you take, you can tune how many entries are stored
-    in each node, or the probing strategy you use. You control the hash
-    function, load factor, and growth rate.
+1.  _哈希表有大量可以调整的旋钮， 它们都会影响性能。你决定使用链地址法还是开放寻址。取决于走哪条路， 你可以调整每个节点的存放条目数、 或者采用何种探测策略。你控制哈希函数、 装载因子与扩容速率。
 
-    All of this variety wasn't created just to give CS doctoral candidates
-    something to <span name="publish">publish</span> theses on: each has its
-    uses in the many varied domains and hardware scenarios where hashing comes
-    into play. Look up a few hash table implementations in different open source
-    systems, research the choices they made, and try to figure out why they did
-    things that way.
+    这些多样性并不是专门为了给_ CS _博士生_ <span name="publish"> _发论文</span> 创造东西而存在的：在各种千差万别的领域与硬件场景中， 它们各有用武之地。看一下几款不同开源系统中的哈希表实现， 研究它们做出的抉择， 并试着弄明白它们为什么要那样做_。
 
     <aside name="publish">
 
-    Well, at least that wasn't the *only* reason they were created. Whether that
-    was the *main* reason is up for debate.
+    _至少那不是它们被 *创* 造出来的*唯* 一* 原因。至于这* 是* 不* 是* 最* 主* 要的* 那* 一* 条*， 那* 就* 见* 仁见智了_。
 
     </aside>
 
-1.  Benchmarking a hash table is notoriously difficult. A hash table
-    implementation may perform well with some keysets and poorly with others. It
-    may work well at small sizes but degrade as it grows, or vice versa. It may
-    choke when deletions are common, but fly when they aren't. Creating
-    benchmarks that accurately represent how your users will use the hash table
-    is a challenge.
+1.  _给哈希表跑基准是出了名的难。一款哈希表实现对某些键集可能表现良好， 对其他却很糟糕。它可能在小尺寸时速度很快， 但随规模增长性能下降， 反之亦然。若删除操作常见， 它可能被噎住， 但若不常见便飞起。要创建出准确反映用户如何使用你的哈希表的基准， 本身就是一大挑战。
 
-    Write a handful of different benchmark programs to validate our hash table
-    implementation. How does the performance vary between them? Why did you
-    choose the specific test cases you chose?
+    写若干个不同的基准程序， 来验证我们的哈希表实现。它们之间的性能变化如何？你为什么挑选了那些具体的测试用例？
 
 </div>

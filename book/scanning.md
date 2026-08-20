@@ -1,136 +1,91 @@
-> Take big bites. Anything worth doing is worth overdoing.
->
-> <cite>Robert A. Heinlein, <em>Time Enough for Love</em></cite>
+# 扫描
 
-The first step in any compiler or interpreter is <span
-name="lexing">scanning</span>. The scanner takes in raw source code as a series
-of characters and groups it into a series of chunks we call **tokens**. These
-are the meaningful "words" and "punctuation" that make up the language's
-grammar.
+> 大胆下口吧。值得做的事，就值得做过头。
+>
+> <cite>罗伯特·海因莱因，<em>《时间足够你爱》</em></cite>
+
+无论是编译器还是解释器，其首要的工作步骤便是<span
+name="lexing">**扫描**</span>（scanning）。扫描器接受一串原始的源代码字符，并将它们切分成一系列的代码块，我们称之为**词法单元**（token）。这些代码块构成了程序设计语言文法中那些具有特定意义的"词汇"与"标点符号"。
 
 <aside name="lexing">
 
-This task has been variously called "scanning" and "lexing" (short for "lexical
-analysis") over the years. Way back when computers were as big as Winnebagos but
-had less memory than your watch, some people used "scanner" only to refer to the
-piece of code that dealt with reading raw source code characters from disk and
-buffering them in memory. Then "lexing" was the subsequent phase that did useful
-stuff with the characters.
+多年来，这项工作在不同场合下有过不同的叫法——人们有时称之为"扫描"（scanning），有时又称之为"词法化"（lexing，"lexical analysis"的简写）。早在计算机还大如房车、内存却比你的手表还小的那个年代，有些人仅用"扫描器"（scanner）一词来指代那些负责从磁盘读取源代码原始字符，并将它们缓存至内存的代码片段；而"词法化"则是紧随其后、对这些字符施以有用处理的下一阶段。
 
-These days, reading a source file into memory is trivial, so it's rarely a
-distinct phase in the compiler. Because of that, the two terms are basically
-interchangeable.
+如今，将源文件读取至内存已是不值一提的小事，因此这一过程在编译器中已鲜少再独立成一"阶段"。基于此，这两个术语在当下基本可以互换使用。
 
 </aside>
 
-Scanning is a good starting point for us too because the code isn't very hard --
-pretty much a `switch` statement with delusions of grandeur. It will help us
-warm up before we tackle some of the more interesting material later. By the end
-of this chapter, we'll have a full-featured, fast scanner that can take any
-string of Lox source code and produce the tokens that we'll feed into the parser
-in the next chapter.
+对我们而言，扫描同样是一个不错的起点，因为相关的代码并不算太复杂——说白了，无非是一个自我感觉良好的 `switch` 语句罢了。它将帮助我们在应对后续那些更为有趣的章节之前，先活动活动筋骨。待到本章结束时，我们手头将会拥有一款功能完备、运行迅捷的扫描器，它能接收任意一段 Lox 源代码，并产出一组词法单元以供下一章中的语法分析器消化。
 
-## The Interpreter Framework
+## 解释器框架
 
-Since this is our first real chapter, before we get to actually scanning some
-code we need to sketch out the basic shape of our interpreter, jlox. Everything
-starts with a class in Java.
+既然这是我们的第一个真正意义上的章节，在我们真正动手去扫描一些代码之前，我们需要先勾勒出 jlox 解释器的基本雏形。一切都要从一个 Java 类开始。
 
 ^code lox-class
 
 <aside name="64">
 
-For exit codes, I'm using the conventions defined in the UNIX
-["sysexits.h"][sysexits] header. It's the closest thing to a standard I could
-find.
+关于退出码，我使用的是 UNIX 中
+["sysexits.h"][sysexits]
+头文件里定义的惯例。这已是我所能找到的、距离"标准"最近的东西了。
 
-[sysexits]: https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropos=0&sektion=0&manpath=FreeBSD+4.3-RELEASE&format=html
+[sysexits]: https://www.freebsd.org/cgi/man.cgi?query=sysexits&amp;apropos=0&amp;sektion=0&amp;manpath=FreeBSD+4.3-RELEASE&amp;format=html
 
 </aside>
 
-Stick that in a text file, and go get your IDE or Makefile or whatever set up.
-I'll be right here when you're ready. Good? OK!
+把它放进一个文本文件里，然后去折腾你的 IDE 或者 Makefile，无论你用什么方式都好。我在这里等你。搞定了？好的！
 
-Lox is a scripting language, which means it executes directly from source. Our
-interpreter supports two ways of running code. If you start jlox from the
-command line and give it a path to a file, it reads the file and executes it.
+Lox 是一门脚本语言，这意味着它直接基于源代码执行。我们的解释器支持两种运行代码的方式。如果你在命令行中启动 jlox 并向它传入一个文件路径，它便会读取该文件并执行之。
 
 ^code run-file
 
-If you want a more intimate conversation with your interpreter, you can also run
-it interactively. Fire up jlox without any arguments, and it drops you into a
-prompt where you can enter and execute code one line at a time.
+如果你想与解释器进行一场更为亲密的对话，你也可以以交互方式运行它。无需传入任何参数即可启动 jlox，此时它会把你带到一个提示符前，使你能够一行一行地输入并执行代码。
 
 <aside name="repl">
 
-An interactive prompt is also called a "REPL" (pronounced like "rebel" but with
-a "p"). The name comes from Lisp where implementing one is as simple as
-wrapping a loop around a few built-in functions:
+这种交互式提示符也被称为 "REPL"（读作 "rebel"，但尾巴上要加个 "p"）。这个名字源自 Lisp——在 Lisp 中，要实现一个 REPL，简单到只需在一个循环里包上几个内置函数即可：
 
 ```lisp
 (print (eval (read)))
 ```
 
-Working outwards from the most nested call, you **R**ead a line of input,
-**E**valuate it, **P**rint the result, then **L**oop and do it all over again.
+从最内层调用往外看，你会先**R**ead 读取一行输入，然后**E**valuate 求值，再**P**rint 打印结果，最后**L**oop 循环往复。
 
 </aside>
 
 ^code prompt
 
-The `readLine()` function, as the name so helpfully implies, reads a line of
-input from the user on the command line and returns the result. To kill an
-interactive command-line app, you usually type Control-D. Doing so signals an
-"end-of-file" condition to the program. When that happens `readLine()` returns
-`null`, so we check for that to exit the loop.
+顾名思义，`readLine()` 函数用于从命令行读取用户输入的一行内容并返回其结果。要终止一个交互式命令行程序，通常需要按下 Ctrl-D。此举相当于向程序发出一个"文件结束"（end-of-file）信号。当这种情况发生时，`readLine()` 会返回 `null`，于是我们便以此作为退出循环的判据。
 
-Both the prompt and the file runner are thin wrappers around this core function:
+无论是提示符模式还是文件运行模式，都只是包裹了如下这一核心函数的薄薄一层皮囊：
 
 ^code run
 
-It's not super useful yet since we haven't written the interpreter, but baby
-steps, you know? Right now, it prints out the tokens our forthcoming scanner
-will emit so that we can see if we're making progress.
+它现在还不是特别有用，因为我们还没把解释器写完——但万事开头难，你说是吧？眼下，它只会将我们即将推出的扫描器所产出的那些词法单元打印出来，好让我们得以窥见进度是否如预期推进。
 
-### Error handling
+### 错误处理
 
-While we're setting things up, another key piece of infrastructure is *error
-handling*. Textbooks sometimes gloss over this because it's more a practical
-matter than a formal computer science-y problem. But if you care about making a
-language that's actually *usable*, then handling errors gracefully is vital.
+在我们搭建脚手架的过程中，另一项关键的基础设施便是 *错误处理*。教科书有时会一笔带过这部分内容，理由是它更多是一个工程实践问题，而非形式化的计算机科学问题。但是，如果你希望打造一门真正**可用**的程序设计语言，那么优雅地处理错误便是至关重要的。
 
-The tools our language provides for dealing with errors make up a large portion
-of its user interface. When the user's code is working, they aren't thinking
-about our language at all -- their headspace is all about *their program*. It's
-usually only when things go wrong that they notice our implementation.
+我们这门语言为应对错误所提供的种种工具，构成了其用户界面中相当大的一块。当用户的代码一切正常时，他们压根不会去考虑我们这门语言——他们的脑子里装的都是**他们自己的程序**。而往往是当问题出现时，他们才会注意到我们这些幕后的实现。
 
-<span name="errors">When</span> that happens, it's up to us to give the user all
-the information they need to understand what went wrong and guide them gently
-back to where they are trying to go. Doing that well means thinking about error
-handling all through the implementation of our interpreter, starting now.
+<span name="errors">当</span>那一刻到来时，我们有责任向用户提供他们所需要的一切信息，帮助他们弄清楚到底哪里出了错，并温柔地引导他们回到他们原本想要去的方向。要做好这一点，意味着我们要从现在开始，在解释器实现的各个阶段都贯穿着对错误处理的思考。
 
 <aside name="errors">
 
-Having said all that, for *this* interpreter, what we'll build is pretty bare
-bones. I'd love to talk about interactive debuggers, static analyzers, and other
-fun stuff, but there's only so much ink in the pen.
+话虽如此，对于**这一版**解释器而言，我们即将构建的还算相当简陋。我很乐意和你聊聊交互式调试器、静态分析器以及其他有趣的东西，但无奈本书的墨水有限。
 
 </aside>
 
 ^code lox-error
 
-This `error()` function and its `report()` helper tells the user some syntax
-error occurred on a given line. That is really the bare minimum to be able to
-claim you even *have* error reporting. Imagine if you accidentally left a
-dangling comma in some function call and the interpreter printed out:
+这个 `error()` 函数及其 `report()` 帮助方法，会告诉用户：在某一指定的行号上，发生了一个语法错误。要想声称自己**拥有**错误报告功能，这实在是最低限度了。想象一下，如果你不小心在某个函数调用里遗留了一个悬空的逗号，然后解释器给你吐出这么一句：
 
 ```text
 Error: Unexpected "," somewhere in your code. Good luck finding it!
 ```
 
-That's not very helpful. We need to at least point them to the right line. Even
-better would be the beginning and end column so they know *where* in the line.
-Even better than *that* is to *show* the user the offending line, like:
+这可真谈不上有多贴心。我们至少得把他们指向正确的行号。更好一点的话，应该告知起始列与结束列，让他们清楚错误**具体**在行内的哪个位置。再好一档的话，便是直接将出错的那一行**展示**给用户，例如：
 
 ```text
 Error: Unexpected "," in argument list.
@@ -139,389 +94,247 @@ Error: Unexpected "," in argument list.
                                ^-- Here.
 ```
 
-I'd love to implement something like that in this book but the honest truth is
-that it's a lot of grungy string manipulation code. Very useful for users, but
-not super fun to read in a book and not very technically interesting. So we'll
-stick with just a line number. In your own interpreters, please do as I say and
-not as I do.
+我其实非常乐意在本书中实现类似这样的效果，但诚实地说，那将涉及到大量乏味的字符串处理代码。对用户来说固然非常实用，但放在书里读起来既不有趣，技术上也没什么看头。所以我们权且只用行号。在你自己打造解释器时，请务必嘴上听我的，而不要照着我做的来。
 
-The primary reason we're sticking this error reporting function in the main Lox
-class is because of that `hadError` field. It's defined here:
+我们将这个错误报告函数置于主 Lox 类中，主要原因便在于那个 `hadError` 字段。它在此处定义：
 
 ^code had-error (1 before)
 
-We'll use this to ensure we don't try to execute code that has a known error.
-Also, it lets us exit with a non-zero exit code like a good command line citizen
-should.
+我们将借此确保不会去执行那些已经知道存在错误的代码。同时，它还能让我们像一个称职的命令行工具那样，在出错时返回一个非零退出码。
 
 ^code exit-code (1 before, 1 after)
 
-We need to reset this flag in the interactive loop. If the user makes a mistake,
-it shouldn't kill their entire session.
+我们需要在交互式循环中重置这个标志位。如果用户犯了个错，不应该就此把他们整段会话都一刀切掉。
 
 ^code reset-had-error (1 before, 1 after)
 
-The other reason I pulled the error reporting out here instead of stuffing it
-into the scanner and other phases where the error might occur is to remind you
-that it's good engineering practice to separate the code that *generates* the
-errors from the code that *reports* them.
+我把错误报告抽离出来，而不是把它塞进扫描器以及其他可能发生错误的阶段里，还有另一个原因——是想提醒你：**将"产生"错误的代码与"报告"错误的代码分离开来**是一种良好的工程实践。
 
-Various phases of the front end will detect errors, but it's not really their
-job to know how to present that to a user. In a full-featured language
-implementation, you will likely have multiple ways errors get displayed: on
-stderr, in an IDE's error window, logged to a file, etc. You don't want that
-code smeared all over your scanner and parser.
+编译器前端的各个阶段都会检测到错误，但知道如何把错误展示给用户，并不是它们真正的工作。在一款功能完备的语言实现中，你大概会有多种展示错误的方式：输出到 stderr、显示在 IDE 的错误窗口中、记录到文件里，诸如此类。你可不想把这些代码弄得扫描器、语法分析器到处都是。
 
-Ideally, we would have an actual abstraction, some kind of <span
-name="reporter">"ErrorReporter"</span> interface that gets passed to the scanner
-and parser so that we can swap out different reporting strategies. For our
-simple interpreter here, I didn't do that, but I did at least move the code for
-error reporting into a different class.
+理想情况下，我们应该有一个真正的抽象——某种名为<span
+name="reporter">"ErrorReporter"</span>的接口——传给扫描器与语法分析器，从而我们可以方便地替换不同的报告策略。对于我们这个简易的解释器而言，我并没有那么做，但我至少还是把错误报告相关的代码挪到了一个不同的类中。
 
 <aside name="reporter">
 
-I had exactly that when I first implemented jlox. I ended up tearing it out
-because it felt over-engineered for the minimal interpreter in this book.
+我最初实现 jlox 的时候，确实就是那么做的。但最终我又把它拆了出来，因为对于本书中这枚小巧玲珑的解释器来说，这么做显得有些过度设计。
 
 </aside>
 
-With some rudimentary error handling in place, our application shell is ready.
-Once we have a Scanner class with a `scanTokens()` method, we can start running
-it. Before we get to that, let's get more precise about what tokens are.
+随着一套粗略但可用的错误处理机制就位，我们应用程序的骨架也就准备好了。一旦我们手头拥有了一个带 `scanTokens()` 方法的 Scanner 类，我们就可以真正开始运行它了。在我们一头扎进去之前，让我们先把"词法单元"这个概念琢磨得更精确一些。
 
-## Lexemes and Tokens
+## 词素与词法单元
 
-Here's a line of Lox code:
+这是 Lox 中的一行代码：
 
 ```lox
 var language = "lox";
 ```
 
-Here, `var` is the keyword for declaring a variable. That three-character
-sequence "v-a-r" means something. But if we yank three letters out of the
-middle of `language`, like "g-u-a", those don't mean anything on their own.
+这里，`var` 是声明变量的关键字。这个由三个字符构成的序列"v-a-r"自有其含义。但如果我们从 `language` 中间抽出三个字母，比如"g-u-a"，那它们本身却什么都不是。
 
-That's what lexical analysis is about. Our job is to scan through the list of
-characters and group them together into the smallest sequences that still
-represent something. Each of these blobs of characters is called a **lexeme**.
-In that example line of code, the lexemes are:
+这便是词法分析所要做的事情。我们的工作是逐个扫过这些字符，把它们归并成最小的、仍然能代表某种含义的字符序列。这些字符的"一团一伙"，我们称之为**词素**（lexeme）。在上面这行代码中，词素分别是：
 
-<img src="image/scanning/lexemes.png" alt="'var', 'language', '=', 'lox', ';'" />
+<img src="image/scanning/lexemes.png" alt="'var'、'language'、'='、'lox'、';'" />
 
-The lexemes are only the raw substrings of the source code. However, in the
-process of grouping character sequences into lexemes, we also stumble upon some
-other useful information. When we take the lexeme and bundle it together with
-that other data, the result is a token. It includes useful stuff like:
+词素仅仅是源代码中那些原始的子串而已。然而，在将字符序列归组为词素的过程中，我们也会顺带发现一些其它有用的信息。当我们拿到一个词素，并把这些附带数据打包在一起时，其结果便是一个**词法单元**（token）。它包含了一些实用的信息，比如：
 
-### Token type
+### 词法单元类型
 
-Keywords are part of the shape of the language's grammar, so the parser often
-has code like, "If the next token is `while` then do..." That means the parser
-wants to know not just that it has a lexeme for some identifier, but that it has
-a *reserved* word, and *which* keyword it is.
+关键字是程序设计语言文法形态的一部分，因此语法分析器常常需要这样的逻辑："如果下一个词法单元是 `while`，那么就……"这意味着语法分析器不仅希望知道自己手里握有某个标识符的词素，还希望知道它是否为**保留字**，以及**究竟是哪**一个关键字。
 
-The <span name="ugly">parser</span> could categorize tokens from the raw lexeme
-by comparing the strings, but that's slow and kind of ugly. Instead, at the
-point that we recognize a lexeme, we also remember which *kind* of lexeme it
-represents. We have a different type for each keyword, operator, bit of
-punctuation, and literal type.
+<span name="ugly">语法分析器</span>本可以粗暴地直接比较词素字符串来对词法单元进行分类，但这样做既慢又有些丑陋。不如这样：当我们识别出一个词素时，也一并记住它所代表的是**哪一种**词素。每一个关键字、运算符、一块标点以及一种字面量类型，我们都为其分别定义一个类型。
 
 <aside name="ugly">
 
-After all, string comparison ends up looking at individual characters, and isn't
-that the scanner's job?
+毕竟，字符串比较最终还是要落到逐字符的比较上去，而这难道不正是扫描器的工作吗？
 
 </aside>
 
 ^code token-type
 
-### Literal value
+### 字面量值
 
-There are lexemes for literal values -- numbers and strings and the like. Since
-the scanner has to walk each character in the literal to correctly identify it,
-it can also convert that textual representation of a value to the living runtime
-object that will be used by the interpreter later.
+有些词素对应着字面量值——数字、字符串，诸如此类。既然扫描器为了正确识别一个字面量，不得不逐字符地遍历它，那顺道把这种文本形式的值，转换为稍后解释器运行时将要使用的那个鲜活的运行时对象，也便是举手之劳。
 
-### Location information
+### 位置信息
 
-Back when I was preaching the gospel about error handling, we saw that we need
-to tell users *where* errors occurred. Tracking that starts here. In our simple
-interpreter, we note only which line the token appears on, but more
-sophisticated implementations include the column and length too.
+还记得我方才喋喋不休地向你布道的那段关于错误处理的内容吗？我们曾提及，需要告诉用户错误**发生在哪里**。对位置的追踪便是从这里起步的。在我们这枚小巧的解释器里，我们仅记录该词法单元出现在哪一行；但更为精密的实现还会同时记录列号与长度。
 
 <aside name="location">
 
-Some token implementations store the location as two numbers: the offset from
-the beginning of the source file to the beginning of the lexeme, and the length
-of the lexeme. The scanner needs to know these anyway, so there's no overhead to
-calculate them.
+有些词法单元的实现将位置存储为两个数字：从源文件起始处到词素起始处的偏移量，以及词素的长度。扫描器本来就需要知道这两个值，因此计算它们并不带来额外的开销。
 
-An offset can be converted to line and column positions later by looking back at
-the source file and counting the preceding newlines. That sounds slow, and it
-is. However, you need to do it *only when you need to actually display a line
-and column to the user*. Most tokens never appear in an error message. For
-those, the less time you spend calculating position information ahead of time,
-the better.
+偏移量日后可以通过回查源文件、统计此前的换行数，转换为具体的行列位置。这听起来似乎挺慢的，事实上也确实如此。然而，你**仅在需要向用户展示行列位置时**才需要这样做。大多数词法单元永远都不会出现在错误消息中——对于它们而言，越少预先计算位置信息，便越是省时。
 
 </aside>
 
-We take all of this data and wrap it in a class.
+我们将所有这些数据打包封装到一个类中。
 
 ^code token-class
 
-Now we have an object with enough structure to be useful for all of the later
-phases of the interpreter.
+这下子，我们就拥有了一个结构丰满、足以应对后续解释器各个阶段的对象了。
 
-## Regular Languages and Expressions
+## 正则语言与正则表达式
 
-Now that we know what we're trying to produce, let's, well, produce it. The core
-of the scanner is a loop. Starting at the first character of the source code, it
-figures out what lexeme it belongs to, and consumes it and any following
-characters that are part of that lexeme. When it reaches the end of that lexeme,
-it emits a token.
+如今，我们已然清楚自己想要产出的东西是什么，那就开工吧——产出它。扫描器的核心是一个循环。扫描器从源代码的第一个字符起步，琢磨出这个字符属于哪一个词素，然后把这个字符以及该词素后续的所有字符统统吃掉。当它抵达该词素的末尾时，便吐出一个词法单元。
 
-Then it loops back and does it again, starting from the very next character in
-the source code. It keeps doing that, eating characters and occasionally, uh,
-excreting tokens, until it reaches the end of the input.
+然后它便折返回来，从源代码中的下一个字符开始，周而复始。它就这样不停地吞下字符，再时不时地，呃，"排泄"出词法单元，直到抵达输入的末尾。
 
 <span name="alligator"></span>
 
-<img src="image/scanning/lexigator.png" alt="An alligator eating characters and, well, you don't want to know." />
+<img src="image/scanning/lexigator.png" alt="一只鳄鱼正在吞食字符，至于后续……你不会想知道的。" />
 
 <aside name="alligator">
 
-Lexical analygator.
+所谓"词法小鳄鱼"（Lexical analygator）。
 
 </aside>
 
-The part of the loop where we look at a handful of characters to figure out
-which kind of lexeme it "matches" may sound familiar. If you know regular
-expressions, you might consider defining a regex for each kind of lexeme and
-using those to match characters. For example, Lox has the same rules as C for
-identifiers (variable names and the like). This regex matches one:
+这个循环里需要窥视少数几个字符以判断它"匹配"的是哪一类词素的部分，听起来或许并不陌生。如果你熟悉正则表达式，你大概会琢磨：能否为每一类词素定义一条正则，然后让它们来匹配字符？比如，Lox 的标识符（变量名以及类似的东西）与 C 有着同样的规则。下列正则便可匹配一个标识符：
 
 ```text
-[a-zA-Z_][a-zA-Z_0-9]*
+[a-zA-Z_][a-zA-Z**0-9]*
 ```
 
-If you did think of regular expressions, your intuition is a deep one. The rules
-that determine how a particular language groups characters into lexemes are
-called its <span name="theory">**lexical grammar**</span>. In Lox, as in most
-programming languages, the rules of that grammar are simple enough for the
-language to be classified a **[regular language][]**. That's the same "regular"
-as in regular expressions.
+如果你确实想到了正则表达式，那你的直觉相当深刻。决定某门程序设计语言如何将字符归组为词素的那些规则，我们称之为它的<span name="theory">**词法文法**</span>。在 Lox 中，正如在大多数程序设计语言中一样，该文法的规则足够简单，以至于这门语言可以被归类为一种**正则语言**（regular language）。这里的"正则"与正则表达式中的"正则"含义相同。
 
-[regular language]: https://en.wikipedia.org/wiki/Regular_language
+[regular language]: https://en.wikipedia.org/wiki/Regular**language
 
 <aside name="theory">
 
-It pains me to gloss over the theory so much, especially when it's as
-interesting as I think the [Chomsky hierarchy][] and [finite-state machines][]
-are. But the honest truth is other books cover this better than I could.
-[*Compilers: Principles, Techniques, and Tools*][dragon] (universally known as
-"the Dragon Book") is the canonical reference.
+我对不得不在书中对理论部分如此一笔带过感到十分痛心——尤其是当我个人也觉得[乔姆斯基谱系][chomsky hierarchy]以及[有限状态机][finite-state machines]饶有趣味时。但实情是，其他书籍对这些内容的论述会比我要好得多。[*编译原理*][dragon]（人称"龙书"）便是这方面公认的权威之作。
 
 [chomsky hierarchy]: https://en.wikipedia.org/wiki/Chomsky_hierarchy
 [dragon]: https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools
-[finite-state machines]: https://en.wikipedia.org/wiki/Finite-state_machine
+[finite-state machines]: https://en.wikipedia.org/wiki/Finite-state**machine
 
 </aside>
 
-You very precisely *can* recognize all of the different lexemes for Lox using
-regexes if you want to, and there's a pile of interesting theory underlying why
-that is and what it means. Tools like [Lex][] or
-[Flex][] are designed expressly to let you do this -- throw a handful of regexes
-at them, and they give you a complete scanner <span name="lex">back</span>.
+你确实可以——如果你愿意的话——使用正则表达式来精确地识别 Lox 中所有不同种类的词素；其背后还蕴含着一大堆饶有趣味的理论，解释着为什么这是可行的，以及它的深层含义。像 [Lex][] 或 [Flex][] 这样的工具，正是为此而生——向它们投喂一把正则表达式，它们便会回馈给你一枚完整的扫描器<span name="lex">回来</span>。
 
 <aside name="lex">
 
-Lex was created by Mike Lesk and Eric Schmidt. Yes, the same Eric Schmidt who
-was executive chairman of Google. I'm not saying programming languages are a
-surefire path to wealth and fame, but we *can* count at least one
-mega billionaire among us.
+Lex 由 Mike Lesk 与 Eric Schmidt 共同打造。是的，就是那位曾任 Google 执行董事长的 Eric Schmidt。我倒不是说程序设计语言是通往财富与名声的必由之路，但我们之中确确实实诞生过亿万富翁。
 
 </aside>
 
 [lex]: http://dinosaur.compilertools.net/lex/
 [flex]: https://github.com/westes/flex
 
-Since our goal is to understand how a scanner does what it does, we won't be
-delegating that task. We're about handcrafted goods.
+既然我们的目标是搞懂扫描器究竟是如何完成其工作的，我们便不打算假手于人。我们即将亲手打造。
 
-## The Scanner Class
+## Scanner 类
 
-Without further ado, let's make ourselves a scanner.
+闲言少叙，我们这就来打造一个扫描器。
 
 ^code scanner-class
 
 <aside name="static-import">
 
-I know static imports are considered bad style by some, but they save me from
-having to sprinkle `TokenType.` all over the scanner and parser. Forgive me, but
-every character counts in a book.
+我知道某些人认为静态导入（static import）是有失风格的写法，但它能让我免于在扫描器与语法分析器中到处撒上 `TokenType.`。还请见谅——毕竟在书里，每一个字符都得精打细算。
 
 </aside>
 
-We store the raw source code as a simple string, and we have a list ready to
-fill with tokens we're going to generate. The aforementioned loop that does that
-looks like this:
+我们将原始的源代码以一个简单字符串的形式存储，并准备了一个列表，用于填充我们即将生成的词法单元。完成这项工作的那个循环，长这样：
 
 ^code scan-tokens
 
-The scanner works its way through the source code, adding tokens until it runs
-out of characters. Then it appends one final "end of file" token. That isn't
-strictly needed, but it makes our parser a little cleaner.
+扫描器自始至终地在源代码中推进，不断地往列表里添加词法单元，直至字符耗尽。随后它会再追加一个"文件结束"（end of file）词法单元。这并非严格必需，但它能让我们的语法分析器稍稍清爽一些。
 
-This loop depends on a couple of fields to keep track of where the scanner is in
-the source code.
+这个循环依赖于若干字段，用以记录扫描器当前在源代码中所处的位置。
 
 ^code scan-state (1 before, 2 after)
 
-The `start` and `current` fields are offsets that index into the string. The
-`start` field points to the first character in the lexeme being scanned, and
-`current` points at the character currently being considered. The `line` field
-tracks what source line `current` is on so we can produce tokens that know their
-location.
+`start` 与 `current` 字段是两个偏移量，用以索引到该字符串。`start` 指向当前正在扫描的这个词素的第一个字符，而 `current` 则指向当前正在被考察的那个字符。`line` 字段用以追踪 `current` 所处的源代码行号，这样我们便能产出带有位置信息的词法单元。
 
-Then we have one little helper function that tells us if we've consumed all the
-characters.
+接下来，我们还有一个不起眼的辅助函数，用来告诉我们是否已经吃光了所有的字符。
 
 ^code is-at-end
 
-## Recognizing Lexemes
+## 识别词素
 
-In each turn of the loop, we scan a single token. This is the real heart of the
-scanner. We'll start simple. Imagine if every lexeme were only a single character
-long. All you would need to do is consume the next character and pick a token type for
-it. Several lexemes *are* only a single character in Lox, so let's start with
-those.
+在循环的每一轮中，我们扫描出一个词法单元。这才是扫描器真正的心脏。我们先从简单的开始。假设每个词素都只有一个字符的长度——那么你所需要做的仅仅是吃掉下一个字符，并为之挑选一个词法单元类型即可。在 Lox 中，确实有好些个词素只有一个字符那么长，所以我们就先从它们开始。
 
 ^code scan-token
 
 <aside name="slash">
 
-Wondering why `/` isn't in here? Don't worry, we'll get to it.
+是不是好奇为什么 `/` 不在这里面？别急，我们马上就会讲到它。
 
 </aside>
 
-Again, we need a couple of helper methods.
+同样，我们需要几个辅助方法。
 
 ^code advance-and-add-token
 
-The `advance()` method consumes the next character in the source file and
-returns it. Where `advance()` is for input, `addToken()` is for output. It grabs
-the text of the current lexeme and creates a new token for it. We'll use the
-other overload to handle tokens with literal values soon.
+`advance()` 方法消化源文件中的下一个字符并将其返回。如果说 `advance()` 负责"输入"，那么 `addToken()` 便负责"输出"。它抓取当前词素的文本，并为之创建一个新的词法单元。我们很快就会用上它的另一个重载版本，以处理那些带有字面量值的词法单元。
 
-### Lexical errors
+### 词法错误
 
-Before we get too far in, let's take a moment to think about errors at the
-lexical level. What happens if a user throws a source file containing some
-characters Lox doesn't use, like `@#^`, at our interpreter? Right now, those
-characters get silently discarded. They aren't used by the Lox language, but
-that doesn't mean the interpreter can pretend they aren't there. Instead, we
-report an error.
+在我们继续深入之前，让我们花点时间来思考一下词法层面的错误。如果用户甩给我们一份包含某些 Lox 根本用不到的字符（比如 `@#^`）的源文件，会发生什么？眼下，这些字符会被悄无声息地丢弃。它们虽然不是 Lox 语言的一部分，但这并不代表解释器可以假装它们不存在。我们应当报错。
 
 ^code char-error (1 before, 1 after)
 
-Note that the erroneous character is still *consumed* by the earlier call to
-`advance()`. That's important so that we don't get stuck in an infinite loop.
+注意，那个出错的字符已经被前面那次 `advance()` 调用**吞掉了**。这一点至关重要——否则我们便会陷入一个无限循环之中。
 
-Note also that we <span name="shotgun">*keep scanning*</span>. There may be
-other errors later in the program. It gives our users a better experience if we
-detect as many of those as possible in one go. Otherwise, they see one tiny
-error and fix it, only to have the next error appear, and so on. Syntax error
-Whac-A-Mole is no fun.
+还请注意，我们 <span name="shotgun">*仍在继续扫描*</span>。在程序的后面可能还潜伏着别的错误。如果我们能一次性地把它们都揪出来，对用户而言将是更好的体验。否则，他们修复了第一个微小的错误，紧接着下一个错误又冒出来，如此往复。"打地鼠"式的语法错误可不怎么好玩。
 
-(Don't worry. Since `hadError` gets set, we'll never try to *execute* any of the
-code, even though we keep going and scan the rest of it.)
+（别担心。由于 `hadError` 已被置位，即便我们继续往后扫描余下的内容，我们也不会去**执行**任何代码。）
 
 <aside name="shotgun">
 
-The code reports each invalid character separately, so this shotguns the user
-with a blast of errors if they accidentally paste a big blob of weird text.
-Coalescing a run of invalid characters into a single error would give a nicer
-user experience.
+由于每一处非法字符都会被单独报告，因此倘若用户不小心粘贴了一大坨乱七八糟的字符进来，错误便会像霰弹枪一样炸得用户满脸都是。将连续的一串非法字符归并为单个错误，用户的体验会更佳。
 
 </aside>
 
-### Operators
+### 操作符
 
-We have single-character lexemes working, but that doesn't cover all of Lox's
-operators. What about `!`? It's a single character, right? Sometimes, yes, but
-if the very next character is an equals sign, then we should instead create a
-`!=` lexeme. Note that the `!` and `=` are *not* two independent operators. You
-can't write `!   =` in Lox and have it behave like an inequality operator.
-That's why we need to scan `!=` as a single lexeme. Likewise, `<`, `>`, and `=`
-can all be followed by `=` to create the other equality and comparison
-operators.
+我们已能让单字符的词素工作，但这并未涵盖 Lox 中所有的操作符。比如 `!`，它不是只有一个字符吗？有时候确实是，但如果紧随其后的字符是等号，那么我们就应当创建 `!=` 这个词素。请注意，`!` 与 `=` 本身并非两个相互独立的操作符——你不能在 Lox 里写成 `!   =` 然后指望它充当不等号操作符。这就是为什么我们需要把 `!=` 作为一个整体词素来扫描。同理，`<`、`>` 与 `=` 后面都可以再跟一个 `=`，从而构成等号与比较操作符。
 
-For all of these, we need to look at the second character.
+对于上述这些情况，我们都需要再往后再看一个字符。
 
 ^code two-char-tokens (1 before, 2 after)
 
-Those cases use this new method:
+这些情形使用到了下面这个新方法：
 
 ^code match
 
-It's like a conditional `advance()`. We only consume the current character if
-it's what we're looking for.
+它有些像一个有条件的 `advance()`——仅当当前字符正是我们所寻找的目标时，才将其吃掉。
 
-Using `match()`, we recognize these lexemes in two stages. When we reach, for
-example, `!`, we jump to its switch case. That means we know the lexeme *starts*
-with `!`. Then we look at the next character to determine if we're on a `!=` or
-merely a `!`.
+借助于 `match()`，我们可以分两阶段来识别这些词素。举例来说，当我们抵达 `!` 时，便跳入其对应的 switch 分支。这意味着我们已经知道这个词素**以** `!` **开头**。随后我们再瞅一眼下一个字符，以判断这究竟是一个 `!=`，还是一个单独的 `!`。
 
-## Longer Lexemes
+## 更长的词素
 
-We're still missing one operator: `/` for division. That character needs a
-little special handling because comments begin with a slash too.
+我们仍遗漏了一个操作符：除号 `/`。这个字符需要一点特殊处理，因为注释也是以斜杠开头的。
 
 ^code slash (1 before, 2 after)
 
-This is similar to the other two-character operators, except that when we find a
-second `/`, we don't end the token yet. Instead, we keep consuming characters
-until we reach the end of the line.
+这与前面提到的那些双字符操作符颇为相似，唯一不同的是，当我们遇到第二个 `/` 时，我们并不就此结束这个词法单元。相反，我们会继续吞下字符，直至抵达行末。
 
-This is our general strategy for handling longer lexemes. After we detect the
-beginning of one, we shunt over to some lexeme-specific code that keeps eating
-characters until it sees the end.
+这便是我们处理更长的词素时的一般策略。在我们识别出某个词素的起始之后，便会转去该词素专属的那段代码，由它继续吞咽字符，直至瞧见词素的末尾。
 
-We've got another helper:
+我们还有一个辅助方法：
 
 ^code peek
 
-It's sort of like `advance()`, but doesn't consume the character. This is called
-<span name="match">**lookahead**</span>. Since it only looks at the current
-unconsumed character, we have *one character of lookahead*. The smaller this
-number is, generally, the faster the scanner runs. The rules of the lexical
-grammar dictate how much lookahead we need. Fortunately, most languages in wide
-use peek only one or two characters ahead.
+它有点像 `advance()`，但并不会消耗掉那个字符。这种做法被称为<span name="match">**前瞻**</span>（lookahead）。由于它仅仅窥视当前尚未被消耗的那个字符，我们因而拥有**一字符的前瞻**。一般来说，这个数字越小，扫描器便跑得越快。词法文法的规则决定了我们需要多少前瞻量。所幸的是，大多数广为使用的语言仅需要向前窥探一两个字符。
 
 <aside name="match">
 
-Technically, `match()` is doing lookahead too. `advance()` and `peek()` are the
-fundamental operators and `match()` combines them.
+严格来说，`match()` 也属于一种前瞻。`advance()` 与 `peek()` 才是更基础的算子，`match()` 不过是它们俩的组合罢了。
 
 </aside>
 
-Comments are lexemes, but they aren't meaningful, and the parser doesn't want
-to deal with them. So when we reach the end of the comment, we *don't* call
-`addToken()`. When we loop back around to start the next lexeme, `start` gets
-reset and the comment's lexeme disappears in a puff of smoke.
+注释本身是一种词素，但它们并没有任何实际意义，语法分析器也不想与它们打交道。因此，当我们抵达注释的末尾时，我们并**不**调用 `addToken()`。当我们回过头来开始扫描下一个词素时，`start` 会被重置，于是这段注释所对应的词素便如一缕青烟般消散无踪。
 
-While we're at it, now's a good time to skip over those other meaningless
-characters: newlines and whitespace.
+既然都说到这儿了，我们不妨顺手把另一些无足轻重的字符也跳过去——换行符与空白字符。
 
 ^code whitespace (1 before, 3 after)
 
-When encountering whitespace, we simply go back to the beginning of the scan
-loop. That starts a new lexeme *after* the whitespace character. For newlines,
-we do the same thing, but we also increment the line counter. (This is why we
-used `peek()` to find the newline ending a comment instead of `match()`. We want
-that newline to get us here so we can update `line`.)
+遇到空白字符时，我们仅仅折返回扫描循环的起点。这会在该空白字符**之后**开启一个新词素。对于换行符，我们亦采取同样的做法，只不过会顺手将行号加一。（这便解释了我们为什么使用 `peek()` 来定位注释末尾的换行符，而不是 `match()`——我们要让那个换行符落到此处，以便更新 `line`。）
 
-Our scanner is getting smarter. It can handle fairly free-form code like:
+我们的扫描器正在变得越来越聪明。它已经能应对相当自由形式的代码，比如：
 
 ```lox
 // this is a comment
@@ -529,59 +342,42 @@ Our scanner is getting smarter. It can handle fairly free-form code like:
 !*+-/=<> <= == // operators
 ```
 
-### String literals
+### 字符串字面量
 
-Now that we're comfortable with longer lexemes, we're ready to tackle literals.
-We'll do strings first, since they always begin with a specific character, `"`.
+既然我们对处理更长的词素已然轻车熟路，我们便可以着手攻克字面量了。我们先从字符串开始，因为它总是以一个特定的字符——`"`——打头。
 
 ^code string-start (1 before, 2 after)
 
-That calls:
+这会调用到：
 
 ^code string
 
-Like with comments, we consume characters until we hit the `"` that ends the
-string. We also gracefully handle running out of input before the string is
-closed and report an error for that.
+与注释类似，我们不断地吞咽字符，直至碰上作为字符串结尾的那个 `"`。我们还优雅地处理了"在字符串尚未闭合之前输入就已耗尽"的情况，并对此报错。
 
-For no particular reason, Lox supports multi-line strings. There are pros and
-cons to that, but prohibiting them was a little more complex than allowing them,
-so I left them in. That does mean we also need to update `line` when we hit a
-newline inside a string.
+无甚特别缘由，Lox 支持多行字符串。这一设计有利有弊，但禁止它比起允许它要稍稍复杂一些，于是我便将它保留了下来。这意味着我们还需要在字符串内部遇到换行符时更新 `line`。
 
-Finally, the last interesting bit is that when we create the token, we also
-produce the actual string *value* that will be used later by the interpreter.
-Here, that conversion only requires a `substring()` to strip off the surrounding
-quotes. If Lox supported escape sequences like `\n`, we'd unescape those here.
+最后，有意思的一点是：在我们创建词法单元时，还会一并产出**真正的**字符串**值**，供稍后的解释器使用。此处的转换仅需一次 `substring()` 调用，将字符串两端的引号剥去即可。如果 Lox 还支持诸如 `\n` 这样的转义序列，我们便会在此处将其反转义。
 
-### Number literals
+### 数字字面量
 
-All numbers in Lox are floating point at runtime, but both integer and decimal
-literals are supported. A number literal is a series of <span
-name="minus">digits</span> optionally followed by a `.` and one or more trailing
-digits.
+Lox 中所有的数字在运行时均为浮点数，但它同时也支持整数与十进制小数字面量。一个数字字面量是一串<span name="minus">数字</span>，其后可选地跟上一个 `.` 以及一位或多位尾随数字。
 
 <aside name="minus">
 
-Since we look only for a digit to start a number, that means `-123` is not a
-number *literal*. Instead, `-123`, is an *expression* that applies `-` to the
-number literal `123`. In practice, the result is the same, though it has one
-interesting edge case if we were to add method calls on numbers. Consider:
+由于我们仅以数字作为数字词素的开头，这意味着 `-123` 并非一个数字**字面量**。实际上，`-123` 是一个**表达式**，它将一元 `-` 作用于数字字面量 `123` 之上。实际效果是一样的，不过假如我们日后打算为数字添加方法调用的话，这里便存在一个有趣的边界情况。试看：
 
 ```lox
 print -123.abs();
 ```
 
-This prints `-123` because negation has lower precedence than method calls. We
-could fix that by making `-` part of the number literal. But then consider:
+这会打印出 `-123`，这是因为取负的优先级低于方法调用。我们当然也可以将 `-` 划入数字字面量的一部分来解决这个问题。但随后再来看：
 
 ```lox
 var n = 123;
 print -n.abs();
 ```
 
-This still produces `-123`, so now the language seems inconsistent. No matter
-what you do, some case ends up weird.
+这同样会产出 `-123`，于是这门语言就显得前后不一了。无论你怎么做，总有些情形会变得古怪。
 
 </aside>
 
@@ -590,77 +386,54 @@ what you do, some case ends up weird.
 12.34
 ```
 
-We don't allow a leading or trailing decimal point, so these are both invalid:
+我们不允许前导或后置的小数点，因此下面这两种都是不合法的：
 
 ```lox
 .1234
 1234.
 ```
 
-We could easily support the former, but I left it out to keep things simple. The
-latter gets weird if we ever want to allow methods on numbers like `123.sqrt()`.
+支持前者其实易如反掌，但为了让事情保持简单，我便没有将其纳入。至于后者，假如日后我们想要允许在数字上调用类似 `123.sqrt()` 的方法，那便会带来一些怪异的行为。
 
-To recognize the beginning of a number lexeme, we look for any digit. It's kind
-of tedious to add cases for every decimal digit, so we'll stuff it in the
-default case instead.
+为了识别数字词素的起始，我们只需查看是否有任何一位数字。逐个为十进制数字罗列 case 分支未免太过繁琐，因此我们索性将其塞入 default 分支中。
 
 ^code digit-start (1 before, 1 after)
 
-This relies on this little utility:
+这有赖于下面这个小小的工具方法：
 
 ^code is-digit
 
 <aside name="is-digit">
 
-The Java standard library provides [`Character.isDigit()`][is-digit], which seems
-like a good fit. Alas, that method allows things like Devanagari digits,
-full-width numbers, and other funny stuff we don't want.
+Java 标准库提供了 [`Character.isDigit()`][is-digit]，看上去似乎正中下怀。可惜的是，那个方法同时还允许诸如天城文数字、全角数字以及其他一些我们并不想接受的奇怪字符。
 
 [is-digit]: http://docs.oracle.com/javase/7/docs/api/java/lang/Character.html#isDigit(char)
 
 </aside>
 
-Once we know we are in a number, we branch to a separate method to consume the
-rest of the literal, like we do with strings.
+一旦我们意识到自己正身处一个数字之中，便会转去另一个独立的方法去消费该字面量的剩余部分——这与我们处理字符串时的做法如出一辙。
 
 ^code number
 
-We consume as many digits as we find for the integer part of the literal. Then
-we look for a fractional part, which is a decimal point (`.`) followed by at
-least one digit. If we do have a fractional part, again, we consume as many
-digits as we can find.
+对于整数部分，我们尽可能多地吞下连续的数字字符。随后，我们再去寻找小数部分——那便是小数点（`.`），其后跟着至少一位数字。如果我们确实找到了小数部分，那么同样地，我们会尽可能多地吞下能找到的数字。
 
-Looking past the decimal point requires a second character of lookahead since we
-don't want to consume the `.` until we're sure there is a digit *after* it. So
-we add:
+在小数点之后进行窥视，依赖于**两字符**的前瞻——我们并不想在小数点**之后**确实存在数字之前就贸然吞掉那个 `.`。因此我们新增：
 
 ^code peek-next
 
 <aside name="peek-next">
 
-I could have made `peek()` take a parameter for the number of characters ahead
-to look instead of defining two functions, but that would allow *arbitrarily*
-far lookahead. Providing these two functions makes it clearer to a reader of the
-code that our scanner looks ahead at most two characters.
+我本可以让 `peek()` 接受一个参数，用以指定向前窥探的字符数，而不必另行定义两个函数——但那将允许**任意远**的前瞻。提供这两个函数，能让代码的读者更清楚地知道：我们的扫描器至多只向前窥探两个字符。
 
 </aside>
 
+最后，我们将该词素转换为其对应的数值。我们的解释器使用 Java 的 `Double` 类型来表示数字，因此我们产出的也便是该类型的一个值。我们直接借用了 Java 自带的解析方法将词素转换为真正的 Java double。我们本可以自己来实现，但说实话，除非你正在为即将到来的某场面试临阵磨枪，否则实在不值得你在这上面浪费时间。
 
-Finally, we convert the lexeme to its numeric value. Our interpreter uses Java's
-`Double` type to represent numbers, so we produce a value of that type. We're
-using Java's own parsing method to convert the lexeme to a real Java double. We
-could implement that ourselves, but, honestly, unless you're trying to cram for
-an upcoming programming interview, it's not worth your time.
+剩下的字面量是布尔值与 `nil`，不过我们会将它们视作关键字来处理，这便引出了……
 
-The remaining literals are Booleans and `nil`, but we handle those as keywords,
-which gets us to...
+## 保留字与标识符
 
-## Reserved Words and Identifiers
-
-Our scanner is almost done. The only remaining pieces of the lexical grammar to
-implement are identifiers and their close cousins, the reserved words. You might
-think we could match keywords like `or` in the same way we handle
-multiple-character operators like `<=`.
+我们的扫描器已几近完工。词法文法中尚未实现的部分仅剩标识符，以及它们形影不离的兄弟——保留字。你或许会觉得，我们可以用与处理 `<=` 这类多字符操作符相同的方式，来匹配诸如 `or` 这般的关键字。
 
 ```java
 case 'o':
@@ -670,191 +443,141 @@ case 'o':
   break;
 ```
 
-Consider what would happen if a user named a variable `orchid`. The scanner
-would see the first two letters, `or`, and immediately emit an `or` keyword
-token. This gets us to an important principle called <span
-name="maximal">**maximal munch**</span>. When two lexical grammar rules can both
-match a chunk of code that the scanner is looking at, *whichever one matches the
-most characters wins*.
+试想一下，如果用户将一个变量命名为 `orchid`，将会发生什么。扫描器看到前两个字母 `or`，便会立刻吐出一个 `or` 关键字词法单元。这把我们引向了一条重要原则——<span name="maximal">**最长匹配**</span>（maximal munch）。当词法文法的两条规则都能匹配扫描器当前所盯着的这一段代码时，**匹配字符更多的那条规则获胜**。
 
-That rule states that if we can match `orchid` as an identifier and `or` as a
-keyword, then the former wins. This is also why we tacitly assumed, previously,
-that `<=` should be scanned as a single `<=` token and not `<` followed by `=`.
+该原则告诉我们：如果我们既能将 `orchid` 匹配为一个标识符，又能将 `or` 匹配为一个关键字，那么前者胜出。这同样解释了我们先前为何理所当然地假设 `<=` 应当作为一个完整的 `<=` 词法单元来扫描，而不是先扫一个 `<` 再跟一个 `=`。
 
 <aside name="maximal">
 
-Consider this nasty bit of C code:
+不妨思考下面这段令人头疼的 C 代码：
 
 ```c
 ---a;
 ```
 
-Is it valid? That depends on how the scanner splits the lexemes. What if the scanner
-sees it like this:
+它合法吗？这取决于扫描器如何切分词素。要是扫描器将其切分为：
 
 ```c
 - --a;
 ```
 
-Then it could be parsed. But that would require the scanner to know about the
-grammatical structure of the surrounding code, which entangles things more than
-we want. Instead, the maximal munch rule says that it is *always* scanned like:
+那它就可以被解析。但那将要求扫描器了解周围代码的语法结构，而这又会让事情变得纠缠不清，远非我们所欲。因此，最长匹配原则规定，它**始终**应被切分为：
 
 ```c
 -- -a;
 ```
 
-It scans it that way even though doing so leads to a syntax error later in the
-parser.
+扫描器如此切分，哪怕这样做会稍后在语法分析器那里招致一个语法错误。
 
 </aside>
 
-Maximal munch means we can't easily detect a reserved word until we've reached
-the end of what might instead be an identifier. After all, a reserved word *is*
-an identifier, it's just one that has been claimed by the language for its own
-use. That's where the term **reserved word** comes from.
+最长匹配原则意味着，在我们抵达一个可能的标识符的末尾之前，我们其实并不能轻松地识别出一个保留字。毕竟，一个保留字**本身**就是一个标识符，只不过它已被该语言霸占为己用罢了。这便是**保留字**（reserved word）这一称呼的由来。
 
-So we begin by assuming any lexeme starting with a letter or underscore is an
-identifier.
+因此，我们不妨先做这样一个假设：任何一个以字母或下划线开头的词素，都是一个标识符。
 
 ^code identifier-start (3 before, 3 after)
 
-The rest of the code lives over here:
+剩余的代码则栖息于彼处：
 
 ^code identifier
 
-We define that in terms of these helpers:
+我们借助于下面这些辅助方法来定义它：
 
 ^code is-alpha
 
-That gets identifiers working. To handle keywords, we see if the identifier's
-lexeme is one of the reserved words. If so, we use a token type specific to that
-keyword. We define the set of reserved words in a map.
+至此，标识符便能跑起来了。至于关键字，我们会去查看该标识符的词素是否属于保留字之列。若是，我们便使用与该关键字专属的词法单元类型。我们在一个映射中定义这组保留字。
 
 ^code keyword-map
 
-Then, after we scan an identifier, we check to see if it matches anything in the
-map.
+然后，在我们扫描完一个标识符之后，我们便会去查看它是否与该映射中的某个条目相吻合。
 
 ^code keyword-type (2 before, 1 after)
 
-If so, we use that keyword's token type. Otherwise, it's a regular user-defined
-identifier.
+若是匹配，我们便使用该关键字对应的词法单元类型。否则，它便是一个普通的用户自定义标识符。
 
-And with that, we now have a complete scanner for the entire Lox lexical
-grammar. Fire up the REPL and type in some valid and invalid code. Does it
-produce the tokens you expect? Try to come up with some interesting edge cases
-and see if it handles them as it should.
+至此，我们已然拥有了一款完整的扫描器，足以应付整个 Lox 的词法文法。启动 REPL，敲入一些合法与不合法的代码试试看。它是否如你所预期的那样产出了对应的词法单元？不妨自己构思一些刁钻的边界情形，看看它是否处理得当。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  The lexical grammars of Python and Haskell are not *regular*. What does that
-    mean, and why aren't they?
+1.  Python 与 Haskell 的词法文法并非**正则**。这意味着什么，为什么它们不是正则的？
 
-1.  Aside from separating tokens -- distinguishing `print foo` from `printfoo`
-    -- spaces aren't used for much in most languages. However, in a couple of
-    dark corners, a space *does* affect how code is parsed in CoffeeScript,
-    Ruby, and the C preprocessor. Where and what effect does it have in each of
-    those languages?
+1.  除了用于分隔词法单元——区分 `print foo` 与 `printfoo` 之外，在大多数语言里，空格的存在感其实很弱。然而，在几处隐秘的角落里，空格**确实**会影响代码的解析方式——CoffeeScript、Ruby 以及 C 预处理器便是如此。它们分别是在哪里、产生了怎样的影响？
 
-1.  Our scanner here, like most, discards comments and whitespace since those
-    aren't needed by the parser. Why might you want to write a scanner that does
-    *not* discard those? What would it be useful for?
+1.  我们的扫描器——与大多数扫描器一样——会丢弃注释与空白字符，因为语法分析器并不需要它们。那么在什么情况下，你可能会想要编写一款**不**丢弃它们的扫描器？它将能派上什么用场？
 
-1.  Add support to Lox's scanner for C-style `/* ... */` block comments. Make
-    sure to handle newlines in them. Consider allowing them to nest. Is adding
-    support for nesting more work than you expected? Why?
+1.  为 Lox 的扫描器添加对 C 风格 `/* ... */` 块注释的支持。务必正确处理其中嵌套的换行。不妨考虑允许它们相互嵌套。添加嵌套支持是否比你预想的要复杂得多？为什么？
 
 </div>
 
 <div class="design-note">
 
-## Design Note: Implicit Semicolons
+## 设计笔记：隐式分号
 
-Programmers today are spoiled for choice in languages and have gotten picky
-about syntax. They want their language to look clean and modern. One bit of
-syntactic lichen that almost every new language scrapes off (and some ancient
-ones like BASIC never had) is `;` as an explicit statement terminator.
+如今的程序员在程序设计语言的选项上被宠坏了，对语法也变得挑剔起来。他们希望自己的语言看起来既清爽又现代。一处几乎被每一门新兴语言都刮除干净的语法寄生物（以及某些像 BASIC 这样古老到从未沾染的语言）是那个用作显式语句终结符的 `;`。
 
-Instead, they treat a newline as a statement terminator where it makes sense to
-do so. The "where it makes sense" part is the challenging bit. While *most*
-statements are on their own line, sometimes you need to spread a single
-statement across a couple of lines. Those intermingled newlines should not be
-treated as terminators.
+取而代之的是，他们将换行符视作语句的终结符——在该这么做的地方。"在该这么做的地方"才是棘手之处。虽然**大多数**语句都独占一行，但有时你也需要将单个语句拆分到几行之中。这些夹杂其间的换行符不应被当作终结符来处理。
 
-Most of the obvious cases where the newline should be ignored are easy to
-detect, but there are a handful of nasty ones:
+大多数换行符应当被忽略的明显情形是易于识别的，但仍有一些棘手的家伙：
 
-* A return value on the next line:
+*   **返回值出现在下一行：**
 
     ```js
     if (condition) return
     "value"
     ```
 
-    Is "value" the value being returned, or do we have a `return` statement with
-    no value followed by an expression statement containing a string literal?
+    这里的 "value" 究竟是被返回的值，还是一个 `return` 语句（不带值）后跟一个由字符串字面量构成的表达式语句？
 
-* A parenthesized expression on the next line:
+*   **括号内的表达式出现在下一行：**
 
     ```js
     func
     (parenthesized)
     ```
 
-    Is this a call to `func(parenthesized)`, or two expression statements, one
-    for `func` and one for a parenthesized expression?
+    这究竟是 `func(parenthesized)` 这一函数调用，还是两个表达式语句——一个是 `func`，另一个是一个带括号的表达式？
 
-* A `-` on the next line:
+*   **一个 `-` 出现在下一行：**
 
     ```js
     first
     -second
     ```
 
-    Is this `first - second` -- an infix subtraction -- or two expression
-    statements, one for `first` and one to negate `second`?
+    这究竟是 `first - second`——一个中缀减法表达式，还是两个表达式语句——一个是 `first`，另一个是对 `second` 取负？
 
-In all of these, either treating the newline as a separator or not would both
-produce valid code, but possibly not the code the user wants. Across languages,
-there is an unsettling variety of rules used to decide which newlines are
-separators. Here are a couple:
+在上述所有情形中，无论将换行符视作分隔符与否，都能生成合法的代码，但所得到的未必是用户真正想要的代码。纵观各种语言，用于判定"哪些换行符算作分隔符"的规则可谓形形色色、五花八门。以下略举两例：
 
-*   [Lua][] completely ignores newlines, but carefully controls its grammar such
-    that no separator between statements is needed at all in most cases. This is
-    perfectly legit:
+*   [Lua][] 完全忽略换行符，但通过精心控制其文法，使得在大多数情况下语句之间根本不
+    需要分隔符。例如以下写法是完全合法的：
 
     ```lua
     a = 1 b = 2
     ```
 
-    Lua avoids the `return` problem by requiring a `return` statement to be the
-    very last statement in a block. If there is a value after `return` before
-    the keyword `end`, it *must* be for the `return`. For the other two cases,
-    they allow an explicit `;` and expect users to use that. In practice, that
-    almost never happens because there's no point in a parenthesized or unary
-    negation expression statement.
+    Lua 通过要求 `return` 语句必须是某一块中的最后一条语句来回避 `return` 那
+    个麻烦。若在关键字 `end` 之前、`return` 之后还有某个值，那它**必然**是 `return`
+    所返回的。至于其余两种情形，Lua 允许显式书写分号，并期望用户使用之。实
+    践中几乎不会出现这种写法，因为括号表达式或一元取负表达式作为独立的语句本
+    就没有任何意义。
 
-*   [Go][] handles newlines in the scanner. If a newline appears following one
-    of a handful of token types that are known to potentially end a statement,
-    the newline is treated like a semicolon, otherwise it is ignored. The Go
-    team provides a canonical code formatter, [gofmt][], and the ecosystem is
-    fervent about its use, which ensures that idiomatic styled code works well
-    with this simple rule.
+*   [Go][] 在扫描器层面处理换行符。如果换行符出现在若干已知"可能结束一条语句"
+    的词法单元类型之后，那么该换行符将被视作一个分号；否则便将其忽略。Go 团
+    队还提供了一款规范化的代码格式化器 [gofmt][]，整个 Go 生态圈对它推崇备至，
+    这便保证了符合惯用风格的代码能够与这条简单规则和谐共处。
 
-*   [Python][] treats all newlines as significant unless an explicit backslash
-    is used at the end of a line to continue it to the next line. However,
-    newlines anywhere inside a pair of brackets (`()`, `[]`, or `{}`) are
-    ignored. Idiomatic style strongly prefers the latter.
+*   [Python][] 默认将所有换行符都视作有意义的，除非在行末显式地使用反斜杠来
+    延续至下一行。然而，任何位于一对括号（`()`, `[]` 或 `{}`）之中的换行符
+    均会被忽略。Python 的惯用风格强烈地倾向于后者。
 
-    This rule works well for Python because it is a highly statement-oriented
-    language. In particular, Python's grammar ensures a statement never appears
-    inside an expression. C does the same, but many other languages which have a
-    "lambda" or function literal syntax do not.
+    这条规则之所以能在 Python 中运作良好，是因为 Python 是一门高度语句导向
+    的语言。具体而言，Python 的文法保证语句永远不会出现在表达式之内。C 语言
+    也具备同样的特性，但许多其它语言——尤其是那些拥有"lambda"或函数字面量
+    语法特性的语言——却并不如此。
 
-    An example in JavaScript:
+    来看一段 JavaScript 的示例：
 
     ```js
     console.log(function() {
@@ -862,42 +585,39 @@ separators. Here are a couple:
     });
     ```
 
-    Here, the `console.log()` *expression* contains a function literal which
-    in turn contains the *statement* `statement();`.
+    这里的 `console.log()` **表达式**内部包含了一个函数字面量，而该函数字面量
+    又包含了**语句** `statement();`。
 
-    Python would need a different set of rules for implicitly joining lines if
-    you could get back *into* a <span name="lambda">statement</span> where
-    newlines should become meaningful while still nested inside brackets.
+    如果你能够在仍嵌套于括号之内的某个地方重新**进入**一处<span name="lambda">语句</span>
+    ——而在这条语句中换行符又重新变得有意义——那么 Python 便需要一套不同的
+    隐式行连接规则了。
 
 <aside name="lambda">
 
-And now you know why Python's `lambda` allows only a single expression body.
+这下你就明白了，为什么 Python 的 `lambda` 只能拥有一个表达式体的原因。
 
 </aside>
 
-*   JavaScript's "[automatic semicolon insertion][asi]" rule is the real odd
-    one. Where other languages assume most newlines *are* meaningful and only a
-    few should be ignored in multi-line statements, JS assumes the opposite. It
-    treats all of your newlines as meaningless whitespace *unless* it encounters
-    a parse error. If it does, it goes back and tries turning the previous
-    newline into a semicolon to get something grammatically valid.
+*   JavaScript 的"自动分号插入"（[automatic semicolon insertion][asi]）规则可
+    算得上真正的异类。当其他语言都默认**大多数**换行符是有意义的、仅在多行
+    语句中才应忽略少数几个时，JavaScript 却走向了反面——它默认将你的所有换
+    行符都视作无意义的空白，**除非**它撞上了一个语法错误。一旦撞上，它便会
+    回头尝试把上一处的换行符变成一个分号，以期能拼凑出某种语法上合法的结果。
 
-    This design note would turn into a design diatribe if I went into complete
-    detail about how that even *works*, much less all the various ways that
-    JavaScript's "solution" is a bad idea. It's a mess. JavaScript is the only
-    language I know where many style guides demand explicit semicolons after
-    every statement even though the language theoretically lets you elide them.
+    如果要把这套规则的工作原理以及 JavaScript 这一"解决方案"是如何糟糕的
+    诸多细节悉数道尽，这份设计笔记便得膨胀成一份设计檄文了。JavaScript 是
+    我所知的唯一一门语言——许多风格指南都要求在每条语句之后都显式地写上分
+    号，尽管这门语言在理论上允许你省略它们。这是一团糟。
 
-If you're designing a new language, you almost surely *should* avoid an explicit
-statement terminator. Programmers are creatures of fashion like other humans, and
-semicolons are as passé as ALL CAPS KEYWORDS. Just make sure you pick a set of
-rules that make sense for your language's particular grammar and idioms. And
-don't do what JavaScript did.
+如果你正在设计一门新的语言，你几乎**必然**应该摒弃显式的语句终结符。程序员
+与其他人类一样，都是时尚的奴隶，而分号早已如全大写关键字那般过时了。只不
+过，请务必挑选一套与你这门语言特定的文法与惯用风格相契合的规则。另外——
+千万不要重蹈 JavaScript 的覆辙。
 
 </div>
 
 [lua]: https://www.lua.org/pil/1.1.html
 [go]: https://golang.org/ref/spec#Semicolons
 [gofmt]: https://golang.org/cmd/gofmt/
-[python]: https://docs.python.org/3.5/reference/lexical_analysis.html#implicit-line-joining
+[python]: https://docs.python.org/3.5/reference/lexical**analysis.html#implicit-line-joining
 [asi]: https://www.ecma-international.org/ecma-262/5.1/#sec-7.9

@@ -1,148 +1,88 @@
-> Logic, like whiskey, loses its beneficial effect when taken in too large
-> quantities.
->
-> <cite>Edward John Moreton Drax Plunkett, Lord Dunsany</cite>
+# 控制流
 
-Compared to [last chapter's][statements] grueling marathon, today is a
-lighthearted frolic through a daisy meadow. But while the work is easy, the
-reward is surprisingly large.
+> 逻辑，正如威士忌一般，饮之过量，便会失去那原本的裨益。
+>
+> <cite>邓萨尼勋爵</cite>
+
+与[上一章][statements]那场令人精疲力竭的马拉松相比，今天更像是一次轻快的雏菊田间漫步。但虽说工作来得轻松，回报却令人喜出望外。
 
 [statements]: statements-and-state.html
 
-Right now, our interpreter is little more than a calculator. A Lox program can
-only do a fixed amount of work before completing. To make it run twice as long
-you have to make the source code twice as lengthy. We're about to fix that. In
-this chapter, our interpreter takes a big step towards the programming
-language major leagues: *Turing-completeness*.
+眼下，我们的解释器充其量不过是一台计算器。一段 Lox 程序在跑完之前所能完成的工作量是固定的。要想让它的运行时间翻倍，你只能把源代码也写长一倍。我们马上要来修正这一点。在本章中，我们的解释器将向着程序设计语言的"大联盟"迈出一大步：*图灵完备*。
 
-## Turing Machines (Briefly)
+## 图灵机（简述）
 
-In the early part of last century, mathematicians stumbled into a series of
-confusing <span name="paradox">paradoxes</span> that led them to doubt the
-stability of the foundation they had built their work upon. To address that
-[crisis][], they went back to square one. Starting from a handful of axioms,
-logic, and set theory, they hoped to rebuild mathematics on top of an
-impervious foundation.
+上世纪初，数学家们一头撞上了一连串令人困惑的<span name="paradox">悖论</span>，这让他们开始怀疑自己工作所赖以建立的那块根基是否稳固。为了应对这场[危机][crisis]，他们回到了一切的起点。从寥寥几条公理、逻辑与集合论出发，他们希望能够将数学重建在一片坚不可摧的基石之上。
 
-[crisis]: https://en.wikipedia.org/wiki/Foundations_of_mathematics#Foundational_crisis
+[crisis]: https://en.wikipedia.org/wiki/Foundations_of_mathematics#Foundational**crisis
 
 <aside name="paradox">
 
-The most famous is [**Russell's paradox**][russell]. Initially, set theory
-allowed you to define any sort of set. If you could describe it in English, it
-was valid. Naturally, given mathematicians' predilection for self-reference,
-sets can contain other sets. So Russell, rascal that he was, came up with:
+其中最著名的便是[**罗素悖论**][russell]。起初，集合论允许你定义任意一种集合——只要你能用英语描述出来，它便是合法的。数学家们天生偏爱自指，集合之中自然又可以包含集合。于是罗素——这个不按常理出牌的家伙——抛出了这么一句：
 
-*R is the set of all sets that do not contain themselves.*
+*R 是所有**不**包含自身的集合所构成的集合。*
 
-Does R contain itself? If it doesn't, then according to the second half of the
-definition it should. But if it does, then it no longer meets the definition.
-Cue mind exploding.
+请问 R 究竟包不包含它自身？若不包含，那么按照定义的后半段，它**应当**包含自身；可若它包含了自身，那它又不再满足定义。准备好，脑浆要爆了。
 
-[russell]: https://en.wikipedia.org/wiki/Russell%27s_paradox
+[russell]: https://en.wikipedia.org/wiki/Russell%27s**paradox
 
 </aside>
 
-They wanted to rigorously answer questions like, "Can all true statements be
-proven?", "Can we [compute][] all functions that we can define?", or even the
-more general question, "What do we mean when we claim a function is
-'computable'?"
+他们渴望对这样一些问题给出严丝合缝的答案："一切真的命题皆可被证明吗？""我们能够[计算][compute]所有可被定义的函数吗？"甚至更为一般性的那个问题："当我们声称一个函数是**可计算的**时，我们究竟指的是什么？"
 
-[compute]: https://en.wikipedia.org/wiki/Computable_function
+[compute]: https://en.wikipedia.org/wiki/Computable**function
 
-They presumed the answer to the first two questions would be "yes". All that
-remained was to prove it. It turns out that the answer to both is "no", and
-astonishingly, the two questions are deeply intertwined. This is a fascinating
-corner of mathematics that touches fundamental questions about what brains are
-able to do and how the universe works. I can't do it justice here.
+他们原本以为，对前两个问题的答案会是"是"。剩下的不过是去证明它罢了。然而结果证明，两个问题的答案都是"否"，而令人惊讶的是，这两个问题之间又彼此深刻地纠缠在一起。这是一处极为迷人的数学疆域，它触及了关于大脑究竟能做什么、以及宇宙究竟如何运作的诸多根本问题。我无法在此将它们讲透。
 
-What I do want to note is that in the process of proving that the answer to the
-first two questions is "no", Alan Turing and Alonzo Church devised a precise
-answer to the last question -- a definition of what kinds of functions are <span
-name="uncomputable">computable</span>. They each crafted a tiny system with a
-minimum set of machinery that is still powerful enough to compute any of a
-(very) large class of functions.
+我所想要指出的，乃是在证明"前两个问题的答案均为否"的过程中，Alan Turing 与 Alonzo Church 共同为最后一个问题给出了一份精确的答案——即对"<span name="uncomputable">可计算</span>"函数这一概念的清晰定义。他们各自打造了一套极简的系统，所用机制虽少，却足以计算出任何（相当）一大类函数。
 
 <aside name="uncomputable">
 
-They proved the answer to the first question is "no" by showing that the
-function that returns the truth value of a given statement is *not* a computable
-one.
+他们证明第一个问题的答案为"否"的方法，是证明那个"判断一条给定命题真值"的函数本身就是**不可计算的**。
 
 </aside>
 
-These are now considered the "computable functions". Turing's system is called a
-<span name="turing">**Turing machine**</span>. Church's is the **lambda
-calculus**. Both are still widely used as the basis for models of computation
-and, in fact, many modern functional programming languages use the lambda
-calculus at their core.
+这些函数如今被统称为"可计算函数"。Turing 的系统被称为<span name="turing">**图灵机**</span>；Church 的则被称为**λ 演算**。两者至今仍被广泛用作计算模型的基础，而事实上，许多现代的函数式程序设计语言便是将 λ 演算作为它们的内核。
 
 <aside name="turing">
 
-Turing called his inventions "a-machines" for "automatic". He wasn't so
-self-aggrandizing as to put his *own* name on them. Later mathematicians did
-that for him. That's how you get famous while still retaining some modesty.
+Turing 曾经将自己的发明称为"a-machines"——automatic（自动机）的缩写。他本人倒并没有那么自恋，非要把自己的名字贴上去。后来是数学家们替他这么干了。想青史留名而又不失谦逊，个中门道大抵如此。
 
 </aside>
 
-<img src="image/control-flow/turing-machine.png" alt="A Turing machine." />
+<img src="image/control-flow/turing-machine.png" alt="一台图灵机。" />
 
-Turing machines have better name recognition -- there's no Hollywood film about
-Alonzo Church yet -- but the two formalisms are [equivalent in power][thesis].
-In fact, any programming language with some minimal level of expressiveness is
-powerful enough to compute *any* computable function.
+图灵机的名气无疑要大得多——毕竟至今还没有一部关于 Alonzo Church 的好莱坞电影——但这两种形式化体系在表达能力上却是[等价的][thesis]。事实上，任何一门具备一定程度表达能力的程序设计语言，都足以计算**任何**可计算函数。
 
-[thesis]: https://en.wikipedia.org/wiki/Church%E2%80%93Turing_thesis
+[thesis]: https://en.wikipedia.org/wiki/Church%E2%80%93Turing**thesis
 
-You can prove that by writing a simulator for a Turing machine in your language.
-Since Turing proved his machine can compute any computable function, by
-extension, that means your language can too. All you need to do is translate the
-function into a Turing machine, and then run that on your simulator.
+你可以用你的语言编写一个图灵机模拟器来对此加以证明。鉴于 Turing 已证明他的机器能计算任何可计算函数，依此类推，这便意味着你的语言亦能胜任。你所需要做的，不过是先把那个函数翻译成图灵机，再让它在你的模拟器上运行而已。
 
-If your language is expressive enough to do that, it's considered
-**Turing-complete**. Turing machines are pretty dang simple, so it doesn't take
-much power to do this. You basically need arithmetic, a little control flow,
-and the ability to allocate and use (theoretically) arbitrary amounts of memory.
-We've got the first. By the end of this chapter, we'll have the <span
-name="memory">second</span>.
+若你的语言具备足够的表达能力来达成此事，那么它便被称作是**图灵完备**的。图灵机本身简单得令人发指，因此要做到这一点并不需要太大的威力。你基本上只需要算术、一点点控制流，以及分配并使用（理论上）任意数量内存的能力。前者我们已然具备；至于<span name="memory">后者</span>，待到本章结束时，我们将同样收入囊中。
 
 <aside name="memory">
 
-We *almost* have the third too. You can create and concatenate strings of
-arbitrary size, so you can *store* unbounded memory. But we don't have any way
-to access parts of a string.
+第三条我们其实也**差不多**达成了。你可以创建并拼接任意大小的字符串，从而能够**存储**任意量的内存。但我们目前尚无法访问字符串的各个部分。
 
 </aside>
 
-## Conditional Execution
+## 条件执行
 
-Enough history, let's jazz up our language. We can divide control flow roughly
-into two kinds:
+历史课讲够了，让我们来给语言加点料。我们大致可以将控制流分为两种：
 
-*   **Conditional** or **branching control flow** is used to *not* execute
-    some piece of code. Imperatively, you can think of it as jumping *ahead*
-    over a region of code.
+*   **条件控制流**或**分支控制流**，其用途在于让某段代码**不**被执行。以命令式的眼光来看，你可以将其理解为在一段代码区域之上**向前**跳过。
 
-*   **Looping control flow** executes a chunk of code more than once. It jumps
-    *back* so that you can do something again. Since you don't usually want
-    *infinite* loops, it typically has some conditional logic to know when to
-    stop looping as well.
+*   **循环控制流**则会让一段代码被执行多次。它**向后**跳回，从而让你得以再次执行某段操作。由于你通常并不想要**无穷**循环，因此循环结构往往还会附带某种条件逻辑，以判断何时该停止。
 
-Branching is simpler, so we'll start there. C-derived languages have two main
-conditional execution features, the `if` statement and the perspicaciously named
-"conditional" <span name="ternary">operator</span> (`?:`). An `if` statement
-lets you conditionally execute statements and the conditional operator lets you
-conditionally execute expressions.
+分支结构更为简单，我们便从那里入手。C 系语言中提供了两大条件执行特性：`if` 语句，以及那个名字颇为精准的"条件"<span name="ternary">运算符</span>（`?:`）。`if` 语句让你能够有条件地执行语句，而条件运算符则让你能够有条件地执行表达式。
 
 <aside name="ternary">
 
-The conditional operator is also called the "ternary" operator because it's the
-only operator in C that takes three operands.
+条件运算符又被称作"三元"运算符，因为在 C 语言中，它是**唯一**一个接受三个操作数的运算符。
 
 </aside>
 
-For simplicity's sake, Lox doesn't have a conditional operator, so let's get our
-`if` statement on. Our statement grammar gets a new production.
+为求简洁，Lox 并不设条件运算符，所以让我们把 `if` 语句这枚钉子敲上去。我们为语句文法新增一条产生式。
 
 <span name="semicolon"></span>
 
@@ -158,240 +98,163 @@ ifStmt         → "if" "(" expression ")" statement
 
 <aside name="semicolon">
 
-The semicolons in the rules aren't quoted, which means they are part of the
-grammar metasyntax, not Lox's syntax. A block does not have a `;` at the end and
-an `if` statement doesn't either, unless the then or else statement happens to
-be one that ends in a semicolon.
+规则中那些未被引号括起的分号，乃是文法元语法的一部分，而非 Lox 的语法。块的末尾并不带分号，`if` 语句的末尾也不带，除非那条 then 或 else 语句本身恰好是一条以分号结尾的语句。
 
 </aside>
 
-An `if` statement has an expression for the condition, then a statement to execute
-if the condition is truthy. Optionally, it may also have an `else` keyword and a
-statement to execute if the condition is falsey. The <span name="if-ast">syntax
-tree node</span> has fields for each of those three pieces.
+一条 `if` 语句由一个表达式充当条件，其后跟随一条待执行的语句——当条件为真值时便会执行。可选地，它还可以带有一个 `else` 关键字以及另一条语句——当条件为假值时便会执行。这个<span name="if-ast">语法树节点</span>为上述三块内容各设有一个字段。
 
 ^code if-ast (1 before, 1 after)
 
 <aside name="if-ast">
 
-The generated code for the new node is in [Appendix II][appendix-if].
+新节点的生成代码收录于[附录 II][appendix-if]。
 
 [appendix-if]: appendix-ii.html#if-statement
 
 </aside>
 
-Like other statements, the parser recognizes an `if` statement by the leading
-`if` keyword.
+与其他语句一样，语法分析器凭借前置的 `if` 关键字来识别一条 `if` 语句。
 
 ^code match-if (1 before, 1 after)
 
-When it finds one, it calls this new method to parse the rest:
+当它识别出之后，便会调用下面这个新方法来解析剩余部分：
 
 ^code if-statement
 
 <aside name="parens">
 
-The parentheses around the condition are only half useful. You need some kind of
-delimiter *between* the condition and the then statement, otherwise the parser
-can't tell when it has reached the end of the condition expression. But the
-*opening* parenthesis after `if` doesn't do anything useful. Dennis Ritchie put
-it there so he could use `)` as the ending delimiter without having unbalanced
-parentheses.
+围绕条件的那对括号，只有一半是真正有用的。你需要在条件与 then 语句**之间**设置某种分隔符，否则语法分析器无法判断条件表达式究竟何时结束。但 `if` 之后那个**开**括号本身却并无任何实际用途。Dennis Ritchie 之所以将它放在那里，是为了能够用 `)` 作为结束分隔符，而不至于让括号失衡。
 
-Other languages like Lua and some BASICs use a keyword like `then` as the ending
-delimiter and don't have anything before the condition. Go and Swift instead
-require the statement to be a braced block. That lets them use the `{` at the
-beginning of the statement to tell when the condition is done.
+另一些语言——比如 Lua 以及某些 BASIC 方言——则采用诸如 `then` 这样的关键字作为结束分隔符，并且在条件之前不放置任何东西。Go 与 Swift 则强制要求语句必须是一个带花括号的块。这便使得它们能够借助语句开头那个 `{` 来识别条件何时结束。
 
 </aside>
 
-As usual, the parsing code hews closely to the grammar. It detects an else
-clause by looking for the preceding `else` keyword. If there isn't one, the
-`elseBranch` field in the syntax tree is `null`.
+如常，解析代码紧贴文法规则。它通过查找前置的 `else` 关键字来检测是否存在 else 子句。若不存在，则语法树中的 `elseBranch` 字段为 `null`。
 
-That seemingly innocuous optional else has, in fact, opened up an ambiguity in
-our grammar. Consider:
+那个看似无害的可选 else，事实上却为我们的文法打开了一道歧义之门。考虑下面这段：
 
 ```lox
 if (first) if (second) whenTrue(); else whenFalse();
 ```
 
-Here's the riddle: Which `if` statement does that else clause belong to? This
-isn't just a theoretical question about how we notate our grammar. It actually
-affects how the code executes:
+谜题来了：那个 else 子句究竟归属于哪一条 `if` 语句？这不仅仅是一个关乎我们如何书写文法的理论问题。它实际上会影响代码的执行方式：
 
-*   If we attach the else to the first `if` statement, then `whenFalse()` is
-    called if `first` is falsey, regardless of what value `second` has.
+*   若我们将 else 归属于第一条 `if` 语句，那么只要 `first` 为假值，便会调用 `whenFalse()`，而与 `second` 的值无关。
+*   若我们将它归属于第二条 `if` 语句，那么只有当 `first` 为真值**且** `second` 为假值时，才会调用 `whenFalse()`。
 
-*   If we attach it to the second `if` statement, then `whenFalse()` is only
-    called if `first` is truthy and `second` is falsey.
+由于 else 子句是可选的，并且又没有显式的分隔符来标记 `if` 语句的结束，当你以这种方式嵌套 `if` 时，文法便会出现歧义。这种经典的语法陷阱被称为[**悬空 else**][dangling else]问题。
 
-Since else clauses are optional, and there is no explicit delimiter marking the
-end of the `if` statement, the grammar is ambiguous when you nest `if`s in this
-way. This classic pitfall of syntax is called the **[dangling else][]** problem.
-
-[dangling else]: https://en.wikipedia.org/wiki/Dangling_else
+[dangling else]: https://en.wikipedia.org/wiki/Dangling**else
 
 <span name="else"></span>
 
-<img class="above" src="image/control-flow/dangling-else.png" alt="Two ways the else can be interpreted.">
+<img class="above" src="image/control-flow/dangling-else.png" alt="两种 else 的解读方式。" />
 
 <aside name="else">
 
-Here, formatting highlights the two ways the else could be parsed. But note that
-since whitespace characters are ignored by the parser, this is only a guide to
-the human reader.
+此处，格式化突出展示了两种 else 可以被解读的方式。但请注意，由于空白字符会被语法分析器所忽略，这种格式化不过是给人类读者的一份参考罢了。
 
 </aside>
 
-It *is* possible to define a context-free grammar that avoids the ambiguity
-directly, but it requires splitting most of the statement rules into pairs, one
-that allows an `if` with an `else` and one that doesn't. It's annoying.
+我们**确实**可以定义一条能够直接规避该歧义的上下文无关文法，但那需要将大多数语句规则一分为二——一条允许 `if` 配 `else`，一条不允许。这相当恼人。
 
-Instead, most languages and parsers avoid the problem in an ad hoc way. No
-matter what hack they use to get themselves out of the trouble, they always
-choose the same interpretation -- the `else` is bound to the nearest `if` that
-precedes it.
+取而代之的是，大多数语言与语法分析器都以某种特别的方式来规避这一问题。无论它们使用何种花式小窍门来脱离困境，它们总会选择同一种解读方式——else 绑定到的是**最近**的那条 `if`。
 
-Our parser conveniently does that already. Since `ifStatement()` eagerly looks
-for an `else` before returning, the innermost call to a nested series will claim
-the else clause for itself before returning to the outer `if` statements.
+我们的语法分析器已然就这么做了。由于 `ifStatement()` 在返回之前会急切地查找 `else`，在一连串嵌套调用中，最内层的那次调用便会在向外层 `if` 语句返回之前，率先将那个 else 子句据为己有。
 
-Syntax in hand, we are ready to interpret.
+语法在手，我们便准备妥当，只待去解释。
 
 ^code visit-if
 
-The interpreter implementation is a thin wrapper around the self-same Java code.
-It evaluates the condition. If truthy, it executes the then branch. Otherwise,
-if there is an else branch, it executes that.
+解释器的实现乃是 Java 同名代码的一层薄薄封装。它对条件进行求值。若为真值，便执行 then 分支。否则，若存在 else 分支，便执行之。
 
-If you compare this code to how the interpreter handles other syntax we've
-implemented, the part that makes control flow special is that Java `if`
-statement. Most other syntax trees always evaluate their subtrees. Here, we may
-not evaluate the then or else statement. If either of those has a side effect,
-the choice not to evaluate it becomes user visible.
+若你拿这段代码与我们先前所实现过的那些语法处理方式作一番比较，便会发现，使控制流得以与众不同的那一部分，便是那个 Java 的 `if` 语句。我们先前实现过的大多数语法树都**总是**会对其子树求值。而此处，我们**可能**不会对那条 then 或 else 语句求值。倘若其中之一带有副作用，那么**不**对其求值这一选择便会成为用户可感知的现象。
 
-## Logical Operators
+## 逻辑运算符
 
-Since we don't have the conditional operator, you might think we're done with
-branching, but no. Even without the ternary operator, there are two other
-operators that are technically control flow constructs -- the logical operators
-`and` and `or`.
+既然我们没有条件运算符，你大概会以为分支这部分已经讲完了，但其实并未。由于没有了三元运算符的缘故，还有另外两种运算符从技术上讲也属于控制流构件——它们便是逻辑运算符 `and` 与 `or`。
 
-These aren't like other binary operators because they **short-circuit**. If,
-after evaluating the left operand, we know what the result of the logical
-expression must be, we don't evaluate the right operand. For example:
+这两位与其它的二元运算符迥异，因为它们会**短路求值**。一旦在求值左操作数之后，我们已然能够知晓整个逻辑表达式的结果，那就**不必**再去对右操作数求值了。举例而言：
 
 ```lox
 false and sideEffect();
 ```
 
-For an `and` expression to evaluate to something truthy, both operands must be
-truthy. We can see as soon as we evaluate the left `false` operand that that
-isn't going to be the case, so there's no need to evaluate `sideEffect()` and it
-gets skipped.
+对于一个 `and` 表达式，其结果若要为真值，则两个操作数必须皆为真值。我们只要在求值左侧的 `false` 操作数的那一刻，便已然看出结果不会是真值，因此便**无需**对 `sideEffect()` 进行求值，它被跳了过去。
 
-This is why we didn't implement the logical operators with the other binary
-operators. Now we're ready. The two new operators are low in the precedence
-table. Similar to `||` and `&&` in C, they each have their <span
-name="logical">own</span> precedence with `or` lower than `and`. We slot them
-right between `assignment` and `equality`.
+这便是我们彼时没有与其它二元运算符一道实现逻辑运算符的原因。如今，我们准备好了。这两个新运算符在优先级表中的位置偏低。与 C 中的 `||` 与 `&&` 类似，它们各自拥有<span name="logical">自己的</span>优先级，其中 `or` 低于 `and`。我们将它们安插在 `assignment` 与 `equality` 之间。
 
 <aside name="logical">
 
-I've always wondered why they don't have the same precedence, like the various
-comparison or equality operators do.
+我一直很好奇，为什么它们不像那些比较运算符或相等性运算符那样共享同一优先级。
 
 </aside>
 
 ```ebnf
 expression     → assignment ;
 assignment     → IDENTIFIER "=" assignment
-               | logic_or ;
+               | logic**or ;
 logic_or       → logic_and ( "or" logic_and )* ;
-logic_and      → equality ( "and" equality )* ;
+logic**and      → equality ( "and" equality )* ;
 ```
 
-Instead of falling back to `equality`, `assignment` now cascades to `logic_or`.
-The two new rules, `logic_or` and `logic_and`, are <span
-name="same">similar</span> to other binary operators. Then `logic_and` calls
-out to `equality` for its operands, and we chain back to the rest of the
-expression rules.
+`assignment` 不再直接落到 `equality`，而是级联到 `logic**or`。这两条新规则 `logic**or` 与 `logic**and`，<span name="same">与</span>其它二元运算符颇为相似。而 `logic**and` 则调用 `equality` 以解析其操作数，于是这条链便重新接回了表达式的其余规则。
 
 <aside name="same">
 
-The *syntax* doesn't care that they short-circuit. That's a semantic concern.
+它们的**语法**与短路求值毫无瓜葛；那是语义层面的考量。
 
 </aside>
 
-We could reuse the existing Expr.Binary class for these two new expressions
-since they have the same fields. But then `visitBinaryExpr()` would have to
-check to see if the operator is one of the logical operators and use a different
-code path to handle the short circuiting. I think it's cleaner to define a <span
-name="logical-ast">new class</span> for these operators so that they get their
-own visit method.
+我们本可以对这两个新表达式复用既有的 Expr.Binary 类——毕竟它们的字段完全相同。但那样一来，`visitBinaryExpr()` 便不得不去检查运算符究竟是哪种逻辑运算符，并采用一条不同的代码路径来处理短路求值。我个人觉得为它们定义一个<span name="logical-ast">全新的类</span>，让它们各自拥有自己的 visit 方法，会更为清爽。
 
 ^code logical-ast (1 before, 1 after)
 
 <aside name="logical-ast">
 
-The generated code for the new node is in [Appendix II][appendix-logical].
+新节点的生成代码收录于[附录 II][appendix-logical]。
 
 [appendix-logical]: appendix-ii.html#logical-expression
 
 </aside>
 
-To weave the new expressions into the parser, we first change the parsing code
-for assignment to call `or()`.
+要将这些新表达式织入语法分析器，我们首先需要修改赋值表达式那条解析代码，让它去调用 `or()`。
 
 ^code or-in-assignment (1 before, 2 after)
 
-The code to parse a series of `or` expressions mirrors other binary operators.
+用于解析一连串 `or` 表达式的代码，与其它二元运算符的处理方式如出一辙。
 
 ^code or
 
-Its operands are the next higher level of precedence, the new `and` expression.
+它的操作数则属于更高一级的优先级——即那条新的 `and` 表达式。
 
 ^code and
 
-That calls `equality()` for its operands, and with that, the expression parser
-is all tied back together again. We're ready to interpret.
+后者又调用 `equality()` 来解析其操作数。至此，表达式语法分析器的全貌便重新闭合了起来。我们已准备好去解释。
 
 ^code visit-logical
 
-If you compare this to the [earlier chapter's][evaluating] `visitBinaryExpr()`
-method, you can see the difference. Here, we evaluate the left operand first. We
-look at its value to see if we can short-circuit. If not, and only then, do we
-evaluate the right operand.
+若你拿这段代码与[前几章][evaluating]中那个 `visitBinaryExpr()` 方法作一番对比，便能一眼看出差别所在。此处，我们先对左操作数求值。我们观察其值，以判断是否可以短路。若不行——唯有此时——我们才去对右操作数求值。
 
 [evaluating]: evaluating-expressions.html
 
-The other interesting piece here is deciding what actual value to return. Since
-Lox is dynamically typed, we allow operands of any type and use truthiness to
-determine what each operand represents. We apply similar reasoning to the
-result. Instead of promising to literally return `true` or `false`, a logic
-operator merely guarantees it will return a value with appropriate truthiness.
+另一个有趣之处在于，我们究竟应当返回怎样的实际值。由于 Lox 是动态类型的，我们允许任意类型的操作数，并用真值性来判定每一操作数的含义。我们对结果也作同样的推导。逻辑运算符并不**承诺**字面上返回 `true` 或 `false`，它仅仅保证会返回一个具有恰当真值性的值。
 
-Fortunately, we have values with proper truthiness right at hand -- the results
-of the operands themselves. So we use those. For example:
+所幸，我们手边便有着真值性恰如其分的值——也就是各个操作数自身的结果。所以我们便直接用上它们。例如：
 
 ```lox
-print "hi" or 2; // "hi".
-print nil or "yes"; // "yes".
+print "hi" or 2; // "hi"。
+print nil or "yes"; // "yes"。
 ```
 
-On the first line, `"hi"` is truthy, so the `or` short-circuits and returns
-that. On the second line, `nil` is falsey, so it evaluates and returns the
-second operand, `"yes"`.
+第一行中，`"hi"` 为真值，因此 `or` 短路求值并将其原样返回。第二行中，`"yes"` 为假值，因此它会对第二个操作数求值并将其返回，`"yes"`。
 
-That covers all of the branching primitives in Lox. We're ready to jump ahead to
-loops. You see what I did there? *Jump. Ahead.* Get it? See, it's like a
-reference to... oh, forget it.
+至此，Lox 中所有的分支原语便都已悉数介绍完毕。我们准备就绪，可以"向前"跳到循环部分了。你听出来我做了什么吗？*向前。跳。* Get it? 这就好比是在影射……唉，算了。
 
-## While Loops
+## while 循环
 
-Lox features two looping control flow statements, `while` and `for`. The `while`
-loop is the simpler one, so we'll start there. Its grammar is the same as in C.
+Lox 设有两种循环控制流语句——`while` 与 `for`。`while` 循环更为简单，我们便从那里入手。它的文法与 C 中一模一样。
 
 ```ebnf
 statement      → exprStmt
@@ -403,55 +266,43 @@ statement      → exprStmt
 whileStmt      → "while" "(" expression ")" statement ;
 ```
 
-We add another clause to the statement rule that points to the new rule for
-while. It takes a `while` keyword, followed by a parenthesized condition
-expression, then a statement for the body. That new grammar rule gets a <span
-name="while-ast">syntax tree node</span>.
+我们在 statement 规则中再添一个分支，使其指向新设的 `while` 规则。它由一个 `while` 关键字、一个被括号包裹的条件表达式、以及循环体所对应的那条语句构成。这条新文法规则会得到一个<span name="while-ast">语法树节点</span>。
 
 ^code while-ast (1 before, 1 after)
 
 <aside name="while-ast">
 
-The generated code for the new node is in [Appendix II][appendix-while].
+新节点的生成代码收录于[附录 II][appendix-while]。
 
 [appendix-while]: appendix-ii.html#while-statement
 
 </aside>
 
-The node stores the condition and body. Here you can see why it's nice to have
-separate base classes for expressions and statements. The field declarations
-make it clear that the condition is an expression and the body is a statement.
+该节点存储了条件与循环体。在这里，你便能看出将表达式与语句各自拆分为两套类继承体系所带来的好处——字段声明清清楚楚地表明：条件是一个表达式，而循环体则是一条语句。
 
-Over in the parser, we follow the same process we used for `if` statements.
-First, we add another case in `statement()` to detect and match the leading
-keyword.
+在语法分析器中，我们沿用 `if` 语句那套流程。首先，我们在 `statement()` 中再添一个分支，以检测并匹配那个前置的关键字。
 
 ^code match-while (1 before, 1 after)
 
-That delegates the real work to this method:
+该分支将真正的工作委托给下面这个方法：
 
 ^code while-statement
 
-The grammar is dead simple and this is a straight translation of it to Java.
-Speaking of translating straight to Java, here's how we execute the new syntax:
+文法再简单不过，这段代码便是它向 Java 的一次直接翻译。说到直接翻译成 Java，下面便是如何执行这套新语法：
 
 ^code visit-while
 
-Like the visit method for `if`, this visitor uses the corresponding Java
-feature. This method isn't complex, but it makes Lox much more powerful. We can
-finally write a program whose running time isn't strictly bound by the length of
-the source code.
+与 `if` 语句的 visit 方法类似，这个 visitor 也借用了与之对应的 Java 特性。该方法并不复杂，却使 Lox 变得强大得多。我们终于可以写出一个运行时间**不再**严格受源代码长度限制的程序了。
 
-## For Loops
+## for 循环
 
-We're down to the last control flow construct, <span name="for">Ye Olde</span>
-C-style `for` loop. I probably don't need to remind you, but it looks like this:
+我们已经来到了最后一种控制流构件——<span name="for">老派</span>C 风格 `for` 循环。大概不需要我来提醒你，它长这样：
 
 ```lox
 for (var i = 0; i < 10; i = i + 1) print i;
 ```
 
-In grammarese, that's:
+若用文法来表述，便是：
 
 ```ebnf
 statement      → exprStmt
@@ -468,61 +319,33 @@ forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
 
 <aside name="for">
 
-Most modern languages have a higher-level looping statement for iterating over
-arbitrary user-defined sequences. C# has `foreach`, Java has "enhanced for",
-even C++ has range-based `for` statements now. Those offer cleaner syntax than
-C's `for` statement by implicitly calling into an iteration protocol that the
-object being looped over supports.
+大多数现代语言都设有更高层次的循环语句，用于遍历用户自定义的任意序列。C# 设有 `foreach`，Java 设有"增强 for"，就连 C++ 如今也有了基于范围的 `for` 语句。这些写法通过隐式地调用被遍历对象所支持的迭代协议，提供了比 C 的 `for` 语句更为清爽的语法。
 
-I love those. For Lox, though, we're limited by building up the interpreter a
-chapter at a time. We don't have objects and methods yet, so we have no way of
-defining an iteration protocol that the `for` loop could use. So we'll stick
-with the old school C `for` loop. Think of it as "vintage". The fixie of control
-flow statements.
+我很喜欢这些写法。但对 Lox 而言，我们仍受到"一章一章地打造解释器"这一节奏的制约。我们尚且没有对象与方法，因而也无法为 `for` 循环定义一套它可以调用的迭代协议。因此，我们只好坚守老派 C 风格的 `for` 循环。把它当作一种"复古"吧——控制流语句中的固定齿轮单车。
 
 </aside>
 
-Inside the parentheses, you have three clauses separated by semicolons:
+在括号内部，由分号隔开的共有三个子句：
 
-1.  The first clause is the *initializer*. It is executed exactly once, before
-    anything else. It's usually an expression, but for convenience, we also
-    allow a variable declaration. In that case, the variable is scoped to the
-    rest of the `for` loop -- the other two clauses and the body.
+1.  第一个子句是**初始化器**。它在整个循环启动之前，恰被执行一次。它通常是一个表达式，但为了方便起见，我们也允许出现变量声明。在那种情况下，该变量的作用域被限定在 `for` 循环的剩余部分——包括另外两个子句与循环体。
 
-2.  Next is the *condition*. As in a `while` loop, this expression controls when
-    to exit the loop. It's evaluated once at the beginning of each iteration,
-    including the first. If the result is truthy, it executes the loop body.
-    Otherwise, it bails.
+2.  接下来是**条件**。与 `while` 循环中一样，这一表达式控制着何时退出循环。它会在每一轮迭代的开头——包括第一轮——被求值。若其结果为真值，便执行循环体。否则，便抽身而去。
 
-3.  The last clause is the *increment*. It's an arbitrary expression that does
-    some work at the end of each loop iteration. The result of the expression is
-    discarded, so it must have a side effect to be useful. In practice, it
-    usually increments a variable.
+3.  最后一个子句是**增量**。它是任意一个表达式，在每一轮迭代的末尾负责做一些工作。该表达式的结果会被丢弃，因此它**必须**带有副作用才能派上用场。在实践中，它通常负责让某个变量自增。
 
-Any of these clauses can be omitted. Following the closing parenthesis is a
-statement for the body, which is typically a block.
+这三个子句中的任何一个皆可被省略。紧跟作为结尾的右括号之后，便是循环体所对应的那条语句——通常是一个块。
 
-### Desugaring
+### 脱糖
 
-That's a lot of machinery, but note that none of it does anything you couldn't
-do with the statements we already have. If `for` loops didn't support
-initializer clauses, you could just put the initializer expression before the
-`for` statement. Without an increment clause, you could simply put the increment
-expression at the end of the body yourself.
+这套机制着实不少，但请留意，它们中的任何一项都未做任何凭借既有语句便无法达成的事情。若 `for` 循环不支持初始化器子句，你完全可以将那条初始化表达式摆在 `for` 语句之前。若不支持增量子句，你同样可以自行将那条增量表达式摆在循环体的末尾。
 
-In other words, Lox doesn't *need* `for` loops, they just make some common code
-patterns more pleasant to write. These kinds of features are called <span
-name="sugar">**syntactic sugar**</span>. For example, the previous `for` loop
-could be rewritten like so:
+换言之，Lox 并**非**非有 `for` 循环不可——它只不过是让某些常见的代码模式写起来更惬意罢了。这类特性有个名字——<span name="sugar">**语法糖**</span>。举个例子，前述那条 `for` 循环可以被改写成如下形式：
 
 <aside name="sugar">
 
-This delightful turn of phrase was coined by Peter J. Landin in 1964 to describe
-how some of the nice expression forms supported by languages like ALGOL were a
-sweetener sprinkled over the more fundamental -- but presumably less palatable
--- lambda calculus underneath.
+这一妙趣横生的措辞由 Peter J. Landin 于 1964 年所创，借以形容某些由 ALGOL 等语言所提供的优美表达式形式，不过是撒在更为基本——但想必也较为乏味——的 λ 演算之上的一层甜味调料。
 
-<img class="above" src="image/control-flow/sugar.png" alt="Slightly more than a spoonful of sugar.">
+<img class="above" src="image/control-flow/sugar.png" alt="一勺多一点的糖。" />
 
 </aside>
 
@@ -536,115 +359,77 @@ sweetener sprinkled over the more fundamental -- but presumably less palatable
 }
 ```
 
-This script has the exact same semantics as the previous one, though it's not as
-easy on the eyes. Syntactic sugar features like Lox's `for` loop make a language
-more pleasant and productive to work in. But, especially in sophisticated
-language implementations, every language feature that requires back-end support
-and optimization is expensive.
+这段脚本与前面那条拥有完全相同的语义，只是看起来没那么赏心悦目罢了。语法糖特性诸如 Lox 的 `for` 循环，能够让一门语言用起来更为惬意、更为高效。但在那些老练的语言实现中，每一个需要后端支持与优化的语言特性都代价不菲。
 
-We can have our cake and eat it too by <span
-name="caramel">**desugaring**</span>. That funny word describes a process where
-the front end takes code using syntax sugar and translates it to a more
-primitive form that the back end already knows how to execute.
+我们可以通过<span name="caramel">**脱糖**</span>这一手法鱼与熊掌兼得。这个听起来颇为滑稽的词所描述的，是这样一种过程：前端接收一段使用语法糖写成的代码，并将其翻译为后端已然知晓如何执行的一种更为基本的形式。
 
 <aside name="caramel">
 
-Oh, how I wish the accepted term for this was "caramelization". Why introduce a
-metaphor if you aren't going to stick with it?
+唉，我多么希望这个被广泛接受的术语是"焦糖化"啊。既然你都已经打了一个比方，为何不把它贯彻到底呢？
 
 </aside>
 
-We're going to desugar `for` loops to the `while` loops and other statements the
-interpreter already handles. In our simple interpreter, desugaring really
-doesn't save us much work, but it does give me an excuse to introduce you to the
-technique. So, unlike the previous statements, we *won't* add a new syntax tree
-node. Instead, we go straight to parsing. First, add an import we'll need soon.
+我们打算将 `for` 循环脱糖为 `while` 循环以及若干其他语句——那些解释器已然能够应对的语句。在我们这款简易的解释器中，脱糖这一手段所节省的工作其实相当有限，但它给了我一个向你引介这一技巧的由头。因此，与前几次那些语句不同，我们**不会**新增一个语法树节点。取而代之，我们直接奔赴解析环节。首先，添上一段我们即将用到的 import。
 
 ^code import-arrays (1 before, 1 after)
 
-Like every statement, we start parsing a `for` loop by matching its keyword.
+与所有语句一样，我们通过匹配其关键字来开启对 `for` 循环的解析。
 
 ^code match-for (1 before, 1 after)
 
-Here is where it gets interesting. The desugaring is going to happen here, so
-we'll build this method a piece at a time, starting with the opening parenthesis
-before the clauses.
+接下来才是真正有趣之处。脱糖将在这里发生，因此我们将以一段一段搭建的方式来构建这个方法，先从诸子句之前那个开括号开始。
 
 ^code for-statement
 
-The first clause following that is the initializer.
+紧随其后的第一个子句，便是初始化器。
 
 ^code for-initializer (2 before, 1 after)
 
-If the token following the `(` is a semicolon then the initializer has been
-omitted. Otherwise, we check for a `var` keyword to see if it's a <span
-name="variable">variable</span> declaration. If neither of those matched, it
-must be an expression. We parse that and wrap it in an expression statement so
-that the initializer is always of type Stmt.
+若紧跟在 `(` 之后的词法单元是一个分号，那么初始化器便已被省略。否则，我们检查是否存在一个 `var` 关键字，以判断它是否是一条<span name="variable">变量</span>声明。若两者皆不匹配，那它必定是一个表达式。我们对其进行解析，并将其包裹进一条表达式语句，从而确保初始化器的类型始终为 Stmt。
 
 <aside name="variable">
 
-In a previous chapter, I said we can split expression and statement syntax trees
-into two separate class hierarchies because there's no single place in the
-grammar that allows both an expression and a statement. That wasn't *entirely*
-true, I guess.
+在前一章中，我曾说过我们可以将表达式与语句的语法树拆分为两套独立的类继承体系，因为文法中并不存在某个既允许表达式又允许语句的位置。看来这话并没有**完全**说对。
 
 </aside>
 
-Next up is the condition.
+紧接着出场的是条件。
 
 ^code for-condition (2 before, 1 after)
 
-Again, we look for a semicolon to see if the clause has been omitted. The last
-clause is the increment.
+同样的，我们去查看一个分号，以判断该子句是否已被省略。最后一个子句则是增量。
 
 ^code for-increment (1 before, 1 after)
 
-It's similar to the condition clause except this one is terminated by the
-closing parenthesis. All that remains is the <span name="body">body</span>.
+它与条件子句颇为相似，只是这一个以作为结尾的右括号收尾。剩下的，便只剩那具<span name="body">循环体</span>了。
 
 <aside name="body">
 
-Is it just me or does that sound morbid? "All that remained... was the *body*".
+就我觉得这听起来多少有些阴森么？"剩下的……便是那具**循环体**"。
 
 </aside>
 
 ^code for-body (1 before, 1 after)
 
-We've parsed all of the various pieces of the `for` loop and the resulting AST
-nodes are sitting in a handful of Java local variables. This is where the
-desugaring comes in. We take those and use them to synthesize syntax tree nodes
-that express the semantics of the `for` loop, like the hand-desugared example I
-showed you earlier.
+至此，我们已经将 `for` 循环的各个组成部分悉数解析完毕，相应的 AST 节点已然栖身于若干个 Java 局部变量之中。脱糖便是在此处粉墨登场。我们将这几块东西拾掇起来，用以合成能够表达 `for` 循环语义的语法树节点——正如我先前为你手工脱糖的那个例子所示。
 
-The code is a little simpler if we work backward, so we start with the increment
-clause.
+倘若我们按逆序行事，代码会简洁一些，所以我们从增量子句入手。
 
 ^code for-desugar-increment (2 before, 1 after)
 
-The increment, if there is one, executes after the body in each iteration of the
-loop. We do that by replacing the body with a little block that contains the
-original body followed by an expression statement that evaluates the increment.
+若存在增量子句，它便会在每一轮迭代的循环体之后被执行。我们通过将循环体替换为一个小小的块来达到此目的——该块内含原本的循环体，紧随其后的是一条用于对增量进行求值的表达式语句。
 
 ^code for-desugar-condition (2 before, 1 after)
 
-Next, we take the condition and the body and build the loop using a primitive
-`while` loop. If the condition is omitted, we jam in `true` to make an infinite
-loop.
+随后，我们将条件与循环体拾掇起来，借由一个原初的 `while` 循环来构建循环结构。若条件已被省略，我们便硬塞上一个 `true`，以构成一个无穷循环。
 
 ^code for-desugar-initializer (2 before, 1 after)
 
-Finally, if there is an initializer, it runs once before the entire loop. We do
-that by, again, replacing the whole statement with a block that runs the
-initializer and then executes the loop.
+最后，若存在初始化器，它会在整个循环开始之前先行执行一次。我们又一次通过将整条语句替换为一个块来达成目的——该块先执行初始化器，再执行循环循环。
 
-That's it. Our interpreter now supports C-style `for` loops and we didn't have
-to touch the Interpreter class at all. Since we desugared to nodes the
-interpreter already knows how to visit, there is no more work to do.
+至此，我们的解释器已然支持 C 风格的 `for` 循环，而我们却**无需**改动 Interpreter 类。因为我们已经将之脱糖为解释器已然懂得如何访问的那些节点，所以无须再做更多的工作。
 
-Finally, Lox is powerful enough to entertain us, at least for a few minutes.
-Here's a tiny program to print the first 21 elements in the Fibonacci
-sequence:
+Lox 终于强大到足以让我们乐上一阵子了。下面这段小程序会打印斐波那契数列的前 21 项：
 
 ```lox
 var a = 0;
@@ -659,79 +444,36 @@ for (var b = 1; a < 10000; b = temp + b) {
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  A few chapters from now, when Lox supports first-class functions and dynamic
-    dispatch, we technically won't *need* branching statements built into the
-    language. Show how conditional execution can be implemented in terms of
-    those. Name a language that uses this technique for its control flow.
+1.  几章之后，当 Lox 支持头等函数与动态分派时，从技术上讲我们便**不再需要**语言内置的分支语句。请展示如何借助这些机制来实现条件执行。并请举出一门采用此技巧来构建其控制流的语言。
 
-2.  Likewise, looping can be implemented using those same tools, provided our
-    interpreter supports an important optimization. What is it, and why is it
-    necessary? Name a language that uses this technique for iteration.
+1.  同样地，借由这些机制也能实现循环——前提是我们的解释器支持某项重要的优化。该优化是什么？它为何必不可少？再请举出一门采用此技巧来实现迭代的语言。
 
-3.  Unlike Lox, most other C-style languages also support `break` and `continue`
-    statements inside loops. Add support for `break` statements.
+1.  与 Lox 不同，大多数其它 C 风格的语言同时支持循环内部的 `break` 与 `continue` 语句。请为 `break` 语句添加支持。
 
-    The syntax is a `break` keyword followed by a semicolon. It should be a
-    syntax error to have a `break` statement appear outside of any enclosing
-    loop. At runtime, a `break` statement causes execution to jump to the end of
-    the nearest enclosing loop and proceeds from there. Note that the `break`
-    may be nested inside other blocks and `if` statements that also need to be
-    exited.
+    其语法为一个 `break` 关键字后跟随一个分号。`break` 语句出现在任何外层循环之外时，都应是一个语法错误。在运行时，`break` 语句会使执行跳转到最近的外层循环的末尾，并从从处开始继续。请注意，`break` 可能会被嵌套于其它块与 `if` 语句之中，那些外层的结构同样需要被一并退出。
 
 </div>
 
 <div class="design-note">
 
-## Design Note: Spoonfuls of Syntactic Sugar
+## 设计笔记：撒入语法糖
 
-When you design your own language, you choose how much syntactic sugar to pour
-into the grammar. Do you make an unsweetened health food where each semantic
-operation maps to a single syntactic unit, or some decadent dessert where every
-bit of behavior can be expressed ten different ways? Successful languages
-inhabit all points along this continuum.
+当你设计自己的语言时，你便要决定往文法里撒入多少语法糖。你是要做一款无糖的健康食品——每一种语义操作都恰好对应一个语法单元？还是要做一款奢华的甜点——每一种行为都各有十种表达方式？成功的语言在这条连续光谱上各有其所居。
 
-On the extreme acrid end are those with ruthlessly minimal syntax like Lisp,
-Forth, and Smalltalk. Lispers famously claim their language "has no syntax",
-while Smalltalkers proudly show that you can fit the entire grammar on an index
-card. This tribe has the philosophy that the *language* doesn't need syntactic
-sugar. Instead, the minimal syntax and semantics it provides are powerful enough
-to let library code be as expressive as if it were part of the language itself.
+处于极端**苦_ 那一端的，是那些语法被精简到近乎苛刻的语言，诸如 Lisp、Forth 与 Smalltalk。Lisp 的拥趸们常以自豪的口吻宣称，他们的语言"没有语法"；而 Smalltalk 玩家则骄傲地展示，他们能将整套文法塞进一张索引卡片之中。这一族群秉持的理念是：*语言*本身并不需要语法糖。其所提供的极简语法与语义已然足够强大，足令库代码能够表现得仿佛它本就是语言的一部分一般。
 
-Near these are languages like C, Lua, and Go. They aim for simplicity and
-clarity over minimalism. Some, like Go, deliberately eschew both syntactic sugar
-and the kind of syntactic extensibility of the previous category. They want the
-syntax to get out of the way of the semantics, so they focus on keeping both the
-grammar and libraries simple. Code should be obvious more than beautiful.
+靠近它们的，是 C、Lua 与 Go 这一类语言。它们追求的是简洁明了，而非极简主义。其中某些语言——比如 Go——刻意回避了语法糖，也回避了前一类语言所具有的那种语法可扩展性。它们希望语法能够为语义让路，因此它们专注于让文法与库二者皆保持简洁。代码应当**清晰明了**，甚于**优美**。
 
-Somewhere in the middle you have languages like Java, C#, and Python. Eventually
-you reach Ruby, C++, Perl, and D -- languages which have stuffed so much syntax
-into their grammar, they are running out of punctuation characters on the
-keyboard.
+介于二者之间的，是 Java、C# 与 Python 这一类语言。再往前走，便到了 Ruby、C++、Perl 与 D——这些语言在文法里塞进了太多的语法，以至于键盘上的标点符号都不够用了。
 
-To some degree, location on the spectrum correlates with age. It's relatively
-easy to add bits of syntactic sugar in later releases. New syntax is a crowd
-pleaser, and it's less likely to break existing programs than mucking with the
-semantics. Once added, you can never take it away, so languages tend to sweeten
-with time. One of the main benefits of creating a new language from scratch is
-it gives you an opportunity to scrape off those accumulated layers of frosting
-and start over.
+某种程度上，所处位置与语言年龄相关。在后续的版本中添加些许语法糖，是一件相对容易的事。新语法总能取悦用户，并且比起动语义来，它也不太会破坏既有程序。一旦加入，便再也拿不掉了——因此语言往往会随着时间而愈发甜蜜。从零开始设计一门新语言的一大主要好处，便是它给予你一次机会，可以将那些年深日久所累积的糖霜统统刮去、重新来过。
 
-Syntactic sugar has a bad rap among the PL intelligentsia. There's a real fetish
-for minimalism in that crowd. There is some justification for that. Poorly
-designed, unneeded syntax raises the cognitive load without adding enough
-expressiveness to carry its weight. Since there is always pressure to cram new
-features into the language, it takes discipline and a focus on simplicity to
-avoid bloat. Once you add some syntax, you're stuck with it, so it's smart to be
-parsimonious.
+语法糖在程序设计语言的知识精英圈子里名声不佳。那圈子里确实存在着一种对极简主义的迷恋。这倒也并非毫无道理。设计拙劣、且无必要的语法，会徒然抬升认知负担，却又无法换来足够的表达能力来扛起自己的分量。既然将新特性塞进语言的压力总是如影随形，那么避免臃肿便需要纪律与对简洁的执着。一旦你添加了某项语法，你便被它套牢了，因此所以**吝啬**一些总归是聪明的做法。
 
-At the same time, most successful languages do have fairly complex grammars, at
-least by the time they are widely used. Programmers spend a ton of time in their
-language of choice, and a few niceties here and there really can improve the
-comfort and efficiency of their work.
+另一方面，大多数成功的语言确实拥有相当复杂的文法，至少在被广泛使用的时候是这样。程序员会在他们所选择的语言上耗费大量时间，而语言中偶尔点缀的那几处体贴，真的可以提升他们工作的舒适度与效率。
 
-Striking the right balance -- choosing the right level of sweetness for your
-language -- relies on your own sense of taste.
+要在两者之间觅得恰到好处的平衡——为你这门语言选定合适的甜度——最终还是要靠你自己的品味。
 
 </div>

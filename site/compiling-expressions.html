@@ -38,16 +38,15 @@
 <h3><a href="#top">Compiling Expressions<small>17</small></a></h3>
 
 <ul>
-    <li><a href="#single-pass-compilation"><small>17.1</small> Single-Pass Compilation</a></li>
-    <li><a href="#parsing-tokens"><small>17.2</small> Parsing Tokens</a></li>
-    <li><a href="#emitting-bytecode"><small>17.3</small> Emitting Bytecode</a></li>
-    <li><a href="#parsing-prefix-expressions"><small>17.4</small> Parsing Prefix Expressions</a></li>
-    <li><a href="#parsing-infix-expressions"><small>17.5</small> Parsing Infix Expressions</a></li>
-    <li><a href="#a-pratt-parser"><small>17.6</small> A Pratt Parser</a></li>
-    <li><a href="#dumping-chunks"><small>17.7</small> Dumping Chunks</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
-    <li class="end-part"><a href="#design-note"><small>note</small>It&#x27;s Just Parsing</a></li>
+    <li><a href="#单遍编译"><small>17.1</small> 单遍编译</a></li>
+    <li><a href="#解析-token"><small>17.2</small> 解析 token</a></li>
+    <li><a href="#生成字节码"><small>17.3</small> 生成字节码</a></li>
+    <li><a href="#解析前缀表达式"><small>17.4</small> 解析前缀表达式</a></li>
+    <li><a href="#解析中缀表达式"><small>17.5</small> 解析中缀表达式</a></li>
+    <li><a href="#pratt-解析器"><small>17.6</small> Pratt 解析器</a></li>
+    <li><a href="#转储-chunk"><small>17.7</small> 转储 chunk</a></li>
+    <li><a href="#挑战"><small>17.8</small> 挑战</a></li>
+    <li><a href="#设计笔记：只是解析而已"><small>17.9</small> 设计笔记：只是解析而已</a></li>
 </ul>
 
 
@@ -73,16 +72,15 @@
 <h3><a href="#top">Compiling Expressions<small>17</small></a></h3>
 
 <ul>
-    <li><a href="#single-pass-compilation"><small>17.1</small> Single-Pass Compilation</a></li>
-    <li><a href="#parsing-tokens"><small>17.2</small> Parsing Tokens</a></li>
-    <li><a href="#emitting-bytecode"><small>17.3</small> Emitting Bytecode</a></li>
-    <li><a href="#parsing-prefix-expressions"><small>17.4</small> Parsing Prefix Expressions</a></li>
-    <li><a href="#parsing-infix-expressions"><small>17.5</small> Parsing Infix Expressions</a></li>
-    <li><a href="#a-pratt-parser"><small>17.6</small> A Pratt Parser</a></li>
-    <li><a href="#dumping-chunks"><small>17.7</small> Dumping Chunks</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
-    <li class="end-part"><a href="#design-note"><small>note</small>It&#x27;s Just Parsing</a></li>
+    <li><a href="#单遍编译"><small>17.1</small> 单遍编译</a></li>
+    <li><a href="#解析-token"><small>17.2</small> 解析 token</a></li>
+    <li><a href="#生成字节码"><small>17.3</small> 生成字节码</a></li>
+    <li><a href="#解析前缀表达式"><small>17.4</small> 解析前缀表达式</a></li>
+    <li><a href="#解析中缀表达式"><small>17.5</small> 解析中缀表达式</a></li>
+    <li><a href="#pratt-解析器"><small>17.6</small> Pratt 解析器</a></li>
+    <li><a href="#转储-chunk"><small>17.7</small> 转储 chunk</a></li>
+    <li><a href="#挑战"><small>17.8</small> 挑战</a></li>
+    <li><a href="#设计笔记：只是解析而已"><small>17.9</small> 设计笔记：只是解析而已</a></li>
 </ul>
 
 
@@ -118,41 +116,22 @@
   <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
 </div>
 
+<h1><a href="#编译表达式" name="编译表达式"><small>17&#8202;.&#8202;0</small>编译表达式</a></h1>
 <blockquote>
-<p>In the middle of the journey of our life I found myself within a dark woods
-where the straight way was lost.</p>
-<p><cite>Dante Alighieri, <em>Inferno</em></cite></p>
+<p>在我们人生旅程的中途，我发现自己身处一片幽暗的森林，因为笔直的道路已然迷失。</p>
+<p><cite>但丁·阿利吉耶里，<em>《神曲·地狱篇》</em></cite></p>
 </blockquote>
-<p>This chapter is exciting for not one, not two, but <em>three</em> reasons. First, it
-provides the final segment of our VM&rsquo;s execution pipeline. Once in place, we can
-plumb the user&rsquo;s source code from scanning all the way through to executing it.</p><img src="image/compiling-expressions/pipeline.png" alt="Lowering the 'compiler' section of pipe between 'scanner' and 'VM'."/>
-<p>Second, we get to write an actual, honest-to-God <em>compiler</em>. It parses source
-code and outputs a low-level series of binary instructions. Sure, it&rsquo;s <span
-name="wirth">bytecode</span> and not some chip&rsquo;s native instruction set, but
-it&rsquo;s way closer to the metal than jlox was. We&rsquo;re about to be real language
-hackers.</p>
+<p>本章激动人心之处<strong>不止</strong>一、<strong>不</strong>二，而是<strong>三</strong>重。首先，它为我们 VM 的执行流水线提供最后一段。一旦就位，我们便能将用户的源代码从扫描一路贯穿到执行。</p><img src="image/compiling-expressions/pipeline.png" alt="压低 'scanner' 与 'VM' 之间那一段 'compiler' 管道。" />
+<p>其次，我们终于要写一款名正言顺的<strong>编译器</strong>了。它解析源代码，并输出一串低层级的二进制指令。当然，它是<span name="wirth">字节码</span>，而非某款芯片的原生指令集，但比起 jlox 来，已经离金属近得多了。我们即将成为货真价实的语言黑客。</p>
 <aside name="wirth">
-<p>Bytecode was good enough for Niklaus Wirth, and no one questions his street
-cred.</p>
+<p>字节码已经足够让 Niklaus Wirth 满意了， <strong>没</strong>有人会去质疑他的江湖地位。</p>
 </aside>
-<p><span name="pratt">Third</span> and finally, I get to show you one of my
-absolute favorite algorithms: Vaughan Pratt&rsquo;s &ldquo;top-down operator precedence
-parsing&rdquo;. It&rsquo;s the most elegant way I know to parse expressions. It gracefully
-handles prefix operators, postfix, infix, <em>mixfix</em>, any kind of <em>-fix</em> you got.
-It deals with precedence and associativity without breaking a sweat. I love it.</p>
+<p><span name="pratt">第三</span>，也是最后一点，我终于可以向你展示我最为钟爱的算法之一：Vaughan Pratt 的&ldquo;自顶向下算符优先&ldquo;解析法。它是我所<strong>知道</strong>的最优雅的表达式解析方式。它能从容地处理前缀运算符、后缀、中缀、<strong>混合缀</strong>，你<strong>能</strong>想出的任何一种 <em>缀</em>。它能轻松应对优先级与结合性，而<strong>不</strong>会大动干戈。我<strong>爱</strong>它。</p>
 <aside name="pratt">
-<p>Pratt parsers are a sort of oral tradition in industry. No compiler or language
-book I&rsquo;ve read teaches them. Academia is very focused on generated parsers, and
-Pratt&rsquo;s technique is for handwritten ones, so it gets overlooked.</p>
-<p>But in production compilers, where hand-rolled parsers are common, you&rsquo;d be
-surprised how many people know it. Ask where they learned it, and it&rsquo;s always,
-&ldquo;Oh, I worked on this compiler years ago and my coworker said they took it from
-this old front end<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span>&rdquo;</p>
+<p>Pratt 解析器在业界多少算是一种口耳相传的传统。我读过的<strong>没有</strong>任何一本编译器或语言的书<strong>讲</strong>过它。学术界<strong>极其</strong>专注于由工具生成的解析器，而 Pratt 的技术是<strong>面向</strong>手写解析器的，因此便遭到冷落。</p>
+<p>但在生产级的编译器中——手写解析器颇为常见——你<strong>会</strong>惊讶于懂得此法的人竟有如此之多。问他们从哪儿学来的，答案总是：&ldquo;哦，那都是多年前我参与某个编译器，我同事说他们是从某个老式前端里学来的……&ldquo;</p>
 </aside>
-<p>As usual, before we get to the fun stuff, we&rsquo;ve got some preliminaries to work
-through. You have to eat your vegetables before you get dessert. First, let&rsquo;s
-ditch that temporary scaffolding we wrote for testing the scanner and replace it
-with something more useful.</p>
+<p>一如既往，在我们抵达那些有趣的部分之前，还有若干准备工作要处理。你必须先吃掉蔬菜才能吃甜点。先，让我们把之前为测试扫描器而搭起的临时脚手架拆掉，换成更有用的东西。</p>
 <div class="codehilite"><pre class="insert-before">
 InterpretResult interpret(const char* source) {
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -179,14 +158,8 @@ replace 2 lines</div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>interpret</em>(), replace 2 lines</div>
 
-<p>We create a new empty chunk and pass it over to the compiler. The compiler will
-take the user&rsquo;s program and fill up the chunk with bytecode. At least, that&rsquo;s
-what it will do if the program doesn&rsquo;t have any compile errors. If it does
-encounter an error, <code>compile()</code> returns <code>false</code> and we discard the unusable
-chunk.</p>
-<p>Otherwise, we send the completed chunk over to the VM to be executed. When the
-VM finishes, we free the chunk and we&rsquo;re done. As you can see, the signature to
-<code>compile()</code> is different now.</p>
+<p>我们创建一份新的空 chunk，并将其交给编译器。编译器将拿过用户的程序，并向那份 chunk 中填入字节码。至少，那是<strong>若</strong>程序<strong>没有</strong>任何编译错误时的做法。若它<strong>真的</strong>撞上了错误，<code>compile()</code> 便返回 <code>false</code>，而我们也就丢弃那份无法使用的 chunk。</p>
+<p>否则，我们便将一份已完成的 chunk 送往 VM 去执行。当 VM 跑完之后，我们释放该 chunk，一切便大功告成。正如你所见，<code>compile()</code> 的签名如今已然不同。</p>
 <div class="codehilite"><pre class="insert-before">
 #define clox_compiler_h
 
@@ -202,9 +175,7 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.h</em>, replace 1 line</div>
 
-<p>We pass in the chunk where the compiler will write the code, and then
-<code>compile()</code> returns whether or not compilation succeeded. We make the same
-change to the signature in the implementation.</p>
+<p>我们传入编译器将要写入代码的那个 chunk，然后 <code>compile()</code> 返回编译是否成功。我们对实现中的签名也做同样的改动。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;scanner.h&quot;
 
@@ -218,9 +189,7 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>compile</em>(), replace 1 line</div>
 
-<p>That call to <code>initScanner()</code> is the only line that survives this chapter. Rip
-out the temporary code we wrote to test the scanner and replace it with these
-three lines:</p>
+<p>那一行 <code>initScanner()</code> 的调用是本章<strong>仅存</strong>的一行。撕掉我们之前为测试扫描器而写的临时代码，换成下面这三行：</p>
 <div class="codehilite"><pre class="insert-before">
   initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -235,69 +204,27 @@ replace 13 lines</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>(), replace 13 lines</div>
 
-<p>The call to <code>advance()</code> &ldquo;primes the pump&rdquo; on the scanner. We&rsquo;ll see what it does
-soon. Then we parse a single expression. We aren&rsquo;t going to do statements yet,
-so that&rsquo;s the only subset of the grammar we support. We&rsquo;ll revisit this when we
-<a href="global-variables.html">add statements in a few chapters</a>. After we compile the expression, we
-should be at the end of the source code, so we check for the sentinel EOF token.</p>
-<p>We&rsquo;re going to spend the rest of the chapter making this function work,
-especially that little <code>expression()</code> call. Normally, we&rsquo;d dive right into that
-function definition and work our way through the implementation from top to
-bottom.</p>
-<p>This chapter is <span name="blog">different</span>. Pratt&rsquo;s parsing technique is
-remarkably simple once you have it all loaded in your head, but it&rsquo;s a little
-tricky to break into bite-sized pieces. It&rsquo;s recursive, of course, which is part
-of the problem. But it also relies on a big table of data. As we build up the
-algorithm, that table grows additional columns.</p>
+<p>对 <code>advance()</code> 的调用为扫描器&ldquo;打了打气&ldquo;。我们很快便会看到它<strong>究竟</strong>在做些什么。然后我们解析一个单一的表达式。我们<strong>还</strong>不会去做语句，所以眼下那便是我们所能支持的文法之全部子集。等到我们在<a href="global-variables.html">几章之后</a>加入语句时，我们再回过头来处理。编译完表达式之后，我们<strong>应该</strong>已身处源代码的末尾，因此我们要检查那个 EOF 哨兵 token。</p>
+<p>我们将在本章余下的部分里让这个函数<strong>真正</strong>能跑起来，尤其是那一句 <code>expression()</code>。通常，我们会一头扎进那个函数的定义，自顶向下走完整个实现。</p>
+<p>但本章<span name="blog">不同</span>。Pratt 解析技术一旦完全装进你的脑袋，便简单得出奇，但若要将其拆解成一口一口能消化的零碎，却有几分棘手。它自然是递归的，这只是问题的一部分。问题还在于，它<strong>还</strong>倚赖于一张庞大的数据表。随着我们搭建这套算法，那张表会<strong>增长</strong>出额外的列。</p>
 <aside name="blog">
-<p>If this chapter isn&rsquo;t clicking with you and you&rsquo;d like another take on the
-concepts, I wrote an article that teaches the same algorithm but using Java and
-an object-oriented style: <a href="http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/">&ldquo;Pratt Parsing: Expression Parsing Made Easy&rdquo;</a>.</p>
+<p>若本章<strong>不</strong>怎么敲得开你的心窍，而你想从另一个角度再领略一下这些概念，我写过一篇文章，使用 Java 与面向对象的风格讲授<strong>同一</strong>算法：《<a href="http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/">Pratt Parsing: Expression Parsing Made Easy</a>》。</p>
 </aside>
-<p>I don&rsquo;t want to revisit 40-something lines of code each time we extend the
-table. So we&rsquo;re going to work our way into the core of the parser from the
-outside and cover all of the surrounding bits before we get to the juicy center.
-This will require a little more patience and mental scratch space than most
-chapters, but it&rsquo;s the best I could do.</p>
-<h2><a href="#single-pass-compilation" name="single-pass-compilation"><small>17&#8202;.&#8202;1</small>Single-Pass Compilation</a></h2>
-<p>A compiler has roughly two jobs. It parses the user&rsquo;s source code to understand
-what it means. Then it takes that knowledge and outputs low-level instructions
-that produce the same semantics. Many languages split those two roles into two
-separate <span name="passes">passes</span> in the implementation. A parser
-produces an AST<span class="em">&mdash;</span>just like jlox does<span class="em">&mdash;</span>and then a code generator traverses
-the AST and outputs target code.</p>
+<p>我不想在每次为那张表多添一列时，都回过头去修改那四十来行代码。所以我们<strong>将从</strong>外部<strong>向</strong>内<strong>进入</strong>解析器的核心，并在抵达中央之前先讲清所有周边之事。这需要比多数章节多一点的耐心与脑中临时占用，但这是我所能做到的最好安排。</p>
+<h2><a href="#单遍编译" name="单遍编译"><small>17&#8202;.&#8202;1</small>单遍编译</a></h2>
+<p>一款编译器大致有两件事。它解析用户的源代码以理解其含义。然后，它将这份知识翻译为一串低层级的指令，以<strong>产生</strong>相同的语义。许多语言<strong>在</strong>实现中<strong>将</strong>这两种角色拆分为两道独立<span name="passes">的 pass</span>。一道解析器<strong>产出</strong>一棵 AST——正如同 jlox 所做的——然后一道代码生成器遍历那棵 AST，并<strong>产出</strong>目标代码。</p>
 <aside name="passes">
-<p>In fact, most sophisticated optimizing compilers have a heck of a lot more than
-two passes. Determining not just <em>what</em> optimization passes to have, but how to
-order them to squeeze the most performance out of the compiler<span class="em">&mdash;</span>since the
-optimizations often interact in complex ways<span class="em">&mdash;</span>is somewhere between an &ldquo;open
-area of research&rdquo; and a &ldquo;dark art&rdquo;.</p>
+<p>事实上，大多数精密的优化编译器<strong>远远</strong>不止两道 pass。去敲定<strong>究竟</strong>应当设置哪些优化 pass，以及<strong>如何</strong>对它们排序以将最多的性能从编译器中挤出——因为那些优化之间往往以复杂的方式相互影响——乃是介于&ldquo;开放的研究领域&ldquo;与&ldquo;玄学暗术&ldquo;之间的某种东西。</p>
 </aside>
-<p>In clox, we&rsquo;re taking an old-school approach and merging these two passes into
-one. Back in the day, language hackers did this because computers literally
-didn&rsquo;t have enough memory to store an entire source file&rsquo;s AST. We&rsquo;re doing it
-because it keeps our compiler simpler, which is a real asset when programming in
-C.</p>
-<p>Single-pass compilers like we&rsquo;re going to build don&rsquo;t work well for all
-languages. Since the compiler has only a peephole view into the user&rsquo;s program
-while generating code, the language must be designed such that you don&rsquo;t need
-much surrounding context to understand a piece of syntax. Fortunately, tiny,
-dynamically typed Lox is <span name="lox">well-suited</span> to that.</p>
+<p>在 clox 中，我们走的是一条老派路线，将这两道 pass <strong>合二为一</strong>。当年，语言黑客们这么做是因为计算机<strong>实在</strong>没有足够的内存来存储整个源文件的 AST。我们这么干，则是因为它能让我们的编译器保持简洁，而<strong>这</strong>是一项用 C 编程时的真实财富。</p>
+<p>像我们即将构建的这种单遍编译器， <strong>并</strong>不<strong>适用</strong>于所有语言。鉴于编译器在生成代码时， <strong>对</strong>用户的程序<strong>只能</strong>透过&ldquo;锁孔&ldquo;窥视， <strong>这种</strong>语言<strong>必须</strong>在设计上<strong>不</strong>需要太多周边上下文来<strong>搞清</strong>一段语法。幸运的是，小巧的、动态类型的 Lox <strong>恰好</strong>适合这一点。</p>
 <aside name="lox">
-<p>Not that this should come as much of a surprise. I did design the language
-specifically for this book after all.</p><img src="image/compiling-expressions/keyhole.png" alt="Peering through a keyhole at 'var x;'"/>
+<p>这一<strong>点</strong>倒<strong>并不</strong>让人惊讶。我<strong>毕竟</strong>是<strong>为</strong>这本书<strong>专门</strong>设计了这门语言。</p><img src="image/compiling-expressions/keyhole.png" alt="透过 'var x;' 的一把锁孔窥视。" />
 </aside>
-<p>What this means in practical terms is that our &ldquo;compiler&rdquo; C module has
-functionality you&rsquo;ll recognize from jlox for parsing<span class="em">&mdash;</span>consuming tokens,
-matching expected token types, etc. And it also has functions for code gen<span class="em">&mdash;</span>emitting bytecode and adding constants to the destination chunk. (And it means
-I&rsquo;ll use &ldquo;parsing&rdquo; and &ldquo;compiling&rdquo; interchangeably throughout this and later
-chapters.)</p>
-<p>We&rsquo;ll build the parsing and code generation halves first. Then we&rsquo;ll stitch them
-together with the code in the middle that uses Pratt&rsquo;s technique to parse Lox&rsquo;s
-particular grammar and output the right bytecode.</p>
-<h2><a href="#parsing-tokens" name="parsing-tokens"><small>17&#8202;.&#8202;2</small>Parsing Tokens</a></h2>
-<p>First up, the front half of the compiler. This function&rsquo;s name should sound
-familiar.</p>
+<p>用实际的话说，这意味着我们这款&ldquo;编译器&rdquo; C 模块中<strong>既有</strong> jlox 中<strong>那种</strong>你<strong>认得出</strong>的解析功能——消费 token、匹配所期待的 token 类型，等等—— <strong>也</strong>有代码生成功能——发射字节码、并<strong>向</strong>目标 chunk <strong>添加</strong>常量。（这意味着在<strong>本章</strong>与<strong>后续</strong>章节中，我将&ldquo;解析&ldquo;与&ldquo;编译&ldquo;两个词<strong>交替</strong>使用。）</p>
+<p>我们会先搭建解析与代码生成两个<strong>半</strong>边。然后，我们会用<strong>位于</strong>两者<strong>之间</strong>的那<strong>一</strong>段代码将它们<strong>缝</strong>在一起——它<strong>使用</strong> Pratt 技术来解析 Lox <strong>那</strong>一份特定的文法，并输出正确的字节码。</p>
+<h2><a href="#解析-token" name="解析-token"><small>17&#8202;.&#8202;2</small>解析 token</a></h2>
+<p>先来前端这一半。这个函数的名字<strong>听上去</strong>应当很耳熟。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;scanner.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
@@ -316,16 +243,9 @@ familiar.</p>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
 
-<p>Just like in jlox, it steps forward through the token stream. It asks the
-scanner for the next token and stores it for later use. Before doing that, it
-takes the old <code>current</code> token and stashes that in a <code>previous</code> field. That will
-come in handy later so that we can get at the lexeme after we match a token.</p>
-<p>The code to read the next token is wrapped in a loop. Remember, clox&rsquo;s scanner
-doesn&rsquo;t report lexical errors. Instead, it creates special <em>error tokens</em> and
-leaves it up to the parser to report them. We do that here.</p>
-<p>We keep looping, reading tokens and reporting the errors, until we hit a
-non-error one or reach the end. That way, the rest of the parser sees only valid
-tokens. The current and previous token are stored in this struct:</p>
+<p>正如在 jlox 中那样，它<strong>向</strong>前<strong>迈</strong>一步<strong>穿过</strong> token 流。它<strong>向</strong>扫描器<strong>索要</strong>下一个 token，并将其<strong>存</strong>起来以备后用。在此<strong>之前</strong>，它将<strong>旧</strong>的 <code>current</code> token <strong>藏</strong>起来，放进 <code>previous</code> 字段。这<strong>将在</strong>之后<strong>派上用场</strong>，以便我们在匹配<strong>一个</strong> token <strong>之后</strong> <strong>拿</strong>到该词素。</p>
+<p>读取下一个 token 的那段代码被裹在一个循环里。记住，clox 的扫描器<strong>并不</strong>报告词法错误。取而代之的是，它创建<strong>专门的</strong>错误 token，并将<strong>报告</strong>的差事<strong>留</strong>给解析器。我们<strong>便</strong>在这里做这件事。</p>
+<p>我们<strong>不断</strong>循环，读取 token 并报告错误，直至<strong>撞上</strong>一个<strong>非</strong>错误 token 或<strong>抵达</strong>末尾。如此一来，解析器的<strong>其余</strong>部分便<strong>只会</strong>看到<strong>合法</strong>的 token。当下与前一个 token 都被<strong>存</strong>在这个结构体中：</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;scanner.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
@@ -343,12 +263,9 @@ static void advance() {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
 
-<p>Like we did in other modules, we have a single global variable of this struct
-type so we don&rsquo;t need to pass the state around from function to function in the
-compiler.</p>
-<h3><a href="#handling-syntax-errors" name="handling-syntax-errors"><small>17&#8202;.&#8202;2&#8202;.&#8202;1</small>Handling syntax errors</a></h3>
-<p>If the scanner hands us an error token, we need to actually tell the user. That
-happens using this:</p>
+<p>正如我们在其它模块中所做的那样，我们<strong>拥有</strong>一份该结构体类型的<strong>全局</strong>变量，从而<strong>不必</strong>在编译器的各函数之间将<strong>状态</strong>传来传去。</p>
+<h3><a href="#处理语法错误" name="处理语法错误"><small>17&#8202;.&#8202;2&#8202;.&#8202;1</small>处理语法错误</a></h3>
+<p>若扫描器<strong>抛给</strong>我们<strong>一个</strong>错误 token，我们便需要<strong>真正</strong>通知用户。那一步<strong>通过</strong>这个函数<strong>完成</strong>：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
 <pre>
@@ -358,10 +275,7 @@ add after variable <em>parser</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 
-<p>We pull the location out of the current token in order to tell the user where
-the error occurred and forward it to <code>errorAt()</code>. More often, we&rsquo;ll report an
-error at the location of the token we just consumed, so we give the shorter name
-to this other function:</p>
+<p>我们<strong>从</strong>当下 token 中<strong>取</strong>出位置，以便告知用户错误发生<strong>在哪</strong>一行，并将其<strong>传</strong>给 <code>errorAt()</code>。更多的时候，我们<strong>会</strong>在<strong>刚</strong>才<strong>消费</strong>的那个 token 的位置报告错误，因此我们为<strong>这个</strong>另一个函数起了个更短的名字：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
 <pre>
@@ -371,7 +285,7 @@ add after variable <em>parser</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 
-<p>The actual work happens here:</p>
+<p>真正的工作<strong>在</strong>这里<strong>进行</strong>：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
 <pre>
@@ -392,10 +306,7 @@ add after variable <em>parser</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 
-<p>First, we print where the error occurred. We try to show the lexeme if it&rsquo;s
-human-readable. Then we print the error message itself. After that, we set this
-<code>hadError</code> flag. That records whether any errors occurred during compilation.
-This field also lives in the parser struct.</p>
+<p>首先，我们<strong>打印</strong>错误发生的位置。若<strong>词素</strong>是人类可读的，我们<strong>便</strong>试着把它<strong>展示</strong>出来。然后我们<strong>打印</strong>错误消息<strong>本身</strong>。此后，我们<strong>设置</strong> <code>hadError</code> 标志位。它<strong>记录</strong>编译过程中<strong>是否</strong>出现过任何错误。这个字段<strong>也</strong>栖身于 parser 结构体之中。</p>
 <div class="codehilite"><pre class="insert-before">
   Token previous;
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -407,8 +318,7 @@ in struct <em>Parser</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Parser</em></div>
 
-<p>Earlier I said that <code>compile()</code> should return <code>false</code> if an error occurred. Now
-we can make it do that.</p>
+<p>先前我曾说过，若出现错误，<code>compile()</code> 应当返回 <code>false</code>。现在我们可以<strong>真正</strong>让它做到这一点了。</p>
 <div class="codehilite"><pre class="insert-before">
   consume(TOKEN_EOF, &quot;Expect end of expression.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -420,19 +330,10 @@ in <em>compile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
-<p>I&rsquo;ve got another flag to introduce for error handling. We want to avoid error
-cascades. If the user has a mistake in their code and the parser gets confused
-about where it is in the grammar, we don&rsquo;t want it to spew out a whole pile of
-meaningless knock-on errors after the first one.</p>
-<p>We fixed that in jlox using panic mode error recovery. In the Java interpreter,
-we threw an exception to unwind out of all of the parser code to a point where
-we could skip tokens and resynchronize. We don&rsquo;t have <span
-name="setjmp">exceptions</span> in C. Instead, we&rsquo;ll do a little smoke and
-mirrors. We add a flag to track whether we&rsquo;re currently in panic mode.</p>
+<p>为了处理错误，我<strong>还得</strong>引入<strong>一个</strong>标志位。我们<strong>希望</strong>避免错误的<strong>级联</strong>。若用户的代码<strong>有</strong>一个错误，且解析器<strong>在</strong>文法<strong>中</strong>搞不清<strong>自己</strong>的位置，我们<strong>并不</strong>希望它在<strong>第一</strong>个错误<strong>之后</strong>再<strong>吐</strong>出<strong>一</strong>大堆<strong>无意义</strong>的连锁错误。</p>
+<p>我们在 jlox 中借助紧急模式错误恢复来<strong>解决</strong>了这一问题。在<strong>那</strong>款 Java 解释器中，我们<strong>抛出</strong>一个异常，以便<strong>从</strong>解析器的所有代码<strong>中</strong>一路<strong>展开</strong> <strong>回到</strong>一点<strong>可以</strong>跳过 token 并<strong>重新</strong>同步的位置。在 C 中<strong>我们</strong> <strong>并</strong>没有<span name="setjmp">异常</span>。取而代之，我们将<strong>耍</strong>一点障眼法。我们<strong>在</strong>解析器<strong>中</strong> <strong>添加</strong>一个标志位， <strong>以</strong>追踪<strong>我们是否</strong>正处于紧急模式<strong>中</strong>。</p>
 <aside name="setjmp">
-<p>There is <code>setjmp()</code> and <code>longjmp()</code>, but I&rsquo;d rather not go there. Those make it
-too easy to leak memory, forget to maintain invariants, or otherwise have a Very
-Bad Day.</p>
+<p>确实有 <code>setjmp()</code> 与 <code>longjmp()</code>，但我<strong>实在</strong>不想<strong>碰</strong>它们。那些东西<strong>太</strong>容易导致内存泄漏、忘记维护不变式、抑或<strong>其他</strong>各种&ldquo;非常糟糕的一天&ldquo;。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
   bool hadError;
@@ -445,7 +346,7 @@ in struct <em>Parser</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Parser</em></div>
 
-<p>When an error occurs, we set it.</p>
+<p>当<strong>发生</strong>一个错误时，我们<strong>将</strong>它<strong>置</strong>位。</p>
 <div class="codehilite"><pre class="insert-before">
 static void errorAt(Token* token, const char* message) {
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -457,10 +358,7 @@ in <em>errorAt</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>errorAt</em>()</div>
 
-<p>After that, we go ahead and keep compiling as normal as if the error never
-occurred. The bytecode will never get executed, so it&rsquo;s harmless to keep on
-trucking. The trick is that while the panic mode flag is set, we simply suppress
-any other errors that get detected.</p>
+<p>此后，我们<strong>继续</strong>照常编译，仿佛<strong>那个</strong>错误<strong>从未</strong>发生过。所<strong>生成</strong>的字节码<strong>永远</strong>不会<strong>被</strong>执行，因此<strong>接着</strong>干下去<strong>是</strong> <strong>无</strong>害的。诀窍在于： <strong>当</strong>紧急模式标志位<strong>被</strong>置位<strong>时</strong>，我们<strong>仅仅</strong>抑制<strong>随后</strong>检测<strong>到</strong>的<strong>任何</strong> <strong>其</strong>他<strong>错误</strong>。</p>
 <div class="codehilite"><pre class="insert-before">
 static void errorAt(Token* token, const char* message) {
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -472,11 +370,8 @@ in <em>errorAt</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>errorAt</em>()</div>
 
-<p>There&rsquo;s a good chance the parser will go off in the weeds, but the user won&rsquo;t
-know because the errors all get swallowed. Panic mode ends when the parser
-reaches a synchronization point. For Lox, we chose statement boundaries, so when
-we later add those to our compiler, we&rsquo;ll clear the flag there.</p>
-<p>These new fields need to be initialized.</p>
+<p>解析器<strong>很</strong>有<strong>可能</strong>在野草丛中<strong>迷失</strong>，但用户<strong>不会</strong>知道，因为所有错误<strong>都</strong>被<strong>默默吞下</strong>。紧急模式<strong>在</strong>解析器<strong>抵达</strong>一个同步点<strong>时</strong>结束。就 Lox 而言，我们<strong>选择</strong>的是语句<strong>交界处</strong>，所以当我们<strong>之后</strong>在编译器中<strong>添</strong>上那些<strong>之后</strong>，我们<strong>便</strong>在<strong>那里</strong>清除该标志位。</p>
+<p>这些新字段<strong>需要</strong>被初始化。</p>
 <div class="codehilite"><pre class="insert-before">
   initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -491,7 +386,7 @@ in <em>compile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
-<p>And to display the errors, we need a standard header.</p>
+<p>而<strong>为了</strong>显示错误，我们<strong>需要</strong>一个标准的头文件。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &lt;stdio.h&gt;
 </pre><div class="source-file"><em>compiler.c</em></div>
@@ -503,7 +398,7 @@ in <em>compile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
 
-<p>There&rsquo;s one last parsing function, another old friend from jlox.</p>
+<p>我们<strong>还</strong>有一个<strong>最</strong>后一个解析函数，jlox 中的另一位老朋友。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>advance</em>()</div>
 <pre>
@@ -518,14 +413,10 @@ add after <em>advance</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>advance</em>()</div>
 
-<p>It&rsquo;s similar to <code>advance()</code> in that it reads the next token. But it also
-validates that the token has an expected type. If not, it reports an error. This
-function is the foundation of most syntax errors in the compiler.</p>
-<p>OK, that&rsquo;s enough on the front end for now.</p>
-<h2><a href="#emitting-bytecode" name="emitting-bytecode"><small>17&#8202;.&#8202;3</small>Emitting Bytecode</a></h2>
-<p>After we parse and understand a piece of the user&rsquo;s program, the next step is to
-translate that to a series of bytecode instructions. It starts with the easiest
-possible step: appending a single byte to the chunk.</p>
+<p>它与 <code>advance()</code> <strong>类似</strong>， <strong>也</strong>会读取下一个 token。但<strong>它</strong> <strong>还</strong>会<strong>验证</strong>该 token <strong>是否</strong>拥有所期待的类型。若<strong>没有</strong>，它<strong>会</strong>报告一个错误。 <strong>这个</strong>函数<strong>是</strong>编译器中绝大多数语法错误的基石。</p>
+<p>好了，前端部分<strong>先</strong>到这里。</p>
+<h2><a href="#生成字节码" name="生成字节码"><small>17&#8202;.&#8202;3</small>生成字节码</a></h2>
+<p>在我们解析并理解了用户程序的某<strong>一片</strong>段<strong>之后</strong>，下一步<strong>是</strong>将其<strong>翻译</strong>为一<strong>串</strong>字节码指令。一切都<strong>从</strong>最<strong>简朴</strong>的那一步<strong>开始</strong>：往 chunk <strong>中</strong>追加<strong>一个</strong>字节。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>consume</em>()</div>
 <pre>
@@ -535,12 +426,8 @@ add after <em>consume</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>consume</em>()</div>
 
-<p>It&rsquo;s hard to believe great things will flow through such a simple function. It
-writes the given byte, which may be an opcode or an operand to an instruction.
-It sends in the previous token&rsquo;s line information so that runtime errors are
-associated with that line.</p>
-<p>The chunk that we&rsquo;re writing gets passed into <code>compile()</code>, but it needs to make
-its way to <code>emitByte()</code>. To do that, we rely on this intermediary function:</p>
+<p>很难<strong>相信</strong>如此<strong>简朴</strong>的一个函数<strong>竟</strong>能<strong>流淌</strong>出<strong>如此</strong>伟大的事物。它<strong>写入</strong>所给的那个字节——它<strong>可以</strong>是一个<strong>操作码</strong>， <strong>也</strong>可以是一条指令的<strong>操作数</strong>。它<strong>将</strong>前一个 token 的<strong>行</strong>信息<strong>一</strong>并<strong>传</strong>进去，以便运行时错误<strong>能够</strong>与<strong>该</strong>行<strong>关联</strong>起来。</p>
+<p>我们<strong>正在</strong>写入的那<strong>份</strong> chunk <strong>是被</strong>传给 <code>compile()</code> 的，但<strong>它</strong>需要<strong>走</strong>到 <code>emitByte()</code> 那里。为了<strong>这</strong>一<strong>步</strong>，我们<strong>倚赖</strong>于这个<strong>中介</strong>函数：</p>
 <div class="codehilite"><pre class="insert-before">
 Parser parser;
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -557,11 +444,8 @@ static void errorAt(Token* token, const char* message) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 
-<p>Right now, the chunk pointer is stored in a module-level variable like we store
-other global state. Later, when we start compiling user-defined functions, the
-notion of &ldquo;current chunk&rdquo; gets more complicated. To avoid having to go back and
-change a lot of code, I encapsulate that logic in the <code>currentChunk()</code> function.</p>
-<p>We initialize this new module variable before we write any bytecode:</p>
+<p>眼下，chunk 指针<strong>被</strong>存放<strong>在</strong>一个<strong>模块</strong>级的变量<strong>中</strong>，一如我们<strong>存</strong>其它<strong>全局</strong>状态<strong>那般</strong>。日后，当我们<strong>开始</strong>编译用户自定义的函数时，&ldquo;当前 chunk&rdquo;这一概念<strong>会</strong>变得<strong>更</strong>为复杂。为了<strong>避免</strong> <strong>回</strong>过头<strong>去</strong>改动<strong>大量</strong>代码，我<strong>将</strong>那套逻辑<strong>封</strong>在 <code>currentChunk()</code> 这一函数<strong>中</strong>。</p>
+<p>我们<strong>在</strong>写入<strong>任何</strong>字节码<strong>之前</strong>， <strong>先</strong>初始化这个<strong>新的</strong>模块<strong>级</strong>变量：</p>
 <div class="codehilite"><pre class="insert-before">
 bool compile(const char* source, Chunk* chunk) {
   initScanner(source);
@@ -575,7 +459,7 @@ in <em>compile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
-<p>Then, at the very end, when we&rsquo;re done compiling the chunk, we wrap things up.</p>
+<p>随后， <strong>在</strong> <strong>最</strong>后， <strong>当</strong>我们<strong>编译</strong>完 chunk <strong>之后</strong>，我们<strong>做</strong>收尾<strong>工作</strong>。</p>
 <div class="codehilite"><pre class="insert-before">
   consume(TOKEN_EOF, &quot;Expect end of expression.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -587,7 +471,7 @@ in <em>compile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
-<p>That calls this:</p>
+<p>它<strong>调</strong>用<strong>这个</strong>：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitByte</em>()</div>
 <pre>
@@ -597,10 +481,7 @@ add after <em>emitByte</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>emitByte</em>()</div>
 
-<p>In this chapter, our VM deals only with expressions. When you run clox, it will
-parse, compile, and execute a single expression, then print the result. To print
-that value, we are temporarily using the <code>OP_RETURN</code> instruction. So we have the
-compiler add one of those to the end of the chunk.</p>
+<p>在本章中，我们的 VM <strong>只</strong>处理表达式。当你<strong>跑</strong>起 clox <strong>时</strong>，它<strong>会</strong>解析、编译、 <strong>并</strong>执行<strong>一</strong>条表达式， <strong>接着</strong>打印其结果。为了打印<strong>那</strong>个值，我们<strong>暂时</strong>使用 <code>OP**RETURN</code> 指令。于是我们<strong>让</strong>编译器<strong>在</strong> chunk 末尾<strong>加</strong>一条。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitByte</em>()</div>
 <pre>
@@ -610,7 +491,7 @@ add after <em>emitByte</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>emitByte</em>()</div>
 
-<p>While we&rsquo;re here in the back end we may as well make our lives easier.</p>
+<p><strong>既然</strong>我们<strong>已经</strong>到了后端， <strong>不</strong>如<strong>顺</strong>便<strong>让</strong>自己的生活<strong>更</strong>轻松<strong>一些</strong>。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitByte</em>()</div>
 <pre>
@@ -621,12 +502,10 @@ add after <em>emitByte</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>emitByte</em>()</div>
 
-<p>Over time, we&rsquo;ll have enough cases where we need to write an opcode followed by
-a one-byte operand that it&rsquo;s worth defining this convenience function.</p>
-<h2><a href="#parsing-prefix-expressions" name="parsing-prefix-expressions"><small>17&#8202;.&#8202;4</small>Parsing Prefix Expressions</a></h2>
-<p>We&rsquo;ve assembled our parsing and code generation utility functions. The missing
-piece is the code in the middle that connects those together.</p><img src="image/compiling-expressions/mystery.png" alt="Parsing functions on the left, bytecode emitting functions on the right. What goes in the middle?"/>
-<p>The only step in <code>compile()</code> that we have left to implement is this function:</p>
+<p>日积月累，我们<strong>会</strong>积累<strong>足够</strong>多<strong>的</strong> &ldquo;写一个<strong>操作码</strong>后跟<strong>一个</strong>一字节<strong>操作数</strong>&rdquo; <strong>的</strong>场景，以至于<strong>为</strong>此<strong>封</strong>一个便利函数<strong>是</strong>值得的。</p>
+<h2><a href="#解析前缀表达式" name="解析前缀表达式"><small>17&#8202;.&#8202;4</small>解析前缀表达式</a></h2>
+<p>我们<strong>已</strong>搭好了解析与代码生成的<strong>那些</strong>工具函数。<strong>所</strong>缺的那<strong>一</strong>块<strong>是</strong>居<strong>中</strong>的那一段<strong>将</strong>它们<strong>连</strong>起来<strong>的</strong>代码。</p><img src="image/compiling-expressions/mystery.png" alt="左侧的解析函数，右侧的字节码发射函数。中间**是**什么？" />
+<p><code>compile()</code> 中<strong>唯</strong>一<strong>没</strong>实现的<strong>那</strong>一步<strong>是</strong>这个函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
 <pre>
@@ -636,28 +515,18 @@ add after <em>endCompiler</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
-<p>We aren&rsquo;t ready to implement every kind of expression in Lox yet. Heck, we don&rsquo;t
-even have Booleans. For this chapter, we&rsquo;re only going to worry about four:</p>
+<p>我<strong>们_ <strong>尚</strong>未准备好去实现 Lox 中的</strong>每<strong>一种表达式。老实</strong>说**，我们<strong>甚</strong>至<strong>连</strong>布尔<strong>值</strong>都没<strong>有</strong>。在本章中，我们<strong>只</strong>关心<strong>四</strong>种：</p>
 <ul>
-<li>Number literals: <code>123</code></li>
-<li>Parentheses for grouping: <code>(123)</code></li>
-<li>Unary negation: <code>-123</code></li>
-<li>The Four Horsemen of the Arithmetic: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></li>
+<li>数字字面量：<code>123</code></li>
+<li>用于分组的圆括号：<code>(123)</code></li>
+<li>一元取负：<code>-123</code></li>
+<li>算术四骑士：<code>+</code>、<code>-</code>、<code>*</code>、<code>/</code></li>
 </ul>
-<p>As we work through the functions to compile each of those kinds of expressions,
-we&rsquo;ll also assemble the requirements for the table-driven parser that calls
-them.</p>
-<h3><a href="#parsers-for-tokens" name="parsers-for-tokens"><small>17&#8202;.&#8202;4&#8202;.&#8202;1</small>Parsers for tokens</a></h3>
-<p>For now, let&rsquo;s focus on the Lox expressions that are each only a single token.
-In this chapter, that&rsquo;s just number literals, but there will be more later. Here&rsquo;s
-how we can compile them:</p>
-<p>We map each token type to a different kind of expression. We define a function
-for each expression that outputs the appropriate bytecode. Then we build an
-array of function pointers. The indexes in the array correspond to the
-<code>TokenType</code> enum values, and the function at each index is the code to compile
-an expression of that token type.</p>
-<p>To compile number literals, we store a pointer to the following function at the
-<code>TOKEN_NUMBER</code> index in the array.</p>
+<p>当我们<strong>走</strong>过<strong>为</strong>各种<strong>表达式</strong>类型<strong>各自</strong>编译的函数时，我们<strong>也</strong>会<strong>凑</strong>齐<strong>驱动</strong>表<strong>的</strong>要求—— <strong>那</strong>张表<strong>是</strong>调用这些函数的<strong>核心</strong>。</p>
+<h3><a href="#字面量-token-的解析器" name="字面量-token-的解析器"><small>17&#8202;.&#8202;4&#8202;.&#8202;1</small>字面量 token 的解析器</a></h3>
+<p>眼下，让我们<strong>先</strong>关注<strong>那些</strong>仅由<strong>一个</strong> token <strong>构成</strong>的 Lox 表达式。在本章中， <strong>那</strong>就<strong>是</strong>数字字面量，但<strong>之后</strong>还<strong>会</strong>有更多。下面<strong>是</strong>我们<strong>将</strong>如何<strong>去</strong>编译<strong>它们</strong>：</p>
+<p>我们<strong>将</strong>每<strong>种</strong> token 类型<strong>映射</strong>为<strong>一种</strong> <strong>不同</strong>的<strong>表达式</strong>类型。我们<strong>为</strong>每<strong>一种</strong> <strong>表达式</strong>都<strong>定义</strong>一个<strong>函数</strong>， <strong>以</strong>输出<strong>恰当</strong>的字节码。然后我们<strong>搭</strong>起<strong>一个</strong>函数指针<strong>数组</strong>。数组<strong>中</strong>的<strong>索引</strong> <strong>对</strong>应<strong>于</strong> <code>TokenType</code> 枚举<strong>值</strong>， <strong>而</strong> <strong>每个</strong>索引<strong>处</strong>的函数<strong>便</strong>是<strong>编译</strong> <strong>该</strong> token 类型<strong>之</strong> <strong>表达式</strong>的<strong>代码</strong>。</p>
+<p>为了<strong>编译</strong>数字字面量，我们<strong>将</strong>一个<strong>指向</strong>下面<strong>这</strong>个函数的<strong>指针</strong>存<strong>在</strong>数组<strong>的</strong> <code>TOKEN**NUMBER</code> 索引<strong>处</strong>。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
 <pre>
@@ -668,10 +537,7 @@ add after <em>endCompiler</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
-<p>We assume the token for the number literal has already been consumed and is
-stored in <code>previous</code>. We take that lexeme and use the C standard library to
-convert it to a double value. Then we generate the code to load that value using
-this function:</p>
+<p>我们<strong>假</strong>设数字字面量的 token <strong>已</strong>被消费<strong>并</strong>存<strong>在_ <code>previous</code> <strong>中</strong>。我们</strong>拿<strong>出该</strong>词素**， <strong>并</strong>用 C 标准库<strong>将</strong>其<strong>转换</strong>为一个 double <strong>值</strong>。然后，我们<strong>通过</strong>该函数<strong>生成</strong>代码<strong>以</strong>加载<strong>该</strong> <strong>值</strong>：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitReturn</em>()</div>
 <pre>
@@ -681,9 +547,7 @@ add after <em>emitReturn</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>emitReturn</em>()</div>
 
-<p>First, we add the value to the constant table, then we emit an <code>OP_CONSTANT</code>
-instruction that pushes it onto the stack at runtime. To insert an entry in the
-constant table, we rely on:</p>
+<p>首先，我们<strong>将</strong>该<strong>值</strong>添加<strong>至</strong>常量表， <strong>接着</strong>发射<strong>一</strong>条 <code>OP**CONSTANT</code> 指令， <strong>以</strong>在运行时<strong>将</strong>其<strong>推</strong>入栈。为了<strong>在</strong>常量表<strong>中</strong>插入<strong>一</strong>条，我们<strong>倚赖</strong>于：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitReturn</em>()</div>
 <pre>
@@ -699,32 +563,15 @@ add after <em>emitReturn</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>emitReturn</em>()</div>
 
-<p>Most of the work happens in <code>addConstant()</code>, which we defined back in an
-<a href="chunks-of-bytecode.html">earlier chapter</a>. That adds the given value to the end of the chunk&rsquo;s
-constant table and returns its index. The new function&rsquo;s job is mostly to make
-sure we don&rsquo;t have too many constants. Since the <code>OP_CONSTANT</code> instruction uses
-a single byte for the index operand, we can store and load only up to <span
-name="256">256</span> constants in a chunk.</p>
+<p>大<strong>部</strong>分工作<strong>在_ <code>addConstant()</code> <strong>中</strong> <strong>进行</strong>—— <strong>该</strong>函数</strong>定<strong>义</strong>于<strong>一[更</strong>早<strong>的章节]<a href="chunks-of-bytecode.html">bytecode</a> <strong>中</strong>。它</strong>将<strong>所给</strong>的** <strong>值</strong> <strong>追</strong>加<strong>至</strong> chunk <strong>常量</strong>表<strong>的</strong>末尾， <strong>并</strong>返回<strong>其</strong>索引。这<strong>个</strong>新函数<strong>的</strong>工作<strong>主要</strong> <strong>是</strong>  <strong>确</strong>保<strong>我们</strong> <strong>没</strong>有<strong>太</strong>多的常量。由于 <code>OP**CONSTANT</code> 指令<strong>使用</strong> <strong>一</strong>个<strong>字节</strong> <strong>作</strong>为<strong>其</strong>索引<strong>操作数</strong>， <strong>我们</strong> <strong>在_ <strong>一</strong>个 chunk <strong>中</strong> <strong>最</strong>多</strong>只<strong>能</strong>存<strong>储</strong>并**加载 <span name="256">256</span> <strong>个</strong>常量。</p>
 <aside name="256">
-<p>Yes, that limit is pretty low. If this were a full-sized language
-implementation, we&rsquo;d want to add another instruction like <code>OP_CONSTANT_16</code> that
-stores the index as a two-byte operand so we could handle more constants when
-needed.</p>
-<p>The code to support that isn&rsquo;t particularly illuminating, so I omitted it from
-clox, but you&rsquo;ll want your VMs to scale to larger programs.</p>
+<p><strong>是</strong>的， <strong>这</strong>个<strong>上</strong>限<strong>有</strong>些<strong>低</strong>。若<strong>这</strong>是<strong>一</strong>款<strong>真</strong>正<strong>的</strong>语言实现，我们<strong>会</strong>想<strong>要</strong>添<strong>上</strong> <strong>另</strong>一<strong>条</strong>指令—— <strong>类</strong>如 <code>OP_CONSTANT_16</code> <strong>的</strong>那种<strong>将</strong>索引<strong>存</strong>为两<strong>字</strong>节<strong>操作数</strong>的—— <strong>以</strong>便<strong>我</strong>们<strong>能</strong>在<strong>需</strong>要<strong>时</strong>处理<strong>更</strong>多的常量。</p>
+<p><strong>支</strong>持<strong>这</strong>一<strong>点</strong>的代码<strong>并</strong>不<strong>特</strong>别<strong>有</strong>启<strong>发</strong>性， <strong>所</strong>以我<strong>在</strong> clox <strong>中</strong>略<strong>去</strong>了<strong>它</strong>，但<strong>你</strong>一定<strong>会</strong>想<strong>让</strong>你的 VM <strong>能</strong>扩<strong>展</strong>到<strong>更</strong>大的程序<strong>上</strong>。</p>
 </aside>
-<p>That&rsquo;s basically all it takes. Provided there is some suitable code that
-consumes a <code>TOKEN_NUMBER</code> token, looks up <code>number()</code> in the function pointer
-array, and then calls it, we can now compile number literals to bytecode.</p>
-<h3><a href="#parentheses-for-grouping" name="parentheses-for-grouping"><small>17&#8202;.&#8202;4&#8202;.&#8202;2</small>Parentheses for grouping</a></h3>
-<p>Our as-yet-imaginary array of parsing function pointers would be great if every
-expression was only a single token long. Alas, most are longer. However, many
-expressions <em>start</em> with a particular token. We call these <em>prefix</em> expressions.
-For example, when we&rsquo;re parsing an expression and the current token is <code>(</code>, we
-know we must be looking at a parenthesized grouping expression.</p>
-<p>It turns out our function pointer array handles those too. The parsing function
-for an expression type can consume any additional tokens that it wants to, just
-like in a regular recursive descent parser. Here&rsquo;s how parentheses work:</p>
+<p>大<strong>体</strong>上<strong>就</strong>是<strong>这</strong>些<strong>了</strong>。<strong>只</strong>要<strong>有</strong> <strong>那</strong>些<strong>恰</strong>当<strong>的</strong>代码<strong>去</strong>消费<strong>一</strong>个 <code>TOKEN_NUMBER</code> token， <strong>在</strong>函数指针数组<strong>中</strong>查找 <code>number()</code>， <strong>并</strong> <strong>接</strong>着<strong>调</strong>用它，我们<strong>便</strong>可<strong>以</strong> <strong>将</strong>数字字面量<strong>编</strong>译<strong>为</strong>字节码。</p>
+<h3><a href="#用于分组的圆括号" name="用于分组的圆括号"><small>17&#8202;.&#8202;4&#8202;.&#8202;2</small>用于分组的圆括号</a></h3>
+<p><strong>我</strong>们<strong>那</strong>些<strong>尚</strong>未<strong>出</strong>现<strong>的</strong>函数指针<strong>数组</strong>， <strong>若</strong> <strong>每</strong>条<strong>表达式</strong> <strong>都</strong> <strong>只</strong> <strong>有</strong> <strong>一</strong>个 token <strong>长</strong>， <strong>就</strong>会<strong>很</strong>棒。可惜，大多数<strong>都</strong> <strong>更</strong>长。然而， <strong>许</strong>多表达式<strong>都</strong> <strong>以</strong> <strong>某</strong>个<strong>特</strong>定的 token <strong>打</strong>头。我们<strong>称</strong> <strong>这</strong>些<strong>为</strong> <strong>前缀</strong>表达式。举例<strong>而</strong>言， <strong>当</strong>我们<strong>正</strong>在解析<strong>一</strong>条表达式， <strong>而</strong>当下 token <strong>是</strong> <code>(</code> <strong>时</strong>，我们<strong>便</strong> <strong>知</strong>道<strong>我</strong>们<strong>必</strong>然<strong>正</strong>在<strong>面</strong>对<strong>一</strong>个<strong>带</strong>圆括号<strong>的</strong> <strong>分组</strong>表达式。</p>
+<p><strong>事</strong>实<strong>上</strong>， <strong>我</strong>们的函数指针<strong>数</strong>组<strong>也</strong>能<strong>处</strong>理<strong>这</strong>些情形。<strong>一</strong>条表达式<strong>的</strong>解析函数<strong>可</strong>以<strong>消</strong>费<strong>它</strong> <strong>想</strong>要<strong>的</strong> <strong>任</strong>何<strong>其</strong>他 token， <strong>正</strong>如<strong>在</strong> <strong>一</strong>款<strong>普</strong>通<strong>的</strong>递归<strong>下</strong>降解析<strong>器</strong> <strong>中</strong>那样。 <strong>下</strong>面<strong>是</strong>圆括号<strong>的</strong>工作<strong>方</strong>式：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
 <pre>
@@ -735,21 +582,13 @@ add after <em>endCompiler</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
-<p>Again, we assume the initial <code>(</code> has already been consumed. We <span
-name="recursive">recursively</span> call back into <code>expression()</code> to compile the
-expression between the parentheses, then parse the closing <code>)</code> at the end.</p>
+<p><strong>再</strong>一次， <strong>我</strong>们<strong>假</strong>设<strong>那</strong>个<strong>起</strong>头<strong>的</strong> <code>(</code> <strong>已</strong>被消费。<strong>我</strong>们<strong>递</strong>归<strong>地</strong> <strong>回</strong>调 <code>expression()</code> <strong>来</strong>编译<strong>圆</strong>括号<strong>之</strong>间<strong>的</strong>表达式， <strong>接</strong>着<strong>在</strong>末尾解析<strong>那</strong>个 <code>)</code>。</p>
 <aside name="recursive">
-<p>A Pratt parser isn&rsquo;t a recursive <em>descent</em> parser, but it&rsquo;s still recursive.
-That&rsquo;s to be expected since the grammar itself is recursive.</p>
+<p>Pratt 解析器<strong>并</strong>不<strong>是</strong>递归<strong>下</strong>降解析<strong>器</strong>， <strong>但</strong>它<strong>依</strong>然<strong>是</strong>递归<strong>的</strong>。 <strong>这</strong> <strong>倒</strong> <strong>不</strong>足<strong>为</strong>奇， <strong>因</strong>为<strong>文</strong>法<strong>本</strong>身<strong>就</strong> <strong>是</strong>递归<strong>的</strong>。</p>
 </aside>
-<p>As far as the back end is concerned, there&rsquo;s literally nothing to a grouping
-expression. Its sole function is syntactic<span class="em">&mdash;</span>it lets you insert a
-lower-precedence expression where a higher precedence is expected. Thus, it has
-no runtime semantics on its own and therefore doesn&rsquo;t emit any bytecode. The
-inner call to <code>expression()</code> takes care of generating bytecode for the
-expression inside the parentheses.</p>
-<h3><a href="#unary-negation" name="unary-negation"><small>17&#8202;.&#8202;4&#8202;.&#8202;3</small>Unary negation</a></h3>
-<p>Unary minus is also a prefix expression, so it works with our model too.</p>
+<p><strong>就</strong>后端<strong>而</strong>言， <strong>一</strong>个<strong>分</strong>组表达式<strong>实</strong>在<strong>没</strong>什么<strong>花</strong>头。它<strong>唯</strong>一<strong>的</strong>作用<strong>是</strong>句法<strong>上</strong>的—— <strong>它</strong>让<strong>你</strong> <strong>能</strong>够<strong>在</strong> <strong>某</strong>个<strong>期</strong>待<strong>出</strong>现<strong>较</strong>高<strong>优</strong>先级<strong>的</strong> <strong>位</strong>置<strong>插</strong>入<strong>一</strong>条<strong>较</strong>低<strong>优</strong>先级<strong>的</strong>表达式。<strong>因</strong>此， <strong>它</strong> <strong>本</strong>身<strong>并</strong>不<strong>具</strong>有<strong>任</strong>何<strong>运</strong>行时<strong>语</strong>义， <strong>也</strong> <strong>因</strong>此<strong>不</strong>发射<strong>任</strong>何<strong>字</strong>节码。 <strong>其</strong> <strong>内</strong>部<strong>对</strong> <code>expression()</code> <strong>的</strong>调<strong>用</strong>负责<strong>为</strong> <strong>圆</strong>括号<strong>内</strong> <strong>的</strong>表达式<strong>生</strong>成<strong>字</strong>节码。</p>
+<h3><a href="#一元取负" name="一元取负"><small>17&#8202;.&#8202;4&#8202;.&#8202;3</small>一元取负</a></h3>
+<p><strong>一</strong>元<strong>减</strong> <strong>号</strong> <strong>也</strong> <strong>是</strong> <strong>一</strong>个<strong>前</strong>缀表达式， <strong>所</strong>以<strong>它</strong> <strong>也</strong> <strong>能</strong> <strong>纳</strong>入<strong>我</strong>们的<strong>这</strong>个<strong>模</strong>型。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>number</em>()</div>
 <pre>
@@ -768,62 +607,33 @@ add after <em>number</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>number</em>()</div>
 
-<p>The leading <code>-</code> token has been consumed and is sitting in <code>parser.previous</code>. We
-grab the token type from that to note which unary operator we&rsquo;re dealing with.
-It&rsquo;s unnecessary right now, but this will make more sense when we use this same
-function to compile the <code>!</code> operator in <a href="types-of-values.html">the next chapter</a>.</p>
-<p>As in <code>grouping()</code>, we recursively call <code>expression()</code> to compile the operand.
-After that, we emit the bytecode to perform the negation. It might seem a little
-weird to write the negate instruction <em>after</em> its operand&rsquo;s bytecode since the
-<code>-</code> appears on the left, but think about it in terms of order of execution:</p>
+<p><strong>那</strong>个<strong>起</strong>头<strong>的</strong> <code>-</code> token <strong>已</strong>被<strong>消</strong>费， <strong>并</strong> <strong>坐</strong>在 <code>parser.previous</code> <strong>中</strong>。我们<strong>从</strong>其<strong>中</strong> <strong>取</strong>出 token <strong>类</strong>型， <strong>以</strong>记<strong>录</strong>我们<strong>到</strong>底<strong>在</strong>应对<strong>哪</strong>个<strong>一</strong>元运算符。<strong>眼</strong>下<strong>这</strong> <strong>是</strong>多余<strong>的</strong>， <strong>但</strong> <strong>这</strong>会在**<a href="types-of-values.html">下<strong>一</strong>章</a> <strong>中_ <strong>当</strong>我们</strong>用<strong>这</strong>同<strong>一个函数</strong>来<strong>编译 <code>!</code> 运算符</strong>时<strong>变得</strong>有<strong>意</strong>义**。</p>
+<p><strong>在</strong> <code>grouping()</code> <strong>中</strong>一样， <strong>我</strong>们<strong>递</strong>归<strong>地</strong> <strong>调</strong>用 <code>expression()</code> <strong>来</strong>编译<strong>那</strong>个运算<strong>对</strong>象。<strong>此</strong>后， <strong>我</strong>们<strong>发</strong>射<strong>字</strong>节码<strong>以</strong>执<strong>行</strong>取负<strong>运</strong>算。<strong>看</strong>起来<strong>有</strong>些<strong>奇</strong>怪——我们<strong>在</strong>运算<strong>对</strong>象<strong>的</strong>字节码<strong>之</strong> <strong>后</strong>才<strong>写</strong>取负指令， <strong>因</strong>为 <code>-</code> <strong>在</strong>源<strong>码</strong> <strong>中</strong> <strong>出</strong>现<strong>在</strong>左<strong>边</strong> ——但<strong>请</strong>从<strong>执</strong>行<strong>顺</strong>序<strong>的</strong>角<strong>度</strong> <strong>来</strong>思<strong>考</strong> <strong>一</strong>下：</p>
 <ol>
 <li>
-<p>We evaluate the operand first which leaves its value on the stack.</p>
+<p>我<strong>们</strong> <strong>先</strong> <strong>对</strong>运算<strong>对</strong>象<strong>求</strong>值， <strong>其</strong>结果<strong>会</strong> <strong>留</strong>在<strong>栈</strong> <strong>上</strong>。</p>
 </li>
 <li>
-<p>Then we pop that value, negate it, and push the result.</p>
+<p><strong>然</strong>后<strong>我</strong>们<strong>将</strong> <strong>那</strong>个值<strong>弹</strong>出<strong>栈</strong>、 <strong>取</strong>负、 <strong>并</strong>将<strong>结</strong>果<strong>重</strong>新<strong>推</strong> <strong>上</strong> <strong>去</strong>。</p>
 </li>
 </ol>
-<p>So the <code>OP_NEGATE</code> instruction should be emitted <span name="line">last</span>.
-This is part of the compiler&rsquo;s job<span class="em">&mdash;</span>parsing the program in the order it
-appears in the source code and rearranging it into the order that execution
-happens.</p>
+<p><strong>于</strong>是 <code>OP**NEGATE</code> 指令<strong>应_ <strong>该</strong>在<span name="line">最</strong>后**</span> 发射。 <strong>这</strong> <strong>是</strong>编译器<strong>的</strong>工作<strong>之</strong>一 —— <strong>按</strong>源<strong>码</strong> <strong>中</strong> <strong>出</strong>现<strong>的</strong>顺<strong>序</strong> <strong>进</strong>行解析， <strong>并</strong>将<strong>其</strong> <strong>重</strong>新<strong>排</strong>列<strong>为</strong>执<strong>行</strong> <strong>发</strong>生<strong>的</strong> <strong>顺</strong>序。</p>
 <aside name="line">
-<p>Emitting the <code>OP_NEGATE</code> instruction after the operands does mean that the
-current token when the bytecode is written is <em>not</em> the <code>-</code> token. That mostly
-doesn&rsquo;t matter, except that we use that token for the line number to associate
-with that instruction.</p>
-<p>This means if you have a multi-line negation expression, like:</p>
+<p><strong>在</strong>运算<strong>对</strong>象<strong>之</strong> <strong>后</strong> <strong>发</strong>射 <code>OP**NEGATE</code> 指令， <strong>意</strong>味着<strong>写</strong>入<strong>字</strong>节码<strong>时</strong>的<strong>当</strong>下 token <strong>并_ <strong>不</strong> <strong>是</strong> <code>-</code>。<strong>这</strong> <strong>大</strong>抵</strong>不** <strong>会</strong> <strong>有</strong> <strong>多</strong>大<strong>影</strong>响， <strong>除</strong>非<strong>我</strong>们<strong>使</strong>用<strong>那</strong>个 token <strong>来</strong>获<strong>取</strong> <strong>与</strong> <strong>该</strong>指令<strong>关</strong>联<strong>的</strong> <strong>行</strong>号。</p>
+<p><strong>这</strong> <strong>意</strong>味<strong>着</strong>，若<strong>你</strong>拥<strong>有</strong>一<strong>个</strong>跨<strong>多</strong>行<strong>的</strong>取负表达式， <strong>比</strong> <strong>如</strong>：</p>
 <div class="codehilite"><pre>
 <span class="k">print</span> -
   <span class="k">true</span>;
 </pre></div>
-<p>Then the runtime error will be reported on the wrong line. Here, it would show
-the error on line 2, even though the <code>-</code> is on line 1. A more robust approach
-would be to store the token&rsquo;s line before compiling the operand and then pass
-that into <code>emitByte()</code>, but I wanted to keep things simple for the book.</p>
+<p><strong>则</strong>运行时错误<strong>将</strong> <strong>在</strong> <strong>错</strong>误<strong>的</strong> <strong>行</strong> <strong>上</strong>报告。<strong>在</strong>此<strong>处</strong>， <strong>它</strong> <strong>会</strong> <strong>显</strong>示<strong>错</strong>误<strong>在</strong> <strong>第</strong> 2 <strong>行</strong>， <strong>尽</strong>管 <code>-</code> <strong>位</strong> <strong>于</strong> <strong>第</strong> 1 <strong>行</strong>。 <strong>一</strong>个<strong>更</strong>为<strong>稳</strong>健<strong>的</strong> <strong>做</strong>法<strong>是</strong> <strong>在</strong>编译<strong>运</strong>算<strong>对</strong>象<strong>之</strong> <strong>前</strong> <strong>先</strong> <strong>存</strong>储<strong>该</strong> token <strong>的</strong> <strong>行</strong>， <strong>然</strong>后<strong>将</strong> <strong>其</strong> <strong>传</strong> <strong>入</strong> <code>emitByte()</code>， <strong>但</strong> <strong>我</strong>希<strong>望</strong>让<strong>本</strong>章<strong>保</strong>持<strong>简</strong>单。</p>
 </aside>
-<p>There is one problem with this code, though. The <code>expression()</code> function it
-calls will parse any expression for the operand, regardless of precedence. Once
-we add binary operators and other syntax, that will do the wrong thing.
-Consider:</p>
+<p><strong>不</strong>过<strong>这</strong>段代码<strong>有</strong>一<strong>个</strong>问<strong>题</strong>。 <strong>它</strong> <strong>所</strong>调<strong>用</strong>的 <code>expression()</code> 函数<strong>会</strong> <strong>为</strong>运算<strong>对</strong>象解析<strong>任</strong>何<strong>表</strong>达式， <strong>无</strong>视<strong>优</strong>先级。<strong>一</strong>旦<strong>我</strong>们<strong>添</strong>上<strong>二</strong>元运算符<strong>和</strong> <strong>其</strong>他<strong>语</strong>法， <strong>这</strong> <strong>会</strong> <strong>成</strong> <strong>为</strong>错<strong>误</strong> <strong>的</strong> <strong>做</strong>法。<strong>思</strong>考<strong>一</strong>下：</p>
 <div class="codehilite"><pre>
 -<span class="i">a</span>.<span class="i">b</span> + <span class="i">c</span>;
 </pre></div>
-<p>Here, the operand to <code>-</code> should be just the <code>a.b</code> expression, not the entire
-<code>a.b + c</code>. But if <code>unary()</code> calls <code>expression()</code>, the latter will happily chew
-through all of the remaining code including the <code>+</code>. It will erroneously treat
-the <code>-</code> as lower precendence than the <code>+</code>.</p>
-<p>When parsing the operand to unary <code>-</code>, we need to compile only expressions at a
-certain precedence level or higher. In jlox&rsquo;s recursive descent parser we
-accomplished that by calling into the parsing method for the lowest-precendence
-expression we wanted to allow (in this case, <code>call()</code>). Each method for parsing
-a specific expression also parsed any expressions of higher precedence too, so
-that included the rest of the precedence table.</p>
-<p>The parsing functions like <code>number()</code> and <code>unary()</code> here in clox are different.
-Each only parses exactly one type of expression. They don&rsquo;t cascade to include
-higher-precedence expression types too. We need a different solution, and it
-looks like this:</p>
+<p><strong>在</strong>此<strong>处</strong>， <code>-</code> <strong>的</strong>运算<strong>对</strong>象<strong>应</strong>该<strong>只</strong> <strong>是</strong> <code>a.b</code> <strong>这</strong>条<strong>表</strong>达式， <strong>而</strong> <strong>不</strong> <strong>是</strong>整<strong>个</strong> <code>a.b + c</code>。 <strong>但</strong> <strong>若</strong> <code>unary()</code> <strong>调</strong>用 <code>expression()</code>， <strong>后</strong>者<strong>会</strong> <strong>欣</strong>然<strong>地</strong> <strong>将</strong> <strong>剩</strong>下<strong>的</strong> <strong>所</strong>有<strong>代</strong>码<strong>一</strong> <strong>并</strong>嚼<strong>烂</strong>， <strong>连</strong> <code>+</code> <strong>也</strong> <strong>不</strong>放<strong>过</strong>。<strong>它</strong> <strong>会</strong> <strong>错</strong> <strong>误</strong> <strong>地</strong>将 <code>-</code> <strong>视</strong>为<strong>比</strong> <code>+</code> <strong>更</strong> <strong>低</strong> <strong>的</strong>优<strong>先</strong>级。</p>
+<p><strong>在</strong>解析 <code>-</code> <strong>的</strong>运算<strong>对</strong>象<strong>时</strong>， <strong>我</strong>们<strong>只</strong>需<strong>要</strong>编译<strong>某</strong> <strong>一</strong>优<strong>先</strong>级<strong>以</strong> <strong>上</strong> <strong>的</strong>表达式。<strong>在</strong> jlox <strong>的</strong>递<strong>归</strong> <strong>下</strong>降解析<strong>器</strong> <strong>中</strong>， <strong>我</strong>们<strong>通</strong>过<strong>调</strong>入<strong>我</strong>们<strong>所</strong>希<strong>望</strong> <strong>允</strong>许<strong>的</strong> <strong>最</strong>低<strong>优</strong>先级<strong>的</strong>解析<strong>方</strong>法（<strong>本</strong> <strong>例</strong> <strong>中</strong> <strong>是</strong> <code>call()</code>） <strong>来</strong> <strong>达</strong>到<strong>这</strong> <strong>一</strong>目的。<strong>每</strong>个<strong>用</strong>于解析<strong>特</strong>定表达式<strong>的</strong>方法<strong>也</strong> <strong>会</strong>解析<strong>比</strong>它<strong>更</strong>高<strong>优</strong>先级<strong>的</strong> <strong>那</strong>些表达式， <strong>从</strong>而<strong>也</strong> <strong>覆</strong>盖<strong>了</strong>优<strong>先</strong>级表<strong>的</strong> <strong>其</strong>余部分。</p>
+<p>clox <strong>里</strong> <strong>的</strong> <code>number()</code> <strong>与</strong> <code>unary()</code> <strong>等</strong>解析函数<strong>则</strong> <strong>不</strong> <strong>同</strong>。<strong>每</strong>一<strong>位</strong> <strong>都</strong> <strong>只</strong>解析<strong>一</strong>种<strong>表</strong>达式。<strong>它</strong>们<strong>不</strong> <strong>会</strong>顺<strong>势</strong> <strong>延</strong>伸<strong>到</strong> <strong>也</strong>涵盖<strong>更</strong>高<strong>优</strong>先级<strong>的</strong>表达式。<strong>我</strong>们<strong>需</strong>要<strong>一</strong>个<strong>不</strong>同<strong>的</strong>解决<strong>方</strong>案， <strong>看</strong>起来<strong>如</strong>下：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>unary</em>()</div>
 <pre>
@@ -833,12 +643,7 @@ add after <em>unary</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>unary</em>()</div>
 
-<p>This function<span class="em">&mdash;</span>once we implement it<span class="em">&mdash;</span>starts at the current token and parses
-any expression at the given precedence level or higher. We have some other setup
-to get through before we can write the body of this function, but you can
-probably guess that it will use that table of parsing function pointers I&rsquo;ve
-been talking about. For now, don&rsquo;t worry too much about how it works. In order
-to take the &ldquo;precedence&rdquo; as a parameter, we define it numerically.</p>
+<p><strong>这</strong>个函数—— <strong>一</strong>旦<strong>我</strong>们<strong>实</strong>现<strong>了</strong>它—— <strong>会</strong>从<strong>当</strong>下 token <strong>起</strong>步，解析<strong>任</strong>何<strong>处</strong>于<strong>给</strong>定<strong>优</strong>先级<strong>或</strong> <strong>更</strong>高<strong>位</strong>置<strong>的</strong>表达式。 <strong>我</strong>们<strong>还</strong> <strong>有</strong> <strong>别</strong>的<strong>铺</strong>垫<strong>要</strong>做， <strong>然</strong>后<strong>才</strong>能<strong>去</strong>写<strong>这</strong>个函数<strong>的</strong>函数<strong>体</strong>， <strong>但</strong>你<strong>大</strong>概<strong>已</strong>猜<strong>到</strong>它<strong>将</strong>使<strong>用</strong> <strong>我</strong>们<strong>一</strong> <strong>直</strong> <strong>在</strong>念<strong>叨</strong> <strong>的</strong> <strong>那</strong>张<strong>解</strong>析函数指针<strong>表</strong>。 <strong>眼</strong>下， <strong>不</strong>必<strong>太</strong>担<strong>心</strong>它<strong>如</strong>何<strong>工</strong>作。<strong>为</strong>了<strong>将</strong> &ldquo;优先级&rdquo; <strong>作</strong>为参数<strong>接</strong>收， <strong>我</strong>们<strong>定</strong>义<strong>它</strong>为<strong>一</strong>个<strong>数</strong>字。</p>
 <div class="codehilite"><pre class="insert-before">
 } Parser;
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -864,20 +669,12 @@ Parser parser;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after struct <em>Parser</em></div>
 
-<p>These are all of Lox&rsquo;s precedence levels in order from lowest to highest. Since
-C implicitly gives successively larger numbers for enums, this means that
-<code>PREC_CALL</code> is numerically larger than <code>PREC_UNARY</code>. For example, say the
-compiler is sitting on a chunk of code like:</p>
+<p><strong>这</strong>些<strong>都</strong> <strong>是</strong> Lox <strong>的</strong> <strong>所</strong> <strong>有</strong>优<strong>先</strong>级<strong>层</strong>级， <strong>按</strong> <strong>从</strong> <strong>低</strong>到<strong>高</strong>排序。<strong>由</strong>于 C <strong>隐</strong>式<strong>地</strong> <strong>为</strong>枚<strong>举</strong> <strong>赋</strong>值<strong>以</strong> <strong>递</strong>增<strong>的</strong>数<strong>字</strong>， <strong>这</strong> <strong>意</strong>味<strong>着</strong> <code>PREC_CALL</code> <strong>在</strong>数<strong>值</strong> <strong>上</strong> <strong>比</strong> <code>PREC_UNARY</code> <strong>更</strong>大。<strong>比</strong>如<strong>说</strong>， <strong>假</strong>如<strong>编</strong>译器<strong>正</strong>停留<strong>在</strong> <strong>这</strong>样<strong>一</strong>段<strong>代</strong>码<strong>上</strong>：</p>
 <div class="codehilite"><pre>
 -<span class="i">a</span>.<span class="i">b</span> + <span class="i">c</span>
 </pre></div>
-<p>If we call <code>parsePrecedence(PREC_ASSIGNMENT)</code>, then it will parse the entire
-expression because <code>+</code> has higher precedence than assignment. If instead we
-call <code>parsePrecedence(PREC_UNARY)</code>, it will compile the <code>-a.b</code> and stop there.
-It doesn&rsquo;t keep going through the <code>+</code> because the addition has lower precedence
-than unary operators.</p>
-<p>With this function in hand, it&rsquo;s a snap to fill in the missing body for
-<code>expression()</code>.</p>
+<p><strong>若</strong> <strong>我</strong>们<strong>调</strong>用 <code>parsePrecedence(PREC_ASSIGNMENT)</code>， <strong>那</strong>么<strong>它</strong> <strong>会</strong>解析<strong>整</strong>条<strong>表</strong>达式， <strong>因</strong>为 <code>+</code> <strong>的</strong> <strong>优</strong>先级<strong>比</strong>赋<strong>值</strong> <strong>更</strong>高。 <strong>若</strong> <strong>取</strong>而<strong>代</strong>之<strong>调</strong>用 <code>parsePrecedence(PREC_UNARY)</code>， <strong>那</strong>么<strong>它</strong> <strong>会</strong>编译 <code>-a.b</code> <strong>并</strong> <strong>在</strong> <strong>此</strong> <strong>处</strong> <strong>停</strong> <strong>下</strong>。<strong>它</strong> <strong>不</strong>会<strong>继</strong>续<strong>穿</strong>过 <code>+</code>， <strong>因</strong>为<strong>加</strong>法<strong>的</strong>优<strong>先</strong>级<strong>比</strong>一元运算符<strong>更</strong> <strong>低</strong>。</p>
+<p><strong>带</strong>上<strong>这</strong>个函数<strong>在</strong>手， <strong>补</strong>上 <code>expression()</code> <strong>那</strong>个<strong>空</strong> <strong>缺</strong>的函数<strong>体</strong>实在<strong>是</strong> <strong>小</strong>菜<strong>一</strong>碟。</p>
 <div class="codehilite"><pre class="insert-before">
 static void expression() {
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -890,9 +687,7 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>expression</em>(), replace 1 line</div>
 
-<p>We simply parse the lowest precedence level, which subsumes all of the
-higher-precedence expressions too. Now, to compile the operand for a unary
-expression, we call this new function and limit it to the appropriate level:</p>
+<p><strong>我</strong>们<strong>只</strong>是解析<strong>最</strong>低<strong>的</strong>优<strong>先</strong>级<strong>层</strong>级， <strong>而</strong>它<strong>自</strong>然<strong>而</strong>然<strong>地</strong> <strong>也</strong> <strong>会</strong>涵盖<strong>所</strong> <strong>有</strong> <strong>更</strong>高<strong>优</strong>先级<strong>的</strong>表达式。<strong>现</strong>在， <strong>为</strong>了<strong>编</strong>译<strong>一</strong>元<strong>表</strong>达式<strong>的</strong>运算<strong>对</strong>象， <strong>我</strong>们<strong>调</strong>用<strong>这</strong>个<strong>新</strong>函数<strong>并</strong>将<strong>其</strong>限<strong>定</strong> <strong>在</strong> <strong>恰</strong>当<strong>的</strong>优<strong>先</strong>级<strong>上</strong>：</p>
 <div class="codehilite"><pre class="insert-before">
   // Compile the operand.
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -906,52 +701,31 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>unary</em>(), replace 1 line</div>
 
-<p>We use the unary operator&rsquo;s own <code>PREC_UNARY</code> precedence to permit <span
-name="useful">nested</span> unary expressions like <code>!!doubleNegative</code>. Since
-unary operators have pretty high precedence, that correctly excludes things like
-binary operators. Speaking of which<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span></p>
+<p><strong>我</strong>们<strong>使</strong>用<strong>一</strong>元运算符<strong>自</strong>己<strong>的</strong> <code>PREC**UNARY</code> 优<strong>先</strong>级， <strong>以_ <strong>允</strong>许<span name="useful">嵌套</strong>的**</span> 一元表达式， <strong>比</strong>如 <code>!!doubleNegative</code>。<strong>由</strong>于<strong>一</strong>元运算符<strong>的</strong>优先级<strong>很</strong>高， <strong>这</strong> <strong>恰</strong>当地<strong>排</strong>除<strong>了</strong> <strong>像</strong> <strong>二</strong>元运算符<strong>这</strong>样<strong>的</strong>情形。<strong>说</strong>到<strong>这</strong> <strong>个</strong>……</p>
 <aside name="useful">
-<p>Not that nesting unary expressions is particularly useful in Lox. But other
-languages let you do it, so we do too.</p>
+<p><strong>嵌</strong>套<strong>一</strong>元表达式<strong>在</strong> Lox <strong>中</strong> <strong>也</strong> <strong>算</strong> <strong>不</strong>上<strong>特</strong>别<strong>有</strong> <strong>用</strong>。<strong>但</strong> <strong>其</strong>它<strong>语</strong>言<strong>允</strong>许<strong>这</strong>么<strong>做</strong>， <strong>所</strong>以<strong>我</strong>们<strong>也</strong> <strong>跟</strong>着<strong>这</strong>么<strong>做</strong>。</p>
 </aside>
-<h2><a href="#parsing-infix-expressions" name="parsing-infix-expressions"><small>17&#8202;.&#8202;5</small>Parsing Infix Expressions</a></h2>
-<p>Binary operators are different from the previous expressions because they are
-<em>infix</em>. With the other expressions, we know what we are parsing from the very
-first token. With infix expressions, we don&rsquo;t know we&rsquo;re in the middle of a
-binary operator until <em>after</em> we&rsquo;ve parsed its left operand and then stumbled
-onto the operator token in the middle.</p>
-<p>Here&rsquo;s an example:</p>
+<h2><a href="#解析中缀表达式" name="解析中缀表达式"><small>17&#8202;.&#8202;5</small>解析中缀表达式</a></h2>
+<p><strong>二</strong>元运算符<strong>与</strong> <strong>之</strong>前<strong>的</strong>表达式<strong>不</strong>同， <strong>因</strong>为它们<strong>是</strong> <strong>中</strong>缀<strong>的</strong>。<strong>对</strong>于<strong>其</strong>他表达式， <strong>我</strong>们<strong>从</strong> <strong>第</strong>一<strong>个</strong> token <strong>就</strong> <strong>知</strong>道<strong>我</strong>们<strong>在</strong>解析<strong>什</strong>么。<strong>对</strong>于<strong>中</strong>缀表达式， <strong>我</strong>们<strong>要</strong>在<strong>已</strong>经解析<strong>完</strong>它的<strong>左</strong>运算<strong>对</strong>象、 <strong>接</strong>着<strong>撞</strong>上<strong>中</strong>间的<strong>那</strong>个运算符 token <strong>之</strong> <strong>后</strong>， <strong>才</strong> <strong>知</strong>道<strong>我</strong>们<strong>正</strong>处<strong>于</strong>一<strong>个</strong> <strong>二</strong>元运算符<strong>的</strong> <strong>中</strong>间。</p>
+<p><strong>举</strong>个<strong>例</strong>子：</p>
 <div class="codehilite"><pre>
 <span class="n">1</span> + <span class="n">2</span>
 </pre></div>
-<p>Let&rsquo;s walk through trying to compile it with what we know so far:</p>
+<p><strong>让</strong> <strong>我</strong>们<strong>走</strong> <strong>一</strong>遍<strong>尝</strong>试<strong>用</strong> <strong>我</strong>们<strong>到</strong> <strong>目</strong>前<strong>为</strong>止<strong>所</strong>知<strong>的</strong> <strong>知</strong>识<strong>来</strong>编译<strong>它</strong>：</p>
 <ol>
 <li>
-<p>We call <code>expression()</code>. That in turn calls
-<code>parsePrecedence(PREC_ASSIGNMENT)</code>.</p>
+<p><strong>我</strong>们<strong>调</strong>用 <code>expression()</code>。<strong>它</strong> <strong>进</strong>而<strong>调</strong>用 <code>parsePrecedence(PREC_ASSIGNMENT)</code>。</p>
 </li>
 <li>
-<p>That function (once we implement it) sees the leading number token and
-recognizes it is parsing a number literal. It hands off control to
-<code>number()</code>.</p>
+<p><strong>那</strong>个函数（ <strong>一</strong>旦<strong>我</strong>们<strong>实</strong>现<strong>了</strong>它） <strong>看</strong>到<strong>了</strong>开头<strong>的</strong> <strong>那</strong>个<strong>数</strong>字 token， <strong>并</strong> <strong>认</strong>出<strong>正</strong>在解析<strong>一</strong>条<strong>数</strong>字字面量。<strong>它</strong> <strong>将</strong>控<strong>制</strong>权<strong>交</strong> <strong>给</strong> <code>number()</code>。</p>
 </li>
 <li>
-<p><code>number()</code> creates a constant, emits an <code>OP_CONSTANT</code>, and returns back to
-<code>parsePrecedence()</code>.</p>
+<p><code>number()</code> <strong>创</strong>建<strong>一</strong>个常量， <strong>发</strong>射<strong>一</strong>条 <code>OP_CONSTANT</code>， <strong>并</strong>返<strong>回</strong> <strong>至</strong> <code>parsePrecedence()</code>。</p>
 </li>
 </ol>
-<p>Now what? The call to <code>parsePrecedence()</code> should consume the entire addition
-expression, so it needs to keep going somehow. Fortunately, the parser is right
-where we need it to be. Now that we&rsquo;ve compiled the leading number expression,
-the next token is <code>+</code>. That&rsquo;s the exact token that <code>parsePrecedence()</code> needs to
-detect that we&rsquo;re in the middle of an infix expression and to realize that the
-expression we already compiled is actually an operand to that.</p>
-<p>So this hypothetical array of function pointers doesn&rsquo;t just list functions to
-parse expressions that start with a given token. Instead, it&rsquo;s a <em>table</em> of
-function pointers. One column associates prefix parser functions with token
-types. The second column associates infix parser functions with token types.</p>
-<p>The function we will use as the infix parser for <code>TOKEN_PLUS</code>, <code>TOKEN_MINUS</code>,
-<code>TOKEN_STAR</code>, and <code>TOKEN_SLASH</code> is this:</p>
+<p><strong>接</strong> <strong>下</strong>来<strong>该</strong> <strong>如</strong>何？ <strong>对</strong> <code>parsePrecedence()</code> <strong>的</strong> <strong>调</strong>用<strong>应</strong>该<strong>消</strong>费<strong>整</strong>条<strong>加</strong>法表达式， <strong>所</strong>以<strong>它</strong>需<strong>要</strong> <strong>以</strong>某<strong>种</strong>方<strong>式</strong> <strong>继</strong>续<strong>向</strong> <strong>前</strong>。幸运<strong>的</strong>是，解析器<strong>正</strong>停留<strong>在</strong> <strong>我</strong>们<strong>所</strong>需<strong>要</strong> <strong>的</strong> <strong>位</strong>置。 <strong>既</strong>然<strong>我</strong>们<strong>已</strong>经编译<strong>了</strong> <strong>那</strong>个<strong>开</strong>头<strong>的</strong> <strong>数</strong>字表达式， <strong>下</strong> <strong>一</strong>个 token <strong>就</strong> <strong>是</strong> <code>+</code>。<strong>这</strong> <strong>正</strong>是 <code>parsePrecedence()</code> <strong>需</strong>要<strong>的</strong> <strong>那</strong>个 token， <strong>以</strong>检<strong>测</strong> <strong>我</strong>们<strong>正</strong>处<strong>于</strong>一<strong>条</strong> <strong>中</strong>缀表达式<strong>之</strong> <strong>中</strong>， <strong>并</strong>意识<strong>到</strong> <strong>我</strong>们<strong>已</strong>经编译<strong>完</strong>的<strong>那</strong>条表达式<strong>实</strong>际<strong>上</strong> <strong>是</strong> <strong>它</strong> <strong>的</strong> <strong>一</strong>个运算<strong>对</strong>象。</p>
+<p><strong>所</strong>以<strong>这</strong>张<strong>假</strong>想<strong>中</strong> <strong>的</strong>函数指针<strong>数</strong>组<strong>不</strong>仅仅<strong>是</strong> <strong>列</strong>出<strong>一</strong>些<strong>函</strong>数<strong>用</strong>于解析<strong>以</strong> <strong>给</strong>定 token <strong>开</strong>头<strong>的</strong>表达式。 <strong>取</strong>而<strong>代</strong>之， <strong>它</strong> <strong>是</strong>一<strong>张</strong>函数指针<strong>表</strong>。<strong>一</strong>列<strong>将</strong> <strong>前</strong>缀解析函数<strong>与</strong> token 类型<strong>关</strong>联<strong>起</strong>来。 <strong>第</strong>二<strong>列</strong> <strong>则</strong> <strong>将</strong> <strong>中</strong>缀解析函数<strong>与</strong> token 类型<strong>关</strong>联<strong>起</strong>来。</p>
+<p><strong>我</strong>们<strong>将</strong> <strong>用</strong>作 <code>+</code>、<code>-</code>、<code>*</code>、<code>/</code> <strong>的</strong> <strong>中</strong>缀解析函数<strong>的</strong> _， <strong>是</strong> <strong>这</strong>个：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
 <pre>
@@ -971,85 +745,53 @@ add after <em>endCompiler</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
-<p>When a prefix parser function is called, the leading token has already been
-consumed. An infix parser function is even more <em>in medias res</em><span class="em">&mdash;</span>the entire
-left-hand operand expression has already been compiled and the subsequent infix
-operator consumed.</p>
-<p>The fact that the left operand gets compiled first works out fine. It means at
-runtime, that code gets executed first. When it runs, the value it produces will
-end up on the stack. That&rsquo;s right where the infix operator is going to need it.</p>
-<p>Then we come here to <code>binary()</code> to handle the rest of the arithmetic operators.
-This function compiles the right operand, much like how <code>unary()</code> compiles its
-own trailing operand. Finally, it emits the bytecode instruction that performs
-the binary operation.</p>
-<p>When run, the VM will execute the left and right operand code, in that order,
-leaving their values on the stack. Then it executes the instruction for the
-operator. That pops the two values, computes the operation, and pushes the
-result.</p>
-<p>The code that probably caught your eye here is that <code>getRule()</code> line. When we
-parse the right-hand operand, we again need to worry about precedence. Take an
-expression like:</p>
+<p><strong>当</strong>一<strong>个</strong> <strong>前</strong>缀解析函数<strong>被</strong>调<strong>用</strong>时， <strong>那</strong>个<strong>领</strong>头<strong>的</strong> token <strong>已</strong>被消费。<strong>一</strong>个<strong>中</strong>缀解析函数<strong>更</strong>加<strong>中</strong> <strong>的</strong> <strong>是</strong> —— <strong>整</strong>个<strong>左</strong>侧运算<strong>对</strong>象<strong>都</strong> <strong>已</strong>被编译， <strong>接</strong>着<strong>的</strong> <strong>那</strong>个<strong>中</strong>缀运算符<strong>也</strong> <strong>已</strong>被消费。</p>
+<p><strong>左</strong>侧运算<strong>对</strong>象<strong>会</strong> <strong>先</strong>被编译<strong>这</strong> <strong>回</strong>事<strong>恰</strong>好<strong>很</strong>妙。<strong>这</strong> <strong>意</strong>味<strong>着</strong>运行时<strong>那</strong>段代码<strong>会</strong> <strong>先</strong> <strong>执</strong>行。<strong>当</strong>它<strong>运</strong>行<strong>时</strong>， <strong>其</strong>产<strong>生</strong>的<strong>值</strong> <strong>会</strong> <strong>落</strong>到<strong>栈</strong> <strong>上</strong>。<strong>这</strong> <strong>正</strong>是<strong>中</strong>缀运算符<strong>即</strong>将<strong>需</strong>要<strong>的</strong> <strong>位</strong>置。</p>
+<p><strong>随</strong>后， <strong>我</strong>们<strong>抵</strong>达 <code>binary()</code> <strong>处</strong>理<strong>其</strong>它<strong>算</strong>术运算符。<strong>这</strong>个函数<strong>编</strong>译<strong>其</strong> <strong>右</strong>侧运算<strong>对</strong>象， <strong>类</strong>似<strong>于</strong> <code>unary()</code> <strong>编</strong>译<strong>它</strong> <strong>自</strong>己<strong>那</strong>个<strong>后</strong>跟<strong>的</strong>运算<strong>对</strong>象。<strong>最</strong>后， <strong>它</strong>发射<strong>执</strong>行<strong>那</strong>个<strong>二</strong>元运算<strong>的</strong>字节码指令。</p>
+<p><strong>运</strong>行<strong>时</strong>，VM <strong>会</strong> <strong>先</strong>后<strong>执</strong>行<strong>左</strong>、 <strong>右</strong>侧运算<strong>对</strong>象<strong>的</strong>代码， <strong>顺</strong>序<strong>如</strong>此， <strong>并</strong>将<strong>它</strong>们<strong>的</strong> <strong>值</strong> <strong>留</strong>在<strong>栈</strong> <strong>上</strong>。 <strong>接</strong>着<strong>它</strong> <strong>会</strong>执<strong>行</strong> <strong>那</strong>个<strong>运</strong>算符<strong>对</strong>应<strong>的</strong>指令。<strong>那</strong> <strong>会</strong> <strong>弹</strong>出<strong>两</strong>个<strong>值</strong>、 <strong>计</strong>算<strong>运</strong>算、 <strong>并</strong>将<strong>结</strong>果<strong>推</strong> <strong>回</strong> <strong>去</strong>。</p>
+<p><strong>大</strong>概<strong>引</strong>起<strong>你</strong> <strong>注</strong>意<strong>的</strong> <strong>是</strong> <strong>那</strong>行 <code>getRule()</code>。<strong>当</strong> <strong>我</strong>们解析<strong>右</strong>侧运算<strong>对</strong>象<strong>时</strong>， <strong>我</strong>们<strong>再</strong> <strong>一</strong>次<strong>需</strong>要<strong>考</strong>虑<strong>优</strong>先级。<strong>看</strong> <strong>这</strong>样<strong>一</strong>条<strong>表</strong>达式：</p>
 <div class="codehilite"><pre>
 <span class="n">2</span> * <span class="n">3</span> + <span class="n">4</span>
 </pre></div>
-<p>When we parse the right operand of the <code>*</code> expression, we need to just capture
-<code>3</code>, and not <code>3 + 4</code>, because <code>+</code> is lower precedence than <code>*</code>. We could define
-a separate function for each binary operator. Each would call
-<code>parsePrecedence()</code> and pass in the correct precedence level for its operand.</p>
-<p>But that&rsquo;s kind of tedious. Each binary operator&rsquo;s right-hand operand precedence
-is one level <span name="higher">higher</span> than its own. We can look that up
-dynamically with this <code>getRule()</code> thing we&rsquo;ll get to soon. Using that, we call
-<code>parsePrecedence()</code> with one level higher than this operator&rsquo;s level.</p>
+<p><strong>当</strong> <strong>我</strong>们解析 <code>*</code> <strong>的</strong> <strong>右</strong>侧运算<strong>对</strong>象<strong>时</strong>， <strong>我</strong>们<strong>只</strong> <strong>需</strong> <strong>捕</strong>获 <code>3</code>， <strong>而</strong> <strong>不</strong> <strong>应</strong> <strong>包</strong>括 <code>3 + 4</code>， <strong>因</strong>为 <code>+</code> <strong>的</strong> <strong>优</strong>先级<strong>比</strong> <code>*</code> <strong>更</strong>低。<strong>我</strong>们<strong>本</strong>可<strong>以</strong>为<strong>每</strong>一<strong>个</strong> <strong>二</strong>元运算符<strong>各</strong>自<strong>定</strong>义<strong>一</strong>个<strong>函</strong>数。<strong>每</strong>个<strong>函</strong>数<strong>都</strong> <strong>会</strong> <strong>调</strong>用 <code>parsePrecedence()</code> <strong>并</strong> <strong>传</strong>入<strong>其</strong>运算<strong>对</strong>象<strong>应</strong>遵<strong>循</strong> <strong>的</strong> <strong>正</strong>确<strong>优</strong>先级。</p>
+<p><strong>但</strong> <strong>那</strong> <strong>样</strong> <strong>实</strong>在<strong>有</strong>些<strong>繁</strong>琐。<strong>每</strong>一<strong>个</strong> <strong>二</strong>元运算符<strong>其</strong> <strong>右</strong>侧运算<strong>对</strong>象<strong>的</strong>优<strong>先</strong>级<strong>都</strong> <strong>比</strong> <strong>它</strong> <strong>自</strong>己<strong>高</strong>一档。<span name="higher">更高</span> <strong>一</strong>档。<strong>我</strong>们<strong>可</strong>以<strong>通</strong>过<strong>马</strong>上<strong>就</strong>要<strong>介</strong>绍<strong>的</strong> <code>getRule()</code> <strong>动</strong>态<strong>地</strong>查<strong>到</strong> <strong>那</strong> <strong>个</strong> <strong>值</strong>。<strong>利</strong>用<strong>这</strong> <strong>一</strong>点， <strong>我</strong>们<strong>调</strong>用 <code>parsePrecedence()</code> <strong>并</strong> <strong>传</strong>入<strong>比</strong> <strong>当</strong>前运算符<strong>的</strong>优先级<strong>更</strong>高<strong>一</strong>档<strong>的</strong>参数。</p>
 <aside name="higher">
-<p>We use one <em>higher</em> level of precedence for the right operand because the binary
-operators are left-associative. Given a series of the <em>same</em> operator, like:</p>
+<p><strong>我</strong>们<strong>为</strong> <strong>右</strong>侧运算<strong>对</strong>象<strong>使</strong>用<strong>比</strong> <strong>其</strong>自身<strong>更</strong>高<strong>一</strong>档<strong>的</strong>优<strong>先</strong>级， <strong>是</strong> <strong>因</strong>为<strong>这</strong>些<strong>二</strong>元运算符<strong>都</strong>是<strong>左</strong>结合<strong>的</strong>。<strong>面</strong>对<strong>一</strong>串<strong>相</strong>同<strong>的</strong>运算符， <strong>比</strong>如：</p>
 <div class="codehilite"><pre>
 <span class="n">1</span> + <span class="n">2</span> + <span class="n">3</span> + <span class="n">4</span>
 </pre></div>
-<p>We want to parse it like:</p>
+<p><strong>我</strong>们<strong>希</strong>望<strong>将</strong>其<strong>解</strong>析<strong>为</strong>：</p>
 <div class="codehilite"><pre>
 ((<span class="n">1</span> + <span class="n">2</span>) + <span class="n">3</span>) + <span class="n">4</span>
 </pre></div>
-<p>Thus, when parsing the right-hand operand to the first <code>+</code>, we want to consume
-the <code>2</code>, but not the rest, so we use one level above <code>+</code>&rsquo;s precedence. But if
-our operator was <em>right</em>-associative, this would be wrong. Given:</p>
+<p><strong>于</strong>是， <strong>当</strong>解析<strong>第</strong>一<strong>个</strong> <code>+</code> <strong>的</strong> <strong>右</strong>侧运算<strong>对</strong>象<strong>时</strong>， <strong>我</strong>们<strong>希</strong>望<strong>捕</strong>获 <code>2</code>， <strong>而</strong> <strong>不</strong> <strong>包</strong>括<strong>其</strong>余<strong>部</strong>分， <strong>所</strong>以<strong>我</strong>们<strong>使</strong>用<strong>比</strong> <code>+</code> <strong>更</strong>高<strong>一</strong>档<strong>的</strong>优先级。<strong>但</strong> <strong>若</strong> <strong>我</strong>们的运算符<strong>是</strong> <strong>右</strong>结合<strong>的</strong>， <strong>这</strong> <strong>就</strong>错<strong>了</strong>。<strong>面</strong>对：</p>
 <div class="codehilite"><pre>
 <span class="i">a</span> = <span class="i">b</span> = <span class="i">c</span> = <span class="i">d</span>
 </pre></div>
-<p>Since assignment is right-associative, we want to parse it as:</p>
+<p><strong>由</strong>于赋<strong>值</strong> <strong>是</strong> <strong>右</strong>结合<strong>的</strong>， <strong>我</strong>们<strong>希</strong>望<strong>将</strong>其<strong>解</strong>析<strong>为</strong>：</p>
 <div class="codehilite"><pre>
 <span class="i">a</span> = (<span class="i">b</span> = (<span class="i">c</span> = <span class="i">d</span>))
 </pre></div>
-<p>To enable that, we would call <code>parsePrecedence()</code> with the <em>same</em> precedence as
-the current operator.</p>
+<p><strong>为</strong>了<strong>支</strong>持<strong>这</strong> <strong>一</strong>点， <strong>我</strong>们<strong>会</strong> <strong>用</strong> <strong>与</strong>当<strong>前</strong>运算符<strong>相</strong>同<strong>的</strong>优<strong>先</strong>级<strong>来</strong>调<strong>用</strong> <code>parsePrecedence()</code>。</p>
 </aside>
-<p>This way, we can use a single <code>binary()</code> function for all binary operators even
-though they have different precedences.</p>
-<h2><a href="#a-pratt-parser" name="a-pratt-parser"><small>17&#8202;.&#8202;6</small>A Pratt Parser</a></h2>
-<p>We now have all of the pieces and parts of the compiler laid out. We have a
-function for each grammar production: <code>number()</code>, <code>grouping()</code>, <code>unary()</code>, and
-<code>binary()</code>. We still need to implement <code>parsePrecedence()</code>, and <code>getRule()</code>. We
-also know we need a table that, given a token type, lets us find</p>
+<p><strong>以</strong> <strong>这</strong>种<strong>方</strong>式， <strong>我</strong>们<strong>便</strong> <strong>可</strong>以<strong>为</strong> <strong>所</strong> <strong>有</strong> <strong>的</strong> <strong>二</strong>元运算符<strong>使</strong>用<strong>同</strong>一<strong>个</strong> <code>binary()</code> 函数， <strong>即</strong>使它们<strong>具</strong> <strong>有</strong> <strong>不</strong>同<strong>的</strong>优先级。</p>
+<h2><a href="#pratt-解析器" name="pratt-解析器"><small>17&#8202;.&#8202;6</small>Pratt 解析器</a></h2>
+<p><strong>我</strong>们<strong>现</strong>在<strong>已</strong>经将<strong>编</strong>译器<strong>的</strong> <strong>各</strong>个<strong>零</strong>件<strong>与</strong>部<strong>件</strong>摆<strong>好</strong> <strong>了</strong>位。<strong>我</strong>们<strong>为</strong>文法<strong>的</strong> <strong>每</strong>一<strong>个</strong> <strong>产</strong>生式<strong>都</strong> <strong>有</strong>一<strong>个</strong>函数： <code>number()</code>、<code>grouping()</code>、<code>unary()</code> <strong>以</strong>及 <code>binary()</code>。<strong>我</strong>们<strong>还</strong>需<strong>要</strong> <code>parsePrecedence()</code> <strong>以</strong>及 <code>getRule()</code> <strong>的</strong>实现。<strong>我</strong>们<strong>也</strong> <strong>知</strong>道<strong>我</strong>们<strong>需</strong>要<strong>一</strong>张<strong>表</strong>， <strong>给</strong>定<strong>一</strong>个 token 类型， <strong>它</strong>能<strong>让</strong> <strong>我</strong>们<strong>查</strong>找<strong>到</strong>：</p>
 <ul>
 <li>
-<p>the function to compile a prefix expression starting with a token of that
-type,</p>
+<p>解析<strong>以</strong> <strong>该</strong>类型<strong>开</strong>头<strong>的</strong> <strong>前</strong>缀表达式<strong>的</strong>函数；</p>
 </li>
 <li>
-<p>the function to compile an infix expression whose left operand is followed
-by a token of that type, and</p>
+<p>解析<strong>其</strong> <strong>左</strong>侧运算<strong>对</strong>象<strong>之</strong> <strong>后</strong> <strong>跟</strong>着<strong>该</strong>类型<strong>的</strong> <strong>中</strong>缀表达式<strong>的</strong>函数； <strong>以</strong>及</p>
 </li>
 <li>
-<p>the precedence of an <span name="prefix">infix</span> expression that uses
-that token as an operator.</p>
+<p><strong>使</strong>用<strong>该</strong> token <strong>作</strong>为运算符<strong>的</strong> <strong>中</strong>缀表达式<strong>的</strong>优先级。</p>
 </li>
 </ul>
 <aside name="prefix">
-<p>We don&rsquo;t need to track the precedence of the <em>prefix</em> expression starting with a
-given token because all prefix operators in Lox have the same precedence.</p>
+<p><strong>我</strong>们<strong>并</strong>不<strong>需</strong>要<strong>记</strong>录<strong>以</strong> <strong>给</strong>定 token <strong>开</strong>头<strong>的</strong> <strong>前</strong>缀表达式<strong>的</strong>优<strong>先</strong>级， <strong>因</strong>为 Lox <strong>中</strong> <strong>所</strong> <strong>有</strong> <strong>的</strong> <strong>前</strong>缀运算符<strong>都</strong>拥<strong>有</strong> <strong>相</strong>同<strong>的</strong>优先级。</p>
 </aside>
-<p>We wrap these three properties in a little struct which represents a single row
-in the parser table.</p>
+<p><strong>我</strong>们<strong>将</strong> <strong>这</strong>三<strong>个</strong>属<strong>性</strong> <strong>打</strong>个<strong>包</strong>， <strong>放</strong> <strong>进</strong> <strong>一</strong>个<strong>小</strong>结<strong>构</strong> <strong>里</strong>， <strong>它</strong> <strong>代</strong>表<strong>解</strong>析<strong>表</strong> <strong>中</strong> <strong>的</strong>一<strong>行</strong>。</p>
 <div class="codehilite"><pre class="insert-before">
 } Precedence;
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -1067,12 +809,9 @@ Parser parser;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after enum <em>Precedence</em></div>
 
-<p>That ParseFn type is a simple <span name="typedef">typedef</span> for a function
-type that takes no arguments and returns nothing.</p>
+<p><strong>那</strong>个 ParseFn <strong>类</strong>型<strong>是</strong>一<strong>个</strong> <strong>简</strong>单<strong>的</strong><span name="typedef">typedef</span>， <strong>对</strong>应<strong>于</strong>一<strong>个</strong> <strong>不</strong>带参数、 <strong>返</strong>回<strong>空</strong> <strong>的</strong>函数<strong>类</strong>型。</p>
 <aside name="typedef" class="bottom">
-<p>C&rsquo;s syntax for function pointer types is so bad that I always hide it behind a
-typedef. I understand the intent behind the syntax<span class="em">&mdash;</span>the whole &ldquo;declaration
-reflects use&rdquo; thing<span class="em">&mdash;</span>but I think it was a failed syntactic experiment.</p>
+<p>C <strong>在</strong>函数指针<strong>类</strong>型<strong>上</strong>的<strong>语</strong>法<strong>实</strong>在<strong>太</strong> <strong>糟</strong> <strong>糕</strong>了， <strong>所</strong>以<strong>我</strong>们<strong>总</strong>是<strong>把</strong>它<strong>藏</strong> <strong>在</strong>一<strong>个</strong> typedef <strong>后</strong>面。<strong>我</strong> <strong>理</strong>解<strong>这</strong>一语<strong>法</strong> <strong>背</strong> <strong>后</strong>的<strong>设</strong>计<strong>意</strong>图—— <strong>那</strong>些 &rdquo; <strong>声</strong>明<strong>反</strong>映<strong>使</strong>用&rdquo; <strong>的</strong> <strong>事</strong>儿—— <strong>但</strong> <strong>我</strong>认<strong>为</strong> <strong>它</strong> <strong>是</strong>一<strong>个</strong>失败<strong>的</strong>语<strong>法</strong> <strong>实</strong>验。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
 } Precedence;
@@ -1087,8 +826,7 @@ typedef struct {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after enum <em>Precedence</em></div>
 
-<p>The table that drives our whole parser is an array of ParseRules. We&rsquo;ve been
-talking about it forever, and finally you get to see it.</p>
+<p><strong>驱</strong>动<strong>整</strong>款解析器<strong>的</strong> <strong>那</strong>张<strong>表</strong> <strong>是</strong>一<strong>个</strong> ParseRules <strong>数</strong>组。<strong>我</strong>们<strong>为</strong> <strong>它</strong>念<strong>叨</strong>了<strong>许</strong>久， <strong>终</strong>于<strong>你</strong> <strong>能</strong> <strong>看</strong>到<strong>它</strong> <strong>了</strong>。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>unary</em>()</div>
 <pre>
@@ -1138,27 +876,13 @@ add after <em>unary</em>()</div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>unary</em>()</div>
 
 <aside name="big">
-<p>See what I mean about not wanting to revisit the table each time we needed a new
-column? It&rsquo;s a beast.</p>
-<p>If you haven&rsquo;t seen the <code>[TOKEN_DOT] =</code> syntax in a C array literal, that is
-C99&rsquo;s designated initializer syntax. It&rsquo;s clearer than having to count array
-indexes by hand.</p>
+<p><strong>看</strong>到<strong>我</strong> <strong>说</strong> &rdquo; <strong>我</strong> <strong>不</strong>想<strong>在</strong> <strong>每</strong>次<strong>为</strong> <strong>那</strong>张<strong>表</strong>添<strong>一</strong>列<strong>时</strong> <strong>都</strong> <strong>回</strong>过头<strong>去</strong>修<strong>改</strong>它&rdquo; <strong>的</strong>意<strong>思</strong>了<strong>吧</strong>？它<strong>是</strong>一头<strong>怪</strong>兽。</p>
+<p><strong>若</strong>你<strong>还</strong> <strong>没</strong>见<strong>过</strong> C 数组<strong>字</strong>面量<strong>中</strong> <strong>的</strong> <code>[TOKEN_DOT] =</code> <strong>这</strong>种语<strong>法</strong>， <strong>那</strong>它<strong>是</strong> C99 <strong>的</strong>显<strong>式</strong>初始化<strong>器</strong>语<strong>法</strong>。<strong>它</strong> <strong>比</strong> <strong>让</strong> <strong>你</strong>用<strong>手</strong>指<strong>头</strong>数<strong>数</strong>组<strong>索</strong>引<strong>要</strong> <strong>清</strong>晰<strong>得</strong>多。</p>
 </aside>
-<p>You can see how <code>grouping</code> and <code>unary</code> are slotted into the prefix parser column
-for their respective token types. In the next column, <code>binary</code> is wired up to
-the four arithmetic infix operators. Those infix operators also have their
-precedences set in the last column.</p>
-<p>Aside from those, the rest of the table is full of <code>NULL</code> and <code>PREC_NONE</code>. Most
-of those empty cells are because there is no expression associated with those
-tokens. You can&rsquo;t start an expression with, say, <code>else</code>, and <code>}</code> would make for
-a pretty confusing infix operator.</p>
-<p>But, also, we haven&rsquo;t filled in the entire grammar yet. In later chapters, as we
-add new expression types, some of these slots will get functions in them. One of
-the things I like about this approach to parsing is that it makes it very easy
-to see which tokens are in use by the grammar and which are available.</p>
-<p>Now that we have the table, we are finally ready to write the code that uses it.
-This is where our Pratt parser comes to life. The easiest function to define is
-<code>getRule()</code>.</p>
+<p><strong>你</strong> <strong>可</strong>以<strong>看</strong>到 <code>grouping</code> <strong>与</strong> <code>unary</code> <strong>如</strong>何<strong>分</strong>别<strong>安</strong>插<strong>在</strong> <strong>与</strong>其<strong>各</strong>自 token 类型<strong>对</strong>应<strong>的</strong> <strong>前</strong>缀解析<strong>列</strong> <strong>里</strong>。<strong>在</strong> <strong>下</strong> <strong>一</strong>列， <code>binary</code> <strong>与</strong> <strong>四</strong>个<strong>算</strong>术<strong>中</strong>缀运算符<strong>相</strong>连。<strong>那</strong>些<strong>中</strong>缀运算符<strong>也</strong> <strong>有</strong>其<strong>优</strong>先级， <strong>设</strong>定<strong>在</strong>最<strong>后</strong> <strong>一</strong>列。</p>
+<p><strong>除</strong> <strong>了</strong> <strong>这</strong>些<strong>之</strong>外， <strong>表</strong> <strong>的</strong>其<strong>余</strong>部<strong>分</strong> <strong>填</strong> <strong>满</strong>了 <code>NULL</code> <strong>和</strong> <code>PREC_NONE</code>。<strong>那</strong>些<strong>空</strong>格子<strong>大</strong>多<strong>是</strong> <strong>因</strong>为<strong>没</strong>有<strong>与</strong> <strong>那</strong>些 token <strong>相</strong>关联<strong>的</strong>表达式。 <strong>比</strong>如<strong>说</strong>， <strong>你</strong> <strong>不</strong>能<strong>以</strong> <code>else</code> <strong>作</strong>为<strong>一</strong>条表达式<strong>的</strong>起点， <strong>而</strong> <code>}</code> <strong>作</strong>为<strong>中</strong>缀运算符<strong>也</strong>会<strong>让</strong>人<strong>极</strong>为<strong>困</strong>惑。</p>
+<p><strong>但</strong>同时， <strong>我</strong>们<strong>还</strong> <strong>没</strong> <strong>有</strong> <strong>填</strong>满<strong>整</strong>条<strong>文</strong>法。<strong>在</strong> <strong>后</strong>面<strong>的</strong>章节<strong>中</strong>， <strong>当</strong> <strong>我</strong>们<strong>添</strong>上<strong>新</strong>的表达式<strong>类</strong>型<strong>时</strong>， <strong>其</strong> <strong>中</strong> <strong>的</strong> <strong>一</strong>些<strong>格</strong>子<strong>会</strong> <strong>再</strong>次<strong>被</strong> <strong>填</strong>上函数。<strong>我</strong> <strong>喜</strong>欢<strong>这</strong>种解析<strong>方</strong>法<strong>的</strong> <strong>一</strong>个<strong>地</strong>方<strong>是</strong>： <strong>它</strong> <strong>让</strong>我<strong>们</strong> <strong>能</strong> <strong>够</strong>极<strong>其</strong>直<strong>观</strong>地<strong>看</strong>出<strong>哪</strong>些 token <strong>正</strong>在<strong>被</strong>文法<strong>使</strong>用、 <strong>哪</strong>些<strong>还</strong>留<strong>着</strong> <strong>空</strong>位。</p>
+<p><strong>现</strong>在<strong>我</strong>们<strong>有</strong>了<strong>这</strong>张<strong>表</strong>， <strong>终</strong>于<strong>可</strong>以<strong>来</strong> <strong>写</strong> <strong>那</strong>些<strong>使</strong>用<strong>它</strong>的代码<strong>了</strong>。<strong>最</strong>容易<strong>定</strong>义<strong>的</strong>函数<strong>是</strong> <code>getRule()</code>。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>parsePrecedence</em>()</div>
 <pre>
@@ -1168,19 +892,10 @@ add after <em>parsePrecedence</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>parsePrecedence</em>()</div>
 
-<p>It simply returns the rule at the given index. It&rsquo;s called by <code>binary()</code> to look
-up the precedence of the current operator. This function exists solely to handle
-a declaration cycle in the C code. <code>binary()</code> is defined <em>before</em> the rules
-table so that the table can store a pointer to it. That means the body of
-<code>binary()</code> cannot access the table directly.</p>
-<p>Instead, we wrap the lookup in a function. That lets us forward declare
-<code>getRule()</code> before the definition of <code>binary()</code>, and <span
-name="forward">then</span> <em>define</em> <code>getRule()</code> after the table. We&rsquo;ll need a
-couple of other forward declarations to handle the fact that our grammar is
-recursive, so let&rsquo;s get them all out of the way.</p>
+<p><strong>它</strong>简<strong>单</strong> <strong>地</strong>返<strong>回</strong> <strong>指</strong>定索引<strong>处</strong>的<strong>那</strong>一<strong>行</strong>。<strong>它</strong> <strong>由</strong> <code>binary()</code> <strong>调</strong>用， <strong>以</strong> <strong>查</strong>找<strong>当</strong>前<strong>运</strong>算符<strong>的</strong>优<strong>先</strong>级。<strong>这</strong>个函数<strong>存</strong>在<strong>的</strong> <strong>唯</strong>一<strong>理</strong>由<strong>是</strong> <strong>为</strong>了<strong>处</strong>理 C 代码<strong>中</strong>的<strong>一</strong>个<strong>声</strong>明<strong>顺</strong>序<strong>循</strong>环。<code>binary()</code> <strong>在</strong> <strong>那</strong>张<strong>表</strong> <strong>之</strong> <strong>前</strong>定<strong>义</strong>， <strong>这</strong>样<strong>那</strong>张<strong>表</strong> <strong>才</strong>能<strong>存</strong>储<strong>指</strong>向<strong>它</strong>的指针。<strong>这</strong> <strong>意</strong>味_ <strong>着</strong> <code>binary()</code> <strong>的</strong>函数<strong>体</strong> <strong>无</strong>法<strong>直</strong>接<strong>访</strong>问<strong>那</strong>张<strong>表</strong>。</p>
+<p><strong>取</strong>而<strong>代</strong>之， <strong>我</strong>们<strong>将</strong>查找<strong>包</strong> <strong>装</strong>在<strong>一</strong>个函数<strong>里</strong>。<strong>这</strong>样<strong>我</strong>们<strong>就</strong>能<strong>在</strong> <code>binary()</code> <strong>定</strong>义<strong>之</strong> <strong>前</strong>预<strong>先</strong>声<strong>明</strong> <code>getRule()</code>， <strong>然</strong>后<span name="forward">再</span> 在<strong>那</strong>张<strong>表</strong> <strong>之</strong> <strong>后</strong> <strong>定</strong>义 <code>getRule()</code>。<strong>我</strong>们<strong>还</strong> <strong>会</strong>需<strong>要</strong> <strong>一</strong>些<strong>其</strong>他<strong>预</strong>声<strong>明</strong> <strong>来</strong> <strong>应</strong>对<strong>文</strong>法<strong>是</strong>递<strong>归</strong>的<strong>这</strong>一<strong>事</strong>实， <strong>所</strong>以<strong>让</strong> <strong>我</strong>们<strong>一</strong>次<strong>性</strong> <strong>都</strong>摆<strong>出</strong>来<strong>吧</strong>。</p>
 <aside name="forward">
-<p>This is what happens when you write your VM in a language that was designed to
-be compiled on a PDP-11.</p>
+<p><strong>这</strong> <strong>就</strong>是<strong>当</strong>你<strong>用</strong>一<strong>门</strong> <strong>为</strong> <strong>在</strong> PDP-11 <strong>上</strong>编译<strong>而</strong> <strong>设</strong>计<strong>的</strong>语<strong>言</strong>来_ <strong>写</strong>你<strong>的</strong> VM <strong>时</strong>， <strong>所</strong>会<strong>发</strong>生<strong>的</strong>事**情。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
   emitReturn();
@@ -1198,13 +913,9 @@ static void binary() {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
-<p>If you&rsquo;re following along and implementing clox yourself, pay close attention to
-the little annotations that tell you where to put these code snippets. Don&rsquo;t
-worry, though, if you get it wrong, the C compiler will be happy to tell you.</p>
-<h3><a href="#parsing-with-precedence" name="parsing-with-precedence"><small>17&#8202;.&#8202;6&#8202;.&#8202;1</small>Parsing with precedence</a></h3>
-<p>Now we&rsquo;re getting to the fun stuff. The maestro that orchestrates all of the
-parsing functions we&rsquo;ve defined is <code>parsePrecedence()</code>. Let&rsquo;s start with parsing
-prefix expressions.</p>
+<p><strong>若</strong>你<strong>正</strong>在<strong>跟</strong>着<strong>一</strong>步步<strong>实</strong>现 clox， <strong>请</strong>仔<strong>细_ <strong>看</strong>那些</strong>小<strong>标</strong>注** —— <strong>它</strong>们<strong>会</strong>告<strong>诉</strong>你<strong>该</strong> <strong>把</strong>这<strong>些</strong>代码<strong>片</strong>段<strong>放</strong>在<strong>哪</strong>。<strong>不</strong>用<strong>担</strong>心， <strong>即</strong>使<strong>你</strong> <strong>放</strong> <strong>错</strong>了<strong>位</strong>置， C <strong>编</strong>译器<strong>也</strong>会<strong>很</strong>乐<strong>意</strong> <strong>告</strong>诉<strong>你</strong>。</p>
+<h3><a href="#带优先级的解析" name="带优先级的解析"><small>17&#8202;.&#8202;6&#8202;.&#8202;1</small>带优先级的解析</a></h3>
+<p><strong>如</strong>今<strong>我</strong>们<strong>抵</strong>达<strong>了</strong> <strong>有</strong>趣<strong>的</strong>部<strong>分</strong>。<strong>统</strong>领<strong>那</strong>些<strong>我</strong>们<strong>已</strong>经<strong>定</strong>义<strong>的</strong>解析函数<strong>的</strong> <strong>那</strong>位<strong>指</strong>挥<strong>家</strong>， <strong>是</strong> <code>parsePrecedence()</code>。<strong>让</strong> <strong>我</strong>们<strong>从</strong>解析<strong>前</strong>缀表达式<strong>开</strong>始。</p>
 <div class="codehilite"><pre class="insert-before">
 static void parsePrecedence(Precedence precedence) {
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -1224,14 +935,8 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parsePrecedence</em>(), replace 1 line</div>
 
-<p>We read the next token and look up the corresponding ParseRule. If there is no
-prefix parser, then the token must be a syntax error. We report that and return
-to the caller.</p>
-<p>Otherwise, we call that prefix parse function and let it do its thing. That
-prefix parser compiles the rest of the prefix expression, consuming any other
-tokens it needs, and returns back here. Infix expressions are where it gets
-interesting since precedence comes into play. The implementation is remarkably
-simple.</p>
+<p><strong>我</strong>们<strong>读</strong>取<strong>下</strong>一<strong>个</strong> token， <strong>并</strong>查<strong>找</strong> <strong>相</strong>应<strong>的</strong> ParseRule。<strong>若</strong> <strong>没</strong>有<strong>前</strong>缀解析器， <strong>则</strong> <strong>该</strong> token <strong>一</strong>定<strong>是</strong>一<strong>个</strong>语<strong>法</strong>错误。<strong>我</strong>们<strong>报</strong>告<strong>那</strong>一<strong>点</strong> <strong>并</strong>返<strong>回</strong> <strong>给</strong>调<strong>用</strong>方。</p>
+<p><strong>否</strong>则， <strong>我</strong>们<strong>调</strong>用<strong>那</strong>个<strong>前</strong>缀解析函数， <strong>让</strong>它<strong>去</strong>干<strong>它</strong>的<strong>事</strong>。<strong>那</strong>个<strong>前</strong>缀解析器<strong>会</strong>编译<strong>那</strong>条<strong>前</strong>缀表达式<strong>的</strong> <strong>其</strong>余部<strong>分</strong>， <strong>消</strong>费<strong>它</strong> <strong>所</strong>需<strong>的</strong> <strong>其</strong>他 token， <strong>并</strong>返<strong>回</strong> <strong>到</strong> <strong>此</strong>。<strong>中</strong>缀表达式<strong>则</strong>是<strong>有</strong>趣<strong>之</strong>处 —— <strong>因</strong>为<strong>优</strong>先级<strong>在</strong> <strong>此</strong>登场。<strong>实</strong>现<strong>起</strong>来<strong>出</strong>奇<strong>地</strong> <strong>简</strong>单。</p>
 <div class="codehilite"><pre class="insert-before">
   prefixRule();
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -1248,48 +953,18 @@ in <em>parsePrecedence</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parsePrecedence</em>()</div>
 
-<p>That&rsquo;s the whole thing. Really. Here&rsquo;s how the entire function works: At the
-beginning of <code>parsePrecedence()</code>, we look up a prefix parser for the current
-token. The first token is <em>always</em> going to belong to some kind of prefix
-expression, by definition. It may turn out to be nested as an operand inside one
-or more infix expressions, but as you read the code from left to right, the
-first token you hit always belongs to a prefix expression.</p>
-<p>After parsing that, which may consume more tokens, the prefix expression is
-done. Now we look for an infix parser for the next token. If we find one, it
-means the prefix expression we already compiled might be an operand for it. But
-only if the call to <code>parsePrecedence()</code> has a <code>precedence</code> that is low enough to
-permit that infix operator.</p>
-<p>If the next token is too low precedence, or isn&rsquo;t an infix operator at all,
-we&rsquo;re done. We&rsquo;ve parsed as much expression as we can. Otherwise, we consume the
-operator and hand off control to the infix parser we found. It consumes whatever
-other tokens it needs (usually the right operand) and returns back to
-<code>parsePrecedence()</code>. Then we loop back around and see if the <em>next</em> token is
-also a valid infix operator that can take the entire preceding expression as its
-operand. We keep looping like that, crunching through infix operators and their
-operands until we hit a token that isn&rsquo;t an infix operator or is too low
-precedence and stop.</p>
-<p>That&rsquo;s a lot of prose, but if you really want to mind meld with Vaughan Pratt
-and fully understand the algorithm, step through the parser in your debugger as
-it works through some expressions. Maybe a picture will help. There&rsquo;s only a
-handful of functions, but they are marvelously intertwined:</p>
-<p><span name="connections"></span></p><img src="image/compiling-expressions/connections.png" alt="The various parsing functions and how they call each other."/>
+<p><strong>这</strong>就<strong>是</strong>整<strong>个</strong>函数。 <strong>真</strong>的。 <strong>下</strong>面<strong>是</strong> <strong>这</strong>个<strong>函</strong>数<strong>的</strong> <strong>整</strong>体<strong>工</strong>作<strong>方</strong>式：<strong>在</strong> <code>parsePrecedence()</code> <strong>的</strong>起点， <strong>我</strong>们<strong>去</strong>查<strong>找</strong> <strong>当</strong>前 token <strong>对</strong>应<strong>的</strong>一<strong>个</strong> <strong>前</strong>缀解析器。<strong>第</strong>一<strong>个</strong> token—— <strong>按</strong>定<strong>义</strong>—— <strong>总</strong>是<strong>归</strong>属<strong>于</strong>某<strong>种</strong> <strong>前</strong>缀表达式。<strong>它</strong> <strong>最</strong>终<strong>可</strong>能<strong>会</strong> <strong>被</strong>嵌<strong>套</strong>在<strong>一</strong> <strong>个</strong> <strong>或</strong> <strong>多</strong>个<strong>中</strong>缀表达式<strong>之</strong> <strong>中</strong> <strong>作</strong>为运算<strong>对</strong>象， <strong>但</strong>当<strong>你</strong>自<strong>左</strong>向<strong>右</strong> <strong>读</strong>源<strong>码</strong> <strong>时</strong>， <strong>你</strong> <strong>碰</strong>到<strong>的</strong> <strong>第</strong>一<strong>个</strong> token <strong>总</strong>是<strong>归</strong>属<strong>于</strong>一<strong>个</strong> <strong>前</strong>缀表达式。</p>
+<p><strong>在</strong>解析<strong>完</strong> <strong>那</strong>些<strong>之</strong> <strong>后</strong>（ <strong>它</strong> <strong>可</strong>能<strong>会</strong> <strong>消</strong>费<strong>更</strong>多<strong>的</strong> token）， <strong>那</strong>条<strong>前</strong>缀表达式<strong>便</strong>完<strong>工</strong>了。<strong>接</strong>下<strong>来</strong>， <strong>我</strong>们<strong>去</strong>查<strong>找</strong> <strong>下</strong>一<strong>个</strong> token <strong>对</strong>应<strong>的</strong>一<strong>个</strong> <strong>中</strong>缀解析器。<strong>若</strong> <strong>我</strong>们<strong>找</strong>到<strong>一</strong>个， <strong>那</strong>意味着<strong>我</strong>们<strong>已</strong>经编译<strong>完</strong>的<strong>那</strong>条<strong>前</strong>缀表达式<strong>可</strong>能<strong>就</strong>是<strong>它</strong>的运算<strong>对</strong>象。<strong>但</strong> <strong>这</strong> <strong>需</strong>要<strong>对</strong> <code>parsePrecedence()</code> <strong>的</strong> <strong>那</strong>次<strong>调</strong>用<strong>所</strong> <strong>传</strong>入<strong>的</strong> <code>precedence</code> <strong>足</strong>够<strong>低</strong>， <strong>以</strong> <strong>允</strong>许<strong>那</strong>个<strong>中</strong>缀运算符。</p>
+<p><strong>若</strong> <strong>下</strong>一<strong>个</strong> token <strong>的</strong>优<strong>先</strong>级<strong>太</strong>低、 <strong>或</strong>者<strong>根</strong>本<strong>不</strong> <strong>是</strong>一<strong>个</strong> <strong>中</strong>缀运算符， <strong>那</strong> <strong>我</strong>们<strong>就</strong>完<strong>工</strong>了。<strong>我</strong>们<strong>已</strong>经<strong>按</strong>当<strong>前</strong>优先<strong>级</strong>解析<strong>了</strong> <strong>尽</strong>可<strong>能</strong> <strong>多</strong> <strong>的</strong>表达式。<strong>否</strong>则， <strong>我</strong>们<strong>消</strong>费<strong>那</strong>个运算符， <strong>并</strong>将<strong>控</strong>制<strong>权</strong> <strong>交</strong> <strong>给</strong> <strong>我</strong>们<strong>找</strong>到<strong>的</strong> <strong>中</strong>缀解析器。<strong>它</strong> <strong>会</strong>消费<strong>它</strong> <strong>所</strong>需<strong>的</strong> <strong>其</strong>他 token（<strong>通</strong>常<strong>是</strong> <strong>右</strong>侧运算<strong>对</strong>象）， <strong>并</strong> <strong>返</strong>回<strong>至</strong> <code>parsePrecedence()</code>。<strong>接</strong>着<strong>我</strong>们<strong>回</strong> <strong>到</strong>循环<strong>起</strong>点， <strong>看</strong>看<strong>是</strong> <strong>否</strong> <strong>下</strong>一<strong>个</strong> token <strong>也</strong>是<strong>一</strong>个<strong>有</strong>效<strong>的</strong> <strong>中</strong>缀运算符， <strong>能</strong>够<strong>将</strong> <strong>整</strong>条<strong>前</strong>置表达式<strong>作</strong>为<strong>它</strong>的运算<strong>对</strong>象。<strong>我</strong>们<strong>一</strong>直<strong>这</strong>样<strong>循</strong>环<strong>下</strong>去， <strong>一</strong>路<strong>碾</strong>过<strong>中</strong>缀运算符<strong>与</strong>它<strong>们</strong> <strong>的</strong>运算<strong>对</strong>象， <strong>直</strong>到<strong>我</strong>们<strong>撞</strong>上<strong>一</strong>个<strong>不</strong> <strong>是</strong> <strong>中</strong>缀运算符、 <strong>或</strong>者<strong>优</strong>先级<strong>太</strong>低<strong>的</strong> token， <strong>于</strong>是<strong>停</strong> <strong>下</strong>。</p>
+<p><strong>这</strong>段<strong>文</strong>字<strong>不</strong>少， <strong>但</strong>若<strong>你</strong>真<strong>的</strong>想<strong>与</strong> Vaughan Pratt <strong>产</strong>生<strong>思</strong>想<strong>上</strong>的<strong>共</strong>鸣、 <strong>完</strong>全<strong>领</strong>会<strong>这</strong>个<strong>算</strong>法， <strong>请</strong>在<strong>你</strong>的<strong>调</strong>试器<strong>中</strong> <strong>让</strong>解析器<strong>一</strong>步步<strong>地</strong> <strong>走</strong> <strong>过</strong> <strong>一</strong>些表达式。<strong>或</strong>许<strong>一</strong>张<strong>图</strong>会<strong>有</strong>帮<strong>助</strong>。<strong>这</strong>里<strong>只</strong> <strong>有</strong>寥<strong>寥</strong>几<strong>个</strong>函<strong>数</strong>， <strong>但</strong>它们<strong>缠</strong>绕<strong>得</strong>令<strong>人</strong>惊<strong>叹</strong>：</p>
+<p><span name="connections"></span></p><img src="image/compiling-expressions/connections.png" alt=" **各**个解析函数**以**及它们**如**何**互**相**调**用。" />
 <aside name="connections">
-<p>The <img src="image/compiling-expressions/calls.png" class="arrow" /> arrow
-connects a function to another function it directly calls. The <img
-src="image/compiling-expressions/points-to.png" class="arrow" /> arrow shows the
-table&rsquo;s pointers to the parsing functions.</p>
+<p><strong>那</strong>条 <img src="image/compiling-expressions/calls.png" alt=" **一**条**实**心**箭**头。" class="arrow" /> <strong>箭</strong>头<strong>将</strong>一<strong>个</strong>函<strong>数</strong>连_ <strong>到</strong>另<strong>一</strong>个<strong>它</strong> <strong>直</strong>接<strong>调</strong>用<strong>的</strong>函数。 <strong>那</strong>条 <img src="image/compiling-expressions/points-to.png" alt=" **一**条**空**心**箭**头。" class="arrow" /> <strong>箭</strong>头<strong>显</strong>示<strong>那</strong>张<strong>表</strong> <strong>指</strong>向<strong>各</strong>个解析函数<strong>的</strong>指<strong>针</strong>。</p>
 </aside>
-<p>Later, we&rsquo;ll need to tweak the code in this chapter to handle assignment. But,
-otherwise, what we wrote covers all of our expression compiling needs for the
-rest of the book. We&rsquo;ll plug additional parsing functions into the table when we
-add new kinds of expressions, but <code>parsePrecedence()</code> is complete.</p>
-<h2><a href="#dumping-chunks" name="dumping-chunks"><small>17&#8202;.&#8202;7</small>Dumping Chunks</a></h2>
-<p>While we&rsquo;re here in the core of our compiler, we should put in some
-instrumentation. To help debug the generated bytecode, we&rsquo;ll add support for
-dumping the chunk once the compiler finishes. We had some temporary logging
-earlier when we hand-authored the chunk. Now we&rsquo;ll put in some real code so that
-we can enable it whenever we want.</p>
-<p>Since this isn&rsquo;t for end users, we hide it behind a flag.</p>
+<p><strong>之</strong>后， <strong>我</strong>们<strong>会</strong> <strong>需</strong>要<strong>对</strong>本章<strong>的</strong> <strong>代</strong>码<strong>略</strong>加<strong>调</strong>整， <strong>以</strong>应<strong>对</strong>赋<strong>值</strong>。<strong>但</strong> <strong>除</strong>此<strong>之</strong>外， <strong>我</strong>们<strong>所</strong>写<strong>的</strong> <strong>这</strong>些<strong>已</strong>经涵盖<strong>了</strong>我<strong>们</strong>在<strong>本</strong>书<strong>其</strong>余部<strong>分</strong> <strong>中</strong>解析表达式<strong>的</strong> <strong>全</strong>部<strong>需</strong>求。<strong>当</strong> <strong>我</strong>们<strong>添</strong>加<strong>新</strong>的表达式<strong>类</strong>型<strong>时</strong>， <strong>我</strong>们<strong>会</strong> <strong>把</strong> <strong>更</strong>多<strong>的</strong>解析函数<strong>插</strong>入<strong>那</strong>张<strong>表</strong> <strong>中</strong>， <strong>但</strong> <code>parsePrecedence()</code> <strong>本</strong>身<strong>已</strong>经<strong>完</strong>整<strong>了</strong>。</p>
+<h2><a href="#转储-chunk" name="转储-chunk"><small>17&#8202;.&#8202;7</small>转储 chunk</a></h2>
+<p><strong>在</strong>我<strong>们</strong>抵<strong>达</strong> <strong>编</strong>译器<strong>的</strong> <strong>核</strong>心<strong>之</strong>时， <strong>我</strong>们<strong>应</strong>该<strong>顺</strong>便<strong>加</strong>上<strong>一</strong>些<strong>检</strong>测<strong>工</strong>具。<strong>为</strong>了<strong>调</strong>试<strong>所</strong>生<strong>成</strong> <strong>的</strong>字节码， <strong>我</strong>们<strong>将</strong>添加<strong>一</strong>段<strong>在</strong>编译<strong>结</strong>束<strong>后</strong> <strong>转</strong>储 chunk <strong>的</strong>代<strong>码</strong>。<strong>早</strong> <strong>些</strong>时<strong>候</strong>， <strong>在</strong> <strong>我</strong>们<strong>手</strong>工<strong>拼</strong>凑 chunk <strong>时</strong>， <strong>我</strong>们<strong>有</strong>一些<strong>临</strong>时<strong>的</strong> <strong>日</strong>志输<strong>出</strong>。<strong>如</strong>今， <strong>我</strong>们<strong>会</strong>添<strong>上</strong> <strong>一</strong>些<strong>真</strong>正<strong>的</strong>代码， <strong>以</strong>便<strong>我</strong>们<strong>可</strong>以<strong>在</strong> <strong>任</strong>何<strong>想</strong>用<strong>的</strong>时<strong>候</strong> <strong>将</strong>其<strong>打</strong>开。</p>
+<p><strong>由</strong>于<strong>这</strong> <strong>并</strong>不<strong>是</strong> <strong>为</strong>终<strong>端</strong>用<strong>户</strong> <strong>而</strong> <strong>设</strong>， <strong>我</strong>们<strong>将</strong>它<strong>隐</strong>藏<strong>在</strong>一<strong>个</strong>标<strong>志</strong>后**面。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &lt;stdint.h&gt;
 
@@ -1298,11 +973,11 @@ we can enable it whenever we want.</p>
 <span class="a">#define DEBUG_PRINT_CODE</span>
 </pre><pre class="insert-after">
 #define DEBUG_TRACE_EXECUTION
+
 </pre></div>
 <div class="source-file-narrow"><em>common.h</em></div>
 
-<p>When that flag is defined, we use our existing &ldquo;debug&rdquo; module to print out the
-chunk&rsquo;s bytecode.</p>
+<p><strong>当_ <strong>那</strong>个标</strong>志** <strong>被</strong>定<strong>义</strong> <strong>时</strong>， <strong>我</strong>们<strong>使</strong>用<strong>我</strong>们<strong>既</strong>有<strong>的</strong> &ldquo;debug&rdquo; <strong>模</strong>块<strong>来</strong> <strong>打</strong>印<strong>那</strong>份 chunk <strong>的</strong>字节码。</p>
 <div class="codehilite"><pre class="insert-before">
   emitReturn();
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -1318,11 +993,8 @@ in <em>endCompiler</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endCompiler</em>()</div>
 
-<p>We do this only if the code was free of errors. After a syntax error, the
-compiler keeps on going but it&rsquo;s in kind of a weird state and might produce
-broken code. That&rsquo;s harmless because it won&rsquo;t get executed, but we&rsquo;ll just
-confuse ourselves if we try to read it.</p>
-<p>Finally, to access <code>disassembleChunk()</code>, we need to include its header.</p>
+<p><strong>我</strong>们<strong>只</strong>在<strong>编</strong>译<strong>完</strong>全<strong>没</strong>错<strong>的</strong>代码<strong>后</strong> <strong>才</strong> <strong>这</strong>样<strong>做</strong>。<strong>在</strong> <strong>发</strong>生<strong>语</strong>法错误<strong>之</strong> <strong>后</strong>， <strong>编</strong>译器<strong>会</strong> <strong>继</strong>续<strong>向</strong> <strong>前</strong>， <strong>但</strong> <strong>它</strong>此<strong>时</strong>处<strong>于</strong> <strong>一</strong>种<strong>有</strong>点<strong>古</strong>怪<strong>的</strong>状<strong>态</strong>， <strong>并</strong> <strong>可</strong>能<strong>会</strong> <strong>生</strong>成<strong>有</strong>问<strong>题</strong>的代码。 <strong>这</strong> <strong>是</strong> <strong>无</strong>害<strong>的</strong>， <strong>因</strong>为<strong>它</strong> <strong>不</strong>会<strong>被</strong>执<strong>行</strong>， <strong>但</strong>若<strong>我</strong>们<strong>尝</strong>试<strong>去</strong>读<strong>它</strong>， <strong>也</strong>只<strong>会</strong> <strong>让</strong> <strong>我</strong>们<strong>自</strong>己<strong>一</strong>头雾<strong>水</strong>。</p>
+<p><strong>最</strong>后， <strong>为</strong>了<strong>访</strong>问 <code>disassembleChunk()</code>， <strong>我</strong>们<strong>需</strong>要<strong>包</strong>含<strong>它</strong>的<strong>头</strong> <strong>文</strong>件。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;scanner.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
@@ -1337,91 +1009,43 @@ typedef struct {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
 
-<p>We made it! This was the last major section to install in our VM&rsquo;s compilation
-and execution pipeline. Our interpreter doesn&rsquo;t <em>look</em> like much, but inside it
-is scanning, parsing, compiling to bytecode, and executing.</p>
-<p>Fire up the VM and type in an expression. If we did everything right, it should
-calculate and print the result. We now have a very over-engineered arithmetic
-calculator. We have a lot of language features to add in the coming chapters,
-but the foundation is in place.</p>
+<p><strong>我</strong>们<strong>搞</strong>定<strong>了</strong>！<strong>这</strong> <strong>是</strong>我<strong>们</strong> VM <strong>的</strong>编<strong>译</strong>与<strong>执</strong>行<strong>管</strong>道<strong>中</strong> <strong>需</strong>要<strong>安</strong>装<strong>的</strong>最<strong>后</strong>一<strong>大</strong> <strong>部</strong>件。<strong>我</strong>们<strong>的</strong>解释器<strong>看</strong> <strong>起</strong>来<strong>不</strong> <strong>起</strong>眼， <strong>但</strong> <strong>其</strong>内<strong>部</strong>  <strong>却</strong> <strong>在</strong> <strong>扫</strong>描、 <strong>解</strong>析、 <strong>编</strong>译<strong>为</strong>字节码， <strong>并</strong> <strong>执</strong>行<strong>之</strong>。</p>
+<p><strong>启</strong>动 VM <strong>并</strong> <strong>输</strong>入<strong>一</strong>条<strong>表</strong>达式。<strong>若</strong> <strong>我</strong>们<strong>一</strong>切<strong>都</strong>做<strong>对</strong>了， <strong>它</strong> <strong>应</strong>该<strong>会</strong> <strong>计</strong>算<strong>并</strong> <strong>打</strong>印<strong>其</strong>结果。<strong>我</strong>们<strong>现</strong>在<strong>有</strong>了<strong>一</strong>款<strong>过</strong>度<strong>工</strong>程<strong>的</strong>算<strong>术</strong> <strong>计</strong>算<strong>器</strong>。<strong>在</strong> <strong>接</strong>下<strong>来</strong> <strong>的</strong>几<strong>章</strong> <strong>里</strong>， <strong>我</strong>们<strong>还</strong> <strong>有</strong> <strong>大</strong>批<strong>的</strong>语<strong>言</strong>特<strong>性</strong> <strong>要</strong> <strong>添</strong> <strong>上</strong>， <strong>但</strong> <strong>地</strong>基<strong>已</strong>经<strong>就</strong>位。</p>
 <div class="challenges">
-<h2><a href="#challenges" name="challenges">Challenges</a></h2>
+<h2><a href="#挑战" name="挑战"><small>17&#8202;.&#8202;8</small>挑战</a></h2>
 <ol>
 <li>
-<p>To really understand the parser, you need to see how execution threads
-through the interesting parsing functions<span class="em">&mdash;</span><code>parsePrecedence()</code> and the
-parser functions stored in the table. Take this (strange) expression:</p>
+<p><strong>要</strong> <strong>真</strong>正<strong>理</strong>解<strong>解</strong>析器， <strong>你</strong> <strong>需</strong>要<strong>看</strong> <strong>一</strong> <strong>看</strong> <strong>执</strong>行<strong>线</strong>程<strong>是</strong> <strong>如</strong>何<strong>穿</strong> <strong>过</strong> <strong>那</strong>些<strong>有</strong>趣<strong>的</strong>解析函数——<code>parsePrecedence()</code> <strong>以</strong>及<strong>存</strong> <strong>放</strong>在<strong>那</strong>张<strong>表</strong> <strong>中</strong>的<strong>各</strong>解析函数<strong>的</strong>。<strong>请</strong> <strong>拿</strong> <strong>这</strong>条（有<strong>些</strong>古<strong>怪</strong>）<strong>的</strong>表达式：</p>
 <div class="codehilite"><pre>
 (-<span class="n">1</span> + <span class="n">2</span>) * <span class="n">3</span> - -<span class="n">4</span>
 </pre></div>
-<p>Write a trace of how those functions are called. Show the order they are
-called, which calls which, and the arguments passed to them.</p>
+<p><strong>请</strong> <strong>写</strong> <strong>出</strong> <strong>那</strong>些函数<strong>被</strong>调<strong>用</strong>的<strong>顺</strong>序—— <strong>哪</strong>个<strong>调</strong>用<strong>哪</strong>个， <strong>以</strong>及<strong>向</strong>它<strong>们</strong> <strong>传</strong>入<strong>的</strong> <strong>参</strong>数。</p>
 </li>
 <li>
-<p>The ParseRule row for <code>TOKEN_MINUS</code> has both prefix and infix function
-pointers. That&rsquo;s because <code>-</code> is both a prefix operator (unary negation) and
-an infix one (subtraction).</p>
-<p>In the full Lox language, what other tokens can be used in both prefix and
-infix positions? What about in C or in another language of your choice?</p>
+<p><code>TOKEN_MINUS</code> <strong>对</strong>应<strong>的</strong> <strong>那</strong>一<strong>行</strong> ParseRule <strong>同</strong>时<strong>具</strong> <strong>有</strong> <strong>前</strong>缀<strong>与</strong> <strong>中</strong>缀函数<strong>指</strong>针。<strong>这</strong> <strong>是</strong> <strong>因</strong>为 <code>-</code> <strong>既</strong> <strong>是</strong>一<strong>个</strong> <strong>前</strong>缀运算符（一元取负） <strong>又</strong> <strong>是</strong>一<strong>个</strong> <strong>中</strong>缀运算符（减<strong>法</strong>）。</p>
+<p><strong>在</strong>完<strong>整</strong> <strong>的</strong> Lox <strong>语</strong>言<strong>中</strong>， <strong>还</strong> <strong>有</strong>哪<strong>些</strong> token <strong>可</strong>以<strong>同</strong>时<strong>用</strong> <strong>于</strong> <strong>前</strong>缀<strong>与</strong> <strong>中</strong>缀<strong>位</strong>置？ <strong>在</strong> C <strong>或</strong> <strong>你</strong>选<strong>的</strong>另<strong>一</strong>门<strong>语</strong>言<strong>中</strong> <strong>又</strong> <strong>如</strong>何？</p>
 </li>
 <li>
-<p>You might be wondering about complex &ldquo;mixfix&rdquo; expressions that have more
-than two operands separated by tokens. C&rsquo;s conditional or &ldquo;ternary&rdquo;
-operator, <code>?:</code>, is a widely known one.</p>
-<p>Add support for that operator to the compiler. You don&rsquo;t have to generate
-any bytecode, just show how you would hook it up to the parser and handle
-the operands.</p>
+<p><strong>你</strong> <strong>或</strong>许<strong>正</strong>在<strong>好</strong>奇<strong>那</strong>些<strong>具</strong> <strong>有</strong> <strong>两</strong>个<strong>以</strong>上<strong>由</strong> token <strong>分</strong>隔<strong>的</strong>运算<strong>对</strong>象<strong>的</strong>复杂 &rdquo; <strong>混</strong>合缀&rdquo; <strong>表</strong>达式。C <strong>的</strong> <strong>条</strong>件<strong>或</strong> &rdquo; <strong>三</strong>元&rdquo; 运算符 <code>?:</code> <strong>是</strong>一<strong>个</strong>广<strong>为</strong>人<strong>知</strong> <strong>的</strong>例子。</p>
+<p><strong>请</strong>  <strong>为</strong>编译<strong>器</strong>添<strong>上</strong> <strong>对</strong> <strong>该</strong>运算符<strong>的</strong> <strong>支</strong>持。<strong>你</strong> <strong>不</strong>用<strong>发</strong>射<strong>任</strong>何字节码， <strong>只</strong>需<strong>显</strong>示<strong>如</strong>何<strong>将</strong>其<strong>接</strong> <strong>入</strong>解析器<strong>并</strong>  <strong>处</strong>理<strong>那</strong>些运算<strong>对</strong>象<strong>即</strong>可。</p>
 </li>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#design-note" name="design-note">Design Note: It&rsquo;s Just Parsing</a></h2>
-<p>I&rsquo;m going to make a claim here that will be unpopular with some compiler and
-language people. It&rsquo;s OK if you don&rsquo;t agree. Personally, I learn more from
-strongly stated opinions that I disagree with than I do from several pages of
-qualifiers and equivocation. My claim is that <em>parsing doesn&rsquo;t matter</em>.</p>
-<p>Over the years, many programming language people, especially in academia, have
-gotten <em>really</em> into parsers and taken them very seriously. Initially, it was
-the compiler folks who got into <span name="yacc">compiler-compilers</span>,
-LALR, and other stuff like that. The first half of the Dragon book is a long
-love letter to the wonders of parser generators.</p>
+<h2><a href="#设计笔记：只是解析而已" name="设计笔记：只是解析而已"><small>17&#8202;.&#8202;9</small>设计笔记：只是解析而已</a></h2>
+<p><strong>我</strong> <strong>要</strong>在<strong>这</strong>里<strong>抛</strong> <strong>出</strong>一<strong>个</strong> <strong>可</strong>能<strong>会</strong> <strong>惹</strong> <strong>不</strong>少编译器<strong>与</strong> <strong>语</strong>言<strong>人</strong> <strong>士</strong> <strong>不</strong>痛<strong>快</strong>的<strong>主</strong>张。<strong>你</strong>不同意<strong>也</strong> <strong>没</strong>关系。<strong>个</strong> <strong>人</strong> <strong>而</strong>言， <strong>我</strong> <strong>从</strong>那些<strong>表</strong>述<strong>强</strong>硬、 <strong>让</strong> <strong>我</strong> <strong>不</strong>同意<strong>的</strong>观点<strong>中</strong> <strong>学</strong> <strong>到</strong>的， <strong>远</strong> <strong>比</strong> <strong>从</strong> <strong>好</strong>几<strong>页</strong> <strong>的</strong> <strong>限</strong>定<strong>词</strong> <strong>与</strong>含糊<strong>之</strong>辞<strong>中</strong> <strong>学</strong>到<strong>的</strong> <strong>多</strong>。<strong>我</strong>的<strong>主</strong>张<strong>是</strong>，<em>解析<strong>并</strong>不<strong>重</strong>要</em>。</p>
+<p><strong>这</strong>些<strong>年</strong>来， <strong>许</strong>多数<strong>程</strong>序<strong>设</strong>计<strong>语</strong>言<strong>方</strong>面<strong>的</strong> <strong>人</strong> —— <strong>尤</strong>其<strong>是</strong> <strong>学</strong>术<strong>界</strong> <strong>的</strong> <strong>那</strong> <strong>些</strong>——<strong>对</strong>解析<strong>器</strong> <strong>走</strong> <strong>火</strong>入<strong>魔</strong>， <strong>并</strong> <strong>把</strong>它<strong>们</strong> <strong>看</strong> <strong>得</strong> <strong>极</strong>为<strong>重</strong>要。<strong>最</strong>初， <strong>是</strong> <strong>那</strong>些 <span name="yacc">编译<strong>器</strong>编译器</span>、LALR <strong>以</strong>及<strong>类</strong>似<strong>的</strong>玩<strong>意</strong>儿<strong>的</strong>编译器<strong>人</strong>士_ <strong>们</strong>玩<strong>得</strong>不<strong>可</strong> <strong>开</strong>交。<strong>龙</strong>书<strong>的</strong> <strong>前</strong>半<strong>部</strong>就<strong>是</strong>一<strong>封</strong> <strong>长</strong>长<strong>的</strong>情<strong>书</strong>， <strong>献</strong>给<strong>解</strong>析器<strong>生</strong>成<strong>器</strong> <strong>的</strong>奇<strong>妙</strong>。</p>
 <aside name="yacc">
-<p>All of us suffer from the vice of &ldquo;when all you have is a hammer, everything
-looks like a nail&rdquo;, but perhaps none so visibly as compiler people. You wouldn&rsquo;t
-believe the breadth of software problems that miraculously seem to require a new
-little language in their solution as soon as you ask a compiler hacker for help.</p>
-<p>Yacc and other compiler-compilers are the most delightfully recursive example.
-&ldquo;Wow, writing compilers is a chore. I know, let&rsquo;s write a compiler to write our
-compiler for us.&rdquo;</p>
-<p>For the record, I don&rsquo;t claim immunity to this affliction.</p>
+<p><strong>我</strong>们<strong>所</strong> <strong>有</strong> <strong>人</strong> <strong>都</strong> <strong>有</strong> &rdquo; <strong>手</strong>里<strong>有</strong> <strong>了</strong> <strong>一</strong>把<strong>锤</strong>子<strong>之</strong>后， <strong>看</strong> <strong>什</strong>么<strong>都</strong>像<strong>钉</strong>子&rdquo; <strong>的</strong>坏<strong>毛</strong>病， <strong>但</strong> <strong>编</strong>译器<strong>人</strong>士<strong>的</strong> <strong>这</strong> <strong>种</strong>毛<strong>病</strong> <strong>可</strong>能<strong>最</strong>为<strong>触</strong>目<strong>惊</strong>心。<strong>你</strong>简<strong>直</strong> <strong>无</strong>法<strong>相</strong>信， <strong>一</strong>旦<strong>你</strong>向<strong>一</strong>位<strong>编</strong>译器<strong>黑</strong>客<strong>求</strong>助<strong>某</strong> <strong>个</strong> <strong>软</strong>件<strong>问</strong>题， <strong>下</strong>一<strong>秒</strong>他<strong>就</strong> <strong>会</strong> <strong>掏</strong>出<strong>一</strong>堆<strong>新</strong>的<strong>小</strong> <strong>语</strong>言<strong>来</strong> <strong>解</strong>决_ <strong>它</strong>。</p>
+<p>Yacc <strong>以</strong>及<strong>其</strong>他<strong>编</strong>译器<strong>编译器</strong>， <strong>是</strong>这<strong>种</strong>毛<strong>病</strong> <strong>最</strong>令<strong>人</strong>愉<strong>快</strong> <strong>的</strong> <strong>递</strong>归<strong>范</strong>例。_&rdquo; <strong>哇</strong>， <strong>写</strong>编译器<strong>真</strong>是<strong>一</strong>桩<strong>苦</strong>差。<strong>我</strong> <strong>知</strong>道<strong>了</strong>， <strong>让</strong> <strong>我</strong>们<strong>写</strong> <strong>一</strong>款<strong>编</strong>译器<strong>来</strong> <strong>为</strong> <strong>我</strong>们<strong>写</strong> <strong>这</strong>款<strong>编</strong>译器。&ldquo;*</p>
+<p><strong>在</strong> <strong>这</strong> <strong>里</strong>， <strong>我</strong> <strong>不</strong> <strong>声</strong>称<strong>自</strong>己<strong>对</strong> <strong>此</strong> <strong>免</strong>疫_。</p>
 </aside>
-<p>Later, the functional programming folks got into parser combinators, packrat
-parsers, and other sorts of things. Because, obviously, if you give a functional
-programmer a problem, the first thing they&rsquo;ll do is whip out a pocketful of
-higher-order functions.</p>
-<p>Over in math and algorithm analysis land, there is a long legacy of research
-into proving time and memory usage for various parsing techniques, transforming
-parsing problems into other problems and back, and assigning complexity classes
-to different grammars.</p>
-<p>At one level, this stuff is important. If you&rsquo;re implementing a language, you
-want some assurance that your parser won&rsquo;t go exponential and take 7,000 years
-to parse a weird edge case in the grammar. Parser theory gives you that bound.
-As an intellectual exercise, learning about parsing techniques is also fun and
-rewarding.</p>
-<p>But if your goal is just to implement a language and get it in front of users,
-almost all of that stuff doesn&rsquo;t matter. It&rsquo;s really easy to get worked up by
-the enthusiasm of the people who <em>are</em> into it and think that your front end
-<em>needs</em> some whiz-bang generated combinator-parser-factory thing. I&rsquo;ve seen
-people burn tons of time writing and rewriting their parser using whatever
-today&rsquo;s hot library or technique is.</p>
-<p>That&rsquo;s time that doesn&rsquo;t add any value to your user&rsquo;s life. If you&rsquo;re just
-trying to get your parser done, pick one of the bog-standard techniques, use it,
-and move on. Recursive descent, Pratt parsing, and the popular parser generators
-like ANTLR or Bison are all fine.</p>
-<p>Take the extra time you saved not rewriting your parsing code and spend it
-improving the compile error messages your compiler shows users. Good error
-handling and reporting is more valuable to users than almost anything else you
-can put time into in the front end.</p>
+<p><strong>之</strong>后， <strong>函</strong>数<strong>式</strong> <strong>编</strong>程<strong>的</strong> <strong>那</strong>帮<strong>人</strong> <strong>又</strong> <strong>对</strong>解析<strong>器</strong> <strong>组</strong>合<strong>子</strong>、Packrat 解析<strong>器</strong> <strong>以</strong>及<strong>其</strong>它<strong>种</strong>类<strong>的</strong> <strong>玩</strong>意<strong>儿</strong> <strong>走</strong> <strong>火</strong>入<strong>魔</strong>。<strong>因</strong>为， <strong>显</strong>然， <strong>如</strong>果<strong>你</strong>给<strong>一</strong>位<strong>函</strong>数<strong>式</strong> <strong>编</strong>程<strong>者</strong> <strong>一</strong> <strong>个</strong> <strong>问</strong>题， <strong>他</strong> <strong>会</strong> <strong>马</strong>上<strong>掏</strong>出<strong>一</strong>把<strong>高</strong>阶<strong>函</strong>数<strong>来</strong>解决<strong>它</strong>。</p>
+<p><strong>数</strong>学<strong>与</strong> <strong>算</strong>法<strong>分</strong>析<strong>阵</strong> <strong>地</strong>， <strong>那</strong>边<strong>也</strong> <strong>有</strong> <strong>大</strong>批<strong>的</strong>研<strong>究</strong>， <strong>去</strong>证<strong>明</strong> <strong>各</strong> <strong>种</strong>解析<strong>技</strong>术<strong>的</strong> <strong>时</strong>间<strong>与</strong> <strong>空</strong>间<strong>复</strong>杂<strong>度</strong>， <strong>去</strong>将解析<strong>问</strong>题<strong>与</strong> <strong>其</strong>他<strong>问</strong>题<strong>相</strong>互<strong>转</strong>换， <strong>以</strong>及<strong>去</strong>给<strong>各</strong> <strong>种</strong> <strong>文</strong>法<strong>分</strong>配<strong>复</strong>杂<strong>度</strong>类<strong>别</strong>。</p>
+<p><strong>从</strong> <strong>某</strong>个<strong>层</strong>面<strong>来</strong>说， <strong>这</strong> <strong>些</strong> <strong>都</strong> <strong>是</strong> <strong>重</strong>要<strong>的</strong>。<strong>如</strong>果<strong>你</strong> <strong>正</strong> <strong>在</strong>实<strong>现</strong> <strong>一</strong>门<strong>语</strong>言， <strong>你</strong>希<strong>望</strong> <strong>有</strong>些<strong>保</strong>障<strong>以</strong>证<strong>明</strong> <strong>你</strong>的解析<strong>器</strong> <strong>不</strong>会<strong>退</strong> <strong>化</strong>到<strong>指</strong>数<strong>级</strong>， <strong>从</strong>而<strong>花</strong> 7000 <strong>年</strong>去解析<strong>一</strong>段<strong>文</strong>法<strong>中</strong>某<strong>个</strong> <strong>奇</strong>怪<strong>的</strong>边<strong>角</strong>情<strong>形</strong>。<strong>解</strong>析<strong>理</strong>论<strong>给</strong> <strong>你</strong> <strong>了</strong> <strong>这</strong>一<strong>下</strong>界。<strong>作</strong>为<strong>一</strong>项<strong>智</strong>力<strong>活</strong>动， <strong>学</strong> <strong>一</strong> <strong>学</strong>解析<strong>技</strong>术<strong>也</strong> <strong>是</strong>趣<strong>味</strong>盎<strong>然</strong>、 <strong>报</strong>酬<strong>丰</strong> <strong>厚</strong> <strong>的</strong>。</p>
+<p><strong>但</strong> <strong>如</strong>果<strong>你</strong>的<strong>目</strong>标<strong>不</strong>过<strong>是</strong>实<strong>现</strong> <strong>一</strong>门<strong>语</strong>言， <strong>并</strong>把它<strong>摆</strong>到<strong>用</strong>户<strong>面</strong>前， <strong>那</strong> <strong>几</strong>乎<strong>所</strong> <strong>有</strong> <strong>这</strong>些<strong>都</strong> <strong>不</strong> <strong>重</strong>要。<strong>它</strong>真<strong>的</strong> <strong>很</strong>容易<strong>被</strong>那些<strong>对</strong>解析<strong>热</strong>情<strong>洋</strong>溢<strong>的</strong> <strong>人</strong> <strong>的</strong>情<strong>绪</strong> <strong>感</strong>染， <strong>以</strong>为<strong>你</strong>的前<strong>端</strong> <strong>必</strong>须<strong>有</strong> <strong>某</strong>种<strong>又</strong>酷<strong>又</strong> <strong>潮</strong>的<strong>解</strong>析<strong>器</strong> <strong>生</strong>成<strong>器</strong> <strong>组</strong>合<strong>子</strong> <strong>工</strong>厂<strong>的</strong>玩<strong>意</strong>儿。<strong>我</strong> <strong>看</strong> <strong>到</strong> <strong>过</strong> <strong>不</strong>少<strong>人</strong> <strong>把</strong> <strong>大</strong> <strong>量</strong> <strong>时</strong>间<strong>耗</strong> <strong>在</strong> <strong>用</strong> <strong>当</strong>下<strong>最</strong>热<strong>门</strong>的<strong>库</strong>或_ <strong>技</strong>术<strong>一</strong> <strong>遍</strong>又<strong>一</strong>遍<strong>地</strong> <strong>重</strong>写<strong>他</strong>们<strong>的</strong>解析<strong>器</strong> <strong>上</strong>。</p>
+<p><strong>那</strong> <strong>是</strong> <strong>一</strong> <strong>段</strong> <strong>不</strong> <strong>会</strong> <strong>为</strong> <strong>用</strong>户<strong>的</strong> <strong>生</strong>活<strong>增</strong>添<strong>任</strong>何<strong>价</strong>值<strong>的</strong> <strong>时</strong>间。<strong>如</strong>果<strong>你</strong> <strong>只</strong> <strong>是</strong> <strong>想</strong>赶<strong>快</strong> <strong>把</strong>解析<strong>器</strong> <strong>做</strong> <strong>完</strong>， <strong>挑</strong> <strong>一</strong> <strong>个</strong> <strong>那</strong>些<strong>烂</strong> <strong>大</strong>街<strong>的</strong> <strong>技</strong>术， <strong>用</strong> <strong>上</strong>它， <strong>然</strong>后<strong>往</strong> <strong>前</strong>走<strong>就</strong> <strong>是</strong> <strong>了</strong>。递归<strong>下</strong>降、Pratt 解析<strong>法</strong>、 <strong>以</strong>及<strong>那</strong>些<strong>流</strong>行<strong>的</strong>解析<strong>器</strong> <strong>生</strong>成<strong>器</strong>（<strong>比</strong>如 ANTLR <strong>或</strong> Bison） <strong>都</strong> <strong>是</strong> <strong>相</strong>当<strong>不</strong>错<strong>的</strong>选<strong>择</strong>。</p>
+<p><strong>请</strong>把<strong>你</strong> <strong>因</strong> <strong>不</strong>反复<strong>重</strong>写<strong>解</strong>析代码<strong>而</strong> <strong>省</strong> <strong>下</strong>的<strong>那</strong> <strong>些</strong> <strong>时</strong>间， <strong>花</strong> <strong>在</strong> <strong>改</strong>进<strong>你</strong>的<strong>编</strong>译器<strong>向</strong> <strong>用</strong>户<strong>展</strong>示<strong>的</strong> <strong>那</strong>些<strong>编</strong>译错误<strong>消</strong>息<strong>上</strong>。<strong>良</strong>好<strong>的</strong> <strong>错</strong>误<strong>处</strong>理<strong>与</strong> <strong>报</strong>告， <strong>比</strong> <strong>你</strong> <strong>能</strong>放<strong>进</strong>前<strong>端</strong>的_ <strong>几</strong>乎<strong>任</strong>何<strong>其</strong>他<strong>东</strong>西， <strong>对</strong> <strong>用</strong>户<strong>而</strong>言<strong>都</strong> <strong>更</strong> <strong>有</strong>价<strong>值</strong>。</p>
 </div>
 
 <footer>

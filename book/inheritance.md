@@ -1,221 +1,140 @@
-> Once we were blobs in the sea, and then fishes, and then lizards and rats and
-> then monkeys, and hundreds of things in between. This hand was once a fin,
-> this hand once had claws! In my human mouth I have the pointy teeth of a wolf
-> and the chisel teeth of a rabbit and the grinding teeth of a cow! Our blood is
-> as salty as the sea we used to live in! When we're frightened, the hair on our
-> skin stands up, just like it did when we had fur. We are history! Everything
-> we've ever been on the way to becoming us, we still are.
->
-> <cite>Terry Pratchett, <em>A Hat Full of Sky</em></cite>
+# 继承
 
-Can you believe it? We've reached the last chapter of [Part II][]. We're almost
-done with our first Lox interpreter. The [previous chapter][] was a big ball of
-intertwined object-orientation features. I couldn't separate those from each
-other, but I did manage to untangle one piece. In this chapter, we'll finish
-off Lox's class support by adding inheritance.
+> 我们曾是海中的微生物，然后是鱼，然后是蜥蜴、老鼠、猴子，以及其间上百种生灵。这只手曾经是鳍，这只手曾经长着爪子！我这人类的嘴里，长着狼的尖牙、兔的门齿、牛的磨牙！我们的血液与我们曾栖身其中的海洋一样咸！当我们惊惧之时，皮肤上的毛发便会竖起，正如我们身披皮毛之时那般。我们**就是**历史！在我们**成为**我们的那条路上，我们曾**是**的一切，我们**依然**是。
+>
+> <cite>特里·普拉切特，<em>《帽子里的天空》</em></cite>
+
+你敢相信吗？我们已经走到了[第二部分][part ii]的最后一章。我们离打造出第一款 Lox 解释器只差一步。[上一章][previous chapter]是一个由各种面向对象特性缠结而成的庞然大物。我无法将它们彼此分离，但我确实设法拆出了一个独立的部分。在本章中，我们将通过引入继承，来完成 Lox 的类支持。
 
 [part ii]: a-tree-walk-interpreter.html
 [previous chapter]: classes.html
 
-Inheritance appears in object-oriented languages all the way back to the <span
-name="inherited">first</span> one, [Simula][]. Early on, Kristen Nygaard and
-Ole-Johan Dahl noticed commonalities across classes in the simulation programs
-they wrote. Inheritance gave them a way to reuse the code for those similar
-parts.
+继承这一概念最早出现在面向对象语言中——一路追溯到那门<span name="inherited">第一门</span>面向对象语言 [Simula][]。早在当年，Kristen Nygaard 与 Ole-Johan Dahl 在他们所编写的仿真程序中注意到了跨类共性。继承为他们提供了一种复用那些相似部分代码的方式。
 
 [simula]: https://en.wikipedia.org/wiki/Simula
 
 <aside name="inherited">
 
-You could say all those other languages *inherited* it from Simula. Hey-ooo!
-I'll, uh, see myself out.
+你可以说，那些其他语言全都"继承"自 Simula。嗨——嗷！我……呃……自己看着办吧。
 
 </aside>
 
-## Superclasses and Subclasses
+## 父类与子类
 
-Given that the concept is "inheritance", you would hope they would pick a
-consistent metaphor and call them "parent" and "child" classes, but that would
-be too easy. Way back when, C. A. R. Hoare coined the term "<span
-name="subclass">subclass</span>" to refer to a record type that refines another
-type. Simula borrowed that term to refer to a *class* that inherits from
-another. I don't think it was until Smalltalk came along that someone flipped
-the Latin prefix to get "superclass" to refer to the other side of the
-relationship. From C++, you also hear "base" and "derived" classes. I'll mostly
-stick with "superclass" and "subclass".
+既然概念本身叫"继承"（inheritance），你大概会期望他们能选一个一致的比喻，并称之为"父类"与"子类"——但那未免太容易了。早年间，C. A. R. Hoare 创造了"子<span name="subclass">类</span>"（subclass）一词，用以指代对另一种类型加以精炼的记录类型。Simula 借用了这个词，用以指代从另一个类**继承**而来的**类**。我想直到 Smalltalk 出现之前，都没有人调换那个拉丁语前缀，造出"父类"（superclass）一词来指代关系中的另一方。从 C++ 起，你也会听到"基类"（base）与"派生类"（derived）这样的说法。我则会大多沿用"父类"与"子类"。
 
 <aside name="subclass">
 
-"Super-" and "sub-" mean "above" and "below" in Latin, respectively. Picture an
-inheritance tree like a family tree with the root at the top -- subclasses are
-below their superclasses on the diagram. More generally, "sub-" refers to things
-that refine or are contained by some more general concept. In zoology, a
-subclass is a finer categorization of a larger class of living things.
+"Super-" 与 "sub-" 在拉丁语中分别表示"上方"与"下方"。试将一棵继承树想象成一棵以根为顶的家谱——在图上，子类位于其父类**下方**。更宽泛地说，"sub-" 所指代的是那些对更一般概念加以精炼或被其囊括的事物。在动物学中，"亚纲"是对更大一类的生物所作的更细的分类。
 
-In set theory, a subset is contained by a larger superset which has all of the
-elements of the subset and possibly more. Set theory and programming languages
-meet each other in type theory. There, you have "supertypes" and "subtypes".
+在集合论中，一个子集被一个更大的超集所囊括，后者囊括子集中的所有元素，并可能还多出一些。集合论与程序设计语言在类型论中相遇。在那里，你又见到了"父类型"与"子类型"。
 
-In statically typed object-oriented languages, a subclass is also often a
-subtype of its superclass. Say we have a Doughnut superclass and a BostonCream
-subclass. Every BostonCream is also an instance of Doughnut, but there may be
-doughnut objects that are not BostonCreams (like Crullers).
+在静态类型的面向对象语言中，一个子类通常也是其父类的一个子类型。假设我们有一个 Doughnut 父类与一个 BostonCream 子类。每一个 BostonCream 同样也是一个 Doughnut 的实例，但可能存在某些不是 BostonCream 的 Doughnut 对象（譬如 Crullers）。
 
-Think of a type as the set of all values of that type. The set of all Doughnut
-instances contains the set of all BostonCream instances since every BostonCream
-is also a Doughnut. So BostonCream is a subclass, and a subtype, and its
-instances are a subset. It all lines up.
+将一种类型视作该类型所有值的集合。Doughnut 实例的集合囊括了 BostonCream 实例的集合，因为每一个 BostonCream 同样也是一个 Doughnut。因此 BostonCream 既是一个子类，也是一个子类型，它的实例也是一个子集。一切都对得上。
 
-<img src="image/inheritance/doughnuts.png" alt="Boston cream <: doughnut.">
+<img src="image/inheritance/doughnuts.png" alt="Boston cream &lt;: doughnut。" />
 
 </aside>
 
-Our first step towards supporting inheritance in Lox is a way to specify a
-superclass when declaring a class. There's a lot of variety in syntax for this.
-C++ and C# place a `:` after the subclass's name, followed by the superclass
-name. Java uses `extends` instead of the colon. Python puts the superclass(es)
-in parentheses after the class name. Simula puts the superclass's name *before*
-the `class` keyword.
+我们迈向 Lox 中继承支持的第一步，便是提供一种在声明类时指定其父类的方式。光是在语法上，各家语言便已是形形色色。C++ 与 C# 在子类名之后放一个 `:`，再跟上父类名。Java 用的不是冒号，而是 `extends`。Python 将父类（们）放在类名后的圆括号里。Simula 则把父类名**放在** `class` 关键字**之前**。
 
-This late in the game, I'd rather not add a new reserved word or token to the
-lexer. We don't have `extends` or even `:`, so we'll follow Ruby and use a
-less-than sign (`<`).
+都到这个节骨眼了，我实在不想再去词法分析器里加新的保留字或词法单元。我们既没有 `extends`，连 `:` 也没有，于是我们跟随 Ruby 的脚步，用一个小于号（`<`）。
 
 ```lox
 class Doughnut {
-  // General doughnut stuff...
+  // 一般性的甜甜圈的事……
 }
 
 class BostonCream < Doughnut {
-  // Boston Cream-specific stuff...
+  // 特别属于波士顿奶油的事……
 }
 ```
 
-To work this into the grammar, we add a new optional clause in our existing
-`classDecl` rule.
+为将这一点融进文法，我们在那条既有的 `classDecl` 规则中加上一条新的可选子句。
 
 ```ebnf
 classDecl      → "class" IDENTIFIER ( "<" IDENTIFIER )?
                  "{" function* "}" ;
 ```
 
-After the class name, you can have a `<` followed by the superclass's name. The
-superclass clause is optional because you don't *have* to have a superclass.
-Unlike some other object-oriented languages like Java, Lox has no root "Object"
-class that everything inherits from, so when you omit the superclass clause, the
-class has *no* superclass, not even an implicit one.
+在类名之后，你可以有一个 `<`，其后跟着父类的名字。父类子句之所以可选，是因为你**可以**没有父类。不同于 Java 等其它面向对象语言，Lox 并没有一个所有类皆继承自的根"Object"类，因此当你省略父类子句时，该类便**没有**父类，连一个隐式的都没有。
 
-We want to capture this new syntax in the class declaration's AST node.
+我们希望将这一新语法也囊括进类声明的 AST 节点之中。
 
 ^code superclass-ast (1 before, 1 after)
 
-You might be surprised that we store the superclass name as an Expr.Variable,
-not a Token. The grammar restricts the superclass clause to a single identifier,
-but at runtime, that identifier is evaluated as a variable access. Wrapping the
-name in an Expr.Variable early on in the parser gives us an object that the
-resolver can hang the resolution information off of.
+你或许会对我们用 `Expr.Variable` 而非 `Token` 来存储父类名感到意外。文法将父类子句限定为一个单独的标识符，但在运行时，那个标识符会被当作一次变量访问来求值。在解析器早期便将这个名字包裹进 `Expr.Variable`，便为我们提供了一个对象，解析器可以借此挂载解析信息。
 
-The new parser code follows the grammar directly.
+新的解析代码直接对应文法。
 
 ^code parse-superclass (1 before, 1 after)
 
-Once we've (possibly) parsed a superclass declaration, we store it in the AST.
+一旦我们（可能）解析完父类声明，便将其存于 AST 之中。
 
 ^code construct-class-ast (2 before, 1 after)
 
-If we didn't parse a superclass clause, the superclass expression will be
-`null`. We'll have to make sure the later passes check for that. The first of
-those is the resolver.
+若我们未能解析出父类子句，那么父类表达式便为 `null`。我们须确保后续的 pass 对此进行检查。第一个这样做的是解析器。
 
 ^code resolve-superclass (1 before, 2 after)
 
-The class declaration AST node has a new subexpression, so we traverse into and
-resolve that. Since classes are usually declared at the top level, the
-superclass name will most likely be a global variable, so this doesn't usually
-do anything useful. However, Lox allows class declarations even inside blocks,
-so it's possible the superclass name refers to a local variable. In that case,
-we need to make sure it's resolved.
+类声明 AST 节点多了一个子表达式，于是我们遍历并解析它。由于类通常在顶层声明，父类名多半会指向一个全局变量，因此这一解析通常并无实际作用。然而，Lox 允许类声明甚至出现在块之内，因此父类名有可能指向一个局部变量。倘若如此，我们便需要确保它能够得到解析。
 
-Because even well-intentioned programmers sometimes write weird code, there's a
-silly edge case we need to worry about while we're in here. Take a look at this:
+既然即便是出于善意的程序员有时也会写出古怪的代码，我们还需在此处留意一处愚蠢的边角情形。请看下面这段：
 
 ```lox
 class Oops < Oops {}
 ```
 
-There's no way this will do anything useful, and if we let the runtime try to
-run this, it will break the expectation the interpreter has about there not
-being cycles in the inheritance chain. The safest thing is to detect this case
-statically and report it as an error.
+它不会做任何有意义的事；倘若我们任由运行时去执行它，它会打破解释器对"继承链中不存在环"的假设。最安全的做法是静态地检测这一情形，并将其作为一个错误报告出来。
 
 ^code inherit-self (2 before, 1 after)
 
-Assuming the code resolves without error, the AST travels to the interpreter.
+假设代码解析无误，那么 AST 便会抵达解释器。
 
 ^code interpret-superclass (1 before, 1 after)
 
-If the class has a superclass expression, we evaluate it. Since that could
-potentially evaluate to some other kind of object, we have to check at runtime
-that the thing we want to be the superclass is actually a class. Bad things
-would happen if we allowed code like:
+若该类带有一个父类表达式，我们便对它求值。由于那个值**有可能**落到某个其它类型的对象身上，我们不得不在运行时检查我们想要当作父类的那东西**确实**是一个类。若我们允许类似下面这样的代码通行，后果将不堪设想：
 
 ```lox
 var NotAClass = "I am totally not a class";
 
-class Subclass < NotAClass {} // ?!
+class Subclass < NotAClass {} // ？！
 ```
 
-Assuming that check passes, we continue on. Executing a class declaration turns
-the syntactic representation of a class -- its AST node -- into its runtime
-representation, a LoxClass object. We need to plumb the superclass through to
-that too. We pass the superclass to the constructor.
+假设这项检查通过，我们便继续往下。执行一条类声明，会将类的语法表示——其 AST 节点——转换为其运行时表示——一枚 `LoxClass` 对象。我们也需要将父类一路串接过去。我们将父类传给构造函数。
 
 ^code interpreter-construct-class (3 before, 1 after)
 
-The constructor stores it in a field.
+构造函数将其存于一个字段之中。
 
 ^code lox-class-constructor (1 after)
 
-Which we declare here:
+我们顺带在此声明该字段：
 
 ^code lox-class-superclass-field (1 before, 1 after)
 
-With that, we can define classes that are subclasses of other classes. Now, what
-does having a superclass actually *do?*
+至此，我们便能定义作为其它类之子的类了。那么，拥有一位父类**究竟**意味着什么？
 
-## Inheriting Methods
+## 继承方法
 
-Inheriting from another class means that everything that's <span
-name="liskov">true</span> of the superclass should be true, more or less, of the
-subclass. In statically typed languages, that carries a lot of implications. The
-sub*class* must also be a sub*type*, and the memory layout is controlled so that
-you can pass an instance of a subclass to a function expecting a superclass and
-it can still access the inherited fields correctly.
+从另一个类继承，意味着父类**为真**的一切，在子类身上大体上也应为**真**。在静态类型语言中，这一点牵连甚广。子**类**必须同时也是子**类型**，内存布局也须得到控制，以便你能够将一个子类的实例传给一个期待父类的函数，且该函数依然能够正确地访问那些被继承的字段。
 
 <aside name="liskov">
 
-A fancier name for this hand-wavey guideline is the [*Liskov substitution
-principle*][liskov]. Barbara Liskov introduced it in a keynote during the
-formative period of object-oriented programming.
+这条拍脑袋式的指引有一个更显赫的名字——[*Liskov 替换原则*][liskov]。Barbara Liskov 在面向对象编程的奠基时期的一次主旨演讲中提出了它。
 
-[liskov]: https://en.wikipedia.org/wiki/Liskov_substitution_principle
+[liskov]: https://en.wikipedia.org/wiki/Liskov_substitution**principle
 
 </aside>
 
-Lox is a dynamically typed language, so our requirements are much simpler.
-Basically, it means that if you can call some method on an instance of the
-superclass, you should be able to call that method when given an instance of the
-subclass. In other words, methods are inherited from the superclass.
+Lox 是一门动态类型语言，因此我们的要求要简单得多。基本上，它意味着：若你能够在父类的一个实例上调用某个方法，那么当传入一个子类的实例时，你也应该能够调用该方法。换言之，方法从父类继承而来。
 
-This lines up with one of the goals of inheritance -- to give users a way to
-reuse code across classes. Implementing this in our interpreter is
-astonishingly easy.
+这与继承的目标之一——为用户提供一种跨类复用代码的方式——不谋而合。在我们的解释器中实现这一点，竟**匪夷所思**般简单。
 
 ^code find-method-recurse-superclass (3 before, 1 after)
 
-That's literally all there is to it. When we are looking up a method on an
-instance, if we don't find it on the instance's class, we recurse up through the
-superclass chain and look there. Give it a try:
+这便是全部内容。当我们在一个实例上查找一个方法时，若我们无法在该实例的类上找到它，我们便递归地上溯父类链，并在那里查找。试试看：
 
 ```lox
 class Doughnut {
@@ -229,26 +148,15 @@ class BostonCream < Doughnut {}
 BostonCream().cook();
 ```
 
-There we go, half of our inheritance features are complete with only three lines
-of Java code.
+行了，我们就此完成了继承功能的一半，这部分总共只用了三行 Java 代码。
 
-## Calling Superclass Methods
+## 调用父类方法
 
-In `findMethod()` we look for a method on the current class *before* walking up
-the superclass chain. If a method with the same name exists in both the subclass
-and the superclass, the subclass one takes precedence or **overrides** the
-superclass method. Sort of like how variables in inner scopes shadow outer ones.
+在 `findMethod()` 中，我们**先**在当前类上查找，然后再沿着父类链上溯。若同名方法同时存在于子类与父类中，子类的那一个会**优先** ——即所谓的**覆写**（override）父类方法。这与内层作用域中的变量遮蔽外层变量的情形多少有些相似。
 
-That's great if the subclass wants to *replace* some superclass behavior
-completely. But, in practice, subclasses often want to *refine* the superclass's
-behavior. They want to do a little work specific to the subclass, but also
-execute the original superclass behavior too.
+子类想要**完全**替换父类某些行为时，这种做法棒极了。但在实际中，子类往往想要**细化**父类的行为。它们希望完成一些专属于子类的细小工作，同时也执行父类原有的行为。
 
-However, since the subclass has overridden the method, there's no way to refer
-to the original one. If the subclass method tries to call it by name, it will
-just recursively hit its own override. We need a way to say "Call this method,
-but look for it directly on my superclass and ignore my override". Java uses
-`super` for this, and we'll use that same syntax in Lox. Here is an example:
+然而，由于子类已经覆写了那个方法，除非另辟蹊径，它便无从再去引用那个原始的方法。若子类的方法试图以名字来调用它，它只会递归地撞上自己的覆写版本。我们需要一种方式来表达"调用这个方法，但请直接在我**父类**中查找，忽略我的覆写"。Java 用 `super` 来做这件事，我们亦在 Lox 中采用同样的语法。示例如下：
 
 ```lox
 class Doughnut {
@@ -267,30 +175,24 @@ class BostonCream < Doughnut {
 BostonCream().cook();
 ```
 
-If you run this, it should print:
+倘若你跑一跑这段代码，它应当打印：
 
 ```text
 Fry until golden brown.
 Pipe full of custard and coat with chocolate.
 ```
 
-We have a new expression form. The `super` keyword, followed by a dot and an
-identifier, looks for a method with that name. Unlike calls on `this`, the search
-starts at the superclass.
+我们有了一种新的表达式形式。`super` 关键字后跟一个点号与一个标识符，会去查找一个具有该名字的方法。不同于在 `this` 上的调用，这一次的查找**从父类**起步。
 
-### Syntax
+### 语法
 
-With `this`, the keyword works sort of like a magic variable, and the expression
-is that one lone token. But with `super`, the subsequent `.` and property name
-are inseparable parts of the `super` expression. You can't have a bare `super`
-token all by itself.
+对于 `this` 来说，那个关键字工作起来多少有点像一种魔法变量，而表达式本身仅仅是那个孤零零的词法单元。但对于 `super` 来说，其后的那个 `.` 与属性名则是该 `super` 表达式不可分割的组成部分。你不能光秃秃地丢一个 `super` 词法单元在那里。
 
 ```lox
-print super; // Syntax error.
+print super; // 语法错误。
 ```
 
-So the new clause we add to the `primary` rule in our grammar includes the
-property access as well.
+因此，我们在文法中向 `primary` 规则新增的那条子句，也一并包含了属性访问。
 
 ```ebnf
 primary        → "true" | "false" | "nil" | "this"
@@ -298,45 +200,34 @@ primary        → "true" | "false" | "nil" | "this"
                | "super" "." IDENTIFIER ;
 ```
 
-Typically, a `super` expression is used for a method call, but, as with regular
-methods, the argument list is *not* part of the expression. Instead, a super
-*call* is a super *access* followed by a function call. Like other method calls,
-you can get a handle to a superclass method and invoke it separately.
+通常，一处 `super` 表达式是为方法调用服务的，但与普通方法一样，实参列表**并非**表达式的一部分。取而代之的是，一次 super **调用**是一次 super **访问**后跟一次函数调用。跟其它的方法调用一样，你可以先获取一个父类方法的句柄，再单独地调用它。
 
 ```lox
 var method = super.cook;
 method();
 ```
 
-So the `super` expression itself contains only the token for the `super` keyword
-and the name of the method being looked up. The corresponding <span
-name="super-ast">syntax tree node</span> is thus:
+因此 `super` 表达式本身仅包含那个 `super` 关键字的词法单元与所查找方法的名字。与之对应的<span name="super-ast">语法树节点</span>便是：
 
 ^code super-expr (1 before, 1 after)
 
 <aside name="super-ast">
 
-The generated code for the new node is in [Appendix II][appendix-super].
+新节点的生成代码收录于[附录 II][appendix-super]。
 
-[appendix-super]: appendix-ii.html#super-expression
+[appendix-super]: appendix-xi.html#super-expression
 
 </aside>
 
-Following the grammar, the new parsing code goes inside our existing `primary()`
-method.
+依照文法，新的解析代码被安插于我们既有的 `primary()` 方法之中。
 
 ^code parse-super (2 before, 2 after)
 
-A leading `super` keyword tells us we've hit a `super` expression. After that we
-consume the expected `.` and method name.
+一个前置的 `super` 关键字告诉我们已然撞上了一处 `super` 表达式。此后，我们便消耗所期待的 `.` 与方法名。
 
-### Semantics
+### 语义
 
-Earlier, I said a `super` expression starts the method lookup from "the
-superclass", but *which* superclass? The naïve answer is the superclass of
-`this`, the object the surrounding method was called on. That coincidentally
-produces the right behavior in a lot of cases, but that's not actually correct.
-Gaze upon:
+早些时候，我曾说过 `super` 表达式从"父类"起步开始方法查找，但**究竟**是哪位父类？最直白的答案是 `this` 的父类——也就是那个外层方法所**针对**的对象。在很多情况下，这碰巧会得到正确的结果，但实际上**有失偏颇**。请凝视下面这段：
 
 ```lox
 class A {
@@ -353,178 +244,117 @@ class B < A {
   test() {
     super.method();
   }
+
 }
 
 class C < B {}
 
 C().test();
 ```
-Translate this program to Java, C#, or C++ and it will print "A method", which
-is what we want Lox to do too. When this program runs, inside the body of
-`test()`, `this` is an instance of C. The superclass of C is B, but that is
-*not* where the lookup should start. If it did, we would hit B's `method()`.
 
-Instead, lookup should start on the superclass of *the class containing the
-`super` expression*. In this case, since `test()` is defined inside B, the
-`super` expression inside it should start the lookup on *B*&rsquo;s superclass
--- A.
+将这段程序翻译为 Java、C# 或 C++，它会打印 "A method"，这正是我们希望 Lox 所做的。当这段程序运行之时，在 `test()` 的函数体内，`this` 是 C 的一个实例。C 的父类是 B，但**并非**查找应当起步之处。倘若如此，我们便会撞上 B 的 `method()`。
+
+取而代之的是，查找应当从**包含该 `super` 表达式的类**的父类起步。在本例中，由于 `test()` 定义于 B 之中，因此其中的 `super` 表达式应当从**B 的父类**——即 A——起步。
 
 <span name="flow"></span>
 
-<img src="image/inheritance/classes.png" alt="The call chain flowing through the classes." />
+<img src="image/inheritance/classes.png" alt="调用链在各个类之间一路流转。" />
 
 <aside name="flow">
 
-The execution flow looks something like this:
+执行流大致如下：
 
-1. We call `test()` on an instance of C.
+1. 我们对一个 C 的实例调用 `test()`。
 
-2. That enters the `test()` method inherited from B. That calls
-   `super.method()`.
+2. 那便进入了从 B 继承而来的 `test()` 方法。它随后调用 `super.method()`。
 
-3. The superclass of B is A, so that chains to `method()` on A, and the program
-   prints "A method".
+3. B 的父类是 A，于是那便串接到 A 上的 `method()`，程序打印 "A method"。
 
 </aside>
 
-Thus, in order to evaluate a `super` expression, we need access to the
-superclass of the class definition surrounding the call. Alack and alas, at the
-point in the interpreter where we are executing a `super` expression, we don't
-have that easily available.
+因此，为了对一处 `super` 表达式求值，我们便需要访问**包含此次调用的**类定义的父类。然而，在解释器中我们正在执行 `super` 表达式的那一位置上，我们并不能轻而易举地拿到它。
 
-We *could* add a field to LoxFunction to store a reference to the LoxClass that
-owns that method. The interpreter would keep a reference to the
-currently executing LoxFunction so that we could look it up later when we hit a
-`super` expression. From there, we'd get the LoxClass of the method, then its
-superclass.
+我们**可以**给 `LoxFunction` 添加一个字段，用以存储拥有该方法的那枚 `LoxClass` 的引用。解释器会保留一份对当前正在执行的 `LoxFunction` 的引用，以便当我们稍后撞上 `super` 表达式时能够回溯查找。顺着这一线索，我们便可以拿到该方法所属的 `LoxClass`，再拿到它的父类。
 
-That's a lot of plumbing. In the [last chapter][], we had a similar problem when
-we needed to add support for `this`. In that case, we used our existing
-environment and closure mechanism to store a reference to the current object.
-Could we do something similar for storing the superclass<span
-name="rhetorical">?</span> Well, I probably wouldn't be talking about it if the
-answer was no, so... yes.
+这要铺设的管道可真不少。在[上一章][last chapter]里，我们也曾遭遇过一个类似的问题——彼时我们需要为 `this` 添砖加瓦。在那种情况下，我们借用了既有的环境与闭包机制来存储对当前对象的一份引用。我们是否也能为存储父类而做些<span name="rhetorical">类似</span>的事情呢？我若是说自己不会专门讨论这个，那答案大概便是"否"，所以……是的。
 
 <aside name="rhetorical">
 
-Does anyone even like rhetorical questions?
+有谁**真会**喜欢修辞性提问吗？
 
 </aside>
 
 [last chapter]: classes.html
 
-One important difference is that we bound `this` when the method was *accessed*.
-The same method can be called on different instances and each needs its own
-`this`. With `super` expressions, the superclass is a fixed property of the
-*class declaration itself*. Every time you evaluate some `super` expression, the
-superclass is always the same.
+一处重要的区别在于：我们是在方法**被访问时**绑定 `this` 的。同一个方法可以在不同的实例上被调用，且每个调用都需要自己的 `this`。而对于 `super` 表达式而言，父类乃是类声明**本身**的一项固定属性。每一次你对某处 `super` 表达式求值，那位父类都始终是同一位。
 
-That means we can create the environment for the superclass once, when the class
-definition is executed. Immediately before we define the methods, we make a new
-environment to bind the class's superclass to the name `super`.
+这意味着我们可以在类定义被执行时，为父类创建**一次**环境。恰在定义方法之前，我们新建一份环境，将该类的父类用名字 `super` 绑定起来。
 
-<img src="image/inheritance/superclass.png" alt="The superclass environment." />
+<img src="image/inheritance/superclass.png" alt="父类环境。" />
 
-When we create the LoxFunction runtime representation for each method, that is
-the environment they will capture in their closure. Later, when a method is
-invoked and `this` is bound, the superclass environment becomes the parent for
-the method's environment, like so:
+当我们为每一方法创建其 `LoxFunction` 运行时表示时，那便是它们将捕获进其闭包的那份环境。稍后，当方法被调用、`this` 被绑定时，父类环境便成为该方法环境的父环境，如下所示：
 
-<img src="image/inheritance/environments.png" alt="The environment chain including the superclass environment." />
+<img src="image/inheritance/environments.png" alt="包含父类环境的环境链。" />
 
-That's a lot of machinery, but we'll get through it a step at a time. Before we
-can get to creating the environment at runtime, we need to handle the
-corresponding scope chain in the resolver.
+这套机制繁琐得很，但我们会一步一步地走完。在我们能够在运行时创建环境之前，我们需要先在解析器中处理相应的作用域链。
 
 ^code begin-super-scope (2 before, 2 after)
 
-If the class declaration has a superclass, then we create a new scope
-surrounding all of its methods. In that scope, we define the name "super". Once
-we're done resolving the class's methods, we discard that scope.
+若该类声明带有一个父类，那么我们便在它**所有**方法的外围创建一份新的作用域。在那份作用域中，我们定义名字 "super"。一旦解析完该类的方法，我们便丢弃该作用域。
 
 ^code end-super-scope (2 before, 1 after)
 
-It's a minor optimization, but we only create the superclass environment if the
-class actually *has* a superclass. There's no point creating it when there isn't
-a superclass since there'd be no superclass to store in it anyway.
+这是一处小小的优化：我们仅在该类**确实**拥有一个父类时才创建父类环境。若不存在父类，那么创建它便毫无意义——因为根本没有可存入的父类。
 
-With "super" defined in a scope chain, we are able to resolve the `super`
-expression itself.
+随着 "super" 在作用域链中得以定义，我们便能够解析 `super` 表达式本身。
 
 ^code resolve-super-expr
 
-We resolve the `super` token exactly as if it were a variable. The resolution
-stores the number of hops along the environment chain that the interpreter needs
-to walk to find the environment where the superclass is stored.
+我们解析那个 `super` 词法单元的方式，与解析任何其它变量**完全相同**。解析结果会存储着解释器需要跨越的环境链步数，以便找到那位父类所栖身的环境。
 
-This code is mirrored in the interpreter. When we evaluate a subclass
-definition, we create a new environment.
+这段代码在解释器中亦有其镜像。当我们对子类定义进行求值时，我们创建一份新的环境。
 
 ^code begin-superclass-environment (6 before, 2 after)
 
-Inside that environment, we store a reference to the superclass -- the actual
-LoxClass object for the superclass which we have now that we are in the runtime.
-Then we create the LoxFunctions for each method. Those will capture the current
-environment -- the one where we just bound "super" -- as their closure, holding
-on to the superclass like we need. Once that's done, we pop the environment.
+在那份环境之内，我们存储对父类的一份引用——父类便是相应的 `LoxClass` 对象，我们直到运行时才拥有它。随后，我们为每一方法创建相应的 `LoxFunction`。它们会捕获**当前**环境——也就是我们刚刚将 "super" 绑定进去的那一份——作为它们的闭包，如我们所需的那样紧紧攥住父类。一旦搞定这一切，我们便弹出该环境。
 
 ^code end-superclass-environment (2 before, 2 after)
 
-We're ready to interpret `super` expressions themselves. There are a few moving
-parts, so we'll build this method up in pieces.
+我们已准备就绪，可以去解释 `super` 表达式本身了。其中牵扯的环节不少，因此我们将这一方法一段一段地搭建。
 
 ^code interpreter-visit-super
 
-First, the work we've been leading up to. We look up the surrounding class's
-superclass by looking up "super" in the proper environment.
+首先，是我们一直铺垫到这一步的工作。我们通过在恰当的环境之中查找 "super"，来寻找外层类的父类。
 
-When we access a method, we also need to bind `this` to the object the method is
-accessed from. In an expression like `doughnut.cook`, the object is whatever we
-get from evaluating `doughnut`. In a `super` expression like `super.cook`, the
-current object is implicitly the *same* current object that we're using. In
-other words, `this`. Even though we are looking up the *method* on the
-superclass, the *instance* is still `this`.
+当我们访问一个方法时，我们还需要将 `this` 绑定到那个方法**被访问时所******针对**的对象之上。在诸如 `doughnut.cook` 这样的表达式中，那个对象便是我们求值 `doughnut` 所得到的结果。在一处 `super` 表达式（譬如 `super.cook`）中，那个当前对象隐式地便与**我们正在使用的**当前对象是**同**一位——换言之，便是 `this`。即便我们是在**父类**上查找**方法**，那个**实例**仍为 `this`。
 
-Unfortunately, inside the `super` expression, we don't have a convenient node
-for the resolver to hang the number of hops to `this` on. Fortunately, we do
-control the layout of the environment chains. The environment where "this" is
-bound is always right inside the environment where we store "super".
+然而，遗憾的是，在 `super` 表达式内部，我们并没有一个方便的节点可供解析器挂载通往 `this` 的步数。幸运的是，我们**的确**掌控着环境链的布局。`this` 所绑定的环境，恰好位于我们存储 "super" 之环境的**内侧**。
 
 ^code super-find-this (2 before, 1 after)
 
-Offsetting the distance by one looks up "this" in that inner environment. I
-admit this isn't the most <span name="elegant">elegant</span> code, but it
-works.
+将距离偏移一步，便能在那份内侧的环境中查找 "this"。我承认这并不是最<span name="elegant">优雅</span>的代码，但确实管用。
 
 <aside name="elegant">
 
-Writing a book that includes every single line of code for a program means I
-can't hide the hacks by leaving them as an "exercise for the reader".
+写一本**包含**程序的每一行代码的书，意味着我无法再把这些"妙手"藏在"留给读者的练习"之中。
 
 </aside>
 
-Now we're ready to look up and bind the method, starting at the superclass.
+至此，我们准备就绪，可以去查找并绑定那个方法——从父类起步。
 
 ^code super-find-method (2 before, 1 after)
 
-This is almost exactly like the code for looking up a method of a get
-expression, except that we call `findMethod()` on the superclass instead of on
-the class of the current object.
+这与查找一次 get 表达式的方法的代码几乎完全一样，只不过我们调用的是父类上的 `findMethod()`，而非当前对象之类上的。
 
-That's basically it. Except, of course, that we might *fail* to find the method.
-So we check for that too.
+事情大致就是这些。当然，我们**可能**找不到那个方法。因此我们也检查一下。
 
 ^code super-no-method (2 before, 2 after)
 
-There you have it! Take that BostonCream example earlier and give it a try.
-Assuming you and I did everything right, it should fry it first, then stuff it
-with cream.
+便是这样！拿前面那个 `BostonCream` 的例子试一试。假设你我都做对了一切，它应当先**炸**它，再**酿**它。
 
-### Invalid uses of super
+### super 的无效使用
 
-As with previous language features, our implementation does the right thing when
-the user writes correct code, but we haven't bulletproofed the intepreter
-against bad code. In particular, consider:
+与前面那些语言特性一样，我们的实现在用户写下正确的代码时表现无误，但我们尚未将解释器打磨成**刀枪不入**的金钟罩。尤其是，请考虑：
 
 ```lox
 class Eclair {
@@ -535,72 +365,53 @@ class Eclair {
 }
 ```
 
-This class has a `super` expression, but no superclass. At runtime, the code for
-evaluating `super` expressions assumes that "super" was successfully resolved
-and will be found in the environment. That's going to fail here because there is
-no surrounding environment for the superclass since there is no superclass. The
-JVM will throw an exception and bring our interpreter to its knees.
+这个类用了一处 `super` 表达式，但它**没有**父类。在运行时，用于求值 `super` 表达式的代码假定 "super" 已被成功解析，并能在环境中找到它。这在此处将会失败，因为既然没有父类，便**不存在**围绕它的父类环境。JVM 会抛出一个异常，让我们的解释器就此一蹶不振。
 
-Heck, there are even simpler broken uses of super:
+哎呀，其实还有更简单的错误用法：
 
 ```lox
 super.notEvenInAClass();
 ```
 
-We could handle errors like these at runtime by checking to see if the lookup
-of "super" succeeded. But we can tell statically -- just by looking at the
-source code -- that Eclair has no superclass and thus no `super` expression will
-work inside it. Likewise, in the second example, we know that the `super`
-expression is not even inside a method body.
+我们本可以在运行时通过检查对 "super" 的查找是否成功来处理这些错误。但我们**仅凭观察源代码**即可静态地判定——`Eclair` 没有父类，因此其内部的任何 `super` 表达式都注定无法工作。类似地，在第二个例子中，我们知道那处 `super` 表达式**根本**不在任何方法体之内。
 
-Even though Lox is dynamically typed, that doesn't mean we want to defer
-*everything* to runtime. If the user made a mistake, we'd like to help them find
-it sooner rather than later. So we'll report these errors statically, in the
-resolver.
+即便 Lox 是动态类型的，这并不意味着我们想把**一切**都推迟到运行时。如果用户犯了错，我们乐意尽早——而非延误——地帮他们找到它。因此，我们便在解析器中静态地报告这些错误。
 
-First, we add a new case to the enum we use to keep track of what kind of class
-is surrounding the current code being visited.
+首先，我们向那个用于追踪"当前所访问代码外围是哪种类"的枚举新增一个情形。
 
 ^code class-type-subclass (1 before, 1 after)
 
-We'll use that to distinguish when we're inside a class that has a superclass
-versus one that doesn't. When we resolve a class declaration, we set that if the
-class is a subclass.
+我们将借它来区分：当下的代码是位于一个带有父类的类内部，还是位于一个没有父类的类内部。当我们解析一条类声明时，若该类是一个子类，我们便做相应设置。
 
 ^code set-current-subclass (1 before, 1 after)
 
-Then, when we resolve a `super` expression, we check to see that we are
-currently inside a scope where that's allowed.
+随后，当我们解析一处 `super` 表达式时，我们便去检查我们是否正身处一个允许此类用法的作用域之中。
 
 ^code invalid-super (1 before, 1 after)
 
-If not -- oopsie! -- the user made a mistake.
+若非如此——哎呀——那便是用户犯了个错。
 
-## Conclusion
+## 收官
 
-We made it! That final bit of error handling is the last chunk of code needed to
-complete our Java implementation of Lox. This is a real <span
-name="superhero">accomplishment</span> and one you should be proud of. In the
-past dozen chapters and a thousand or so lines of code, we have learned and
-implemented...
+我们做到了！那最后那一段错误处理是完成 Lox 的 Java 实现所需的最后一块代码。这是一项了不起的<span name="superhero">成就</span>，你大可为之感到自豪。在过去这十来章、千余行代码中，我们学习并实现了……
 
-* [tokens and lexing][4],
-* [abstract syntax trees][5],
-* [recursive descent parsing][6],
-* prefix and infix expressions,
-* runtime representation of objects,
-* [interpreting code using the Visitor pattern][7],
-* [lexical scope][8],
-* environment chains for storing variables,
-* [control flow][9],
-* [functions with parameters][10],
-* closures,
-* [static variable resolution and error detection][11],
-* [classes][12],
-* constructors,
-* fields,
-* methods, and finally,
-* inheritance.
+* [词法单元与词法分析][4]，
+* [抽象语法树][5]，
+* [递归下降语法分析][6]，
+* 前缀与中缀表达式，
+* 对象的运行时表示，
+* [借由访问者模式解释代码][7]，
+* [词法作用域][8]，
+* 用以存储变量的环境链，
+* [控制流][9]，
+* [带参数的函数][10]，
+* 闭包，
+* [静态变量解析与错误检测][11]，
+* [类][12]，
+* 构造器，
+* 字段，
+* 方法，以及最后，
+* 继承。
 
 [4]: scanning.html
 [5]: representing-code.html
@@ -614,64 +425,37 @@ implemented...
 
 <aside name="superhero">
 
-<img src="image/inheritance/superhero.png" alt="You, being your bad self.">
+<img src="image/inheritance/superhero.png" alt="你，正展现着你的风采。" />
 
 </aside>
 
-We did all of that from scratch, with no external dependencies or magic tools.
-Just you and I, our respective text editors, a couple of collection classes in
-the Java standard library, and the JVM runtime.
+这一切，都是我们从零起步、不依赖任何外部依赖或魔法工具所完成的。只有你与我，再加上我们各自的文本编辑器、Java 标准库中的若干集合类，以及 JVM 运行时。
 
-This marks the end of Part II, but not the end of the book. Take a break. Maybe
-write a few fun Lox programs and run them in your interpreter. (You may want to
-add a few more native methods for things like reading user input.) When you're
-refreshed and ready, we'll embark on our [next adventure][].
+这标志着第二部分——但并非本书——的结束。休息一下。或许写几段有趣的 Lox 程序，并让它们在你的解释器中跑一跑。（你或许还想要再添几样原生方法，譬如用于读取用户输入。）等你神清气爽、准备就绪之时，我们便踏上[下一段冒险][next adventure]。
 
 [next adventure]: a-bytecode-virtual-machine.html
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  Lox supports only *single inheritance* -- a class may have a single
-    superclass and that's the only way to reuse methods across classes. Other
-    languages have explored a variety of ways to more freely reuse and share
-    capabilities across classes: mixins, traits, multiple inheritance, virtual
-    inheritance, extension methods, etc.
+1.  Lox 仅支持**单继承**——一个类只能有一位父类，而这也是跨类复用方法的唯一途径。其它语言探索了多种更为自由地复用与共享能力的方式：mixins、traits、多继承、虚继承、扩展方法，等等。
 
-    If you were to add some feature along these lines to Lox, which would you
-    pick and why? If you're feeling courageous (and you should be at this
-    point), go ahead and add it.
+    倘若你打算为 Lox 添加此类特性，你会选哪一个，为什么？假如你勇气可嘉（到了这个节骨眼你也应该如此），不妨立刻为它添上吧。
 
-1.  In Lox, as in most other object-oriented languages, when looking up a
-    method, we start at the bottom of the class hierarchy and work our way up --
-    a subclass's method is preferred over a superclass's. In order to get to the
-    superclass method from within an overriding method, you use `super`.
+1.  在 Lox 中，与大多数其它面向对象语言一样，当我们查找一个方法时，我们从类继承链的**底部**起步，一路向上——子类的方法优先于父类。为了从某个覆写方法**内部**去访问父类方法，你可以使用 `super`。
 
-    The language [BETA][] takes the [opposite approach][inner]. When you call a
-    method, it starts at the *top* of the class hierarchy and works *down*. A
-    superclass method wins over a subclass method. In order to get to the
-    subclass method, the superclass method can call `inner`, which is sort of
-    like the inverse of `super`. It chains to the next method down the
-    hierarchy.
+    [BETA][] 语言采取了[相反的路径][inner]。当你调用一个方法时，它从类继承链的**顶部**起步，一路**向下**。父类的方法优先于子类方法。为了访问子类方法，父类方法可以调用 `inner`，这多少像是 `super` 的反义。它会沿着继承链向下，去寻找下一个同名方法。
 
-    The superclass method controls when and where the subclass is allowed to
-    refine its behavior. If the superclass method doesn't call `inner` at all,
-    then the subclass has no way of overriding or modifying the superclass's
-    behavior.
+    父类方法控制着，何时何地允许子类去细化其行为。倘若父类方法**根本不**调用 `inner`，那么子类便**无从**覆写或修改父类方法的行为。
 
-    Take out Lox's current overriding and `super` behavior and replace it with
-    BETA's semantics. In short:
+    撤掉 Lox 现有的覆写与 `super` 行为，并以 BETA 的语义取而代之。简而言之：
 
-    *   When calling a method on a class, prefer the method *highest* on the
-        class's inheritance chain.
+    *   当在某个类上调用一个方法时，优先选用**继承链最顶层**的那个方法。
 
-    *   Inside the body of a method, a call to `inner` looks for a method with
-        the same name in the nearest subclass along the inheritance chain
-        between the class containing the `inner` and the class of `this`. If
-        there is no matching method, the `inner` call does nothing.
+    *   在方法的函数体内，一次对 `inner` 的调用，会在**包含该 `inner` 的类**与 `this` 所归属的类**之间**、那条继承链上的最近一个子类中，去寻找同名方法。倘若找不到匹配的，则 `inner` 调用**什么**也不做。
 
-    For example:
+    举个例子：
 
     ```lox
     class Doughnut {
@@ -691,7 +475,7 @@ refreshed and ready, we'll embark on our [next adventure][].
     BostonCream().cook();
     ```
 
-    This should print:
+    这段代码应当打印：
 
     ```text
     Fry until golden brown.
@@ -699,9 +483,7 @@ refreshed and ready, we'll embark on our [next adventure][].
     Place in a nice box.
     ```
 
-1.  In the chapter where I introduced Lox, [I challenged you][challenge] to
-    come up with a couple of features you think the language is missing. Now
-    that you know how to build an interpreter, implement one of those features.
+1.  在介绍 Lox 的那一章里，我曾[向你发起挑战][challenge]，请你列举几项你认为这门语言所欠缺的功能。如今你既已懂得如何打造一款解释器，不妨亲手实现其中一项。
 
 [challenge]: the-lox-language.html#challenges
 [inner]: http://journal.stuffwithstuff.com/2012/12/19/the-impoliteness-of-overriding-methods/

@@ -1,493 +1,329 @@
-> "Ah? A small aversion to menial labor?" The doctor cocked an eyebrow.
-> "Understandable, but misplaced. One should treasure those hum-drum
-> tasks that keep the body occupied but leave the mind and heart unfettered."
+# 字符串
+
+> "啊？是对苦活儿的小小厌恶？"医生挑了挑眉。
+> "可以理解，但大可不必。倒是应当珍视那些乏味至极的差事 _—_ 它们让身体忙碌， 却让心灵得以解脱**。"
 >
-> <cite>Tad Williams, <em>The Dragonbone Chair</em></cite>
+> <cite>泰德·威廉斯，<em>《龙骨椅》</em></cite>
 
-Our little VM can represent three types of values right now: numbers, Booleans,
-and `nil`. Those types have two important things in common: they're immutable
-and they're small. Numbers are the largest, and they still fit into two 64-bit
-words. That's a small enough price that we can afford to pay it for all values,
-even Booleans and nils which don't need that much space.
+我们**的_ 小 VM 眼下能表示三种值类型：数字、 布尔与 `nil`。这些类型有两个重要的共性： 它们都不可变， 而且它们都很小。数字是其中最大的， 也只占两个 64 位字。即使对于那些本不需要如此多空间的布尔与 `nil`， 我们也付得起这一点开销_。
 
-Strings, unfortunately, are not so petite. There's no maximum length for a
-string. Even if we were to artificially cap it at some contrived limit like
-<span name="pascal">255</span> characters, that's still too much memory to spend
-on every single value.
+然而， 字符串却不那么纤巧。它没有长度上限。即使我们人为地在某个人为设定的上**限（ 比如 <span name="pascal"> 255 </span> **个_ 字符） 上画上一道线， 那也太浪费内存了， 根本不能对每一个值都这样花费_。
 
 <aside name="pascal">
 
-UCSD Pascal, one of the first implementations of Pascal, had this exact limit.
-Instead of using a terminating null byte to indicate the end of the string like
-C, Pascal strings started with a length value. Since UCSD used only a single
-byte to store the length, strings couldn't be any longer than 255 characters.
+UCSD Pascal，Pascal 的早期实现之一， 就采用了这种上限。它不像 C 那样用一个终止空节来标记字符串的末尾， 而是在字符串开头放一个长度值。由于 UCSD 只用一个字节存放长度， 字符串就不能超过 255 个字符长。
 
-<img src="image/strings/pstring.png" alt="The Pascal string 'hello' with a length byte of 5 preceding it.">
+<img src="image/strings/pstring.png" alt="Pascal 字符串 'hello'， 前面有一个长度字节 5。" />
 
 </aside>
 
-We need a way to support values whose sizes vary, sometimes greatly. This is
-exactly what dynamic allocation on the heap is designed for. We can allocate as
-many bytes as we need. We get back a pointer that we'll use to keep track of the
-value as it flows through the VM.
+我们需要一种支持大小不一的值的方法， 有时其大小的跨度还非常巨大。这正是堆上动态分配的存在意义。我们可以分配任意多少字节， 并收到一个指针_， 之后就凭这个指针来在 VM 中追踪该值的流动。
 
-## Values and Objects
+## 值与对象
 
-Using the heap for larger, variable-sized values and the stack for smaller,
-atomic ones leads to a two-level representation. Every Lox value that you can
-store in a variable or return from an expression will be a Value. For small,
-fixed-size types like numbers, the payload is stored directly inside the Value
-struct itself.
+大值、 大小不一的值用堆来存放_， 小的、 原子型的值用栈来存放—— 这便形成了一个两级的表示法。你能存入某个变量或者从某条表达式返回的每一个 Lox 值， 都会是一个 Value。对于数字这种小而定长的类型而言， 其载荷_ 直接存放于 Value 结构体本身之中_。
 
-If the object is larger, its data lives on the heap. Then the Value's payload is
-a *pointer* to that blob of memory. We'll eventually have a handful of
-heap-allocated types in clox: strings, instances, functions, you get the idea.
-Each type has its own unique data, but there is also state they all share that
-[our future garbage collector][gc] will use to manage their memory.
+若该对象较大， 其数据则栖身于堆上。于是 _Value_ 的载荷变成了一个指向那团_ 内存的**指针**。我们最终会在 clox 中拥有若干种堆分配的类型： 字符串、 实例、 函数_， 总而言之你能想到的都算。每一种类型有其各自独有的数据_， 但也有一些 [ 我们未来的垃圾回收器 ][gc] 会用于管理它们的内存的共同状态_。
 
-<img src="image/strings/value.png" class="wide" alt="Field layout of number and obj values.">
+<img src="image/strings/value.png" class="wide" alt=" 数字与 obj 值的字段布局_。" />
 
 [gc]: garbage-collection.html
 
-We'll call this common representation <span name="short">"Obj"</span>. Each Lox
-value whose state lives on the heap is an Obj. We can thus use a single new
-ValueType case to refer to all heap-allocated types.
+我们将这一共同表示称作 <span name="short">"Obj"</span>。每一个状态栖身于堆上的 Lox 值都是一枚 Obj。于是我们可以用一个新的 ValueType 分支来涵盖所有堆分配的类型_。
 
 <aside name="short">
 
-"Obj" is short for "object", natch.
+"Obj" 是 "object" 的缩写， 这自然不用多费口舌_。
 
 </aside>
 
 ^code val-obj (1 before, 1 after)
 
-When a Value's type is `VAL_OBJ`, the payload is a pointer to the heap memory,
-so we add another case to the union for that.
+当一枚 Value 的类型为 `VAL_OBJ` 时， 其载荷为一个指向堆内存的指针_， 于是我们再向联合中添上一个相应的分支_。
 
 ^code union-object (1 before, 1 after)
 
-As we did with the other value types, we crank out a couple of helpful macros
-for working with Obj values.
+与对待其他值类型一样， 我们封装了几个便利的宏来处理 Obj 值_。
 
 ^code is-obj (1 before, 2 after)
 
-This evaluates to `true` if the given Value is an Obj. If so, we can use this:
+若所给 Value 为一枚 Obj， 这段代码求值为 `true`。若如此， 我们便可以使用这个_：
 
 ^code as-obj (2 before, 1 after)
 
-It extracts the Obj pointer from the value. We can also go the other way.
+它从 Value 中抽出 Obj 指针_。 我们也可以反向操作_。
 
 ^code obj-val (1 before, 2 after)
 
-This takes a bare Obj pointer and wraps it in a full Value.
+它接受一个裸 Obj 指针， 并将其包入一枚完整的 Value 之中**。
 
-## Struct Inheritance
+## 结构体继承
 
-Every heap-allocated value is an Obj, but <span name="objs">Objs</span> are
-not all the same. For strings, we need the array of characters. When we get to
-instances, they will need their data fields. A function object will need its
-chunk of bytecode. How do we handle different payloads and sizes? We can't use
-another union like we did for Value since the sizes are all over the place.
+每一个堆分配的值**都_ 是一枚 Obj， 但 <span name="objs"> 这些 Obj</span> 并不全都一样。对于字符串， 我们需要字符数组。等到实例的时候， 它们又需要自己的数据字段_。一个函数对象则需要它的字节码块。那么， 对于这些各不相同的载荷与大小， 我们该如何应对_？由于各种类型的大小参不齐， 我们无法再像 Value 那样使用联合_。
 
 <aside name="objs">
 
-No, I don't know how to pronounce "objs" either. Feels like there should be a
-vowel in there somewhere.
+不， 我也不知道 "objs" 该怎样发音才好。总感觉里面应该有个元音才对。
 
 </aside>
 
-Instead, we'll use another technique. It's been around for ages, to the point
-that the C specification carves out specific support for it, but I don't know
-that it has a canonical name. It's an example of [*type punning*][pun], but that
-term is too broad. In the absence of any better ideas, I'll call it **struct
-inheritance**, because it relies on structs and roughly follows how
-single-inheritance of state works in object-oriented languages.
+取而代之， 我们将使用另一种技巧。它已经存在了很久之久， 久到了 C 标准的规范都为它刻意开了一道门， 但我不知道它有没有一个权威的名字。它是 [类型双关_ ][pun] 的一个例子， 但这个词义太宽泛了。在没有更好主意的情况**下， 我们**将_ 其称作结构体**继承**（struct inheritance）， 因为它倚赖于结构体， 并且大致沿着面向对象语言中单继承状态的运作方式_。
 
-[pun]: https://en.wikipedia.org/wiki/Type_punning
+[pun]: https://en.wikipedia.org/wiki/Type_punning>
 
-Like a tagged union, each Obj starts with a tag field that identifies what kind
-of object it is -- string, instance, etc. Following that are the payload fields.
-Instead of a union with cases for each type, each type is its own separate
-struct. The tricky part is how to treat these structs uniformly since C has no
-concept of inheritance or polymorphism. I'll explain that <span
-name="foreshadowing">soon</span>, but first lets get the preliminary stuff out
-of the way.
+与标签联合类似， 每一枚 Obj 都以一个标签字段开头， 用于标识它是哪一种对象—— 字符串、 实例等等。在那之后便是各自的载荷字段。我们没有为每一种类型使用带各分支的联合， 而是让每一种类型各自成为一个独立的结构体。其中的难点在于， 由于 C 本身并没有继承或多态的概念， 我们如何统一地对待这些结构体_。我很快就会解释这一点， 但先让我们把那些铺垫性的事情搞定。
 
-<aside name="foreshadowing">
-
-Ooh, foreshadowing!
-
-</aside>
-
-The name "Obj" itself refers to a struct that contains the state shared across
-all object types. It's sort of like the "base class" for objects. Because of
-some cyclic dependencies between values and objects, we forward-declare it in
-the "value" module.
+"Obj" 这个名字本身指向一个结构体， 该结构体包含了所有对象类型共用的状态_。它有点类似对象的 " 基类"。由于 value 与 object 之间存在某些循环依赖_， 我们在 "value" 模块中对它作了前置声明_。
 
 ^code forward-declare-obj (2 before, 1 after)
 
-And the actual definition is in a new module.
+而其本体的定义_ 则栖身_ 于一个新模块中。
 
 ^code object-h
 
-Right now, it contains only the type tag. Shortly, we'll add some other
-bookkeeping information for memory management. The type enum is this:
+眼下， 它只装有一个类型标签。很快， 我们会向其中添加其他用于内存管理的登记信息。那个类型枚举是这样_ 的：
 
 ^code obj-type (1 before, 2 after)
 
-Obviously, that will be more useful in later chapters after we add more
-heap-allocated types. Since we'll be accessing these tag types frequently, it's
-worth making a little macro that extracts the object type tag from a given
-Value.
+显然， 在之后我们添加更多堆分配的类型之后， 这会变得更为有用。由于我们会频繁访问这些标签类型， 值得封装一个小宏来从给定的 Value 中抽出对象类型标签_。
 
 ^code obj-type-macro (1 before, 2 after)
 
-That's our foundation.
+这便是我们的基础了。
 
-Now, let's build strings on top of it. The payload for strings is defined in a
-separate struct. Again, we need to forward-declare it.
+现在， 我们在其之上搭起字符串。字符串的载荷于一个单独的结构体中定义_。 同样地， 我们需要对它作前置声明_。
 
 ^code forward-declare-obj-string (1 before, 2 after)
 
-The definition lives alongside Obj.
+本体的定义则与 Obj 同居。
 
 ^code obj-string (1 before, 2 after)
 
-A string object contains an array of characters. Those are stored in a separate,
-heap-allocated array so that we set aside only as much room as needed for each
-string. We also store the number of bytes in the array. This isn't strictly
-necessary but lets us tell how much memory is allocated for the string without
-walking the character array to find the null terminator.
+一个字符串对象含有一个字符数组。这些字符被存放于一个单独的、 堆分配的数组之中_， 这样我们就可以仅为每条字符串开辟所需要的空间。我们同时也存储了该数组中字节的数量。这并不完全必需_， 但这样我们就可以在不用一路遍历字符数组以寻找那个空终止字节的前提下， 知道这条字符串分配了多少内存_。
 
-Because ObjString is an Obj, it also needs the state all Objs share. It
-accomplishes that by having its first field be an Obj. C specifies that struct
-fields are arranged in memory in the order that they are declared. Also, when
-you nest structs, the inner struct's fields are expanded right in place. So the
-memory for Obj and for ObjString looks like this:
+由于 ObjString 是一枚 Obj， 它也需要所有 Obj 共用的那些状态_。 它通过将一个 Obj 作为它的第一个字段来达到这一点。C 规定结构体的字段在内存中按其声明顺序排列。此外， 当你嵌套结构体时， 内层结构体的字段会就地展开。于是 Obj 与 ObjString 的内存看起来如此：
 
-<img src="image/strings/obj.png" alt="The memory layout for the fields in Obj and ObjString." />
+<img src="image/strings/obj.png" alt="Obj 与 ObjString 字段的内存布局_。" />
 
-Note how the first bytes of ObjString exactly line up with Obj. This is not a
-coincidence -- C <span name="spec">mandates</span> it. This is designed to
-enable a clever pattern: You can take a pointer to a struct and safely convert
-it to a pointer to its first field and back.
+请注意 ObjString 的前几个字节与 Obj 如出一辙地对齐。这并不是巧合——C <span name="spec"> 规定</span> 如此_。这一点为一种精明的模式创造了可能**性： **你_ 可以拿一个指向某个结构体的指针_， 并安全地将它转换为指向其第一个字段的_ 指针_， 反之亦然_。
 
 <aside name="spec">
 
-The key part of the spec is:
+该规范的关键部分如下：
 
 > &sect; 6.7.2.1 13
 >
-> Within a structure object, the non-bit-field members and the units in which
-> bit-fields reside have addresses that increase in the order in which they
-> are declared. A pointer to a structure object, suitably converted, points to
-> its initial member (or if that member is a bit-field, then to the unit in
-> which it resides), and vice versa. There may be unnamed padding within a
-> structure object, but not at its beginning.
+> 在一个结构对象内部， 那些非位字段的成员与位字段所栖身的单位， 其地址按其声明顺序递增_。一个合适转换后的结构对象指针指向其起始成员（ 或若那一成员是一个位字段， 则指向它所栖身的那个单位）， 反之亦然_。在一个结构对象内部可以存在未命名的填充， 但其开头不允许出现填充_。
 
 </aside>
 
-Given an `ObjString*`, you can safely cast it to `Obj*` and then access the
-`type` field from it. Every ObjString "is" an Obj in the OOP sense of "is". When
-we later add other object types, each struct will have an Obj as its first
-field. Any code that wants to work with all objects can treat them as base
-`Obj*` and ignore any other fields that may happen to follow.
+对于一个 `ObjString*`， 你可以安全地将其转换为 `Obj*`， 并然后从其中访问 `type` 字段_。每一个 ObjString 在面向对象编程的意义上 " 是 " 一枚 Obj。等到之后我们添加其他对象类型时， 每一个结构体都会将一个 Obj 作为它的第一个字段。 任何想要统一处理所有对象的代码都可以将它们视为基类 `Obj*`， 并对其之后可能存在的其他字段视而不见_。
 
-You can go in the other direction too. Given an `Obj*`, you can "downcast" it to
-an `ObjString*`. Of course, you need to ensure that the `Obj*` pointer you have
-does point to the `obj` field of an actual ObjString. Otherwise, you are
-unsafely reinterpreting random bits of memory. To detect that such a cast is
-safe, we add another macro.
+你也_ 可以往反方向走： 对于一个 `Obj*`， 你可以将它 " 下转型" 为 `ObjString*`。 当然， 你需要确保手里那个 `Obj*` 指针确实指向的是一个 ObjString 的 `obj` 字段。否则， 你就是在不安全地重新诠释内存中的随机比特了。为了检测这一下转型是否安全_， 我们再添一个宏。
 
 ^code is-string (1 before, 2 after)
 
-It takes a Value, not a raw `Obj*` because most code in the VM works with
-Values. It relies on this inline function:
+它接受的是 Value 而不是裸 `Obj*`， 因为 VM 中大多数代码都是在与 Values 打交道_。它倚赖于这个内联函数：
 
-^code is-obj-type (2 before, 2 after)
+^code is-obj-type (2 before, 1 after)
 
-Pop quiz: Why not just put the body of this function right in the macro? What's
-different about this one compared to the others? Right, it's because the body
-uses `value` twice. A macro is expanded by inserting the argument *expression*
-every place the parameter name appears in the body. If a macro uses a parameter
-more than once, that expression gets evaluated multiple times.
+小测_ 试： 为什么不直接将这个函数的函体放进宏里？它与其他那些有什么不同？对了， 这是因为该函体使用 `value` 了两次。宏的展开方式是将参数表达式插_ 入每一次参数名出现的位置。若一个宏在多处使用了同一个参数， 那个表达式会_ 被求值多次_。
 
-That's bad if the expression has side effects. If we put the body of
-`isObjType()` into the macro definition and then you did, say,
+若表达式带有副作用， 那就糟了。如果我们把 `isObjType()` 的函体塞进宏里， 然后你写了这样一句：
 
 ```c
 IS_STRING(POP())
 ```
 
-then it would pop two values off the stack! Using a function fixes that.
+它就会从栈顶弹出两个值！使用一个函数就能修复这一点。
 
-As long as we ensure that we set the type tag correctly whenever we create an
-Obj of some type, this macro will tell us when it's safe to cast a value to a
-specific object type. We can do that using these:
+只要我们在每次创建某种类型的 Obj 时都正确地设定类型标签_， 这个宏就会告诉_ 我们何时可以安全地将一枚 Value 转换为某种具体的对象类型_。 我们可以这样去做：
 
 ^code as-string (1 before, 2 after)
 
-These two macros take a Value that is expected to contain a pointer to a valid
-ObjString on the heap. The first one returns the `ObjString*` pointer. The
-second one steps through that to return the character array itself, since that's
-often what we'll end up needing.
+这两个宏接受的是一枚预期装有一个有效 ObjString 的 Value。第一个返回 `ObjString*` 指针_。第二个则走过那个对象返回其字符数组本身_， 因为那通常正是我们最终会需要的那个东西**。
 
-## Strings
+## 字符串
 
-OK, our VM can now represent string values. It's time to add strings to the
-language itself. As usual, we begin in the front end. The lexer already
-tokenizes string literals, so it's the parser's turn.
+**好_， 我们的 VM 现在能够表示字符串值了。是时候把字符串本身纳入这门语言了。 照例， 我们从前端开始_。词法分析器已经会产生字符串字面量的 token 了， 于是接下来该解析器上场_。
 
 ^code table-string (1 before, 1 after)
 
-When the parser hits a string token, it calls this parse function:
+当解析器碰上一个字符串 token 时， 它调用这个解析函数：
 
 ^code parse-string
 
-This takes the string's characters <span name="escape">directly</span> from the
-lexeme. The `+ 1` and `- 2` parts trim the leading and trailing quotation marks.
-It then creates a string object, wraps it in a Value, and stuffs it into the
-constant table.
+它直接从词素 <span name="escape"> 中取</span> 出那些字符。`+ 1` 与 `- 2` 两段是为了去掉前后的引号。接着它创建一个字符串对象， 将其包入一枚 Value 之中_， 再塞入常量表里。
 
 <aside name="escape">
 
-If Lox supported string escape sequences like `\n`, we'd translate those here.
-Since it doesn't, we can take the characters as they are.
+若 Lox 支持字符串转义序列比如 `\n`， 我们会在此处翻译它们。由于 Lox 并不支持， 我们便可以原样取走那些字符_。
 
 </aside>
 
-To create the string, we use `copyString()`, which is declared in `object.h`.
+为了创建该字符串， 我们使用 `copyString()`， 它声明于 `object.h` 中。
 
 ^code copy-string-h (2 before, 1 after)
 
-The compiler module needs to include that.
+编译器模块需要包含它。
 
 ^code compiler-include-object (2 before, 1 after)
 
-Our "object" module gets an implementation file where we define the new
-function.
+我们那个 "object" 模块得到一个实现文件， 我们在其中定义了这个新函数。
 
 ^code object-c
 
-First, we allocate a new array on the heap, just big enough for the string's
-characters and the trailing <span name="terminator">terminator</span>, using
-this low-level macro that allocates an array with a given element type and
-count:
+首先， 我们在堆上分配一个新数组， 大小仅足以装下字符串的各个字符与末尾 <span name="terminator"> 的终止字节</span>。此处使用这个低层的宏， 它根据所给的元素类型与数量分配一个数组：
 
 ^code allocate (2 before, 1 after)
 
-Once we have the array, we copy over the characters from the lexeme and
-terminate it.
+一旦我们有了这个数组， 我们将词素中的字符复制过去并为其加上终止符。
 
 <aside name="terminator" class="bottom">
 
-We need to terminate the string ourselves because the lexeme points at a range
-of characters inside the monolithic source string and isn't terminated.
+我们需要自己为这条字符串添上终止符， 因为那段词素指向的是整段源码字符串中间的一段范围_， 本身并不带终止符。
 
-Since ObjString stores the length explicitly, we *could* leave the character
-array unterminated, but slapping a terminator on the end costs us only a byte
-and lets us pass the character array to C standard library functions that expect
-a terminated string.
+由于 ObjString 显式存储了长度， 我们本可以让字符数组不带终止符， 但在末尾补上一个终止符只花我们一个字节， 却让我们可以将这段字符数组直接交给那些期待字符串以终止符结尾的 C 标准库函数。
 
 </aside>
 
-You might wonder why the ObjString can't just point back to the original
-characters in the source string. Some ObjStrings will be created dynamically at
-runtime as a result of string operations like concatenation. Those strings
-obviously need to dynamically allocate memory for the characters, which means
-the string needs to *free* that memory when it's no longer needed.
+你或许会_ 奇怪， 为什么 ObjString 不能仅仅回指到源字符串中的那些原始字符。一些 ObjString 会在运行时作为字符串运算的结果被动态创建_， 比如拼接。那些字符串显然需要在堆上动态分配内存来装那些字符_， 这意味着当该字符串不再被需要时， 它需要释放那些内存_。
 
-If we had an ObjString for a string literal, and tried to free its character
-array that pointed into the original source code string, bad things would
-happen. So, for literals, we preemptively copy the characters over to the heap.
-This way, every ObjString reliably owns its character array and can free it.
+若我们为一条字符串字面量也弄一枚 ObjString， 并试图去释放它的那段指向源码字符串中间的字符数组， 糟糕的事情就会发生。所以， 对于字面量， 我们抢先将那些字符复制到堆上。这样， 每一枚 ObjString 都可靠地拥有自己的字符数组， 并可以将其释放_。
 
-The real work of creating a string object happens in this function:
+创建一枚字符串对象的真正工作发生于这个函数中：
 
 ^code allocate-string (2 before)
 
-It creates a new ObjString on the heap and then initializes its fields. It's
-sort of like a constructor in an OOP language. As such, it first calls the "base
-class" constructor to initialize the Obj state, using a new macro.
+它在堆上_ 创建一枚 ObjString， 接着初始化其各字段_。它有些类似面向对象编程语言中的构造器。由于这一点， 它首先会调用 " 基类" 构造器来初始化 Obj 的状态_， 所用的是一个新宏。
 
 ^code allocate-obj (1 before, 2 after)
 
-<span name="factored">Like</span> the previous macro, this exists mainly to
-avoid the need to redundantly cast a `void*` back to the desired type. The
-actual functionality is here:
+<span name="factored"> 与之前那个宏一样， 它主要是为了避免冗余地把 `void*` 强转回所需的类型而设的。 真正的功能在这里_：</span>
 
 <aside name="factored">
 
-I admit this chapter has a sea of helper functions and macros to wade through. I
-try to keep the code nicely factored, but that leads to a scattering of tiny
-functions. They will pay off when we reuse them later.
+我承认本章有一大片辅助函数与宏需要去穿越。我力图让代码的分拆优雅， 但这会导致许多小小的函数四散分布。它们在之后被复用时便会回本_。
 
 </aside>
 
 ^code allocate-object (2 before, 2 after)
 
-It allocates an object of the given size on the heap. Note that the size is
-*not* just the size of Obj itself. The caller passes in the number of bytes so
-that there is room for the extra payload fields needed by the specific object
-type being created.
+它在堆上分配一个大小为所给字节数的对象。请注意该大小并不只是 Obj 本身的大小。调用方传入的字节数包括了那些由所创建的具体对象类型所需要的额外载荷字段_。
 
-Then it initializes the Obj state -- right now, that's just the type tag. This
-function returns to `allocateString()`, which finishes initializing the ObjString
-fields. <span name="viola">*Voilà*</span>, we can compile and execute string
-literals.
+然后它初始化 Obj 的状态_—— 眼下那只是类型标签_。这个函数返回给 `allocateString()`， 由后者完成 ObjString 的其他字段的初始化。<span name="viola">*Voilà*</span>， 我们现在能够编译并执行字符串字面量了**。
 
 <aside name="viola">
 
-<img src="image/strings/viola.png" class="above" alt="A viola.">
+<img src="image/strings/viola.png" class="above" alt="一把中提琴**。" />
 
-Don't get "voilà" confused with "viola". One means "there it is" and the other
-is a string instrument, the middle child between a violin and a cello. Yes, I
-did spend two hours drawing a viola just to mention that.
+千万别把 "voilà" 与 "viola" 弄混了。一个意思是 " 就这样 "， 另一个是一件弦乐器—— 小提琴与大提琴之间的中间孩。 对了， 为了提一嘴这个， 我确实花了两个小时来画一把中提琴**。
 
 </aside>
 
-## Operations on Strings
+## 字符串上的运算
 
-Our fancy strings are there, but they don't do much of anything yet. A good
-first step is to make the existing print code not barf on the new value type.
+我们那些花哨**的_ 字符串就在那里， 但它们还不怎么能干什么。一个良好的起点是让现有的打印代码不在碰上新的值类型时崩溃_。
 
 ^code call-print-object (1 before, 1 after)
 
-If the value is a heap-allocated object, it defers to a helper function over in
-the "object" module.
+若值是一个堆分配的对象， 它会将工作转交给 "object" 模块中的一个辅助函数_。
 
-^code print-object-h
+^code print-object-h (1 before, 2 after)
 
-The implementation looks like this:
+其实现看起来如此：
 
 ^code print-object
 
-We have only a single object type now, but this function will sprout additional
-switch cases in later chapters. For string objects, it simply <span
-name="term-2">prints</span> the character array as a C string.
+眼下我们只有一种对象类型， 但这个函数在之后的几章里会长出更多的 switch 分支_。对于字符串对象， 它只是 <span name="term-2"> 简单地**把</span> 字符数组**作_ 为一条 C 字符串打印出来_。
 
 <aside name="term-2">
 
-I told you terminating the string would come in handy.
+看吧_， 给字符串添加终止符终于派上用场了。
 
 </aside>
 
-The equality operators also need to gracefully handle strings. Consider:
+相等性运算符也需要从容地应对字符串。试想一下：
 
 ```lox
 "string" == "string"
 ```
 
-These are two separate string literals. The compiler will make two separate
-calls to `copyString()`, create two distinct ObjString objects and store them as
-two constants in the chunk. They are different objects in the heap. But our
-users (and thus we) expect strings to have value equality. The above expression
-should evaluate to `true`. That requires a little special support.
+这是两个相同的字符串字面量。编译器会进行两次各自的 `copyString()` 调用， 创建两个各不相同的 ObjString 对象， 并将其作为两条常量存进 chunk。它们是堆中两个不同的对象_。但我们的用户（ 从而也是我们自己） 期待字符串具有值相等性。 上述表达式应该求值为 `true`。这需要一点特殊的支持_。
 
 ^code strings-equal (1 before, 1 after)
 
-If the two values are both strings, then they are equal if their character
-arrays contain the same characters, regardless of whether they are two separate
-objects or the exact same one. This does mean that string equality is slower
-than equality on other types since it has to walk the whole string. We'll revise
-that [later][hash], but this gives us the right semantics for now.
+若两个值都是字符串， 它们相等当且仅当_ 它们的字符数组包含同样的字符_， 与它们是两个各自独立的对象还是_ 完全同一个毫无关系。这意味_ 着字符串的相等比较比其他类型要慢， 因为它必须走遍整条字符串。我们会 [ 之后 ][hash] 对这一点加以改进， 但眼下这种做法给了我们_ 正确的语义。
 
 [hash]: hash-tables.html
 
-Finally, in order to use `memcmp()` and the new stuff in the "object" module, we
-need a couple of includes. Here:
+最后， 为了能使用 `memcmp()` 以及 "object" 模块中的新东西_， 我们需要几个 include。这里：
 
 ^code value-include-string (1 before, 2 after)
 
-And here:
+还有这里：
 
-^code value-include-object (2 before, 1 after)
+^code value-include-object (2 before, 2 after)
 
-### Concatenation
+### 拼接
 
-Full-grown languages provide lots of operations for working with strings --
-access to individual characters, the string's length, changing case, splitting,
-joining, searching, etc. When you implement your language, you'll likely want
-all that. But for this book, we keep things *very* minimal.
+功能齐备的语言为字符串提供了一大堆操**作—— **对_ 单个字符的访问_、字符串的长度_、大小写转换_、 分隔_、拼接_、搜索等等。当你实现自己的语言时_， 你大概都会需要。但对于本书， 我们保持极简。
 
-The only interesting operation we support on strings is `+`. If you use that
-operator on two string objects, it produces a new string that's a concatenation
-of the two operands. Since Lox is dynamically typed, we can't tell which
-behavior is needed at compile time because we don't know the types of the
-operands until runtime. Thus, the `OP_ADD` instruction dynamically inspects the
-operands and chooses the right operation.
+我们对字符串支持的唯一一项有意思的_ 运算是 `+`。若你用这个运算符对两个字符串进行操作， 它会产出一条由两个操作数拼接而成的新字符串。由于 Lox 是动态类型的， 我们无法在编译期知道应该采用哪种行为， 因为我们要到运行时才知道操作数的_ 类型_。于是 `OP_ADD` 指令会在运行时动态检查操作**数， **并_ 选择正确的操作。
 
 ^code add-strings (1 before, 1 after)
 
-If both operands are strings, it concatenates. If they're both numbers, it adds
-them. Any other <span name="convert">combination</span> of operand types is a
-runtime error.
+若两个操作数都是字符串， 它就拼接。若它们都是数字， 它们相加。其他 <span name="convert"> 类型</span> 的操作数搭配都是运行时错误_。
 
 <aside name="convert" class="bottom">
 
-This is more conservative than most languages. In other languages, if one
-operand is a string, the other can be any type and it will be implicitly
-converted to a string before concatenating the two.
+这比大多数其他语言都要保守。在其他语言中， 如果一个操作数是字符串， 另一个可以是任意类型， 并会被隐式转换为字符串之后再拼接。
 
-I think that's a fine feature, but would require writing tedious "convert to
-string" code for each type, so I left it out of Lox.
+我认为那是一项不错的特性， 但那会需要为每一种类型编写烦琐的 " 转换为字符**串" 代码， 所以我在 Lox **中_ 省略了它_。
 
 </aside>
 
-To concatenate strings, we define a new function.
+为了拼接字符串， 我们定义了一个新函数。
 
 ^code concatenate
 
-It's pretty verbose, as C code that works with strings tends to be. First, we
-calculate the length of the result string based on the lengths of the operands.
-We allocate a character array for the result and then copy the two halves in. As
-always, we carefully ensure the string is terminated.
+它有些冗长， 这便是与字符串打交道的 C 代码的一贯作风_。首先， 我们根据两个操作数的长度计算出结果字符串的长度。接着我们为结果分配一段字符数组， 再将那两半分别拷贝进去_。一如既往， 我们慎重地确保字符串已被终止_。
 
-In order to call `memcpy()`, the VM needs an include.
+为能调用 `memcpy()`，VM 需要一个 include。
 
 ^code vm-include-string (1 before, 2 after)
 
-Finally, we produce an ObjString to contain those characters. This time we use a
-new function, `takeString()`.
+最后， 我们产出一枚 ObjString 来装那些字符_。 这一次我们使用了一个新函数， `takeString()`。
 
-^code take-string-h (2 before, 3 after)
+^code take-string-h (2 before, 1 after)
 
-The implementation looks like this:
+实现如此：
 
 ^code take-string
 
-The previous `copyString()` function assumes it *cannot* take ownership of the
-characters you pass in. Instead, it conservatively creates a copy of the
-characters on the heap that the ObjString can own. That's the right thing for
-string literals where the passed-in characters are in the middle of the source
-string.
+之前那个 `copyString()` 函数假设它_ 不能取得你传给它的那些_ 字符的所有权。取而代之， 它会保守地在堆上创建一份字符的拷贝_， 由 ObjString 去拥有_。对于那些传入的字符位于源字符串中间的字面量而**言， **这_ 是正确的做法_。
 
-But, for concatenation, we've already dynamically allocated a character array on
-the heap. Making another copy of that would be redundant (and would mean
-`concatenate()` has to remember to free its copy). Instead, this function claims
-ownership of the string you give it.
+但对于拼接， 我们已经在堆上动态分配了一段字符数组_。在其上再复制一份会是冗余的（ 而且意味着 `concatenate()` 必须记得去释放它的那一份拷贝）。取而代之， 这个函数会主动接管你给它的那条字符串的所有权。
 
-As usual, stitching this functionality together requires a couple of includes.
+一如既往， 要把这些功能拼在一起， 还需要几个 include。
 
 ^code vm-include-object-memory (1 before, 1 after)
 
-## Freeing Objects
+## 释放对象
 
-Behold this innocuous-seeming expression:
+请看这条看似人畜无害的表达**式：
 
 ```lox
 "st" + "ri" + "ng"
 ```
 
-When the compiler chews through this, it allocates an ObjString for each of
-those three string literals and stores them in the chunk's constant table and
-generates this <span name="stack">bytecode</span>:
+当编译器咬碎这条表达**式_ 时， 它会为那三个字符串字面量各自分配一个 ObjString， 将它们存_ 入 chunk 的常量表中， 并生成这段 <span name="stack"> 字节码</span>：
 
 <aside name="stack">
 
-Here's what the stack looks like after each instruction:
+这里是每条指令执行之后栈的状态_：
 
-<img src="image/strings/stack.png" alt="The state of the stack at each instruction.">
+<img src="image/strings/stack.png" alt=" 每条指令处栈的状态_。" />
 
 </aside>
 
@@ -500,296 +336,164 @@ Here's what the stack looks like after each instruction:
 0008    OP_RETURN
 ```
 
-The first two instructions push `"st"` and `"ri"` onto the stack. Then the
-`OP_ADD` pops those and concatenates them. That dynamically allocates a new
-`"stri"` string on the heap. The VM pushes that and then pushes the `"ng"`
-constant. The last `OP_ADD` pops `"stri"` and `"ng"`, concatenates them, and
-pushes the result: `"string"`. Great, that's what we expect.
+前两条指令将 `"st"` 与 `"ri"` 推上了栈。接着 `OP_ADD` 弹出它们并对其进行拼接_。这会在堆上动态分配一个新的 `"stri"` 字符串。VM 将其推上栈， 接着再推上 `"ng"` 常量。最后那条 `OP_ADD` 弹出 `"stri"` 与 `"ng"`， 对其进行拼接， 并将结果推回栈中：`"string"`。妙啊， 正是我们所期待的。
 
-But, wait. What happened to that `"stri"` string? We dynamically allocated it,
-then the VM discarded it after concatenating it with `"ng"`. We popped it from
-the stack and no longer have a reference to it, but we never freed its memory.
-We've got ourselves a classic memory leak.
+但， 等等。那条 `"stri"` 字符串后来怎样了？我们动态分配了它_， 接着 VM 在将其与 `"ng"` 拼接之后便将其抛弃了。我们从栈上弹出了它， 也不再拥有对它的任何引用， 但我们从未释放过它所占用的_ 内存_。我们自己惹上了一桩经典的内存泄漏_。
 
-Of course, it's perfectly fine for the *Lox program* to forget about
-intermediate strings and not worry about freeing them. Lox automatically manages
-memory on the user's behalf. The responsibility to manage memory doesn't
-*disappear*. Instead, it falls on our shoulders as VM implementers.
+当然， 对于 Lox 程序而言， 完全可以忘记那些中间字符串， 并不去担心释放它们的事情_。Lox 会代用户自动管理内存_。管理内存的责任并不会消失， 它只是转移到了我们这些 VM 实现者的肩上。
 
-The full <span name="borrowed">solution</span> is a [garbage collector][gc] that
-reclaims unused memory while the program is running. We've got some other stuff
-to get in place before we're ready to tackle that project. Until then, we are
-living on borrowed time. The longer we wait to add the collector, the harder it
-is to do.
+完整 <span name="borrowed"> 的</span> 解决方案是一个 [ 垃圾回收器 ][gc]， 它会在程序运行期间回收不再使用的内存_。 在我们准备就绪去攻克这个工程之前， 还有一些别的事情得先安排好。在那之前， 我们一直活在借来的时间里。等待收集器的时间越久， 日后就越难做。
 
 <aside name="borrowed">
 
-I've seen a number of people implement large swathes of their language before
-trying to start on the GC. For the kind of toy programs you typically run while
-a language is being developed, you actually don't run out of memory before
-reaching the end of the program, so this gets you surprisingly far.
+我见过不少人在开始捣鼓他们的语言之_ 前， 先把大块的功能都实现了。对于那些在语言开发过程中_ 通常会跑的那些小玩意儿程序， 其实你在它跑完之前并不会耗尽内存， 于是这种做法出乎意料地可以跑很久。
 
-But that underestimates how *hard* it is to add a garbage collector later. The
-collector *must* ensure it can find every bit of memory that *is* still being
-used so that it doesn't collect live data. There are hundreds of places a
-language implementation can squirrel away a reference to some object. If you
-don't find all of them, you get nightmarish bugs.
+但这低估了之后要加入垃圾回收器的难度_。回收器必须确保它能找到每一点仍然在被使用的内存， 从而不会把仍然活着的数据回收掉。在一门语言的实现之中， 藏匿一处对某个对象的引用可以有上百个地方_。若你没有把它们全找到， 就会碰上噩梦般的_ bug。
 
-I've seen language implementations die because it was too hard to get the GC in
-later. If your language needs GC, get it working as soon as you can. It's a
-crosscutting concern that touches the entire codebase.
+我见过有语言实现死于把垃圾回收器_ 以后才加上。如果你的语言需要垃圾回**收， 越早**上_ 场越_ 好。 它是一项贯穿整个代码库的_ 横切关注点。
 
 </aside>
 
-Today, we should at least do the bare minimum: avoid *leaking* memory by making
-sure the VM can still find every allocated object even if the Lox program itself
-no longer references them. There are many sophisticated techniques that advanced
-memory managers use to allocate and track memory for objects. We're going to
-take the simplest practical approach.
+今天， 我们至少应该做一件最低限度的_ 事： 避免泄漏内存_—— 确保 VM 能找到每一个已经分配的对象， 即便是 Lox 程序本身已不再引用它们的情况_。 有许多复杂的方法可以被高级内存管理器用于追踪对象的分配与状态_。 我们将采取最简而实用的做法_。
 
-We'll create a linked list that stores every Obj. The VM can traverse that
-list to find every single object that has been allocated on the heap, whether or
-not the user's program or the VM's stack still has a reference to it.
+我们会创建一条存储所有 Obj 的链表_。VM 可以遍历这条链表_， 以找到每一个已在堆上分配的对象_， 无视是否仍然有程序或栈上的引用指向它们_。
 
-We could define a separate linked list node struct but then we'd have to
-allocate those too. Instead, we'll use an **intrusive list** -- the Obj struct
-itself will be the linked list node. Each Obj gets a pointer to the next Obj in
-the chain.
+我们本可以单独定义一个链表节点的结构体， 但那样我们就也必须为它分配空间。取而代之， 我们将使用侵入式链表—— Obj 结构本身即充当链表节点。每一个 Obj 都拥有一个指向链表中下一个 Obj 的指针_。
 
 ^code next-field (2 before, 1 after)
 
-The VM stores a pointer to the head of the list.
+VM 存了一个指向链表头部的指针_。
 
 ^code objects-root (1 before, 1 after)
 
-When we first initialize the VM, there are no allocated objects.
+当我们首次初始化 VM 时， 还没有任何已分配的对象_。
 
 ^code init-objects-root (1 before, 1 after)
 
-Every time we allocate an Obj, we insert it in the list.
+每当我们分配一枚 Obj 时， 我们会将它插入链表_。
 
 ^code add-to-list (1 before, 1 after)
 
-Since this is a singly linked list, the easiest place to insert it is as the
-head. That way, we don't need to also store a pointer to the tail and keep it
-updated.
+由于这是一条单链表， 最容易插入的位置是头部。这样， 我们就不需要同时存一个指向尾部的指针并不断更新它。
 
-The "object" module is directly using the global `vm` variable from the "vm"
-module, so we need to expose that externally.
+"object" 模块正在直接使用来自 "vm" 模块的全局 `vm` 变量， 于是我们需要将该变量对外暴露_。
 
 ^code extern-vm (2 before, 1 after)
 
-Eventually, the garbage collector will free memory while the VM is still
-running. But, even then, there will usually be unused objects still lingering in
-memory when the user's program completes. The VM should free those too.
+最终， 垃圾回收器会在 VM 还在运行的_ 时候就去释放内存_。但即使如此， 当用户的程序完成时， 仍会有许多不再使用的对象滞留在内存中。VM 也应_ 当把它们一并清理掉。
 
-There's no sophisticated logic for that. Once the program is done, we can free
-*every* object. We can and should implement that now.
+其中并不存在什么精巧的逻辑_。一旦程序跑完， 我们便可以把**所有**的_ 对象都释放掉。 我们现在就可以_ 也应该把这件事落到实处。
 
 ^code call-free-objects (1 before, 1 after)
 
-That empty function we defined [way back when][vm] finally does something! It
-calls this:
+我们早先[ 定义的 ][vm] 那个空空如也的函数终于派上用场了！它调用这个：
 
 [vm]: a-virtual-machine.html#an-instruction-execution-machine
 
 ^code free-objects-h (1 before, 2 after)
 
-Here's how we free the objects:
+这样就释放了_ 那些对象_：
 
 ^code free-objects
 
-This is a CS 101 textbook implementation of walking a linked list and freeing
-its nodes. For each node, we call:
+这是一份经典的 CS 101 教科书式的链表遍历与释放节点的实现。对于每一个节点， 我们调用：
 
 ^code free-object
 
-We aren't only freeing the Obj itself. Since some object types also allocate
-other memory that they own, we also need a little type-specific code to handle
-each object type's special needs. Here, that means we free the character array
-and then free the ObjString. Those both use one last memory management macro.
+我们并不只是在释放 Obj 本身_。由于某些对象类型还会分配其他由自己拥有的内存， 我们也需要一些面向特定类型的代码来处理每种对象类型的特殊需要_。这里， 那意味着我们先释放字符数组， 再释放 ObjString。这两步都使用了最后一个内存管理宏。
 
 ^code free (1 before, 2 after)
 
-It's a tiny <span name="free">wrapper</span> around `reallocate()` that
-"resizes" an allocation down to zero bytes.
+它是一个围绕 `reallocate()` 的 <span name="free"> 小小的封装</span>， 通过将一块分配的大小缩减到零字节来 " 释放" 内存_。
 
 <aside name="free">
 
-Using `reallocate()` to free memory might seem pointless. Why not just call
-`free()`? Later, this will help the VM track how much memory is still being
-used. If all allocation and freeing goes through `reallocate()`, it's easy to
-keep a running count of the number of bytes of allocated memory.
+用 `reallocate()` 来释放内存看起来或许有些多余。 为什么不直接调用 `free()`？之后， 这会帮助 VM 追踪至今仍在被使用的内存有多少。若所有的分配与释放都经过 `reallocate()`， 就很容易维护一个对于已分配字节数的持续累加_。
 
 </aside>
 
-As usual, we need an include to wire everything together.
+一如既往， 我们需要一个 include 来把一切串在一起。
 
 ^code memory-include-object (1 before, 2 after)
 
-Then in the implementation file:
+然后在实现文件中：
 
 ^code memory-include-vm (1 before, 2 after)
 
-With this, our VM no longer leaks memory. Like a good C program, it cleans up
-its mess before exiting. But it doesn't free any objects while the VM is
-running. Later, when it's possible to write longer-running Lox programs, the VM
-will eat more and more memory as it goes, not relinquishing a single byte until
-the entire program is done.
+有了这一切， 我们的 VM 不再泄漏内存了。像一段良好的 C 程序那样， 它在退出之前清理了自己的一切残局_。但在 VM 运行期间， 它仍不会释放任何对象_。之后， 当有必要去写一些运行更久的 Lox 程序时，VM 会一边跑一边吃掉越来越多的内存， 直到整个程序跑完之前都不会归还一字一节_。
 
-We won't address that until we've added [a real garbage collector][gc], but this
-is a big step. We now have the infrastructure to support a variety of different
-kinds of dynamically allocated objects. And we've used that to add strings to
-clox, one of the most used types in most programming languages. Strings in turn
-enable us to build another fundamental data type, especially in dynamic
-languages: the venerable [hash table][]. But that's for the next chapter...
+我们要到添上 [ 一个真正的垃圾回收器_ ][gc] 之后才会去解决这一问题_， 但如此一来我们已经迈出了不小的一步。我们现在已经搭起了可以支持多种各不相同的动态分配对象的基础设施_。 我们用它来为 clox 加上了_ 字符串， 一种在大多数程序设计语言中使用最频繁的_ 类型_。而字符串又使我们能够去构造另一种基本的数据类型， 尤其在动态语言中：那位 [ 声望卓著的哈希表_ ][hash]。但那就留给下一章吧 ……
 
 [hash table]: hash-tables.html
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  Each string requires two separate dynamic allocations -- one for the
-    ObjString and a second for the character array. Accessing the characters
-    from a value requires two pointer indirections, which can be bad for
-    performance. A more efficient solution relies on a technique called
-    **[flexible array members][]**. Use that to store the ObjString and its
-    character array in a single contiguous allocation.
+1. 每条字符串都需要两个各自独立的动态分配——一个用于 ObjString， 另一个用于字符数组。从一个值中访问那些字符需要两次指针间接， 这对性能可能不利。一个更高效的解决方案倚赖于一项叫**做 [柔性数组成员** ][flexible array members]_ 的技巧。使用它将 ObjString 与其字符数组存放于一次连续的分配中。
 
-2.  When we create the ObjString for each string literal, we copy the characters
-    onto the heap. That way, when the string is later freed, we know it is safe
-    to free the characters too.
+1. 当我们为每个字符串字面量创建 ObjString 时， 我们会将字符复制到堆上。这样， 当之后该字符串被释放时， 我们便可以安全地也把字符释放掉。
 
-    This is a simpler approach but wastes some memory, which might be a problem
-    on very constrained devices. Instead, we could keep track of which
-    ObjStrings own their character array and which are "constant strings" that
-    just point back to the original source string or some other non-freeable
-    location. Add support for this.
+    这是一种更简单的_ 做法， 但浪费了一些内存， 在极其受限的设备上可能会是一个问题。取而代之， 我们可以跟踪哪些 ObjString 拥有它们的字符数组， 哪些是 " 常量字符串" 只回指到原始源字符串或其他某些不可释放的位置。为这一情形添加支持_。
 
-3.  If Lox was your language, what would you have it do when a user tries to use
-    `+` with one string operand and the other some other type? Justify your
-    choice. What do other languages do?
+1. 若 Lox 是你的语言， 当用户尝试将 `+` 用于一个字符串操作数与另一个其他类型时， 你会让它做什么？为你的选择给出理由。其他语言又是怎样的？
 
-[flexible array members]: https://en.wikipedia.org/wiki/Flexible_array_member
+[flexible array members]: https://en.wikipedia.org/wiki/Flexible_array**member
 
 </div>
 
 <div class="design-note">
 
-## Design Note: String Encoding
+## 设计笔记：字符串编码
 
-In this book, I try not to shy away from the gnarly problems you'll run into in
-a real language implementation. We might not always use the most *sophisticated*
-solution -- it's an intro book after all -- but I don't think it's honest to
-pretend the problem doesn't exist at all. However, I did skirt around one really
-nasty conundrum: deciding how to represent strings.
+**在_ 本书中， 我不试图躲避那些你在一门真正的语言实现中_ 会碰到的那些棘手问题_。我们可能不总是采用最精致的解决方案—— 毕竟这是一本入门书 _—_ 但我不认为假装问题完全不存在是一种诚实的态度_。然而， 我确实绕过了一个极其难缠的问题： 抉择如何表示字符串。
 
-There are two facets to a string encoding:
+字符串的编码有两个侧面**：
 
-*   **What is a single "character" in a string?** How many different values are
-    there and what do they represent? The first widely adopted standard answer
-    to this was [ASCII][]. It gave you 127 different character values and
-    specified what they were. It was great... if you only ever cared about
-    English. While it has weird, mostly forgotten characters like "record
-    separator" and "synchronous idle", it doesn't have a single umlaut, acute,
-    or grave. It can't represent "jalapeño", "naïve", <span
-    name="gruyere">"Gruyère"</span>, or "Mötley Crüe".
+*   什么是_ 字符串中的一个_ **"字**符"？**有多少种不同的值， 它们分别代表什么？最早被广泛接纳的标准答案是 [ASCII][]。 它给出了 127 种不同的字符值并规定了它们的含义。对于只关心英语的场景， 那棒极了—— 但其中不含任何元音变音符或锐音与钝音的_ 字符_。它无法表示_ "jalapeño"、 "naïve"、 <span name="gruyere">"Gruyère"</span> 或 "Mötley Crüe"。
 
     <aside name="gruyere">
 
-    It goes without saying that a language that does not let one discuss Gruyère
-    or Mötley Crüe is a language not worth using.
+    不用多说， 一门不能让人讨论 Gruyère 或 Mötley Crüe 的语言， 乃是一门不值得使用的语言。
 
     </aside>
 
-    Next came [Unicode][]. Initially, it supported 16,384 different characters
-    (**code points**), which fit nicely in 16 bits with a couple of bits to
-    spare. Later that grew and grew, and now there are well over 100,000
-    different code points including such vital instruments of human
-    communication as 💩 (Unicode Character 'PILE OF POO', `U+1F4A9`).
+    接下来出现的是 [Unicode][]。 最初， 它支持 16,384 种不同的字符（码点**）， 恰巧**能_ 装进 16 位还多出两位。之后这个数字不断膨胀， 到如今已经有十几万个码点了—— 甚至包括像 💩（Unicode 字符 'PILE OF POO'，`U+1F4A9`） 这样的人类交流必需工具_。
 
-    Even that long list of code points is not enough to represent each possible
-    visible glyph a language might support. To handle that, Unicode also has
-    **combining characters** that modify a preceding code point. For example,
-    "a" followed by the combining character "¨" gives you "ä". (To make things
-    more confusing Unicode *also* has a single code point that looks like "ä".)
+    即使那么长的码点列表仍不足以代表每种可能的可见字形_， 为此 Unicode 还拥有结合字符_， 它们会修改前面那个码点。比如， "a" 接上结合字符 "¨" 会得到 "ä"。（ 为了更混乱起來， Unicode 同时也有一个单个看起来就像 "ä" 的码点_。_）_
 
-    If a user accesses the fourth "character" in "naïve", do they expect to get
-    back "v" or &ldquo;¨&rdquo;? The former means they are thinking of each code
-    point and its combining character as a single unit -- what Unicode calls an
-    **extended grapheme cluster** -- the latter means they are thinking in
-    individual code points. Which do your users expect?
+    如果用户访问 "naïve" 中的第四个 "字**符"， 他们**期_ 望得到 "v" 还是 "¨"？前者意味着他们认为每个码点与其结合字符构成了一个整体——Unicode 称之为扩展字形簇—— 而后者意味着他们是在按单个码点思考。你的用户期望的是哪一种？
 
-*   **How is a single unit represented in memory?** Most systems using ASCII
-    gave a single byte to each character and left the high bit unused. Unicode
-    has a handful of common encodings. UTF-16 packs most code points into 16
-    bits. That was great when every code point fit in that size. When that
-    overflowed, they added *surrogate pairs* that use multiple 16-bit code units
-    to represent a single code point. UTF-32 is the next evolution of
-    UTF-16 -- it gives a full 32 bits to each and every code point.
+*   一个**单元在内存中是如何表示的？**大多数使用 ASCII 的系统会为每个字符分配一个字节， 并把高位空着不用。Unicode 有若干常见的编码方式。UTF-16 将大多数码点装入 16 位之中_。 那在所有码点都能塞进 16 位的_ 时候棒极了_。当这个上限被突破之后， 它们引入了代理对来用多个 16 位代理单元表示单个码点。UTF-32 是 UTF-16 的下一代—— 它为每一个码点都提供了完整的 32 位。
 
-    UTF-8 is more complex than either of those. It uses a variable number of
-    bytes to encode a code point. Lower-valued code points fit in fewer bytes.
-    Since each character may occupy a different number of bytes, you can't
-    directly index into the string to find a specific code point. If you want,
-    say, the 10th code point, you don't know how many bytes into the string that
-    is without walking and decoding all of the preceding ones.
+    UTF-8 比其中任何一种都更复杂。它使用一个可变长度的字节序列来编码一个码点。 较小的码点装在更少的字节里。 由于每个字符可能占用不同数量的字节， 你不能直接在字符串中下标定位以找到某特定码点。如果你想要第 10 个码点， 在不走遍并解码其之前所有码点的前提下， 你不知道那距离字符串开头有_ 多远字节_。
 
 [ascii]: https://en.wikipedia.org/wiki/ASCII
-[unicode]: https://en.wikipedia.org/wiki/Unicode
+[unicode]: https://en.wikipedia.org/wiki/Unicode>
 
-Choosing a character representation and encoding involves fundamental
-trade-offs. Like many things in engineering, there's no <span
-name="python">perfect</span> solution:
+与许许多多工程上_ 的问题一样， 字符的表示与编码的抉择背后没有 <span name="python"> 完美</span> 的答案_：
 
 <aside name="python">
 
-An example of how difficult this problem is comes from Python. The achingly long
-transition from Python 2 to 3 is painful mostly because of its changes around
-string encoding.
+这个问题究竟有多难， 一个例子是 Python 从 2 到 3 那段漫长而痛苦的迁移之旅， 其中大多数痛苦都来自其对字符串编码的改动_。
 
 </aside>
 
-*   ASCII is memory efficient and fast, but it kicks non-Latin languages to the
-    side.
+*   ASCII 节省内存且快速_， 但却把非拉丁语系的语言踢_ 到了一边_。
 
-*   UTF-32 is fast and supports the whole Unicode range, but wastes a lot of
-    memory given that most code points do tend to be in the lower range of
-    values, where a full 32 bits aren't needed.
+*   UTF-32 快且支持整个 Unicode 范围， 但对内存极其浪费_， 因为大多数码点确实落在较低的值范围， 那里用不上完整的 32 位。
 
-*   UTF-8 is memory efficient and supports the whole Unicode range, but its
-    variable-length encoding makes it slow to access arbitrary code points.
+*   UTF-8 节省内存且支持整个 Unicode 范围， 但其可变长编码使得随机访问码点变得缓慢_。
 
-*   UTF-16 is worse than all of them -- an ugly consequence of Unicode
-    outgrowing its earlier 16-bit range. It's less memory efficient than UTF-8
-    but is still a variable-length encoding thanks to surrogate pairs. Avoid it
-    if you can. Alas, if your language needs to run on or interoperate with the
-    browser, the JVM, or the CLR, you might be stuck with it, since those all
-    use UTF-16 for their strings and you don't want to have to convert every
-    time you pass a string to the underlying system.
+*   UTF-16 比上面那些_ 都糟糕_ ——Unicode 超越其早**期 16 位范**围后所留下的丑陋后果_。它比 UTF-8 更费内存， 却因代理对的存在仍是一种可变长编码_。 若能避免就避免它。可惜， 如果你的语言需要在_ 浏览器、JVM 或 CLR 上运行或与它们交互_， 你大概得与它们_ 为伍， 因为那些都使用 UTF-16 作为它们的字符串表示_， 而你不想每次把一条字符串交给底层系统时都去转一遍编码_。
 
-One option is to take the maximal approach and do the "rightest" thing. Support
-all the Unicode code points. Internally, select an encoding for each string
-based on its contents -- use ASCII if every code point fits in a byte, UTF-16 if
-there are no surrogate pairs, etc. Provide APIs to let users iterate over both
-code points and extended grapheme clusters.
+一种选择是走极端路线， 做最 " 正 " 的事。支持整个 Unicode 码点。在内部， 根据字符串的内容为它挑选一种编码—— 若每个码点都能装进一个字节， 就使用_ ASCII；若没有代理对， 就用 UTF-16；以此类推_。提供一套 API 让用户能分别按码点与扩展字形簇进行遍历_。
 
-This covers all your bases but is really complex. It's a lot to implement,
-debug, and optimize. When serializing strings or interoperating with other
-systems, you have to deal with all of the encodings. Users need to understand
-the two indexing APIs and know which to use when. This is the approach that
-newer, big languages tend to take -- like Raku and Swift.
+这覆盖了你的所有场景_， 但实在太复杂了。实现_、调试与优化都不容易。在字符串序列化或与其他系统交互的时候_， 你得应对所有那些_ 编码_。用户需要了解两套索引 API 并知道在何时该用哪一套_。这便是那些较新且功能强大的语**言—— **比_ 如 Raku 与 Swift—— 所采取的做法_。
 
-A simpler compromise is to always encode using UTF-8 and only expose an API that
-works with code points. For users that want to work with grapheme clusters, let
-them use a third-party library for that. This is less Latin-centric than ASCII
-but not much more complex. You lose fast direct indexing by code point, but you
-can usually live without that or afford to make it *O(n)* instead of *O(1)*.
+一个更简单的折衷是始终使用 UTF-8 进行编码_， 并只暴露一套面向码点的 API。对于那些想要处理字形簇的用户， 让他们自己去用第三方库解决_。这比 ASCII 更不拉丁中心化， 但并不复杂太多_。你失去了直接按码点下标的快速访问_， 但你大概没那么在乎那些_， 或者你可以接受将它变成 _O(n)_ 而不是 _O(1)_。
 
-If I were designing a big workhorse language for people writing large
-applications, I'd probably go with the maximal approach. For my little embedded
-scripting language [Wren][], I went with UTF-8 and code points.
+若我正在为面向大型应用的_ 使用者设计一门重量级的语言， 我大概会走极端路线。对于我那门小巧的嵌入式脚本语**言 [Wren][]， 我选**的_ 是 UTF-8 加码点。
 
 [wren]: http://wren.io
 

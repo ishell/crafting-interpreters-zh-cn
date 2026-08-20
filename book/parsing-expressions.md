@@ -1,85 +1,48 @@
-> Grammar, which knows how to control even kings.
-> <cite>Molière</cite>
+# 解析表达式
 
-<span name="parse">This</span> chapter marks the first major milestone of the
-book. Many of us have cobbled together a mishmash of regular expressions and
-substring operations to extract some sense out of a pile of text. The code was
-probably riddled with bugs and a beast to maintain. Writing a *real* parser --
-one with decent error handling, a coherent internal structure, and the ability
-to robustly chew through a sophisticated syntax -- is considered a rare,
-impressive skill. In this chapter, you will <span name="attain">attain</span>
-it.
+> 即便是君王，也得受语法的辖制。
+>
+> <cite>莫里哀</cite>
+
+<span name="parse">本章</span>标志着本书第一个重大里程碑。我们中的许多人，都曾拼凑过一段正则表达式与子串操作的大杂烩，妄图从一堆文本中榨出点意义。写出来的代码多半 bug 丛生，维护起来如同驯兽。编写一枚 *货真价实的* 语法分析器——具备体面的错误处理、内部结构井然有序、并能稳健地啃下复杂语法——被视为一项罕见而又令人钦佩的技能。在本章中，你将<span name="attain">习得</span>它。
 
 <aside name="parse">
 
-"Parse" comes to English from the Old French "pars" for "part of speech". It
-means to take a text and map each word to the grammar of the language. We use it
-here in the same sense, except that our language is a little more modern than
-Old French.
+"Parse"一词进入英语，源自古法语中的 "pars"，意为"词类"。它的意思是将一段文本逐一映射到该语言的语法之上。我们在此沿用这一层含义，只不过我们所面向的语言比古法语稍稍"时髦"一些罢了。
 
 </aside>
 
 <aside name="attain">
 
-Like many rites of passage, you'll probably find it looks a little smaller, a
-little less daunting when it's behind you than when it loomed ahead.
+如同许多"通过的仪式"一样，你大概会发现：等你翻过这座山头再回首，它其实并不像耸立在前路时那般高耸、那般吓人。
 
 </aside>
 
-It's easier than you think, partially because we front-loaded a lot of the hard
-work in the [last chapter][]. You already know your way around a formal grammar.
-You're familiar with syntax trees, and we have some Java classes to represent
-them. The only remaining piece is parsing -- transmogrifying a sequence of
-tokens into one of those syntax trees.
+它并不像你想象中那么难，部分原因在于，我们已在[上一章][]里将大量艰难的工作前置完成了。你已经熟悉形式文法的套路，也已经对语法树有所了解，我们甚至还准备好了若干 Java 类来表征它们。眼下唯一缺失的那块拼图，便是解析——也就是把一串词法单元蜕变为某一棵语法树的过程。
 
 [last chapter]: representing-code.html
 
-Some CS textbooks make a big deal out of parsers. In the '60s, computer
-scientists -- understandably tired of programming in assembly language --
-started designing more sophisticated, <span name="human">human</span>-friendly
-languages like Fortran and ALGOL. Alas, they weren't very *machine*-friendly
-for the primitive computers of the time.
+某些计算机科学的教科书把语法分析器捧上了天。1960 年代，那些计算机科学家们——完全可以理解，他们对使用汇编语言编程早已不胜其烦——开始着手设计更加精致、<span name="human">更亲近人类</span>的程序设计语言，譬如 Fortran 与 ALGOL。可惜的是，这些语言对当时的那些原始计算机而言，远没有那么**亲近机器**。
 
 <aside name="human">
 
-Imagine how harrowing assembly programming on those old machines must have been
-that they considered *Fortran* to be an improvement.
+试想一下，那时候的汇编编程得是何等令人发指，竟至于他们将 *Fortran* 都视作一种进步。
 
 </aside>
 
-These pioneers designed languages that they honestly weren't even sure how to
-write compilers for, and then did groundbreaking work inventing parsing and
-compiling techniques that could handle these new, big languages on those old, tiny
-machines.
+这些先驱们设计出一些语言——老实说他们甚至都拿不准该如何为它们编写编译器——随后便埋头苦干，发明了解析与编译技术，使得这些崭新而又庞大的语言能够在那些古老而微小的机器上跑起来。
 
-Classic compiler books read like fawning hagiographies of these heroes and their
-tools. The cover of *Compilers: Principles, Techniques, and Tools* literally has
-a dragon labeled "complexity of compiler design" being slain by a knight bearing
-a sword and shield branded "LALR parser generator" and "syntax directed
-translation". They laid it on thick.
+经典的编译器教科书读起来就像是这些英雄及其工具的谄媚式圣徒传记。*《编译原理》*（*Compilers: Principles, Techniques, and Tools*）的封面上，便赫然画着一条被屠的龙——龙身上赫然写着"编译器设计的复杂性"——而被骑士的剑与盾——剑与盾上分别印着"LALR parser generator"与"syntax directed translation"——所斩杀。他们可真是不吝笔墨。
 
-A little self-congratulation is well-deserved, but the truth is you don't need
-to know most of that stuff to bang out a high quality parser for a modern
-machine. As always, I encourage you to broaden your education and take it in
-later, but this book omits the trophy case.
+些许的自我褒扬自然无可厚非，但事实却是：要为现代的机器敲出一款高质量的语法分析器，你根本不需要了解其中的大多数门道。一如既往，我鼓励你拓宽自己的知识面，日后择机补上这一课，但本书便不再陈列那座奖杯柜了。
 
-## Ambiguity and the Parsing Game
+## 歧义与解析游戏
 
-In the last chapter, I said you can "play" a context-free grammar like a game in
-order to *generate* strings. Parsers play that game in reverse. Given a string
--- a series of tokens -- we map those tokens to terminals in the grammar to
-figure out which rules could have generated that string.
+在上一章里，我曾说过，你可以像玩一场游戏一般去"玩"上下文无关文法，从而**生成**出字符串。语法分析器玩的则是这场游戏的逆过程。给定一段字符串——一串词法单元——我们便将这些词法单元一一映射到文法中的终结符，以弄清究竟哪些规则**有可能**生成出这段字符串来。
 
-The "could have" part is interesting. It's entirely possible to create a grammar
-that is *ambiguous*, where different choices of productions can lead to the same
-string. When you're using the grammar to *generate* strings, that doesn't matter
-much. Once you have the string, who cares how you got to it?
+"有可能"这一措辞颇为耐人寻味。完全有可能构造出一种**有歧义**的文法——对于同一段字符串，不同的产生式选取方式可以殊途同归。当你使用文法去**生成**字符串时，这倒也没什么大不了的；只要你最终拿到了字符串，谁在乎你是如何走到这一步的呢？
 
-When parsing, ambiguity means the parser may misunderstand the user's code. As
-we parse, we aren't just determining if the string is valid Lox code, we're
-also tracking which rules match which parts of it so that we know what part of
-the language each token belongs to. Here's the Lox expression grammar we put
-together in the last chapter:
+而在解析时，歧义便意味着语法分析器可能会误解用户的代码。我们在解析的过程中，不仅要弄清楚这段字符串是否为合法的 Lox 代码，还要追踪究竟哪些规则与哪些部分相对应，从而知晓每一个词法单元各自归属于语言的哪一部分。下面便是我们在上一章中拼凑出来的那条 Lox 表达式文法：
 
 ```ebnf
 expression     → literal
@@ -95,65 +58,53 @@ operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
                | "+"  | "-"  | "*" | "/" ;
 ```
 
-This is a valid string in that grammar:
+下面这段字符串便是该文法中一条合法的实例：
 
 <img src="image/parsing-expressions/tokens.png" alt="6 / 3 - 1" />
 
-But there are two ways we could have generated it. One way is:
+然而，生成它却有两种不同的方式。一种方式是：
 
-1. Starting at `expression`, pick `binary`.
-2. For the left-hand `expression`, pick `NUMBER`, and use `6`.
-3. For the operator, pick `"/"`.
-4. For the right-hand `expression`, pick `binary` again.
-5. In that nested `binary` expression, pick `3 - 1`.
+1.  从 `expression` 出发，挑选 `binary`。
+2.  对于左侧的 `expression`，挑选 `NUMBER`，并取 `6`。
+3.  对于运算符，挑选 `"/"`。
+4.  对于右侧的 `expression`，再次挑选 `binary`。
+5.  在这一嵌套的 `binary` 表达式中，挑选 `3 - 1`。
 
-Another is:
+另一种方式是：
 
-1. Starting at `expression`, pick `binary`.
-2. For the left-hand `expression`, pick `binary` again.
-3. In that nested `binary` expression, pick `6 / 3`.
-4. Back at the outer `binary`, for the operator, pick `"-"`.
-5. For the right-hand `expression`, pick `NUMBER`, and use `1`.
+1.  从 `expression` 出发，挑选 `binary`。
+2.  对于左侧的 `expression`，再次挑选 `binary`。
+3.  在这一嵌套的 `binary` 表达式中，挑选 `6 / 3`。
+4.  回到外层的 `binary`，对于运算符，挑选 `"-"`。
+5.  对于右侧的 `expression`，挑选 `NUMBER`，并取 `1`。
 
-Those produce the same *strings*, but not the same *syntax trees*:
+这两种方式所生成的是相同的**字符串**，却不是相同的**语法树**：
 
-<img src="image/parsing-expressions/syntax-trees.png" alt="Two valid syntax trees: (6 / 3) - 1 and 6 / (3 - 1)" />
+<img src="image/parsing-expressions/syntax-trees.png" alt="两棵合法的语法树：(6 / 3) - 1 与 6 / (3 - 1)" />
 
-In other words, the grammar allows seeing the expression as `(6 / 3) - 1` or `6
-/ (3 - 1)`. The `binary` rule lets operands nest any which way you want. That in
-turn affects the result of evaluating the parsed tree. The way mathematicians
-have addressed this ambiguity since blackboards were first invented is by
-defining rules for precedence and associativity.
+换言之，这条文法允许我们将该表达式解读为 `(6 / 3) - 1`，亦允许将其解读为 `6 / (3 - 1)`。`binary` 规则允许操作数彼此以任意方式嵌套。这一来便影响了被解析树求值后所得的结果。数学家们自黑板诞生之日起，便以定义**优先级**与**结合性**的规则来消除此类歧义。
 
-*   <span name="nonassociative">**Precedence**</span> determines which operator
-    is evaluated first in an expression containing a mixture of different
-    operators. Precedence rules tell us that we evaluate the `/` before the `-`
-    in the above example. Operators with higher precedence are evaluated
-    before operators with lower precedence. Equivalently, higher precedence
-    operators are said to "bind tighter".
+*   <span name="nonassociative">**优先级**</span> 决定了在一个含有多种不同运算符的表达式中，哪一个运算符会先行求值。优先级规则告诉我们，在上面这个例子中，`/` 要先于 `-` 求值。优先级较高的运算符会先于优先级较低的运算符求值。等价地说，优先级较高的运算符被说成是"绑定得更紧"。
 
-*   **Associativity** determines which operator is evaluated first in a series
-    of the *same* operator. When an operator is **left-associative** (think
-    "left-to-right"), operators on the left evaluate before those on the right.
-    Since `-` is left-associative, this expression:
+*   **结合性**则决定了在一连串**相同**运算符的表达式中，哪一个运算符会先行求值。当一个运算符为**左结合**（可以想象为"自左向右"）时，位于左侧的运算符会先于位于右侧的运算符求值。由于 `-` 是左结合的，下面这个表达式：
 
     ```lox
     5 - 3 - 1
     ```
 
-    is equivalent to:
+    等价于：
 
     ```lox
     (5 - 3) - 1
     ```
 
-    Assignment, on the other hand, is **right-associative**. This:
+    赋值则不然，它属于**右结合**。下面这段代码：
 
     ```lox
     a = b = c
     ```
 
-    is equivalent to:
+    等价于：
 
     ```lox
     a = (b = c)
@@ -161,66 +112,55 @@ defining rules for precedence and associativity.
 
 <aside name="nonassociative">
 
-While not common these days, some languages specify that certain pairs of
-operators have *no* relative precedence. That makes it a syntax error to mix
-those operators in an expression without using explicit grouping.
+虽说如今已不太常见，但仍有一些语言规定：某些运算符对之间**不存在**相对优先级。这便使得混合使用这些运算符——除非显式地加上括号——成为语法错误。
 
-Likewise, some operators are **non-associative**. That means it's an error to
-use that operator more than once in a sequence. For example, Perl's range
-operator isn't associative, so `a .. b` is OK, but `a .. b .. c` is an error.
+同理，某些运算符是**不结合**（non-associative）的。这意味着在同一个表达式中连续多次使用该运算符本身就是错误的。例如，Perl 中的范围运算符便是不结合的，所以 `a .. b` 是合法的，而 `a .. b .. c` 则是一个错误。
 
 </aside>
 
-Without well-defined precedence and associativity, an expression that uses
-multiple operators is ambiguous -- it can be parsed into different syntax trees,
-which could in turn evaluate to different results. We'll fix that in Lox by
-applying the same precedence rules as C, going from lowest to highest.
+倘若没有定义良好的优先级与结合性，那么凡是使用了多个运算符的表达式都是含混的——它可以被解析为不同的语法树，而这些语法树求值后又会得出不同的结果。我们将通过沿用 C 语言中那套优先级规则来为 Lox 消除这种歧义，由低到高依次为：
 
 <table>
 <thead>
 <tr>
-  <td>Name</td>
-  <td>Operators</td>
-  <td>Associates</td>
+  <td>名称</td>
+  <td>运算符</td>
+  <td>结合性</td>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Equality</td>
+  <td>相等性（Equality）</td>
   <td><code>==</code> <code>!=</code></td>
-  <td>Left</td>
+  <td>左结合</td>
 </tr>
 <tr>
-  <td>Comparison</td>
+  <td>比较（Comparison）</td>
   <td><code>&gt;</code> <code>&gt;=</code>
       <code>&lt;</code> <code>&lt;=</code></td>
-  <td>Left</td>
+  <td>左结合</td>
 </tr>
 <tr>
-  <td>Term</td>
+  <td>项（Term）</td>
   <td><code>-</code> <code>+</code></td>
-  <td>Left</td>
+  <td>左结合</td>
 </tr>
 <tr>
-  <td>Factor</td>
+  <td>因子（Factor）</td>
   <td><code>/</code> <code>*</code></td>
-  <td>Left</td>
+  <td>左结合</td>
 </tr>
 <tr>
-  <td>Unary</td>
+  <td>一元（Unary）</td>
   <td><code>!</code> <code>-</code></td>
-  <td>Right</td>
+  <td>右结合</td>
 </tr>
 </tbody>
 </table>
 
-Right now, the grammar stuffs all expression types into a single `expression`
-rule. That same rule is used as the non-terminal for operands, which lets the
-grammar accept any kind of expression as a subexpression, regardless of whether
-the precedence rules allow it.
+眼下，这条文法将所有种类的表达式一股脑儿塞进了同一条 `expression` 规则之中。这同一条规则又被用作了操作数的非终结符——这便意味着，无论优先级规则是否允许，文法都会接受任意种类的表达式作为子表达式。
 
-We fix that by <span name="massage">stratifying</span> the grammar. We define a
-separate rule for each precedence level.
+我们通过对文法进行<span name="massage">分层</span>来解决这一问题。我们为每一个优先级层级分别定义一条独立的规则。
 
 ```ebnf
 expression     → ...
@@ -234,33 +174,19 @@ primary        → ...
 
 <aside name="massage">
 
-Instead of baking precedence right into the grammar rules, some parser
-generators let you keep the same ambiguous-but-simple grammar and then add in a
-little explicit operator precedence metadata on the side in order to
-disambiguate.
+有些语法分析器生成工具并不将优先级直接嵌入文法规则之中，而是允许你保留那条"有歧义但简洁"的文法，然后再额外附上一小段显式的运算符优先级元数据，以此消除歧义。
 
 </aside>
 
-Each rule here only matches expressions at its precedence level or higher. For
-example, `unary` matches a unary expression like `!negated` or a primary
-expression like `1234`. And `term` can match `1 + 2` but also `3 * 4 / 5`. The
-final `primary` rule covers the highest-precedence forms -- literals and
-parenthesized expressions.
+这里的每一条规则仅匹配该优先级层级或更高优先级层级的表达式。例如，`unary` 既匹配 `!negated` 这样的一元表达式，也匹配 `1234` 这样的一级（primary）表达式。而 `term` 既可以匹配 `1 + 2`，也可以匹配 `3 * 4 / 5`。最后一条 `primary` 规则覆盖了优先级最高的那几种形式——字面量与括号表达式。
 
-We just need to fill in the productions for each of those rules. We'll do the
-easy ones first. The top `expression` rule matches any expression at any
-precedence level. Since <span name="equality">`equality`</span> has the lowest
-precedence, if we match that, then it covers everything.
+我们接下来只需为每一条规则填上它的产生式。先从简单的开始。最顶层的 `expression` 规则匹配任意优先级层级的任意表达式。由于<span name="equality">`equality`</span> 拥有最低的优先级，只要我们匹配上它，便覆盖了一切。
 
 <aside name="equality">
 
-We could eliminate `expression` and simply use `equality` in the other rules
-that contain expressions, but using `expression` makes those other rules read a
-little better.
+我们本可以去掉 `expression`，转而在其它含有 expression 的规则中直接使用 `equality`，但保留 `expression` 能让其它规则读起来更顺眼一些。
 
-Also, in later chapters when we expand the grammar to include assignment and
-logical operators, we'll only need to change the production for `expression`
-instead of touching every rule that contains an expression.
+此外，在后续章节中，当我们扩展文法以囊括赋值与逻辑运算符时，我们只需改动 `expression` 的产生式，而不必去碰其它每一条含有 expression 的规则。
 
 </aside>
 
@@ -268,89 +194,64 @@ instead of touching every rule that contains an expression.
 expression     → equality
 ```
 
-Over at the other end of the precedence table, a primary expression contains
-all the literals and grouping expressions.
+到了优先级表的另一端，一级表达式包含了所有的字面量与括号表达式。
 
 ```ebnf
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
 ```
 
-A unary expression starts with a unary operator followed by the operand. Since
-unary operators can nest -- `!!true` is a valid if weird expression -- the
-operand can itself be a unary operator. A recursive rule handles that nicely.
+一元表达式以一个一元运算符打头，其后跟着操作数。由于一元运算符可以嵌套——`!!true` 虽然古怪但确为合法表达式——操作数本身又可以是一元运算符。一条递归规则可以漂亮地处理这种情况。
 
 ```ebnf
 unary          → ( "!" | "-" ) unary ;
 ```
 
-But this rule has a problem. It never terminates.
+但这条规则有一个问题：它永远不会终止。
 
-Remember, each rule needs to match expressions at that precedence level *or
-higher*, so we also need to let this match a primary expression.
+记住，每一条规则都须匹配**该层级或更高层级**的表达式，因此我们同样需要让它能够匹配一级表达式。
 
 ```ebnf
 unary          → ( "!" | "-" ) unary
                | primary ;
 ```
 
-That works.
+这样便没问题了。
 
-The remaining rules are all binary operators. We'll start with the rule for
-multiplication and division. Here's a first try:
+剩下的规则统统都是二元运算符。我们先从乘法与除法的规则入手。下面是一个初次尝试：
 
 ```ebnf
 factor         → factor ( "/" | "*" ) unary
                | unary ;
 ```
 
-The rule recurses to match the left operand. That enables the rule to match a
-series of multiplication and division expressions like `1 * 2 / 3`. Putting the
-recursive production on the left side and `unary` on the right makes the rule
-<span name="mult">left-associative</span> and unambiguous.
+该规则通过递归来匹配左侧的操作数。这使得该规则能够匹配形如 `1 * 2 / 3` 这样一连串的乘法与除法表达式。将递归性的产生式置于左侧、将 `unary` 置于右侧，便使这条规则成为了<span name="mult">左结合</span>且无歧义的。
 
 <aside name="mult">
 
-In principle, it doesn't matter whether you treat multiplication as left- or
-right-associative -- you get the same result either way. Alas, in the real world
-with limited precision, roundoff and overflow mean that associativity can affect
-the result of a sequence of multiplications. Consider:
+原则而言，将乘法视作左结合还是右结合其实都无关紧要——无论如何都能得到相同的结果。可惜的是，在精度有限的现实世界中，舍入与溢出会使得结合性对连续乘法运算的结果产生影响。试看：
 
 ```lox
 print 0.1 * (0.2 * 0.3);
 print (0.1 * 0.2) * 0.3;
 ```
 
-In languages like Lox that use [IEEE 754][754] double-precision floating-point
-numbers, the first evaluates to `0.006`, while the second yields
-`0.006000000000000001`. Sometimes that tiny difference matters.
-[This][float] is a good place to learn more.
+在诸如 Lox 这类采用 [IEEE 754][754] 双精度浮点数的语言中，前者求值为 `0.006`，而后者则给出 `0.006000000000000001`。有时，这细微的差别也会牵动大局。[这篇文章][float] 是不错的学习起点。
 
 [754]: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
-[float]: https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+[float]: https://docs.oracle.com/cd/E19957-01/806-3568/ncg**goldberg.html
 
 </aside>
 
-All of this is correct, but the fact that the first symbol in the body of the
-rule is the same as the head of the rule means this production is
-**left-recursive**. Some parsing techniques, including the one we're going to
-use, have trouble with left recursion. (Recursion elsewhere, like we have in
-`unary` and the indirect recursion for grouping in `primary` are not a problem.)
+这一切都没有错，但由于规则右部的第一个符号与该规则的左部完全相同，这一产生式是**左递归**的。某些解析技术——包括我们即将采用的那一种——会在左递归面前栽跟头。（别处的递归则无此虞，比如我们在 `unary` 中以及 `primary` 中为括号表达式设立的间接递归，都不构成问题。）
 
-There are many grammars you can define that match the same language. The choice
-for how to model a particular language is partially a matter of taste and
-partially a pragmatic one. This rule is correct, but not optimal for how we
-intend to parse it. Instead of a left recursive rule, we'll use a different one.
+能够定义出描述同一语言的文法有很多种。对某门特定语言的建模选择，部分关乎个人品味，部分则是出于务实考量。这条规则虽然正确，但对于我们打算采用的解析方式而言却并非最优。与其使用一条左递归规则，不如换用另一种：
 
 ```ebnf
 factor         → unary ( ( "/" | "*" ) unary )* ;
 ```
 
-We define a factor expression as a flat *sequence* of multiplications
-and divisions. This matches the same syntax as the previous rule, but better
-mirrors the code we'll write to parse Lox. We use the same structure for all of
-the other binary operator precedence levels, giving us this complete expression
-grammar:
+我们将因子表达式定义为一段由乘法与除法组成的扁平**序列**。这与前一条规则所匹配的语法相同，但与我们即将编写的用以解析 Lox 的代码更为契合。对所有其他二元运算符的优先级层级，我们也采用同样的结构，从而得到如下这条完整的表达式文法：
 
 ```ebnf
 expression     → equality ;
@@ -364,642 +265,387 @@ primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
 ```
 
-This grammar is more complex than the one we had before, but in return we have
-eliminated the previous one's ambiguity. It's just what we need to make a
-parser.
+这条文法虽说比之前那条更为繁复，但作为回报，我们已然将之前那条文法的歧义扫除殆尽。它恰恰是我们用以打造一款语法分析器所必需的东西。
 
-## Recursive Descent Parsing
+## 递归下降解析
 
-There is a whole pack of parsing techniques whose names are mostly combinations
-of "L" and "R" -- [LL(k)][], [LR(1)][lr], [LALR][] -- along with more exotic
-beasts like [parser combinators][], [Earley parsers][], [the shunting yard
-algorithm][yard], and [packrat parsing][]. For our first interpreter, one
-technique is more than sufficient: **recursive descent**.
+解析技术的大家族中，有着种种名字大多以"L"和"R"组合而成的成员——[LL(k)][]、[LR(1)][lr]、[LALR][]——再加上一些更为光怪陆离的异兽，诸如[语法分析器组合子][parser combinators]、[Earley 解析器][earley parsers]、[调度场算法][yard]以及[Packrat 解析][packrat parsing]。对我们这第一款解释器而言，有一种技术便已绰绰有余：**递归下降**。
 
-[ll(k)]: https://en.wikipedia.org/wiki/LL_parser
+[ll(k)]: https://en.wikipedia.org/wiki/LL**parser
 [lr]: https://en.wikipedia.org/wiki/LR_parser
 [lalr]: https://en.wikipedia.org/wiki/LALR_parser
 [parser combinators]: https://en.wikipedia.org/wiki/Parser_combinator
 [earley parsers]: https://en.wikipedia.org/wiki/Earley_parser
 [yard]: https://en.wikipedia.org/wiki/Shunting-yard_algorithm
-[packrat parsing]: https://en.wikipedia.org/wiki/Parsing_expression_grammar
+[packrat parsing]: https://en.wikipedia.org/wiki/Parsing_expression**grammar
 
-Recursive descent is the simplest way to build a parser, and doesn't require
-using complex parser generator tools like Yacc, Bison or ANTLR. All you need is
-straightforward handwritten code. Don't be fooled by its simplicity, though.
-Recursive descent parsers are fast, robust, and can support sophisticated
-error handling. In fact, GCC, V8 (the JavaScript VM in Chrome), Roslyn (the C#
-compiler written in C#) and many other heavyweight production language
-implementations use recursive descent. It rocks.
+递归下降是构造语法分析器最简明的方式，且无需借助 Yacc、Bison 或 ANTLR 这般复杂的语法分析器生成工具。你所需要的，仅仅是直截了当的手写代码。不过，可别被它的简洁所迷惑。递归下降语法分析器既快、又稳，且能支持复杂的错误处理。事实上，GCC、V8（Chrome 中的 JavaScript 虚拟机）、Roslyn（用 C# 编写的 C# 编译器）以及众多其它赫赫有名的工业级语言实现，采用的都是递归下降。它确实很赞。
 
-Recursive descent is considered a **top-down parser** because it starts from the
-top or outermost grammar rule (here `expression`) and works its way <span
-name="descent">down</span> into the nested subexpressions before finally
-reaching the leaves of the syntax tree. This is in contrast with bottom-up
-parsers like LR that start with primary expressions and compose them into larger
-and larger chunks of syntax.
+递归下降被视为一种**自顶向下**（top-down）语法分析器，因为它从最顶层或者说最外层的文法规则（这里是 `expression`）启程，逐步深入嵌套的子表达式，最终抵达语法树的叶节点。这与 LR 这类自底向上的语法分析器形成了鲜明对比——后者从一级表达式起步，再将它们逐级组合成越来越大的语法块。
 
 <aside name="descent">
 
-It's called "recursive *descent*" because it walks *down* the grammar.
-Confusingly, we also use direction metaphorically when talking about "high" and
-"low" precedence, but the orientation is reversed. In a top-down parser, you
-reach the lowest-precedence expressions first because they may in turn contain
-subexpressions of higher precedence.
+之所以称之为"递归 *下降*"，是因为它沿着文法**向下**行走。颇具迷惑性的是，我们在谈及"高优先级"与"低优先级"时，同样使用了方向性的隐喻，但其朝向却恰恰相反。在自顶向下的语法分析器中，你之所以会先抵达那些最低优先级的表达式，是因为它们可能再包含更高优先级的子表达式。
 
-<img src="image/parsing-expressions/direction.png" alt="Top-down grammar rules in order of increasing precedence.">
+<img src="image/parsing-expressions/direction.png" alt="按优先级递增顺序排列的自顶向下文法规则。" />
 
-CS people really need to get together and straighten out their metaphors. Don't
-even get me started on which direction a stack grows or why trees have their
-roots on top.
+计算机科学圈的人实在应当凑在一起，把这些隐喻好好捋一捋。别让我再提起栈到底是往哪个方向增长的、树的根又为何偏偏要长在顶上这种陈年旧账了。
 
 </aside>
 
-A recursive descent parser is a literal translation of the grammar's rules
-straight into imperative code. Each rule becomes a function. The body of the
-rule translates to code roughly like:
+递归下降语法分析器乃是文法规则直译成命令式代码的结果。每一条规则都对应着一个函数。规则体大致翻译为如下代码：
 
 <table>
 <thead>
 <tr>
-  <td>Grammar notation</td>
-  <td>Code representation</td>
+  <td>文法记法</td>
+  <td>代码表示</td>
 </tr>
 </thead>
 <tbody>
-  <tr><td>Terminal</td><td>Code to match and consume a token</td></tr>
-  <tr><td>Nonterminal</td><td>Call to that rule&rsquo;s function</td></tr>
-  <tr><td><code>|</code></td><td><code>if</code> or <code>switch</code> statement</td></tr>
-  <tr><td><code>*</code> or <code>+</code></td><td><code>while</code> or <code>for</code> loop</td></tr>
-  <tr><td><code>?</code></td><td><code>if</code> statement</td></tr>
+  <tr><td>终结符</td><td>用于匹配并消耗一个词法单元的代码</td></tr>
+  <tr><td>非终结符</td><td>对那条规则对应函数的调用</td></tr>
+  <tr><td><code>|</code></td><td><code>if</code> 或 <code>switch</code> 语句</td></tr>
+  <tr><td><code>*</code> 或 <code>+</code></td><td><code>while</code> 或 <code>for</code> 循环</td></tr>
+  <tr><td><code>?</code></td><td><code>if</code> 语句</td></tr>
 </tbody>
 </table>
 
-The descent is described as "recursive" because when a grammar rule refers to
-itself -- directly or indirectly -- that translates to a recursive function
-call.
+之所以称之为"递归"下降，是因为当某条文法规则——直接或间接地——引用了它自身时，这便对应于一次递归的函数调用。
 
-### The parser class
+### 语法分析器类
 
-Each grammar rule becomes a method inside this new class:
+每一条文法规则都会化作这个新类中的一个方法：
 
 ^code parser
 
-Like the scanner, the parser consumes a flat input sequence, only now we're
-reading tokens instead of characters. We store the list of tokens and use
-`current` to point to the next token eagerly waiting to be parsed.
+与扫描器类似，语法分析器也会消化一段扁平的输入序列，只不过这一次我们读取的不再是字符，而是词法单元。我们将词法单元的列表存储起来，并用一个 `current` 指针来指向下一个急切等待被解析的词法单元。
 
-We're going to run straight through the expression grammar now and translate
-each rule to Java code. The first rule, `expression`, simply expands to the
-`equality` rule, so that's straightforward.
+接下来，我们将径直穿越整条表达式文法，并将每一条规则都翻译为 Java 代码。第一条规则 `expression` 只是简单地向 `equality` 规则展开，所以比较直白。
 
 ^code expression
 
-Each method for parsing a grammar rule produces a syntax tree for that rule and
-returns it to the caller. When the body of the rule contains a nonterminal -- a
-reference to another rule -- we <span name="left">call</span> that other rule's
-method.
+每一条用于解析某条文法规则的方法都会为该规则生成一棵语法树，并将其返还给调用者。当规则体中出现一个非终结符——也就是对另一条规则的引用——我们便<span name="left">调用</span>另一条规则所对应的方法。
 
 <aside name="left">
 
-This is why left recursion is problematic for recursive descent. The function
-for a left-recursive rule immediately calls itself, which calls itself again,
-and so on, until the parser hits a stack overflow and dies.
+这便是左递归会对递归下降构成麻烦的原因。一条左递归规则所对应的函数会立即调用其自身，而其自身又会再调用其自身，如此往复，直到语法分析器撞上栈溢出而一命呜呼。
 
 </aside>
 
-The rule for equality is a little more complex.
+`equality` 规则要稍稍复杂一些。
 
 ```ebnf
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 ```
 
-In Java, that becomes:
+翻译为 Java，便是：
 
 ^code equality
 
-Let's step through it. The first `comparison` nonterminal in the body translates
-to the first call to `comparison()` in the method. We take that result and store
-it in a local variable.
+让我们一步一步地走一遍。规则体中的第一个 `comparison` 非终结符，对应于方法体中对 `comparison()` 的首次调用。我们将该调用的结果存入一个局部变量。
 
-Then, the `( ... )*` loop in the rule maps to a `while` loop. We need to know
-when to exit that loop. We can see that inside the rule, we must first find
-either a `!=` or `==` token. So, if we *don't* see one of those, we must be done
-with the sequence of equality operators. We express that check using a handy
-`match()` method.
+随后，规则中的那个 `( ... )*` 循环便映射为一个 `while` 循环。我们需要知道何时应当退出该循环。我们看到，在规则体内部，我们必须先找到一个 `!=` 或 `==` 词法单元。因此，倘若我们**没有**遇到其中之一，那么我们必定已经走完了那一长串相等性运算符。我们用一个便捷的 `match()` 方法来表达这一判定。
 
 ^code match
 
-This checks to see if the current token has any of the given types. If so, it
-consumes the token and returns `true`. Otherwise, it returns `false` and leaves
-the current token alone. The `match()` method is defined in terms of two more
-fundamental operations.
+该方法会检查当前的词法单元是否属于所给定的若干类型之一。若是，则消耗该词法单元并返回 `true`；否则，返回 `false`，并保留当前词法单元不动。`match()` 方法又是基于另外两种更为基础的运算实现的。
 
-The `check()` method returns `true` if the current token is of the given type.
-Unlike `match()`, it never consumes the token, it only looks at it.
+`check()` 方法会在当前词法单元属于所给定的类型时返回 `true`。与 `match()` 不同，它绝不消耗该词法单元，只是瞧上一眼。
 
 ^code check
 
-The `advance()` method consumes the current token and returns it, similar to how
-our scanner's corresponding method crawled through characters.
+`advance()` 方法消耗当前词法单元并将其返回，类似于我们扫描器中同名方法逐字符爬行的样子。
 
 ^code advance
 
-These methods bottom out on the last handful of primitive operations.
+这些方法最终都落到了寥寥几个基础运算之上。
 
 ^code utils
 
-`isAtEnd()` checks if we've run out of tokens to parse. `peek()` returns the
-current token we have yet to consume, and `previous()` returns the most recently
-consumed token. The latter makes it easier to use `match()` and then access the
-just-matched token.
+`isAtEnd()` 用于检查我们的词法单元是否已消耗殆尽。`peek()` 返回我们尚未消耗的当前词法单元，而 `previous()` 则返回最近刚被消耗的那个词法单元。后者使得我们能够更方便地在调用 `match()` 之后再去访问刚刚匹配上的那个词法单元。
 
-That's most of the parsing infrastructure we need. Where were we? Right, so if
-we are inside the `while` loop in `equality()`, then we know we have found a
-`!=` or `==` operator and must be parsing an equality expression.
+至此，解析所需的基础设施便已大致齐备。方才我们说到哪儿了？没错——于是，当我们身处 `equality()` 中的 `while` 循环内部时，我们便已知道：我们已经找到了一个 `!=` 或 `==` 运算符，必定正在解析某个相等性表达式。
 
-We grab the matched operator token so we can track which kind of equality
-expression we have. Then we call `comparison()` again to parse the right-hand
-operand. We combine the operator and its two operands into a new `Expr.Binary`
-syntax tree node, and then loop around. For each iteration, we store the
-resulting expression back in the same `expr` local variable. As we zip through a
-sequence of equality expressions, that creates a left-associative nested tree of
-binary operator nodes.
+我们将刚刚匹配到的那个运算符词法单元取出，以便记录我们究竟遇到的是哪一种相等性表达式。随后，我们再次调用 `comparison()` 来解析右侧的操作数。我们将运算符与它的两个操作数组合在一起，构成一个新的 `Expr.Binary` 语法树节点，然后再回过头去继续循环。对于每一轮迭代，我们都把所生成的表达式重新存回同一个名为 `expr` 的局部变量之中。当我们沿着一条由相等性运算符串联而成的序列一路小跑时，便会构造出一棵由二元运算符节点嵌套而成的、左结合的语法树。
 
 <span name="sequence"></span>
 
-<img src="image/parsing-expressions/sequence.png" alt="The syntax tree created by parsing 'a == b == c == d == e'" />
+<img src="image/parsing-expressions/sequence.png" alt="解析 'a == b == c == d == e' 时所构造的语法树。" />
 
 <aside name="sequence">
 
-Parsing `a == b == c == d == e`. For each iteration, we create a new binary
-expression using the previous one as the left operand.
+解析 `a == b == c == d == e` 的过程。每一轮迭代，我们都会以先前那一轮的结果作为左侧操作数，构造出一个新的二元表达式。
 
 </aside>
 
-The parser falls out of the loop once it hits a token that's not an equality
-operator. Finally, it returns the expression. Note that if the parser never
-encounters an equality operator, then it never enters the loop. In that case,
-the `equality()` method effectively calls and returns `comparison()`. In that
-way, this method matches an equality operator *or anything of higher
-precedence*.
+一旦语法分析器撞上一个并非相等性运算符的词法单元，便会从循环中脱出。最终，它将该表达式返回。请注意：倘若语法分析器始终未曾遇到相等性运算符，那么它便永远不会进入循环。在这种情况下，`equality()` 方法实际上只是调用了 `comparison()` 并将其返回值原样返回。换言之，该方法既能匹配一个相等性运算符，**也能匹配任何优先级更高者**。
 
-Moving on to the next rule...
+接下来轮到下一条规则了——
 
 ```ebnf
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 ```
 
-Translated to Java:
+翻译为 Java：
 
 ^code comparison
 
-The grammar rule is virtually <span name="handle">identical</span> to `equality`
-and so is the corresponding code. The only differences are the token types for
-the operators we match, and the method we call for the operands -- now
-`term()` instead of `comparison()`. The remaining two binary operator rules
-follow the same pattern.
+这条文法规则与 `equality` 几乎<span name="handle">如出一辙</span>，相应的代码亦复如是。两者之间唯一的差异在于：我们所匹配的运算符的词法单元类型，以及我们对操作数调用的方法——此处是 `term()` 而非 `comparison()`。剩下两条二元运算符的规则也循着同样的模式。
 
-In order of precedence, first addition and subtraction:
+按优先级由低到高的顺序，首先登场的是加法与减法：
 
 <aside name="handle">
 
-If you wanted to do some clever Java 8, you could create a helper method for
-parsing a left-associative series of binary operators given a list of token
-types, and an operand method handle to simplify this redundant code.
+如果你愿意耍点小聪明，写一段 Java 8 的代码，可以抽出一个辅助方法，用于解析一串左结合的二元运算符——给定一个词法单元类型列表，外加一个操作数方法的句柄——这样便能化简那些看上去千篇一律的代码。
 
 </aside>
 
 ^code term
 
-And finally, multiplication and division:
+最后出场的是乘法与除法：
 
 ^code factor
 
-That's all of the binary operators, parsed with the correct precedence and
-associativity. We're crawling up the precedence hierarchy and now we've reached
-the unary operators.
+至此，所有的二元运算符便都已悉数解析完毕——且具有正确的优先级与结合性。我们正在沿着优先级层级一路攀爬，眼下已抵达一元运算符。
 
 ```ebnf
 unary          → ( "!" | "-" ) unary
                | primary ;
 ```
 
-The code for this is a little different.
+对应的代码稍有不同。
 
 ^code unary
 
-Again, we look at the <span name="current">current</span> token to see how to
-parse. If it's a `!` or `-`, we must have a unary expression. In that case, we
-grab the token and then recursively call `unary()` again to parse the operand.
-Wrap that all up in a unary expression syntax tree and we're done.
+同样的，我们先观察<span name="current">当前</span>的词法单元，以决定该如何解析。若它是 `!` 或 `-`，那么必定是一元表达式。在这种情况下，我们取出该词法单元，再递归地调用一次 `unary()` 来解析操作数。将其统统裹进一个一元表达式语法树之中，便大功告成。
 
 <aside name="current">
 
-The fact that the parser looks ahead at upcoming tokens to decide how to parse
-puts recursive descent into the category of **predictive parsers**.
+语法分析器会向前窥探即将到来的词法单元，以决定如何进行解析——这一事实将递归下降归入了**预测式语法分析器**（predictive parser）的阵营。
 
 </aside>
 
-Otherwise, we must have reached the highest level of precedence, primary
-expressions.
+否则，我们便必定已经抵达了最高优先级——一级表达式。
 
 ```ebnf
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
 ```
 
-Most of the cases for the rule are single terminals, so parsing is
-straightforward.
+规则中的大多数情形都仅涉及单个终结符，因此解析起来十分直白。
 
 ^code primary
 
-The interesting branch is the one for handling parentheses. After we match an
-opening `(` and parse the expression inside it, we *must* find a `)` token. If
-we don't, that's an error.
+真正有意思的分支是处理括号的那个。在我们匹配上开括号 `(` 并解析完其内部的表达式之后，我们必须**找到一个** `)` 词法单元。否则，便是一个错误。
 
-## Syntax Errors
+## 语法错误
 
-A parser really has two jobs:
+一款语法分析器实则肩负着两项工作：
 
-1.  Given a valid sequence of tokens, produce a corresponding syntax tree.
+1.  给定一串合法的词法单元序列，产出一棵与之对应的语法树。
+2.  给定一串**非法**的词法单元序列，检测出错误所在并告知用户。
 
-2.  Given an *invalid* sequence of tokens, detect any errors and tell the
-    user about their mistakes.
+千万不要低估第二项工作的重要性！在现代的 IDE 与编辑器中，语法分析器会反复不断地重新解析代码——通常是在用户尚未敲完代码时便已开始——以提供语法高亮以及自动补全之类的支持。这意味着，它会**时时刻刻**遭遇那些尚未敲完、错误百出的代码。
 
-Don't underestimate how important the second job is! In modern IDEs and editors,
-the parser is constantly reparsing code -- often while the user is still editing
-it -- in order to syntax highlight and support things like auto-complete. That
-means it will encounter code in incomplete, half-wrong states *all the time.*
-
-When the user doesn't realize the syntax is wrong, it is up to the parser to
-help guide them back onto the right path. The way it reports errors is a large
-part of your language's user interface. Good syntax error handling is hard. By
-definition, the code isn't in a well-defined state, so there's no infallible way
-to know what the user *meant* to write. The parser can't read your <span
-name="telepathy">mind</span>.
+当用户尚未意识到自己的语法有误时，便有赖于语法分析器来引导他们重回正轨。它报告错误的方式，乃是这门语言用户界面中相当重要的一块。要想做好语法错误处理绝非易事——根据定义，此时的代码已不再处于一种良定义的状态，因此并没有什么万无一失的方法可以确知用户**本意**想要书写的内容。语法分析器可读不懂你的<span name="telepathy">心思</span>。
 
 <aside name="telepathy">
 
-Not yet at least. With the way things are going in machine learning these days,
-who knows what the future will bring?
+至少现在还不行。鉴于机器学习这些年的发展势头，谁知道未来会如何呢？
 
 </aside>
 
-There are a couple of hard requirements for when the parser runs into a syntax
-error. A parser must:
+对于语法分析器撞上语法错误时究竟应当如何应对，有几条硬性要求。一款语法分析器必须：
 
-*   **Detect and report the error.** If it doesn't detect the <span
-    name="error">error</span> and passes the resulting malformed syntax tree on
-    to the interpreter, all manner of horrors may be summoned.
+*   **检测并报告错误。**倘若它未能检测出<span name="error">错误</span>，而将由此产生的畸形语法树一路传给了解释器，那么种种可怕的后果便会接踵而至。
 
     <aside name="error">
 
-    Philosophically speaking, if an error isn't detected and the interpreter
-    runs the code, is it *really* an error?
+    哲学地讲，倘若一个错误从未被检测出来、解释器也照常将代码跑了起来，那么它**究竟算不算**一个错误呢？
 
     </aside>
 
-*   **Avoid crashing or hanging.** Syntax errors are a fact of life, and
-    language tools have to be robust in the face of them. Segfaulting or getting
-    stuck in an infinite loop isn't allowed. While the source may not be valid
-    *code*, it's still a valid *input to the parser* because users use the
-    parser to learn what syntax is allowed.
+*   **避免崩溃或陷入死循环。**语法错误是家常便饭，语言工具必须能够稳健地应对它们。段错误或陷入死循环都是不被允许的。尽管源文件可能并不是一段合法的**代码**，但它**仍是**语法分析器的一个合法**输入**——毕竟，用户正是借助语法分析器来了解哪些语法是被允许的。
 
-Those are the table stakes if you want to get in the parser game at all, but you
-really want to raise the ante beyond that. A decent parser should:
+这些不过是参与到语法分析器这场游戏中来的"入场费"，但你自然还想把筹码加得更高一些。一款体面的语法分析器应当：
 
-*   **Be fast.** Computers are thousands of times faster than they were when
-    parser technology was first invented. The days of needing to optimize your
-    parser so that it could get through an entire source file during a coffee
-    break are over. But programmer expectations have risen as quickly, if not
-    faster. They expect their editors to reparse files in milliseconds after
-    every keystroke.
+*   **运行迅速。**当年解析技术初出茅庐之时，计算机的速度不过是今日的千分之一。彼时你需要对语法分析器精打细算，方能赶在喝完一杯咖啡的工夫里把整份源文件解析完毕。然而时至今日，时过境迁了。但程序员的期望也同样水涨船高——甚至涨得更快。他们希望自己的编辑器能够在每一次按键之后，以毫秒为单位重新解析整份文件。
 
-*   **Report as many distinct errors as there are.** Aborting after the first
-    error is easy to implement, but it's annoying for users if every time they
-    fix what they think is the one error in a file, a new one appears. They
-    want to see them all.
+*   **报告出尽可能多的独立错误。**在第一个错误出现时便匆匆中止，固然易于实现，但对于用户而言却颇为恼人——每修复一个他们以为是**唯一**的错误，紧接着便又冒出一个新的错误。他们希望一次性地把所有错误都揪出来。
 
-*   **Minimize *cascaded* errors.** Once a single error is found, the parser no
-    longer really knows what's going on. It tries to get itself back on track
-    and keep going, but if it gets confused, it may report a slew of ghost
-    errors that don't indicate other real problems in the code. When the first
-    error is fixed, those phantoms disappear, because they reflect only the
-    parser's own confusion. Cascaded errors are annoying because they can scare
-    the user into thinking their code is in a worse state than it is.
+*   **将**级联**错误降到最少。**一旦首个错误被发现，语法分析器便不再真正清楚眼下的状况。它会试图将自己拉回正轨、继续前进；但倘若它乱了阵脚，便可能接连报告出一连串"幽灵"般的错误——这些错误并非源自代码中的其他真实问题。一旦首个错误得以修复，这些幻影便会随之消失，因为它们所折射的不过是语法分析器自身的困惑而已。级联错误之恼人，在于它会让用户误以为自己的代码比实际情况更为糟糕。
 
-The last two points are in tension. We want to report as many separate errors as
-we can, but we don't want to report ones that are merely side effects of an
-earlier one.
+最后两点之间存在着张力。我们既希望尽可能多地报告独立的错误，又不希望报告那些仅仅源自先前错误的副作用。
 
-The way a parser responds to an error and keeps going to look for later errors
-is called **error recovery**. This was a hot research topic in the '60s. Back
-then, you'd hand a stack of punch cards to the secretary and come back the next
-day to see if the compiler succeeded. With an iteration loop that slow, you
-*really* wanted to find every single error in your code in one pass.
-
-Today, when parsers complete before you've even finished typing, it's less of an
-issue. Simple, fast error recovery is fine.
-
-### Panic mode error recovery
+语法分析器在应对错误之后继续前行以寻找后续错误的过程，我们称之为**错误恢复**（error recovery）。这曾是 1960 年代一个炙手可热的研究课题。彼时，你得将一沓打孔卡片交给秘书，第二天再来瞧瞧编译器是否成功跑通。在如此漫长的迭代周期里，你自然**迫切希望**一趟下来便能揪出代码中的**每一个**错误。
 
 <aside name="panic">
 
-You know you want to push it.
+你肯定想去按它一按。
 
-<img src="image/parsing-expressions/panic.png" alt="A big shiny 'PANIC' button.">
+<img src="image/parsing-expressions/panic.png" alt="一枚锃亮的硕大'PANIC'按钮。" />
 
 </aside>
 
-Of all the recovery techniques devised in yesteryear, the one that best stood
-the test of time is called -- somewhat alarmingly -- <span name="panic">**panic
-mode**</span>. As soon as the parser detects an error, it enters panic mode. It
-knows at least one token doesn't make sense given its current state in the
-middle of some stack of grammar productions.
+时至今日，当语法分析器在你尚未敲完代码时便已解析完毕，这个问题便不那么突出了。简单、快速地完成错误恢复，便足堪大任。
 
-Before it can get back to parsing, it needs to get its state and the sequence of
-forthcoming tokens aligned such that the next token does match the rule being
-parsed. This process is called **synchronization**.
+### 紧急模式错误恢复
 
-To do that, we select some rule in the grammar that will mark the
-synchronization point. The parser fixes its parsing state by jumping out of any
-nested productions until it gets back to that rule. Then it synchronizes the
-token stream by discarding tokens until it reaches one that can appear at that
-point in the rule.
+在所有那些旧日里被设计出来的恢复技术中，最经得住时间考验的那一种——其名字多少有些骇人——叫做<span name="panic">**紧急模式**</span>（panic mode）。语法分析器一旦检测到错误，便会进入紧急模式。它心知肚明，至少有一个词法单元在当前所处的——那一摞层层堆叠的文法产生式的——状态之下是不合情理的。
 
-Any additional real syntax errors hiding in those discarded tokens aren't
-reported, but it also means that any mistaken cascaded errors that are side
-effects of the initial error aren't *falsely* reported either, which is a decent
-trade-off.
+在它能够重归解析之前，它需要先让自己的状态与那一串即将到来的词法单元对齐——使得下一个词法单元**确实**能够与正在解析的规则相匹配。这一过程便叫做**同步**（synchronization）。
 
-The traditional place in the grammar to synchronize is between statements. We
-don't have those yet, so we won't actually synchronize in this chapter, but
-we'll get the machinery in place for later.
+为此，我们会在文法中挑选某一条规则作为同步点的标记。语法分析器通过跳出任何嵌套的产生式，直到折返回该条规则，从而修正其自身的解析状态。随后，它会丢弃词法单元，直至抵达一个能够出现在该规则当前所处位置上的词法单元，从而完成对词法单元流的同步。
 
-### Entering panic mode
+那些被丢弃的词法单元中所潜藏的任何其他真实语法错误，都不会再被报告；但这同时也意味着，那些由初始错误所引发的、本属误报的级联错误也不会再被**错误地**报告出来——这是一笔相当划算的买卖。
 
-Back before we went on this side trip around error recovery, we were writing the
-code to parse a parenthesized expression. After parsing the expression, it
-looks for the closing `)` by calling `consume()`. Here, finally, is that method:
+在文法中实施同步的传统位置，是语句与语句之间的交界处。我们眼下还没有语句，所以在本章中我们并不会真正实施同步；但我们会把相应的机制安置妥当，以备日后之用。
+
+### 进入紧急模式
+
+在我们绕道去谈错误恢复之前，我们正写到用以解析括号表达式的代码。在解析完括号内的表达式之后，语法分析器会通过调用 `consume()` 来寻找那个作为结尾的 `)`。下面便是这个方法——终于轮到它登场了：
 
 ^code consume
 
-It's similar to `match()` in that it checks to see if the next token is of the
-expected type. If so, it consumes it and everything is groovy. If some other
-token is there, then we've hit an error. We report it by calling this:
+它与 `match()` 颇为相似：它同样会检查下一个词法单元是否属于所期望的类型。若是，则消耗该词法单元，一切顺风顺水。若碰上的是另一个词法单元，那便是我们撞上了错误。我们通过调用如下方法来报告它：
 
 ^code error
 
-First, that shows the error to the user by calling:
+首先，它会通过调用：
 
 ^code token-error
 
-This reports an error at a given token. It shows the token's location and the
-token itself. This will come in handy later since we use tokens throughout the
-interpreter to track locations in code.
+将错误展示给用户。这会在所给定的词法单元处报告一个错误，同时展示该词法单元的位置及其自身。由于我们在整个解释器中都会借助词法单元来追踪代码中的位置，这一方法日后必将大显身手。
 
-After we report the error, the user knows about their mistake, but what does the
-*parser* do next? Back in `error()`, we create and return a ParseError, an
-instance of this new class:
+在报告完错误之后，用户便已得知自己的疏漏。但语法分析器接下来又当如何？折返回 `error()` 中，我们创建并返回一个 ParseError，这是如下这个新类的一个实例：
 
 ^code parse-error (1 before, 1 after)
 
-This is a simple sentinel class we use to unwind the parser. The `error()`
-method *returns* the error instead of *throwing* it because we want to let the
-calling method inside the parser decide whether to unwind or not. Some parse
-errors occur in places where the parser isn't likely to get into a weird state
-and we don't need to <span name="production">synchronize</span>. In those
-places, we simply report the error and keep on truckin'.
+这是一个简单的哨兵类，我们用它来"展开"语法分析器。`error()` 方法选择**返回**这个错误，而非**抛出**它，是因为我们希望让语法分析器内部的调用方自行决定究竟是否要展开。在某些语法错误发生的地方，语法分析器不太可能陷入一种诡异的状态，因此我们也就不必去<span name="production">同步</span>。在那些地方，我们只需报告错误，然后继续昂首阔步。
 
-For example, Lox limits the number of arguments you can pass to a function. If
-you pass too many, the parser needs to report that error, but it can and should
-simply keep on parsing the extra arguments instead of freaking out and going
-into panic mode.
+例如，Lox 对传入函数的参数个数有所限制。倘若你传入的参数过多，语法分析器需要将这一错误报告出来，但它**能够**也**应当**继续解析那些多出来的参数，而不是惊慌失措地一头扎进紧急模式。
 
 <aside name="production">
 
-Another way to handle common syntax errors is with **error productions**. You
-augment the grammar with a rule that *successfully* matches the *erroneous*
-syntax. The parser safely parses it but then reports it as an error instead of
-producing a syntax tree.
+另一种处理常见语法错误的手段是借助**错误产生式**（error production）。你向文法中增添一条能够**成功**匹配那段**错误**语法的规则。语法分析器可以安全地将其解析出来，但随后再将其作为错误加以报告，而不是产出一棵语法树。
 
-For example, some languages have a unary `+` operator, like `+123`, but Lox does
-not. Instead of getting confused when the parser stumbles onto a `+` at the
-beginning of an expression, we could extend the unary rule to allow it.
+例如，某些语言拥有一元 `+` 运算符，譬如 `+123`，但 Lox 并不支持。与其在语法分析器意外撞上一元 `+` 时茫然无措，我们不如将一元规则扩展为允许接受它：
 
 ```ebnf
 unary → ( "!" | "-" | "+" ) unary
       | primary ;
 ```
 
-This lets the parser consume `+` without going into panic mode or leaving the
-parser in a weird state.
+这样一来，语法分析器便能在不进入紧急模式、也不使自身陷入某种诡异状态的前提下，将那个 `+` 消耗掉。
 
-Error productions work well because you, the parser author, know *how* the code
-is wrong and what the user was likely trying to do. That means you can give a
-more helpful message to get the user back on track, like, "Unary '+' expressions
-are not supported." Mature parsers tend to accumulate error productions like
-barnacles since they help users fix common mistakes.
+错误产生式之所以好用，是因为身为语法分析器的作者，你**清楚**这段代码错在何处，也清楚用户**很可能**想要做什么。这便意味着你能够给出一条更为贴心的错误消息，帮助用户重回正轨——比如："不支持一元 '+' 表达式。"成熟的语法分析器往往会像藤壶一般日积月累地攒下越来越多的错误产生式，因为它们能够帮助用户纠正那些常见的疏漏。
 
 </aside>
 
-In our case, though, the syntax error is nasty enough that we want to panic and
-synchronize. Discarding tokens is pretty easy, but how do we synchronize the
-parser's own state?
+不过在我们这里，这个语法错误已严重到足以让我们想要进入紧急模式并执行同步。丢弃词法单元并不算难，但我们要如何同步语法分析器自身那一份状态呢？
 
-### Synchronizing a recursive descent parser
+### 同步一个递归下降语法分析器
 
-With recursive descent, the parser's state -- which rules it is in the middle of
-recognizing -- is not stored explicitly in fields. Instead, we use Java's
-own call stack to track what the parser is doing. Each rule in the middle of
-being parsed is a call frame on the stack. In order to reset that state, we need
-to clear out those call frames.
+对于递归下降而言，语法分析器的状态——它正处于哪些规则的解析之中——并非显式地存储在某些字段里。取而代之的是，我们借助 Java 自身的调用栈来追踪语法分析器的动向。每一条正处于解析过程中的规则，都对应着栈上的一个调用帧。为了重置这一状态，我们需要清空那些调用帧。
 
-The natural way to do that in Java is exceptions. When we want to synchronize,
-we *throw* that ParseError object. Higher up in the method for the grammar rule
-we are synchronizing to, we'll catch it. Since we synchronize on statement
-boundaries, we'll catch the exception there. After the exception is caught, the
-parser is in the right state. All that's left is to synchronize the tokens.
+在 Java 中，最自然的做法便是异常。当我们想要同步时，便**抛出**那个 ParseError 对象。在我们所要同步到的那条文法规则所对应的方法的高层调用栈上，我们会将其**捕获**。由于我们将同步点设在语句的交界处，我们将在那里捕获这个异常。异常被捕获之后，语法分析器便已处于正确的状态。剩下的，便只剩对词法单元流的同步了。
 
-We want to discard tokens until we're right at the beginning of the next
-statement. That boundary is pretty easy to spot -- it's one of the main reasons
-we picked it. *After* a semicolon, we're <span name="semicolon">probably</span>
-finished with a statement. Most statements start with a keyword -- `for`, `if`,
-`return`, `var`, etc. When the *next* token is any of those, we're probably
-about to start a statement.
+我们希望丢弃词法单元，直到恰好抵达下一条语句的开头。这个边界相当容易辨认——这恰恰是我们当初选择它作为同步点的主要原因之一。在分号**之后**，我们**大概**已经结束了某条语句。大多数语句都以某个关键字打头——`for`、`if`、`return`、`var` 等等。当**下一个**词法单元是其中之一时，我们**大概**就要开始一条新的语句了。
 
 <aside name="semicolon">
 
-I say "probably" because we could hit a semicolon separating clauses in a `for`
-loop. Our synchronization isn't perfect, but that's OK. We've already reported
-the first error precisely, so everything after that is kind of "best effort".
+之所以说"大概"，是因为我们也可能撞上一个用于分隔 `for` 循环中各个子句的分号。我们的同步并不完美，但这一点问题不大。第一个错误我们已然精确地报告过了，所以此后的事情便多少带有"尽人事"的色彩了。
 
 </aside>
 
-This method encapsulates that logic:
+下面这个方法将上述逻辑封装了起来：
 
 ^code synchronize
 
-It discards tokens until it thinks it has found a statement boundary. After
-catching a ParseError, we'll call this and then we are hopefully back in sync.
-When it works well, we have discarded tokens that would have likely caused
-cascaded errors anyway, and now we can parse the rest of the file starting at
-the next statement.
+它会丢弃词法单元，直至自认为已找到一条语句的边界。在捕获到一个 ParseError 之后，我们便会调用这个方法，然后便有望重新回到同步状态。当它运行良好之时，我们便已丢弃了那些原本很可能引发级联错误的词法单元，如此一来，我们便可以从下一条语句开始，继续解析文件的剩余部分。
 
-Alas, we don't get to see this method in action, since we don't have statements
-yet. We'll get to that [in a couple of chapters][statements]. For now, if an
-error occurs, we'll panic and unwind all the way to the top and stop parsing.
-Since we can parse only a single expression anyway, that's no big loss.
+可惜，我们暂时还无法亲眼见证这个方法的实际效果——我们毕竟还没有语句。这一[几章之后][statements]我们便会讲到。眼下，如果错误发生，我们便会进入紧急模式并一路展开到最顶层，从而停止解析。鉴于我们眼下只能解析单一表达式，这倒也没什么大不了的。
 
 [statements]: statements-and-state.html
 
-## Wiring up the Parser
+## 把语法分析器接入系统
 
-We are mostly done parsing expressions now. There is one other place where we
-need to add a little error handling. As the parser descends through the parsing
-methods for each grammar rule, it eventually hits `primary()`. If none of the
-cases in there match, it means we are sitting on a token that can't start an
-expression. We need to handle that error too.
+至此，表达式解析的工作已几近完工。还有一处地方需要我们再添加一点错误处理。当语法分析器沿着每条文法规则所对应的解析方法一路下沉时，它终将抵达 `primary()`。倘若其中的所有分支都不匹配，那便意味着我们脚下所踩的，是一个无法作为表达式开头的词法单元。我们同样需要对这个错误加以处理。
 
 ^code primary-error (5 before, 1 after)
 
-With that, all that remains in the parser is to define an initial method to kick
-it off. That method is called, naturally enough, `parse()`.
+至此，语法分析器里剩下的，便唯独缺少一个用以启动整个流程的入口方法。这个方法，自然而然地，被命名为 `parse()`。
 
 ^code parse
 
-We'll revisit this method later when we add statements to the language. For now,
-it parses a single expression and returns it. We also have some temporary code
-to exit out of panic mode. Syntax error recovery is the parser's job, so we
-don't want the ParseError exception to escape into the rest of the interpreter.
+等到我们日后向这门语言加入语句时，我们还会再来打磨这个方法。眼下，它只会解析一个表达式并将其返回。我们还临时附上了一段代码，用以从紧急模式中抽身。语法错误的恢复乃是语法分析器的分内之事，因此我们并不希望让 ParseError 异常逃逸到解释器的其余部分。
 
-When a syntax error does occur, this method returns `null`. That's OK. The
-parser promises not to crash or hang on invalid syntax, but it doesn't promise
-to return a *usable syntax tree* if an error is found. As soon as the parser
-reports an error, `hadError` gets set, and subsequent phases are skipped.
+当语法错误确实发生时，这个方法会返回 `null`。这并无大碍。语法分析器只承诺不会在面对非法语法时崩溃或陷入死循环，却并未承诺**在发现错误时仍能返回一棵可用的语法树**。一旦语法分析器报告了一个错误，`hadError` 便会被置位，后续的阶段也都会被跳过。
 
-Finally, we can hook up our brand new parser to the main Lox class and try it
-out. We still don't have an interpreter, so for now, we'll parse to a syntax
-tree and then use the AstPrinter class from the [last chapter][ast-printer] to
-display it.
+最后，我们可以将我们崭新的语法分析器接入到主 Lox 类中，亲手试一试。眼下我们还没有解释器，所以暂时只能将一段字符串解析为语法树，再借助[上一章][ast-printer]中的 AstPrinter 类将其展示出来。
 
-[ast-printer]: representing-code.html#a-(not-very)-pretty-printer
+[ast-printer]: representing-code.html#a-not-very-pretty-printer
 
-Delete the old code to print the scanned tokens and replace it with this:
+将原本用来打印扫描所得词法单元的那段旧代码删掉，换成下面这段：
 
 ^code print-ast (1 before, 1 after)
 
-Congratulations, you have crossed the <span name="harder">threshold</span>! That
-really is all there is to handwriting a parser. We'll extend the grammar in
-later chapters with assignment, statements, and other stuff, but none of that is
-any more complex than the binary operators we tackled here.
+恭喜你，你已然<span name="harder">跨过了</span>那道门槛！手写语法分析器的全部精髓，尽在于此。在后续章节中，我们会向文法中陆续加入赋值、语句以及其它特性，但它们都不会比我们在本章里所攻克的那几个二元运算符更为复杂。
 
 <aside name="harder">
 
-It is possible to define a more complex grammar than Lox's that's difficult to
-parse using recursive descent. Predictive parsing gets tricky when you may need
-to look ahead a large number of tokens to figure out what you're sitting on.
+我们也完全可以定义出一条比 Lox 的文法更为繁复的文法，使得借助递归下降来解析它变得困难重重。当我们需要向前窥探大量词法单元才能弄清眼前所处境况时，预测式解析便会变得棘手。
 
-In practice, most languages are designed to avoid that. Even in cases where they
-aren't, you can usually hack around it without too much pain. If you can parse
-C++ using recursive descent -- which many C++ compilers do -- you can parse
-anything.
+但实际上，大多数语言的设计都会刻意避开这一情形。即便偶尔有语言不那么做，通常你也能不费太多周折地予以绕行。若是你能够用递归下降去解析 C++——许多 C++ 编译器确实是这么做的——那么你便能够解析世上的一切。
 
 </aside>
 
-Fire up the interpreter and type in some expressions. See how it handles
-precedence and associativity correctly? Not bad for less than 200 lines of code.
+启动解释器，输入几条表达式试试。它处理优先级与结合性的方式是否如你所愿？区区不到 200 行代码，便能做到这般地步，实在不赖。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  In C, a block is a statement form that allows you to pack a series of
-    statements where a single one is expected. The [comma operator][] is an
-    analogous syntax for expressions. A comma-separated series of expressions
-    can be given where a single expression is expected (except inside a function
-    call's argument list). At runtime, the comma operator evaluates the left
-    operand and discards the result. Then it evaluates and returns the right
-    operand.
+1.  在 C 语言中，代码块是一种语句形式，它允许你将一连串语句塞进原本只期望出现一条语句的位置。[逗号运算符][comma operator]则是表达式层面的一种类似语法。一连串以逗号分隔的表达式，可以出现在原本只期望出现单一表达式的地方（除了函数调用的参数列表内部）。在运行时，逗号运算符会对左侧操作数求值并丢弃其结果。然后，它会对右侧操作数求值，并将其结果返回。
 
-    Add support for comma expressions. Give them the same precedence and
-    associativity as in C. Write the grammar, and then implement the necessary
-    parsing code.
+    请为逗号表达式添加支持。沿用 C 语言中逗号运算符的优先级与结合性。请写出文法，再实现相应的解析代码。
 
-2.  Likewise, add support for the C-style conditional or "ternary" operator
-    `?:`. What precedence level is allowed between the `?` and `:`? Is the whole
-    operator left-associative or right-associative?
+1.  同样地，请为 C 风格的条件运算符——也就是所谓的"三元"运算符 `?:`——添加支持。`?` 与 `:` 之间允许出现什么优先级层级的表达式？整个运算符是左结合还是右结合的？
 
-3.  Add error productions to handle each binary operator appearing without a
-    left-hand operand. In other words, detect a binary operator appearing at the
-    beginning of an expression. Report that as an error, but also parse and
-    discard a right-hand operand with the appropriate precedence.
+1.  请添加错误产生式，以处理各种二元运算符出现在缺少左侧操作数的情形。换言之，请检测位于表达式开头的二元运算符，并将其作为错误予以报告，同时解析并丢弃一个具有恰当优先级的右侧操作数。
 
-[comma operator]: https://en.wikipedia.org/wiki/Comma_operator
+[comma operator]: https://en.wikipedia.org/wiki/Comma**operator
 
 </div>
 
 <div class="design-note">
 
-## Design Note: Logic Versus History
+## 设计笔记：逻辑与历史
 
-Let's say we decide to add bitwise `&` and `|` operators to Lox. Where should we
-put them in the precedence hierarchy? C -- and most languages that follow in C's
-footsteps -- place them below `==`. This is widely considered a mistake because
-it means common operations like testing a flag require parentheses.
+假设我们决定为 Lox 添上一对按位运算符 `&` 与 `|`。那么，它们究竟应当被放在优先级层级的哪一档呢？C 语言——以及大多数沿袭 C 之路的语言——将它们放在 `==` 之下。这被广泛视为一个错误，因为这意味着那些常见的运算——譬如检测一个标志位——都不得不借助一对括号：
 
 ```c
-if (flags & FLAG_MASK == SOME_FLAG) { ... } // Wrong.
-if ((flags & FLAG_MASK) == SOME_FLAG) { ... } // Right.
+if (flags & FLAG_MASK == SOME**FLAG) { ... } // 错。
+if ((flags & FLAG**MASK) == SOME_FLAG) { ... } // 对。
 ```
 
-Should we fix this for Lox and put bitwise operators higher up the precedence
-table than C does? There are two strategies we can take.
+我们究竟要不要破一破 C 语言的成规，将按位运算符在优先级层级中抬得更高一些？对于这个问题，我们可以采取以下两种策略中的一种。
 
-You almost never want to use the result of an `==` expression as the operand to
-a bitwise operator. By making bitwise bind tighter, users don't need to
-parenthesize as often. So if we do that, and users assume the precedence is
-chosen logically to minimize parentheses, they're likely to infer it correctly.
+几乎没有人会想拿一个 `==` 表达式的结果去作为按位运算符的操作数。通过让按位运算符绑定得更紧，用户便不再那么频繁地需要加上括号。因此，倘若我们这样做，而用户又天真地以为"运算符优先级是按照'尽量少打括号'的逻辑来确定的"，那么他们多半会蒙对。
 
-This kind of internal consistency makes the language easier to learn because
-there are fewer edge cases and exceptions users have to stumble into and then
-correct. That's good, because before users can use our language, they have to
-load all of that syntax and semantics into their heads. A simpler, more rational
-language *makes sense*.
+这种内在的一致性能够使一门语言更易于学习——毕竟，用户需要去记挂、并在实践中一一撞上的边边角角与例外情况也就更少了。这可是件好事，因为在用户能够使用我们的语言之前，他们必须先将所有这些语法与语义的细节一股脑儿塞进自己的脑袋里。一门更简洁、更有理性的语言**自有其道理**。
 
-But, for many users there is an even faster shortcut to getting our language's
-ideas into their wetware -- *use concepts they already know*. Many newcomers to
-our language will be coming from some other language or languages. If our
-language uses some of the same syntax or semantics as those, there is much less
-for the user to learn (and *unlearn*).
+然而，对许多用户而言，还有一条更为迅捷的捷径—— **借用户早已了然于胸的东西为我所用**。许多初来乍到的用户都会从其它某一门或多门语言转投而来。倘若我们的语言能够在语法或语义上与它们**有几分相似**，那么用户需要去学习（乃至去**忘却**）的东西便会少得多。
 
-This is particularly helpful with syntax. You may not remember it well today,
-but way back when you learned your very first programming language, code
-probably looked alien and unapproachable. Only through painstaking effort did
-you learn to read and accept it. If you design a novel syntax for your new
-language, you force users to start that process all over again.
+这一点在语法上尤为受用。你今天或许已记不太真切，但回想当年你学习**第一门**程序设计语言之时，代码看上去大概曾像是某种全然陌生的、拒人于千里之外的语言。你只有通过千辛万苦，才能学会阅读并接纳它。倘若你为自己这门全新的语言设计出一套全新的语法，那么你便是在强迫用户将那一整套痛苦的学习过程从头再走一遍。
 
-Taking advantage of what users already know is one of the most powerful tools
-you can use to ease adoption of your language. It's almost impossible to
-overestimate how valuable this is. But it faces you with a nasty problem: What
-happens when the thing the users all know *kind of sucks*? C's bitwise operator
-precedence is a mistake that doesn't make sense. But it's a *familiar* mistake
-that millions have already gotten used to and learned to live with.
+充分利用用户早已了然于胸的东西，乃是你所能倚仗的、最为强大的工具之一，用以助推这门语言的普及。它的价值，无论如何高估都不为过。但它也令你面临一个棘手的问题：当用户**全都了然**的那件东西**多少有些糟糕**时，又当如何呢？C 语言的按位运算符优先级便是一个错误，一个毫无道理的错误。但它同时也是一个**众人皆知**的错误——无数人早已习以为常、与之共处。
 
-Do you stay true to your language's own internal logic and ignore history? Do
-you start from a blank slate and first principles? Or do you weave your language
-into the rich tapestry of programming history and give your users a leg up by
-starting from something they already know?
+你究竟应当忠于这门语言自身的内在逻辑、并将历史抛诸脑后？还是应当从一张白纸、从第一性原理起步？又或者，你应当将这门语言编织进程序设计语言那源远流长的织锦之中，借用户耳熟能详之物，为他们铺平一条迈入新天地的道路？
 
-There is no perfect answer here, only trade-offs. You and I are obviously biased
-towards liking novel languages, so our natural inclination is to burn the
-history books and start our own story.
+对于这个问题，并无完美的答案——有的只是一笔笔权衡取舍。你我显然都倾向于欣赏那些新颖独特的语言，因此我们骨子里自然是去烧掉那些史书，开创自己的故事。
 
-In practice, it's often better to make the most of what users already know.
-Getting them to come to your language requires a big leap. The smaller you can
-make that chasm, the more people will be willing to cross it. But you can't
-*always* stick to history, or your language won't have anything new and
-compelling to give people a *reason* to jump over.
+然而在实践中，充分利用用户早已了然于胸的东西，往往才是上策。要说服用户转向你的语言，所需迈过的乃是一道巨大的鸿沟。你能让这道沟壑变得越浅，愿意跨过来的人便会越多。但你也**不能**总是墨守成规，否则你的语言便没有任何新颖动人之处，足以成为**值得**用户跃过那道鸿沟的理由了。
 
 </div>

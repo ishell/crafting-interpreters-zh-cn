@@ -1,261 +1,180 @@
-> Literature is idiosyncratic arrangements in horizontal lines in only
-> twenty-six phonetic symbols, ten Arabic numbers, and about eight punctuation
-> marks.
->
-> <cite>Kurt Vonnegut, <em>Like Shaking Hands With God: A Conversation about Writing</em></cite>
+# 按需词法分析
 
-Our second interpreter, clox, has three phases -- scanner, compiler, and virtual
-machine. A data structure joins each pair of phases. Tokens flow from scanner to
-compiler, and chunks of bytecode from compiler to VM. We began our
-implementation near the end with [chunks][] and the [VM][]. Now, we're going to
-hop back to the beginning and build a scanner that makes tokens. In the
-[next chapter][], we'll tie the two ends together with our bytecode compiler.
+> 文学，不过是仅凭二十六个语音符号、十个阿拉伯数字、以及约八个标点符号，所进行的别具一格的横向排列。
+>
+> <cite>库尔特·冯内古特，<em>《与上帝握手：一场关于写作的对话》</em></cite>
+
+我们这第二款解释器 clox 共有三个阶段——扫描器、编译器、虚拟机。一种数据结构将相邻两阶段衔接起来。token 从扫描器流向编译器，字节码块则从编译器流向 VM。我们先前从 [chunk][chunks] 与 [VM][vm] 开始、从**后面**启程。现在，我们要折返至起点，打造一个能产出 token 的扫描器。在[下一章][next chapter]，我们则会用字节码编译器将这两端缝合起来。
 
 [chunks]: chunks-of-bytecode.html
 [vm]: a-virtual-machine.html
 [next chapter]: compiling-expressions.html
 
-<img src="image/scanning-on-demand/pipeline.png" alt="Source code &rarr; scanner &rarr; tokens &rarr; compiler &rarr; bytecode chunk &rarr; VM." />
+<img src="image/scanning-on-demand/pipeline.png" alt="源代码 → 扫描器 → token → 编译器 → 字节码块 → VM。" />
 
-I'll admit, this is not the most exciting chapter in the book. With two
-implementations of the same language, there's bound to be some redundancy. I did
-sneak in a few interesting differences compared to jlox's scanner. Read on to
-see what they are.
+我承认，本章算不上本书里最精彩的一章。既然有了同一门语言的两种实现，免不了会有一些重复。我确实悄悄塞进了几处与 jlox 扫描器不尽相同的趣味差异。请继续读下去，看看它们具体是些什么。
 
-## Spinning Up the Interpreter
+## 启动解释器
 
-Now that we're building the front end, we can get clox running like a real
-interpreter. No more hand-authored chunks of bytecode. It's time for a REPL and
-script loading. Tear out most of the code in `main()` and replace it with:
+既然我们正在构建前端，clox 终于可以跑得像一款真正的解释器了。再也不用手工拼凑字节码块。是时候写一个 REPL 与脚本加载器了。拆掉 `main()` 中的大部分代码，换成下面的内容：
 
 ^code args (3 before, 2 after)
 
-If you pass <span name="args">no arguments</span> to the executable, you are
-dropped into the REPL. A single command line argument is understood to be the
-path to a script to run.
+如果传给可执行文件的<span name="args">参数为零</span>，你便会进入 REPL。若带有一个命令行参数，则将其视为待运行脚本的路径。
 
 <aside name="args">
 
-The code tests for one and two arguments, not zero and one, because the first
-argument in `argv` is always the name of the executable being run.
+代码检查的是参数个数为 1 与 2，而非 0 与 1——这是因为 `argv` 中的第一个参数始终是正在运行的可执行文件名。
 
 </aside>
 
-We'll need a few system headers, so let's get them all out of the way.
+我们需要若干系统头文件，索性一次性都 include 进来。
 
 ^code main-includes (1 after)
 
-Next, we get the REPL up and REPL-ing.
+接下来，让 REPL 真正跑起来。
 
 ^code repl (1 before)
 
-A quality REPL handles input that spans multiple lines gracefully and doesn't
-have a hardcoded line length limit. This REPL here is a little more, ahem,
-austere, but it's fine for our purposes.
+一个合格的 REPL 会从容地处理跨多行的输入，并且不会带硬编码的行长度限制。我们这里的 REPL 多少有些……呃……朴素的，但够用。
 
-The real work happens in `interpret()`. We'll get to that soon, but first let's
-take care of loading scripts.
+真正的工作发生在 `interpret()` 之中。我们很快就会谈到它，但先让我们处理一下脚本加载。
 
 ^code run-file
 
-We read the file and execute the resulting string of Lox source code. Then,
-based on the result of that, we set the exit code appropriately because we're
-scrupulous tool builders and care about little details like that.
+我们读取那个文件，并在所得到的 Lox 源代码字符串上执行。然后，根据其结果，恰当地设置退出码——我们是严谨的程序员，并会在意此类小小的细节。
 
-We also need to free the source code string because `readFile()` dynamically
-allocates it and passes ownership to its caller. That function looks like this:
+我们还需要释放 `readFile()` 所分配的源代码字符串，因为它采用的是动态分配，并将所有权交予调用者。那个函数长这样：
 
 <aside name="owner">
 
-C asks us not just to manage memory explicitly, but *mentally*. We programmers
-have to remember the ownership rules and hand-implement them throughout the
-program. Java just does it for us. C++ gives us tools to encode the policy
-directly so that the compiler validates it for us.
+C 不仅仅要求我们**显式**地管理内存，还要求我们**在精神上**如此。程序员必须记下那些所有权规则，并亲力亲为地贯彻到程序之中。Java 替我们代劳了这一切。C++ 给了我们一些工具，让我们能直接把这一策略编码到程序里、由编译器去替我们验证。
 
-I like C's simplicity, but we pay a real price for it -- the language requires
-us to be more conscientious.
+我喜欢 C 的简洁，但**代价**也确凿——这门语言要求我们付出更大的谨严。
 
 </aside>
 
 ^code read-file
 
-Like a lot of C code, it takes more effort than it seems like it should,
-especially for a language expressly designed for operating systems. The
-difficult part is that we want to allocate a big enough string to read the whole
-file, but we don't know how big the file is until we've read it.
+就像大量 C 代码那样，它的工作量**看上去**比**本该**的大得多，对于一门**专门**为操作系统而设计的语言而言尤甚。难点在于：我们想要分配一份足够大的字符串来装下整个文件，但**在**读完文件**之前**，我们并不知道文件有多大。
 
-The code here is the classic trick to solve that. We open the file, but before
-reading it, we seek to the very end using `fseek()`. Then we call `ftell()`
-which tells us how many bytes we are from the start of the file. Since we seeked
-(sought?) to the end, that's the size. We rewind back to the beginning, allocate
-a string of that <span name="one">size</span>, and read the whole file in a
-single batch.
+这里的代码便是解决这一问题的经典套路。我们打开文件，但在读取**之前**，先用 `fseek()` 定位到文件末尾。然后调用 `ftell()`，它会告诉我们距离文件头还有多少字节。既然我们（sought?）已 seek 到了末尾，那个数字便是文件大小。我们再倒回文件开头，分配同样大小的一份字符串，一口气读完整个文件。
 
 <aside name="one">
 
-Well, that size *plus one*. Always gotta remember to make room for the null
-byte.
+嗯，那个大小**再加一**。永远记得为那个空字节留出位置。
 
 </aside>
 
-So we're done, right? Not quite. These function calls, like most calls in the C
-standard library, can fail. If this were Java, the failures would be thrown as
-exceptions and automatically unwind the stack so we wouldn't *really* need to
-handle them. In C, if we don't check for them, they silently get ignored.
+这样便万事大吉了，对吧？还没完。C 标准库里的这些函数调用——与大多数一样——都有可能失败。若是 Java，那些失败会以异常的形式抛出，并自动一路展开栈，而我们的确**并不**真的需要处理它们。在 C 中，若我们不去检查它们，它们就会被悄无声息地忽略掉。
 
-This isn't really a book on good C programming practice, but I hate to encourage
-bad style, so let's go ahead and handle the errors. It's good for us, like
-eating our vegetables or flossing.
+本书**其实**并不是一本关于良好 C 编程实践的书，但我实在不愿助长坏习惯，所以咱们还是老老实实地处理一下错误吧。这对我们有好处，就像吃蔬菜或用牙线一样。
 
-Fortunately, we don't need to do anything particularly clever if a failure
-occurs. If we can't correctly read the user's script, all we can really do is
-tell the user and exit the interpreter gracefully. First of all, we might fail
-to open the file.
+幸运的是，如果真的发生了失败，我们也不需要搞什么特别精巧的花活儿。如果我们**无法**正确地读取用户的脚本，事实上我们也**只能**告诉用户一下，然后优雅地退出整个解释器。首先，我们可能会**打不开**文件。
 
 ^code no-file (1 before, 2 after)
 
-This can happen if the file doesn't exist or the user doesn't have access to it.
-It's pretty common -- people mistype paths all the time.
+这种情况在文件不存在或用户没有访问权限时便会发生。它相当常见——人总会输错路径。
 
-This failure is much rarer:
+下面这种情况就更罕见了：
 
 ^code no-buffer (1 before, 1 after)
 
-If we can't even allocate enough memory to read the Lox script, the user's
-probably got bigger problems to worry about, but we should do our best to at
-least let them know.
+倘若我们**连**分配足够的内存以读取 Lox 脚本都做不到，那用户大概有更大的问题要头疼，但我们仍应尽自己所能通知一声。
 
-Finally, the read itself may fail.
+最后，读取本身**也**可能失败。
 
 ^code no-read (1 before, 1 after)
 
-This is also unlikely. Actually, the <span name="printf"> calls</span> to
-`fseek()`, `ftell()`, and `rewind()` could theoretically fail too, but let's not
-go too far off in the weeds, shall we?
+这同样不太可能。说实话，那几次对 <span name="printf">`fseek()`、`ftell()` 与 `rewind()` 的</span>调用理论上**也**可能会失败，但我们就此打住，不在那些边角上越陷越深了，可好？
 
 <aside name="printf">
 
-Even good old `printf()` can fail. Yup. How many times have you handled *that*
-error?
+哪怕是大名鼎鼎的 `printf()` **也**可能失败。对的。你**几次**处理过**那个**错误？
 
 </aside>
 
-### Opening the compilation pipeline
+### 打开编译流水线
 
-We've got ourselves a string of Lox source code, so now we're ready to set up a
-pipeline to scan, compile, and execute it. It's driven by `interpret()`. Right
-now, that function runs our old hardcoded test chunk. Let's change it to
-something closer to its final incarnation.
+我们已然拿到一份 Lox 源代码字符串，所以现在我们准备好搭建**扫描—编译—执行**流水线了。它由 `interpret()` 驱动。眼下，那个函数跑的还是我们硬编码的那段测试 chunk。让我们把它改写成更接近其最终形态的样子。
 
 ^code vm-interpret-h (1 before, 1 after)
 
-Where before we passed in a Chunk, now we pass in the string of source code.
-Here's the new implementation:
+原先我们传入一个 Chunk，如今我们传入一份源代码字符串。新的实现如下：
 
 ^code vm-interpret-c (1 after)
 
-We won't build the actual *compiler* yet in this chapter, but we can start
-laying out its structure. It lives in a new module.
+我们**还**不会在本章中**真正**搭建编译器，但我们可以先勾勒出它的结构。它栖身于一个新的模块。
 
 ^code vm-include-compiler (1 before, 1 after)
 
-For now, the one function in it is declared like so:
+目前，该模块里只声明了一个函数：
 
 ^code compiler-h
 
-That signature will change, but it gets us going.
+那个签名日后会变，但眼下足以让我们启程。
 
-The first phase of compilation is scanning -- the thing we're doing in this
-chapter -- so right now all the compiler does is set that up.
+编译的第一阶段是扫描——也就是我们本章**正在**做的事——所以眼下编译器所做的，不过是把这一切搭起来。
 
 ^code compiler-c
 
-This will also grow in later chapters, naturally.
+这在后续章节里自然会逐渐成长。
 
-### The scanner scans
+### 扫描器扫描
 
-There are still a few more feet of scaffolding to stand up before we can start
-writing useful code. First, a new header:
+在我们开始着手写真正有用的代码之前，还剩几脚脚手架要搭。先来一个新头文件：
 
 ^code scanner-h
 
-And its corresponding implementation:
+以及它对应的实现：
 
 ^code scanner-c
 
-As our scanner chews through the user's source code, it tracks how far it's
-gone. Like we did with the VM, we wrap that state in a struct and then create a
-single top-level module variable of that type so we don't have to pass it around
-all of the various functions.
+当我们的扫描器咀嚼着用户的源代码时，它会追踪自己已经走到何处。就像我们对 VM 所做的那样，我们把这一状态封装到一个结构体里，再创建唯一一个该类型的模块级变量，这样一来我们便无需在各个函数之间到处传递它。
 
-There are surprisingly few fields. The `start` pointer marks the beginning of
-the current lexeme being scanned, and `current` points to the current character
-being looked at.
+字段少得出乎意料。`start` 指针指向当前所扫描词素的起点，`current` 则指向眼下正在查看的字符。
 
 <span name="fields"></span>
 
-<img src="image/scanning-on-demand/fields.png" alt="The start and current fields pointing at 'print bacon;'. Start points at 'b' and current points at 'o'." />
+<img src="image/scanning-on-demand/fields.png" alt="'start' 与 'current' 字段指向 'print bacon;'。'start' 指向 'b'，'current' 指向 'o'。" />
 
 <aside name="fields">
 
-Here, we are in the middle of scanning the identifier `bacon`. The current
-character is `o` and the character we most recently consumed is `c`.
+此处，我们正在扫描标识符 `bacon` 的中间。当下字符为 `o`，而我们最近消费的那个字符是 `c`。
 
 </aside>
 
-We have a `line` field to track what line the current lexeme is on for error
-reporting. That's it! We don't even keep a pointer to the beginning of the
-source code string. The scanner works its way through the code once and is done
-after that.
+我们有一个 `line` 字段，用以追踪当前词素所在的行，以备错误报告之需。仅此而已！我们甚至不肯保留一个指向源代码字符串开头的指针。扫描器从头到尾将代码走一遍，便就此结束。
 
-Since we have some state, we should initialize it.
+既然我们有一些状态，便应该初始化它。
 
 ^code init-scanner
 
-We start at the very first character on the very first line, like a runner
-crouched at the starting line.
+我们从第一行的第一个字符开始，正如赛跑选手蹲在起跑线上一般。
 
-## A Token at a Time
+## 一次一个词法单元
 
-In jlox, when the starting gun went off, the scanner raced ahead and eagerly
-scanned the whole program, returning a list of tokens. This would be a challenge
-in clox. We'd need some sort of growable array or list to store the tokens in.
-We'd need to manage allocating and freeing the tokens, and the collection
-itself. That's a lot of code, and a lot of memory churn.
+在 jlox 中，开跑的枪声一响，扫描器便冲上前去，**急切地**将整个程序扫描一遍，返回一份 token 列表。在 clox 中这会是个挑战。我们需要某种可生长的数组或列表来存放 token。我们需要管理 token 的分配与释放，还有那一容器本身。代码量不少，内存的折腾也很多。
 
-At any point in time, the compiler needs only one or two tokens -- remember our
-grammar requires only a single token of lookahead -- so we don't need to keep
-them *all* around at the same time. Instead, the simplest solution is to not
-scan a token until the compiler needs one. When the scanner provides one, it
-returns the token by value. It doesn't need to dynamically allocate anything --
-it can just pass tokens around on the C stack.
+在任何时刻，编译器**仅**需要一两个 token——记住我们的文法只需要一个 token 的前瞻——所以我们并不需要同时把**所有** token 都留在手边。最简单的解法是：不到编译器需要**一个** token 时，我们**不**扫描它。扫描器提供 token 时，以**值**返回——它**无需**动态分配任何东西——只需在 C 栈上传来传去即可。
 
-Unfortunately, we don't have a compiler yet that can ask the scanner for tokens,
-so the scanner will just sit there doing nothing. To kick it into action, we'll
-write some temporary code to drive it.
+可惜，我们还没有一个能向扫描器索要 token 的编译器，所以扫描器此刻只能坐在一旁无所事事。为了让它动起来，我们就先写一点临时代码来驱动它。
 
 ^code dump-tokens (1 before, 1 after)
 
 <aside name="format">
 
-That `%.*s` in the format string is a neat feature. Usually, you set the output
-precision -- the number of characters to show -- by placing a number inside the
-format string. Using `*` instead lets you pass the precision as an argument. So
-that `printf()` call prints the first `token.length` characters of the string at
-`token.start`. We need to limit the length like that because the lexeme points
-into the original source string and doesn't have a terminator at the end.
+格式串里那个 `%.*s` 是个小巧的特性。通常，你会在格式串里放一个数字，以设定输出精度——即要显示的字符数。使用 `*` 则允许你将精度作为参数传入。于是那一句 `printf()` 调用便打印出位于 `token.start` 的字符串的头 `token.length` 个字符。我们必须以这种方式限制长度，因为那个词素指向原始的源代码字符串，其末尾**没有**终止符。
 
 </aside>
 
-This loops indefinitely. Each turn through the loop, it scans one token and
-prints it. When it reaches a special "end of file" token or an error, it stops.
-For example, if we run the interpreter on this program:
+这会无限循环。每一轮循环，它都扫描一个 token 并将其打印出来。当它撞上一个特殊的"文件末尾" token 或一个错误时，它会停下来。举例而言，若我们让解释器跑这段程序：
 
 ```lox
 print 1 + 2;
 ```
 
-It prints out:
+它会打印出：
 
 ```text
    1 31 'print'
@@ -266,101 +185,63 @@ It prints out:
    2 39 ''
 ```
 
-The first column is the line number, the second is the numeric value of the
-token <span name="token">type</span>, and then finally the lexeme. That last
-empty lexeme on line 2 is the EOF token.
+第一列是行号，第二列是 token <span name="token">类型</span>的数值，最后则是词素。最后那个位于第 2 行的空词素，就是 EOF token。
 
 <aside name="token">
 
-Yeah, the raw index of the token type isn't exactly human readable, but it's all
-C gives us.
+是啊，token 类型的原始索引**并不**怎么适合人类阅读，但 C 也就只能给我们这么多了。
 
 </aside>
 
-The goal for the rest of the chapter is to make that blob of code work by
-implementing this key function:
+本章余下的目标，便是让那一坨代码真正跑起来——通过实现这个关键函数：
 
 ^code scan-token-h (1 before, 2 after)
 
-Each call scans and returns the next token in the source code. A token looks
-like this:
+每次调用都会扫描并返回源代码中的下一个 token。一个 token 长这样：
 
 ^code token-struct (1 before, 2 after)
 
-It's pretty similar to jlox's Token class. We have an enum identifying what type
-of token it is -- number, identifier, `+` operator, etc. The enum is virtually
-identical to the one in jlox, so let's just hammer out the whole thing.
+它与 jlox 的 Token 类颇为相似。我们有一个枚举，用以识别 token 的种类——数字、标识符、`+` 运算符，等等。这个枚举与 jlox 中的那个几乎一模一样，所以我们就一口气把它敲完。
 
 ^code token-type (2 before, 2 after)
 
-Aside from prefixing all the names with `TOKEN_` (since C tosses enum names in
-the top-level namespace) the only difference is that extra `TOKEN_ERROR` type.
-What's that about?
+除了在所有名字前加一个 `TOKEN**` 前缀外（C 语言的枚举名统统位于顶层命名空间），唯一的区别就是那个额外的 `TOKEN**ERROR` 类型。那是怎么回事？
 
-There are only a couple of errors that get detected during scanning:
-unterminated strings and unrecognized characters. In jlox, the scanner reports
-those itself. In clox, the scanner produces a synthetic "error" token for that
-error and passes it over to the compiler. This way, the compiler knows an error
-occurred and can kick off error recovery before reporting it.
+扫描阶段能检测到的错误寥寥无几——未闭合的字符串、以及无法识别的字符。在 jlox 中，扫描器**自己**报告这些错误。在 clox 中，扫描器会为那个错误产出一条合成的"错误"token，并将其传递给编译器。如此一来，编译器便会得知发生了错误，并能在报告之前先启动错误恢复。
 
-The novel part in clox's Token type is how it represents the lexeme. In jlox,
-each Token stored the lexeme as its own separate little Java string. If we did
-that for clox, we'd have to figure out how to manage the memory for those
-strings. That's especially hard since we pass tokens by value
--- multiple tokens could point to the same lexeme string. Ownership gets weird.
+clox 中 Token 类型的创新之处在于它对词素的表示方式。在 jlox 中，每个 Token 都把词素作为自己独有的一小段 Java 字符串存储起来。若我们在 clox 中也这样干，我们就必须想办法管理那些字符串的内存。这**特别**棘手，因为我们按值传递 token——多个 token 完全可能指向同一段词素字符串。所有权关系会变得扑朔迷离。
 
-Instead, we use the original source string as our character store. We represent
-a lexeme by a pointer to its first character and the number of characters it
-contains. This means we don't need to worry about managing memory for lexemes at
-all and we can freely copy tokens around. As long as the main source code string
-<span name="outlive">outlives</span> all of the tokens, everything works fine.
+取而代之，我们使用原始的源代码字符串作为我们的字符存储。我们以一个指向其首字符的指针与字符数来表示一段词素。这意味着我们根本不必操心为词素管理内存，便可以随意地四处拷贝 token。只要这份主源代码字符串**活得**比所有 token 都久，一切便**都**能正常工作。
 
 <aside name="outlive">
 
-I don't mean to sound flippant. We really do need to think about and ensure that
-the source string, which is created far away over in the "main" module, has a
-long enough lifetime. That's why `runFile()` doesn't free the string until
-`interpret()` finishes executing the code and returns.
+我这么说并非要故作轻浮。我们确实需要考虑并确保那份源代码字符串——它诞生于遥远的 `main` 模块——拥有足够长的生命周期。这便是为何 `runFile()` 要等到 `interpret()` 执行完代码并返回**之后**才会释放那份字符串。
 
 </aside>
 
-### Scanning tokens
+### 扫描 token
 
-We're ready to scan some tokens. We'll work our way up to the complete
-implementation, starting with this:
+我们已准备好去扫描一些 token 了。我们将一路搭出完整的实现，先从这段开始：
 
 ^code scan-token
 
-Since each call to this function scans a complete token, we know we are at the
-beginning of a new token when we enter the function. Thus, we set
-`scanner.start` to point to the current character so we remember where the
-lexeme we're about to scan starts.
+由于对该函数的每一次调用都会扫描一个完整的 token，我们**打从**进入这个函数的那一刻起，**就**知道我们正处在一个全新 token 的起点。于是，我们将 `scanner.start` 设置为指向当前字符，以便记住我们即将扫描的词素从何而起。
 
-Then we check to see if we've reached the end of the source code. If so, we
-return an EOF token and stop. This is a sentinel value that signals to the
-compiler to stop asking for more tokens.
+随后，我们检查一下是否已经抵达源代码的末尾。若是，我们便返回一个 EOF token 并打住。这是一个哨兵值，用以向编译器表明**别再**索要 token 了。
 
-If we aren't at the end, we do some... stuff... to scan the next token. But we
-haven't written that code yet. We'll get to that soon. If that code doesn't
-successfully scan and return a token, then we reach the end of the function.
-That must mean we're at a character that the scanner can't recognize, so we
-return an error token for that.
+若我们尚未抵达末尾，我们便要……做点什么……来扫描下一个 token。但我们**还没**写那段代码。很快就会。如果那段代码**未能**成功扫描并返回一个 token，那便会落入本函数的末尾。既然如此，那**一定**是我们正处在一个扫描器**无法**识别的字符上，于是我们为那个字符返回一条错误 token。
 
-This function relies on a couple of helpers, most of which are familiar from
-jlox. First up:
+这个函数倚赖于几个辅助函数，其中大多数我们都已在 jlox 中见过。先是：
 
 ^code is-at-end
 
-We require the source string to be a good null-terminated C string. If the
-current character is the null byte, then we've reached the end.
+我们要求源代码字符串是一个规范的、以空字符终止的 C 字符串。若当前字符是那个空字节，那我们便已抵达了末尾。
 
-To create a token, we have this constructor-like function:
+为了创建一个 token，我们封装了一个类似构造器的小函数：
 
 ^code make-token
 
-It uses the scanner's `start` and `current` pointers to capture the token's
-lexeme. It sets a couple of other obvious fields then returns the token. It has
-a sister function for returning error tokens.
+它借扫描器的 `start` 与 `current` 指针来截取 token 的词素。它设定几个其它显而易见的字段，然后返回该 token。它还有一个姐妹函数，用于返回错误 token。
 
 ^code error-token
 
@@ -368,360 +249,226 @@ a sister function for returning error tokens.
 
 <aside name="axolotl">
 
-This part of the chapter is pretty dry, so here's a picture of an axolotl.
+本章的这个部分写得相当干巴，所以这里放一张蝾螈的照片。
 
-<img src="image/scanning-on-demand/axolotl.png" alt="A drawing of an axolotl." />
+<img src="image/scanning-on-demand/axolotl.png" alt="一幅蝾螈的画。" />
 
 </aside>
 
-The only difference is that the "lexeme" points to the error message string
-instead of pointing into the user's source code. Again, we need to ensure that
-the error message sticks around long enough for the compiler to read it. In
-practice, we only ever call this function with C string literals. Those are
-constant and eternal, so we're fine.
+两者之间唯一的区别在于，"词素"指向的是错误消息字符串本身，而非用户源代码中的位置。再说一遍，我们需要确保错误消息**活得**足够久，好让编译器能读到它。实际中，我们**只**会用 C 字符串字面量来调用这个函数。那些常量是永恒的，因此我们就安然无恙。
 
-What we have now is basically a working scanner for a language with an empty
-lexical grammar. Since the grammar has no productions, every character is an
-error. That's not exactly a fun language to program in, so let's fill in the
-rules.
+至此，我们基本上拥有了一款针对**词法文法为空**的语言的扫描器。既然文法里没有任何产生式，那么**每个**字符都是错误。那可不是一款有趣的语言，所以我们来填充这些规则。
 
-## A Lexical Grammar for Lox
+## Lox 的词法文法
 
-The simplest tokens are only a single character. We recognize those like so:
+最简单的 token 仅有一个字符。识别它们的方式如下：
 
 ^code scan-char (1 before, 2 after)
 
-We read the next character from the source code, and then do a straightforward
-switch to see if it matches any of Lox's one-character lexemes. To read the next
-character, we use a new helper which consumes the current character and returns
-it.
+我们从源代码中读取下一个字符，然后老老实实地做一个 switch，看看它是否与 Lox 中的某个单字符词素匹配。为了读取下一个字符，我们使用一个**新的**辅助函数，它消费当下的字符并将其返回。
 
 ^code advance
 
-Next up are the two-character punctuation tokens like `!=` and `>=`. Each of
-these also has a corresponding single-character token. That means that when we
-see a character like `!`, we don't know if we're in a `!` token or a `!=` until
-we look at the next character too. We handle those like so:
+接下来是那些双字符的标点 token，比如 `!=` 与 `>=`。每个这样的 token 还各自对应一个单字符 token。这意味着，当我们看到像 `!` 这样的字符时，在我们看到下一个字符**之前**，我们并不知道我们是身处一个 `!` token 之中还是一个 `!=` 之中。我们处理这种情况的方式是：
 
-^code two-char (1 before, 1 after)
+^code two-char (1 before, 2 after)
 
-After consuming the first character, we look for an `=`. If found, we consume it
-and return the corresponding two-character token. Otherwise, we leave the
-current character alone (so it can be part of the *next* token) and return the
-appropriate one-character token.
+在消费完第一个字符之后，我们去寻找一个 `=`。若找到，我们便消费它并返回相应的双字符 token。否则，我们**将**当前字符原封不动地留下（让它能够成为**下一个** token 的一部分），并返回恰当的单字符 token。
 
-That logic for conditionally consuming the second character lives here:
+这种"有条件地消费第二个字符"的逻辑被安放在这里：
 
 ^code match
 
-If the current character is the desired one, we advance and return `true`.
-Otherwise, we return `false` to indicate it wasn't matched.
+若当前字符正是所期望的那一个，我们便前移并返回 `true`。否则，我们返回 `false`，以表示并未匹配成功。
 
-Now our scanner supports all of the punctuation-like tokens. Before we get to
-the longer ones, let's take a little side trip to handle characters that aren't
-part of a token at all.
+至此，我们的扫描器支持**所有**类标点 token。在我们讨到那些更长的 token 之前，让我们先走一小段岔路，处理那些**不属于**任何 token 的字符。
 
-### Whitespace
+### 空白
 
-Our scanner needs to handle spaces, tabs, and newlines, but those characters
-don't become part of any token's lexeme. We could check for those inside the
-main character switch in `scanToken()` but it gets a little tricky to ensure
-that the function still correctly finds the next token *after* the whitespace
-when you call it. We'd have to wrap the whole body of the function in a loop or
-something.
+我们的扫描器需要处理空格、Tab 与换行，但这些字符**不会**成为任何 token 词素的一部分。我们**本可以**在 `scanToken()` 中那个主字符 switch 里检查它们，但要想让该函数在被调用时**仍然**能在跳过了空白之后正确地找到下一个 token，就会有点儿棘手。我们得把整个函数体裹在一个循环里，或诸如此类。
 
-Instead, before starting the token, we shunt off to a separate function.
+取而代之，我们另设一个函数，在**开始**扫描 token 之前，先将它打发走。
 
 ^code call-skip-whitespace (1 before, 1 after)
 
-This advances the scanner past any leading whitespace. After this call returns,
-we know the very next character is a meaningful one (or we're at the end of the
-source code).
+这将使扫描器前移过任何前导的空白。一旦这次调用返回，我们便知道下一字符**或者**是个有意义的字符，**或者**是源代码的末尾。
 
 ^code skip-whitespace
 
-It's sort of a separate mini-scanner. It loops, consuming every whitespace
-character it encounters. We need to be careful that it does *not* consume any
-*non*-whitespace characters. To support that, we use this:
+它就像一个独立的小型扫描器。它不断循环，凡遇空白字符便一律消费。我们需要小心的是，它**不可**消费任何**非**空白字符。为满足这一点，我们使用：
 
 ^code peek
 
-This simply returns the current character, but doesn't consume it. The previous
-code handles all the whitespace characters except for newlines.
+这**只是**返回当前字符，但**不**消费它。前面那段代码处理了除换行符之外的所有空白字符。
 
 ^code newline (1 before, 2 after)
 
-When we consume one of those, we also bump the current line number.
+当我们消费一个换行符时，还要顺手把当前行号加一。
 
-### Comments
+### 注释
 
-Comments aren't technically "whitespace", if you want to get all precise with
-your terminology, but as far as Lox is concerned, they may as well be, so we
-skip those too.
+注释**严格地**说**不是** "空白"，但就 Lox 而言，它们**等同于**空白，所以我们也一并跳过它们。
 
-^code comment (1 before, 2 after)
+^code comment (1 before, 1 after)
 
-Comments start with `//` in Lox, so as with `!=` and friends, we need a second
-character of lookahead. However, with `!=`, we still wanted to consume the `!`
-even if the `=` wasn't found. Comments are different. If we don't find a second
-`/`, then `skipWhitespace()` needs to not consume the *first* slash either.
+Lox 中的注释以 `//` 开头，所以与 `!=` 等同理，我们需要第二个字符的前瞻。然而，与 `!=` 不同的是，注释若我们**未**找到第二个 `/`，那么 `skipWhitespace()` 便**不应**消费那个**第一个** `/`。
 
-To handle that, we add:
+为处理这一点，我们再添：
 
 ^code peek-next
 
-This is like `peek()` but for one character past the current one. If the current
-character and the next one are both `/`, we consume them and then any other
-characters until the next newline or the end of the source code.
+这与 `peek()` 类似，但窥的是当前字符**之后**的一个字符。若当前字符与下一个字符**都**是 `/`，我们便把它们以及后续任何字符统统消费，直至撞上下一个换行或源文件的末尾。
 
-We use `peek()` to check for the newline but not consume it. That way, the
-newline will be the current character on the next turn of the outer loop in
-`skipWhitespace()` and we'll recognize it and increment `scanner.line`.
+我们用 `peek()` 来检查换行符，但**不**消费它。如此一来，那个换行符便会成为下一轮 `skipWhitespace()` 外层循环的当下字符，我们便会识别它并递增 `scanner.line`。
 
-### Literal tokens
+### 字面量词法单元
 
-Number and string tokens are special because they have a runtime value
-associated with them. We'll start with strings because they are easy to
-recognize -- they always begin with a double quote.
+数字与字符串 token 很特殊，因为它们各与一个**运行时值**相关联。我们先来搞字符串，因为它们容易识别——它们**总是**以一个双引号打头。
 
 ^code scan-string (1 before, 1 after)
 
-That calls a new function.
+它调用一个新函数。
 
 ^code string
 
-Similar to jlox, we consume characters until we reach the closing quote. We also
-track newlines inside the string literal. (Lox supports multi-line strings.)
-And, as ever, we gracefully handle running out of source code before we find the
-end quote.
+与 jlox 类似，我们不断地消费字符，直至撞上作为结尾的那个引号。我们**也**跟踪字符串字面量内部的换行符。（Lox 支持多行字符串。）一如既往，我们还要**体面地**处理在找到结束引号之前就已耗尽源代码的情况。
 
-The main change here in clox is something that's *not* present. Again, it
-relates to memory management. In jlox, the Token class had a field of type
-Object to store the runtime value converted from the literal token's lexeme.
+clox 这里的**主要**变化是一处**不存在**的东西。同样，它也与内存管理有关。在 jlox 中，Token 类有一个类型为 Object 的字段，用以存储由字面量 token 的词素转换而来的运行时值。
 
-Implementing that in C would require a lot of work. We'd need some sort of union
-and type tag to tell whether the token contains a string or double value. If
-it's a string, we'd need to manage the memory for the string's character array
-somehow.
+在 C 中实现这件事需要做大量工作。我们需要某种联合体与类型标签，以便分辨一个 token 装的是字符串还是 double 值。若是字符串，我们还得设法管理该字符串字符数组的内存。
 
-Instead of adding that complexity to the scanner, we defer <span
-name="convert">converting</span> the literal lexeme to a runtime value until
-later. In clox, tokens only store the lexeme -- the character sequence exactly
-as it appears in the user's source code. Later in the compiler, we'll convert
-that lexeme to a runtime value right when we are ready to store it in the
-chunk's constant table.
+不去为扫描器添加这种复杂性，我们将词素到运行时值的转换**推迟**到日后。在 clox 中，token **只**存储词素——也就是用户源代码中字符序列的本来面目。稍后在编译器中，当我们需要准备好将之存入 chunk 的常量表时，我们才把那段词素转换为运行时的值。
 
 <aside name="convert">
 
-Doing the lexeme-to-value conversion in the compiler does introduce some
-redundancy. The work to scan a number literal is awfully similar to the work
-required to convert a sequence of digit characters to a number value. But there
-isn't *that* much redundancy, it isn't in anything performance critical, and it
-keeps our scanner simpler.
+把"词素到值"的转换放在编译器中**确实**引入了一些冗余。扫描一个数字字面量所做的工作，与把一串数字字符转换为一个数字值所需的工作，实在颇为相似。但**冗余**并不算多，又**不**落在任何性能要害之上，并且它让我们的扫描器更简洁。
 
 </aside>
 
-Next up, numbers. Instead of adding a switch case for each of the ten digits
-that can start a number, we handle them here:
+接下来是数字。与其为每一个可能作为数字开头的十进制数字各加一个 switch 分支，我们不如在这里统一处理：
 
 ^code scan-number (1 before, 2 after)
 
-That uses this obvious utility function:
+它用到了这个显然的小工具函数：
 
 ^code is-digit
 
-We finish scanning the number using this:
+我们用这个来完成数字的扫描：
 
 ^code number
 
-It's virtually identical to jlox's version except, again, we don't convert the
-lexeme to a double yet.
+除了又**不**立即把词素转换为 double 之外，这几乎与 jlox 的版本一模一样。
 
-## Identifiers and Keywords
+## 标识符与关键字
 
-The last batch of tokens are identifiers, both user-defined and reserved. This
-section should be fun -- the way we recognize keywords in clox is quite
-different from how we did it in jlox, and touches on some important data
-structures.
+最后一批 token 是标识符，既有用户自定义的，也有保留的。本节应当挺有意思——在 clox 中识别关键字的方式与 jlox 中的截然不同，涉及到一些重要的数据结构。
 
-First, though, we have to scan the lexeme. Names start with a letter or
-underscore.
+不过，首先我们得扫描词素。名字以一个字母或下划线打头。
 
 ^code scan-identifier (1 before, 1 after)
 
-We recognize those using this:
+我们借这个函数来识别这些字符：
 
 ^code is-alpha
 
-Once we've found an identifier, we scan the rest of it here:
+一旦我们找到了一个标识符，我们便在这里扫描它的剩余部分：
 
 ^code identifier
 
-After the first letter, we allow digits too, and we keep consuming alphanumerics
-until we run out of them. Then we produce a token with the proper type.
-Determining that "proper" type is the unique part of this chapter.
+在第一个字母之后，我们**也**允许数字，并不断地消费字母与数字，直至它们耗尽为止。然后我们用恰当的类型产出一个 token。敲定那个"恰当"的类型，则是本章**独有**的内容。
 
 ^code identifier-type
 
-Okay, I guess that's not very exciting yet. That's what it looks like if we
-have no reserved words at all. How should we go about recognizing keywords? In
-jlox, we stuffed them all in a Java Map and looked them up by name. We don't
-have any sort of hash table structure in clox, at least not yet.
+好啦，估计这一段读起来并不**怎么**激动人心。那就是当关键字**根本**不存在时，标识符识别的样子。我们当如何识别关键字呢？在 jlox 中，我们把所有关键字塞进了一棵 Java Map，按名字查表。在 clox 中，我们**并**没有任何一种哈希表结构，至少眼前**还**没有。
 
-A hash table would be overkill anyway. To look up a string in a hash <span
-name="hash">table</span>, we need to walk the string to calculate its hash code,
-find the corresponding bucket in the hash table, and then do a
-character-by-character equality comparison on any string it happens to find
-there.
+一张哈希表**也**算是杀鸡用了牛刀。要在一张哈希<span name="hash">表</span>里查一个字符串，你得遍历字符串以算出其哈希值，再找到哈希表中对应的桶，然后对桶里碰巧出现的字符串逐字符进行相等性比较。
 
 <aside name="hash">
 
-Don't worry if this is unfamiliar to you. When we get to [building our own hash
-table from scratch][hash], we'll learn all about it in exquisite detail.
+若你对这一切尚未熟悉，也无须担心。当我们[亲手构建一张哈希表][hash]时，我们会以极致的细节学习这一切。
 
 [hash]: hash-tables.html
 
 </aside>
 
-Let's say we've scanned the identifier "gorgonzola". How much work *should* we
-need to do to tell if that's a reserved word? Well, no Lox keyword starts with
-"g", so looking at the first character is enough to definitively answer no.
-That's a lot simpler than a hash table lookup.
+假设我们已经扫出了标识符 "gorgonzola"。那么我们要做多少工作，**才**能判断它**是**保留字？嗯，没有任何 Lox 关键字以 "g" 开头，所以看第一个字符就足以**一锤定音**——这比一张哈希表查找简单多了。
 
-What about "cardigan"? We do have a keyword in Lox that starts with "c":
-"class". But the second character in "cardigan", "a", rules that out. What about
-"forest"? Since "for" is a keyword, we have to go farther in the string before
-we can establish that we don't have a reserved word. But, in most cases, only a
-character or two is enough to tell we've got a user-defined name on our hands.
-We should be able to recognize that and fail fast.
+那 "cardigan" 又当如何？我们确实有一个以 "c" 开头的 Lox 关键字："class"。但 "cardigan" 的第二个字符 "a" 便**排除**了那种可能。那 "forest" 呢？既然 "for" 是个关键字，我们就得往字符串里再深入几个字符，才能断定它**不是**一个保留字。但大多数情况下，只需要一两个字符，便足以让我们断定这是一个用户自定义的名字。我们**应当**能识别出这一点，并**快速**失败。
 
-Here's a visual representation of that branching character-inspection logic:
+下图便是这种逐字符分支判别逻辑的可视化呈现：
 
 <span name="down"></span>
 
-<img src="image/scanning-on-demand/keywords.png" alt="A trie that contains all of Lox's keywords." />
+<img src="image/scanning-on-demand/keywords.png" alt="一棵包含 Lox 全部关键字的 trie。" />
 
 <aside name="down">
 
-Read down each chain of nodes and you'll see Lox's keywords emerge.
+沿着每一串节点自上而下读下来，你便会看见 Lox 的关键字浮现出来。
 
 </aside>
 
-We start at the root node. If there is a child node whose letter matches the
-first character in the lexeme, we move to that node. Then repeat for the next
-letter in the lexeme and so on. If at any point the next letter in the lexeme
-doesn't match a child node, then the identifier must not be a keyword and we
-stop. If we reach a double-lined box, and we're at the last character of the
-lexeme, then we found a keyword.
+我们从根节点起步。若有一个子节点所对应的字符与词素的第一个字符匹配，我们便移至那个子节点。然后对词素的下一个字符重复此过程，依此类推。若在词素中前**某**个字符已无法与子节点匹配，那么该标识符**一定**不是关键字，我们便**打住**。若我们抵达一个双线框的节点且我们**恰好**处在词素的最后一个字符处，那我们就找到了一个关键字。
 
-### Tries and state machines
+### Trie 与状态机
 
-This tree diagram is an example of a thing called a <span
-name="trie">[**trie**][trie]</span>. A trie stores a set of strings. Most other
-data structures for storing strings contain the raw character arrays and then
-wrap them inside some larger construct that helps you search faster. A trie is
-different. Nowhere in the trie will you find a whole string.
+这张树形图示意了一个名为 <span name="trie">[**trie**][trie]</span> 的数据结构。trie 用于存储一组字符串。多数其它用于存储字符串的数据结构，都将原始的字符数组**放在**内部，外面再裹上一层更大的构造物来帮你加快搜索。trie 则**不同**。在 trie 中，你**找不到**一段完整的字符串。
 
 [trie]: https://en.wikipedia.org/wiki/Trie
 
 <aside name="trie">
 
-"Trie" is one of the most confusing names in CS. Edward Fredkin yanked it out of
-the middle of the word "retrieval", which means it should be pronounced like
-"tree". But, uh, there is already a pretty important data structure pronounced
-"tree" *which tries are a special case of*, so unless you never speak of these
-things out loud, no one can tell which one you're talking about. Thus, people
-these days often pronounce it like "try" to avoid the headache.
+"Trie" 是计算机科学里最令人困惑的名字之一。Edward Fredkin 把它从单词 "retrieval" 的中间抠了出来，按理应读作 "tree"。但**呃**，我们已经有一个读作 "tree" 的相当重要的数据结构了——trie 正是其**一个**特例——所以除非你从不开口谈论这些概念，否则没人能搞得清你到底在指哪一个。于是，如今人们常常读作 "try"，以避免这一头疼。
 
 </aside>
 
-Instead, each string the trie "contains" is represented as a *path* through the
-tree of character nodes, as in our traversal above. Nodes that match the last
-character in a string have a special marker -- the double lined boxes in the
-illustration. That way, if your trie contains, say, "banquet" and "ban", you are
-able to tell that it does *not* contain "banque" -- the "e" node won't have that
-marker, while the "n" and "t" nodes will.
+取而代之的是，trie "容纳"的每一字符串都被表示为一条**穿越**字符节点树的**路径**，正如我们上面那张遍历图所示。匹配某字符串末字符的那些节点带有一个特殊的标记——图中的双线框。如此一来，譬如**既**含有 "banquet" **又**含有 "ban" 的 trie，你**便能**知道它**不**含有 "banque"——"e" 节点**没有**那个标记，而 "n" 与 "t" 节点**都**有。
 
-Tries are a special case of an even more fundamental data structure: a
-[**deterministic finite automaton**][dfa] (**DFA**). You might also know these
-by other names: **finite state machine**, or just **state machine**. State
-machines are rad. They end up useful in everything from [game
-programming][state] to implementing networking protocols.
+trie 是一种更为基础的数据结构——[**确定性有限状态自动机**][dfa]（**DFA**）——的特殊情形。你**或许**也听过它的另一些名字：**有限状态机**，或干脆叫**状态机**。状态机真是太酷了。它们在[游戏编程][state]乃至网络协议的实现中都颇有用武之地。
 
-[dfa]: https://en.wikipedia.org/wiki/Deterministic_finite_automaton
+[dfa]: https://en.wikipedia.org/wiki/Deterministic_finite**automaton
 [state]: http://gameprogrammingpatterns.com/state.html
 
-In a DFA, you have a set of *states* with *transitions* between them, forming a
-graph. At any point in time, the machine is "in" exactly one state. It gets to
-other states by following transitions. When you use a DFA for lexical analysis,
-each transition is a character that gets matched from the string. Each state
-represents a set of allowed characters.
+在一台 DFA 中，你拥有**一组**状态，以及状态**之间**的若干转移，构成一张图。在**任一**时刻，机器恰好"处于"某一状态。它通过沿转移行走来到达其它状态。当你将 DFA 用于词法分析时，每一次转移便是字符串中**被匹配的**一个字符。每一个状态都代表一组被允许的字符。
 
-Our keyword tree is exactly a DFA that recognizes Lox keywords. But DFAs are
-more powerful than simple trees because they can be arbitrary *graphs*.
-Transitions can form cycles between states. That lets you recognize arbitrarily
-long strings. For example, here's a DFA that recognizes number literals:
+我们的关键字树**恰好**就是一台识别 Lox 关键字的 DFA。但 DFA **比**单纯的树**更**强大，因为它们可以是任意**的**图。转移之间可以形成回路。这使得一台 DFA 能够识别任意**长**的字符串。例如，下面便是这样一台识别数字字面量的 DFA：
 
 <span name="railroad"></span>
 
-<img src="image/scanning-on-demand/numbers.png" alt="A syntax diagram that recognizes integer and floating point literals." />
+<img src="image/scanning-on-demand/numbers.png" alt="一张识别整数与浮点字面量的语法图。" />
 
 <aside name="railroad">
 
-This style of diagram is called a [**syntax diagram**][syntax diagram] or the
-more charming **railroad diagram**. The latter name is because it looks
-something like a switching yard for trains.
+这种风格的图被称为一张 [**语法图**][syntax diagram]，或更俏皮的**铁路图**（railroad diagram）。后者之名，是因为它看起来颇像火车的调车场。
 
-Back before Backus-Naur Form was a thing, this was one of the predominant ways
-of documenting a language's grammar. These days, we mostly use text, but there's
-something delightful about the official specification for a *textual language*
-relying on an *image*.
+在巴科斯-诺尔范式问世之前，这是记述语言文法的主流方式之一。如今我们大多用文字，但一门**文本语言**的正式规范**竟然**倚赖于一张**图像**，这事儿总归有几分令人愉悦。
 
-[syntax diagram]: https://en.wikipedia.org/wiki/Syntax_diagram
+[syntax diagram]: https://en.wikipedia.org/wiki/Syntax**diagram
 
 </aside>
 
-I've collapsed the nodes for the ten digits together to keep it more readable,
-but the basic process works the same -- you work through the path, entering
-nodes whenever you consume a corresponding character in the lexeme. If we were
-so inclined, we could construct one big giant DFA that does *all* of the lexical
-analysis for Lox, a single state machine that recognizes and spits out all of
-the tokens we need.
+我已经把十种数字节点合并了起来以使它更可读，但基本流程一样——你沿着路径前进，每当消费词素中一个相应的字符时便进入下一个节点。倘若我们真**那么**乐意，我们**可以**构造一台巨大的 DFA 来完成 Lox 的**全部**词法分析——一台单一的状态机，识别并吐出我们所需要的所有 token。
 
-However, crafting that mega-DFA by <span name="regex">hand</span> would be
-challenging. That's why [Lex][] was created. You give it a simple textual
-description of your lexical grammar -- a bunch of regular expressions -- and it
-automatically generates a DFA for you and produces a pile of C code that
-implements it.
+然而，<span name="regex">手工</span>雕琢这样一台巨型 DFA 是件颇具挑战的事。这也是 [Lex][] 之所以被创造的原因。你只需喂给它一份**你的**词法法法的简单文本描述——一堆正则表达式——它便会自动为你生成一台 DFA，并伴生一大坨实现它的 C 代码。
 
-[lex]: https://en.wikipedia.org/wiki/Lex_(software)
+[lex]: https://en.wikipedia.org/wiki/Lex**(software)
 
 <aside name="regex">
 
-This is also how most regular expression engines in programming languages and
-text editors work under the hood. They take your regex string and convert it to
-a DFA, which they then use to match strings.
+这也是大多数程序设计语言与文本编辑器中的正则表达式引擎在底层的工作方式。它们**拿**你的正则表达式字符串，把它转换为一台 DFA，然后再用后者去匹配字符串。
 
-If you want to learn the algorithm to convert a regular expression into a DFA,
-[the Dragon Book][dragon] has you covered.
+倘若你想学习把正则表达式转换为 DFA 的算法，[龙书][dragon]已然包揽。
 
-[dragon]: https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools
+[dragon]: https://en.wikipedia.org/wiki/Compilers:**Principles,_Techniques,_and**Tools
 
 </aside>
 
-We won't go down that road. We already have a perfectly serviceable hand-rolled
-scanner. We just need a tiny trie for recognizing keywords. How should we map
-that to code?
+我们**不**打算走那条路。我们**已经**拥有了一款**足够**能用的手写扫描器。我们**只**需要一个不起眼的小 trie 用来识别关键字。我们**该**如何将那张图映射到代码中？
 
-The absolute simplest <span name="v8">solution</span> is to use a switch
-statement for each node with cases for each branch. We'll start with the root
-node and handle the easy keywords.
+最<span name="v8">简单</span>的方案是：每个节点都使用一个 switch 语句，每个分支对应一条边。我们从根节点出发，先处理那些**只有**一条路径的关键字。
 
 <aside name="v8">
 
-Simple doesn't mean dumb. The same approach is [essentially what V8 does][v8],
-and that's currently one of the world's most sophisticated, fastest language
-implementations.
+简单**并不**等于愚蠢。同样的思路，恰恰是 [V8 引擎所采用的做法][v8]，而它**眼下**便是世界上最精密、最快的语言实现之一。
 
 [v8]: https://github.com/v8/v8/blob/e77eebfe3b747fb315bd3baad09bec0953e53e68/src/parsing/scanner.cc#L1643
 
@@ -729,66 +476,41 @@ implementations.
 
 ^code keywords (1 before, 1 after)
 
-These are the initial letters that correspond to a single keyword. If we see an
-"s", the only keyword the identifier could possibly be is `super`. It might not
-be, though, so we still need to check the rest of the letters too. In the tree
-diagram, this is basically that straight path hanging off the "s".
+这些是**各自**只对应**一个**关键字的首字母。倘若我们看到了一个 "s"，那这个标识符唯一可能是 `super`。然而，它**也**未必**就**是，所以我们仍得检查它后续的字符。在这棵树的图示中，这基本上就是从 "s" 垂下来的那条直路。
 
-We won't roll a switch for each of those nodes. Instead, we have a utility
-function that tests the rest of a potential keyword's lexeme.
+我们**不**会为**那些**节点各写一个 switch。取而代之，我们有一个小工具函数，用于检测某条**潜在**关键字词素余下的部分。
 
 ^code check-keyword
 
-We use this for all of the unbranching paths in the tree. Once we've found a
-prefix that could only be one possible reserved word, we need to verify two
-things. The lexeme must be exactly as long as the keyword. If the first letter
-is "s", the lexeme could still be "sup" or "superb". And the remaining
-characters must match exactly -- "supar" isn't good enough.
+我们用它来处理树中所有**没有分支**的路径。一旦我们找到了一个**只能**通往一个保留字的前缀，我们需要核验两件事。词素的长度**必须**恰好等于该关键字。若首字母是 "s"，那么词素**仍**可能是 "sup" 或 "superb"。并且余下的字符**必须**严格匹配——"supar" 是不行的。
 
-If we do have the right number of characters, and they're the ones we want, then
-it's a keyword, and we return the associated token type. Otherwise, it must be a
-normal identifier.
+若我们的长度恰好吻合，且字符如我们所愿，那么它**就是**一个关键字，于是我们返回与之对应的 token 类型。否则，它**一定**是一个普通的标识符。
 
-We have a couple of keywords where the tree branches again after the first
-letter. If the lexeme starts with "f", it could be `false`, `for`, or `fun`. So
-we add another switch for the branches coming off the "f" node.
+我们有几条关键字，在第一个字符之后，那棵树**又**分叉了。若词素以 "f" 开头，它既可能是 `false`、`for`、也可能是 `fun`。因此我们为从 "f" 节点引出的那些分支再添一个 switch。
 
 ^code keyword-f (1 before, 1 after)
 
-Before we switch, we need to check that there even *is* a second letter. "f" by
-itself is a valid identifier too, after all. The other letter that branches is
-"t".
+在切换之前，我们需要先检查一下**到底**有没有第二个字母。孤零零的 "f" **本身**亦是一个合法的标识符。另一处分叉的字母是 "t"。
 
 ^code keyword-t (1 before, 1 after)
 
-That's it. A couple of nested `switch` statements. Not only is this code <span
-name="short">short</span>, but it's very, very fast. It does the minimum amount
-of work required to detect a keyword, and bails out as soon as it can tell the
-identifier will not be a reserved one.
+便是如此。几段嵌套的 `switch` 语句而已。这段代码**不仅**简短，而且**非常**、**非常**快。它做完了识别一个关键字所需的**最低限度**的工作，并**在**它**能**判断标识符**并非**保留字的第一时间**就**抽身。
 
-And with that, our scanner is complete.
+至此，我们的扫描器便**已**完整。
 
 <aside name="short">
 
-We sometimes fall into the trap of thinking that performance comes from
-complicated data structures, layers of caching, and other fancy optimizations.
-But, many times, all that's required is to do less work, and I often find that
-writing the simplest code I can is sufficient to accomplish that.
+我们偶尔会陷入一种思维陷阱，以为性能来自于复杂的数据结构、一层又一层的缓存，以及种种酷炫的优化。但很多时候，所需的**不过**是少做一点工作；而我常常发现，**就**写我能想到的最简代码，便足以达成此目标。
 
 </aside>
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  Many newer languages support [**string interpolation**][interp]. Inside a
-    string literal, you have some sort of special delimiters -- most commonly
-    `${` at the beginning and `}` at the end. Between those delimiters, any
-    expression can appear. When the string literal is executed, the inner
-    expression is evaluated, converted to a string, and then merged with the
-    surrounding string literal.
+1.  许多较新的语言都支持 [**字符串内插**][interp]。在字符串字面量内部，会有某种特殊的分隔符——最常见的是开头 `${` 与结尾 `}`。在那些分隔符之间，可以出现任意表达式。当字符串字面量被执行时，里头的表达式被求值，转换为字符串，再与周围的字符串字面量合并。
 
-    For example, if Lox supported string interpolation, then this...
+    举例而言，若 Lox 支持字符串内插，那么下面这段……
 
     ```lox
     var drink = "Tea";
@@ -797,51 +519,36 @@ writing the simplest code I can is sufficient to accomplish that.
     print "${drink} will be ready in ${steep + cool} minutes.";
     ```
 
-    ...would print:
+    ……会打印：
 
     ```text
     Tea will be ready in 6 minutes.
     ```
 
-    What token types would you define to implement a scanner for string
-    interpolation? What sequence of tokens would you emit for the above string
-    literal?
+    你会定义哪些 token 类型来实现一个字符串内插的扫描器？上面那段字符串字面量又会**按怎样的**顺序产出一串 token？
 
-    What tokens would you emit for:
+    对于下面这段，你**又**会产出哪些 token？
 
     ```text
     "Nested ${"interpolation?! Are you ${"mad?!"}"}"
     ```
 
-    Consider looking at other language implementations that support
-    interpolation to see how they handle it.
+    可以参考其它支持内插的语言实现，看看它们如何处理。
 
-2.  Several languages use angle brackets for generics and also have a `>>` right
-    shift operator. This led to a classic problem in early versions of C++:
+1.  不少语言使用尖括号来表示泛型，同时又有一个 `>>` 右移运算符。这在早期版本的 C++ 中曾引发过一个经典的问题：
 
     ```c++
     vector<vector<string>> nestedVectors;
     ```
 
-    This would produce a compile error because the `>>` was lexed to a single
-    right shift token, not two `>` tokens. Users were forced to avoid this by
-    putting a space between the closing angle brackets.
+    这**会**产生一个编译错误，因为 `>>` 被词法分析成了**一**个右移 token，而非两个 `>` token。用户被迫在两个右尖括号之间加一个空格来绕过这一问题。
 
-    Later versions of C++ are smarter and can handle the above code. Java and C#
-    never had the problem. How do those languages specify and implement this?
+    后续版本的 C++ 更为聪明，能够处理上述代码。Java 与 C# **从未**遇到过这个问题。这些语言**是**如何规约与实现这一切的？
 
-3.  Many languages, especially later in their evolution, define "contextual
-    keywords". These are identifiers that act like reserved words in some
-    contexts but can be normal user-defined identifiers in others.
+1.  许多语言——尤其是**在**演进**后**期的语言——定义了"上下文关键字"。这类标识符在**某些**语境中是关键字，但在**其它**语境中可以是普通的用户自定义标识符。
 
-    For example, `await` is a keyword inside an `async` method in C#, but
-    in other methods, you can use `await` as your own identifier.
+    举例而言，`await` 在 C# 的 `async` 方法**内**是个关键字，但在其它方法中，你**可以**把 `await**当作自己的标识符。
 
-    Name a few contextual keywords from other languages, and the context where
-    they are meaningful. What are the pros and cons of having contextual
-    keywords? How would you implement them in your language's front end if you
-    needed to?
+    请列举几个其它语言中的上下文关键字，以及它们所对应的语境。上下文关键字的利弊各是什么？若你的语言前端**需要**上下文关键字，你会如何实现它们？
 
 [interp]: https://en.wikipedia.org/wiki/String_interpolation
-
-</div>

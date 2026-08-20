@@ -1,970 +1,595 @@
-> In the middle of the journey of our life I found myself within a dark woods
-> where the straight way was lost.
+# 编译表达式
+
+> 在我们人生旅程的中途，我发现自己身处一片幽暗的森林，因为笔直的道路已然迷失。
 >
-> <cite>Dante Alighieri, <em>Inferno</em></cite>
+> <cite>但丁·阿利吉耶里，<em>《神曲·地狱篇》</em></cite>
 
-This chapter is exciting for not one, not two, but *three* reasons. First, it
-provides the final segment of our VM's execution pipeline. Once in place, we can
-plumb the user's source code from scanning all the way through to executing it.
+本章激动人心之处**不止**一、**不**二，而是**三**重。首先，它为我们 VM 的执行流水线提供最后一段。一旦就位，我们便能将用户的源代码从扫描一路贯穿到执行。
 
-<img src="image/compiling-expressions/pipeline.png" alt="Lowering the 'compiler' section of pipe between 'scanner' and 'VM'."/>
+<img src="image/compiling-expressions/pipeline.png" alt="压低 'scanner' 与 'VM' 之间那一段 'compiler' 管道。" />
 
-Second, we get to write an actual, honest-to-God *compiler*. It parses source
-code and outputs a low-level series of binary instructions. Sure, it's <span
-name="wirth">bytecode</span> and not some chip's native instruction set, but
-it's way closer to the metal than jlox was. We're about to be real language
-hackers.
+其次，我们终于要写一款名正言顺的**编译器**了。它解析源代码，并输出一串低层级的二进制指令。当然，它是<span name="wirth">字节码</span>，而非某款芯片的原生指令集，但比起 jlox 来，已经离金属近得多了。我们即将成为货真价实的语言黑客。
 
 <aside name="wirth">
 
-Bytecode was good enough for Niklaus Wirth, and no one questions his street
-cred.
+字节码已经足够让 Niklaus Wirth 满意了， **没**有人会去质疑他的江湖地位。
 
 </aside>
 
-<span name="pratt">Third</span> and finally, I get to show you one of my
-absolute favorite algorithms: Vaughan Pratt's "top-down operator precedence
-parsing". It's the most elegant way I know to parse expressions. It gracefully
-handles prefix operators, postfix, infix, *mixfix*, any kind of *-fix* you got.
-It deals with precedence and associativity without breaking a sweat. I love it.
+<span name="pratt">第三</span>，也是最后一点，我终于可以向你展示我最为钟爱的算法之一：Vaughan Pratt 的"自顶向下算符优先"解析法。它是我所**知道**的最优雅的表达式解析方式。它能从容地处理前缀运算符、后缀、中缀、**混合缀**，你**能**想出的任何一种 *缀*。它能轻松应对优先级与结合性，而**不**会大动干戈。我**爱**它。
 
 <aside name="pratt">
 
-Pratt parsers are a sort of oral tradition in industry. No compiler or language
-book I've read teaches them. Academia is very focused on generated parsers, and
-Pratt's technique is for handwritten ones, so it gets overlooked.
+Pratt 解析器在业界多少算是一种口耳相传的传统。我读过的**没有**任何一本编译器或语言的书**讲**过它。学术界**极其**专注于由工具生成的解析器，而 Pratt 的技术是**面向**手写解析器的，因此便遭到冷落。
 
-But in production compilers, where hand-rolled parsers are common, you'd be
-surprised how many people know it. Ask where they learned it, and it's always,
-"Oh, I worked on this compiler years ago and my coworker said they took it from
-this old front end..."
+但在生产级的编译器中——手写解析器颇为常见——你**会**惊讶于懂得此法的人竟有如此之多。问他们从哪儿学来的，答案总是："哦，那都是多年前我参与某个编译器，我同事说他们是从某个老式前端里学来的……"
 
 </aside>
 
-As usual, before we get to the fun stuff, we've got some preliminaries to work
-through. You have to eat your vegetables before you get dessert. First, let's
-ditch that temporary scaffolding we wrote for testing the scanner and replace it
-with something more useful.
+一如既往，在我们抵达那些有趣的部分之前，还有若干准备工作要处理。你必须先吃掉蔬菜才能吃甜点。先，让我们把之前为测试扫描器而搭起的临时脚手架拆掉，换成更有用的东西。
 
 ^code interpret-chunk (1 before, 1 after)
 
-We create a new empty chunk and pass it over to the compiler. The compiler will
-take the user's program and fill up the chunk with bytecode. At least, that's
-what it will do if the program doesn't have any compile errors. If it does
-encounter an error, `compile()` returns `false` and we discard the unusable
-chunk.
+我们创建一份新的空 chunk，并将其交给编译器。编译器将拿过用户的程序，并向那份 chunk 中填入字节码。至少，那是**若**程序**没有**任何编译错误时的做法。若它**真的**撞上了错误，`compile()` 便返回 `false`，而我们也就丢弃那份无法使用的 chunk。
 
-Otherwise, we send the completed chunk over to the VM to be executed. When the
-VM finishes, we free the chunk and we're done. As you can see, the signature to
-`compile()` is different now.
+否则，我们便将一份已完成的 chunk 送往 VM 去执行。当 VM 跑完之后，我们释放该 chunk，一切便大功告成。正如你所见，`compile()` 的签名如今已然不同。
 
 ^code compile-h (2 before, 2 after)
 
-We pass in the chunk where the compiler will write the code, and then
-`compile()` returns whether or not compilation succeeded. We make the same
-change to the signature in the implementation.
+我们传入编译器将要写入代码的那个 chunk，然后 `compile()` 返回编译是否成功。我们对实现中的签名也做同样的改动。
 
 ^code compile-signature (2 before, 1 after)
 
-That call to `initScanner()` is the only line that survives this chapter. Rip
-out the temporary code we wrote to test the scanner and replace it with these
-three lines:
+那一行 `initScanner()` 的调用是本章**仅存**的一行。撕掉我们之前为测试扫描器而写的临时代码，换成下面这三行：
 
 ^code compile-chunk (1 before, 1 after)
 
-The call to `advance()` "primes the pump" on the scanner. We'll see what it does
-soon. Then we parse a single expression. We aren't going to do statements yet,
-so that's the only subset of the grammar we support. We'll revisit this when we
-[add statements in a few chapters][globals]. After we compile the expression, we
-should be at the end of the source code, so we check for the sentinel EOF token.
+对 `advance()` 的调用为扫描器"打了打气"。我们很快便会看到它**究竟**在做些什么。然后我们解析一个单一的表达式。我们**还**不会去做语句，所以眼下那便是我们所能支持的文法之全部子集。等到我们在[几章之后][globals]加入语句时，我们再回过头来处理。编译完表达式之后，我们**应该**已身处源代码的末尾，因此我们要检查那个 EOF 哨兵 token。
 
 [globals]: global-variables.html
 
-We're going to spend the rest of the chapter making this function work,
-especially that little `expression()` call. Normally, we'd dive right into that
-function definition and work our way through the implementation from top to
-bottom.
+我们将在本章余下的部分里让这个函数**真正**能跑起来，尤其是那一句 `expression()`。通常，我们会一头扎进那个函数的定义，自顶向下走完整个实现。
 
-This chapter is <span name="blog">different</span>. Pratt's parsing technique is
-remarkably simple once you have it all loaded in your head, but it's a little
-tricky to break into bite-sized pieces. It's recursive, of course, which is part
-of the problem. But it also relies on a big table of data. As we build up the
-algorithm, that table grows additional columns.
+但本章<span name="blog">不同</span>。Pratt 解析技术一旦完全装进你的脑袋，便简单得出奇，但若要将其拆解成一口一口能消化的零碎，却有几分棘手。它自然是递归的，这只是问题的一部分。问题还在于，它**还**倚赖于一张庞大的数据表。随着我们搭建这套算法，那张表会**增长**出额外的列。
 
 <aside name="blog">
 
-If this chapter isn't clicking with you and you'd like another take on the
-concepts, I wrote an article that teaches the same algorithm but using Java and
-an object-oriented style: ["Pratt Parsing: Expression Parsing Made Easy"][blog].
+若本章**不**怎么敲得开你的心窍，而你想从另一个角度再领略一下这些概念，我写过一篇文章，使用 Java 与面向对象的风格讲授**同一**算法：《[Pratt Parsing: Expression Parsing Made Easy][blog]》。
 
 [blog]: http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
 
 </aside>
 
-I don't want to revisit 40-something lines of code each time we extend the
-table. So we're going to work our way into the core of the parser from the
-outside and cover all of the surrounding bits before we get to the juicy center.
-This will require a little more patience and mental scratch space than most
-chapters, but it's the best I could do.
+我不想在每次为那张表多添一列时，都回过头去修改那四十来行代码。所以我们**将从**外部**向**内**进入**解析器的核心，并在抵达中央之前先讲清所有周边之事。这需要比多数章节多一点的耐心与脑中临时占用，但这是我所能做到的最好安排。
 
-## Single-Pass Compilation
+## 单遍编译
 
-A compiler has roughly two jobs. It parses the user's source code to understand
-what it means. Then it takes that knowledge and outputs low-level instructions
-that produce the same semantics. Many languages split those two roles into two
-separate <span name="passes">passes</span> in the implementation. A parser
-produces an AST -- just like jlox does -- and then a code generator traverses
-the AST and outputs target code.
+一款编译器大致有两件事。它解析用户的源代码以理解其含义。然后，它将这份知识翻译为一串低层级的指令，以**产生**相同的语义。许多语言**在**实现中**将**这两种角色拆分为两道独立<span name="passes">的 pass</span>。一道解析器**产出**一棵 AST——正如同 jlox 所做的——然后一道代码生成器遍历那棵 AST，并**产出**目标代码。
 
 <aside name="passes">
 
-In fact, most sophisticated optimizing compilers have a heck of a lot more than
-two passes. Determining not just *what* optimization passes to have, but how to
-order them to squeeze the most performance out of the compiler -- since the
-optimizations often interact in complex ways -- is somewhere between an "open
-area of research" and a "dark art".
+事实上，大多数精密的优化编译器**远远**不止两道 pass。去敲定**究竟**应当设置哪些优化 pass，以及**如何**对它们排序以将最多的性能从编译器中挤出——因为那些优化之间往往以复杂的方式相互影响——乃是介于"开放的研究领域"与"玄学暗术"之间的某种东西。
 
 </aside>
 
-In clox, we're taking an old-school approach and merging these two passes into
-one. Back in the day, language hackers did this because computers literally
-didn't have enough memory to store an entire source file's AST. We're doing it
-because it keeps our compiler simpler, which is a real asset when programming in
-C.
+在 clox 中，我们走的是一条老派路线，将这两道 pass **合二为一**。当年，语言黑客们这么做是因为计算机**实在**没有足够的内存来存储整个源文件的 AST。我们这么干，则是因为它能让我们的编译器保持简洁，而**这**是一项用 C 编程时的真实财富。
 
-Single-pass compilers like we're going to build don't work well for all
-languages. Since the compiler has only a peephole view into the user's program
-while generating code, the language must be designed such that you don't need
-much surrounding context to understand a piece of syntax. Fortunately, tiny,
-dynamically typed Lox is <span name="lox">well-suited</span> to that.
+像我们即将构建的这种单遍编译器， **并**不**适用**于所有语言。鉴于编译器在生成代码时， **对**用户的程序**只能**透过"锁孔"窥视， **这种**语言**必须**在设计上**不**需要太多周边上下文来**搞清**一段语法。幸运的是，小巧的、动态类型的 Lox **恰好**适合这一点。
 
 <aside name="lox">
 
-Not that this should come as much of a surprise. I did design the language
-specifically for this book after all.
+这一**点**倒**并不**让人惊讶。我**毕竟**是**为**这本书**专门**设计了这门语言。
 
-<img src="image/compiling-expressions/keyhole.png" alt="Peering through a keyhole at 'var x;'"/>
+<img src="image/compiling-expressions/keyhole.png" alt="透过 'var x;' 的一把锁孔窥视。" />
 
 </aside>
 
-What this means in practical terms is that our "compiler" C module has
-functionality you'll recognize from jlox for parsing -- consuming tokens,
-matching expected token types, etc. And it also has functions for code gen --
-emitting bytecode and adding constants to the destination chunk. (And it means
-I'll use "parsing" and "compiling" interchangeably throughout this and later
-chapters.)
+用实际的话说，这意味着我们这款"编译器" C 模块中**既有** jlox 中**那种**你**认得出**的解析功能——消费 token、匹配所期待的 token 类型，等等—— **也**有代码生成功能——发射字节码、并**向**目标 chunk **添加**常量。（这意味着在**本章**与**后续**章节中，我将"解析"与"编译"两个词**交替**使用。）
 
-We'll build the parsing and code generation halves first. Then we'll stitch them
-together with the code in the middle that uses Pratt's technique to parse Lox's
-particular grammar and output the right bytecode.
+我们会先搭建解析与代码生成两个**半**边。然后，我们会用**位于**两者**之间**的那**一**段代码将它们**缝**在一起——它**使用** Pratt 技术来解析 Lox **那**一份特定的文法，并输出正确的字节码。
 
-## Parsing Tokens
+## 解析 token
 
-First up, the front half of the compiler. This function's name should sound
-familiar.
+先来前端这一半。这个函数的名字**听上去**应当很耳熟。
 
 ^code advance (1 before)
 
-Just like in jlox, it steps forward through the token stream. It asks the
-scanner for the next token and stores it for later use. Before doing that, it
-takes the old `current` token and stashes that in a `previous` field. That will
-come in handy later so that we can get at the lexeme after we match a token.
+正如在 jlox 中那样，它**向**前**迈**一步**穿过** token 流。它**向**扫描器**索要**下一个 token，并将其**存**起来以备后用。在此**之前**，它将**旧**的 `current` token **藏**起来，放进 `previous` 字段。这**将在**之后**派上用场**，以便我们在匹配**一个** token **之后** **拿**到该词素。
 
-The code to read the next token is wrapped in a loop. Remember, clox's scanner
-doesn't report lexical errors. Instead, it creates special *error tokens* and
-leaves it up to the parser to report them. We do that here.
+读取下一个 token 的那段代码被裹在一个循环里。记住，clox 的扫描器**并不**报告词法错误。取而代之的是，它创建**专门的**错误 token，并将**报告**的差事**留**给解析器。我们**便**在这里做这件事。
 
-We keep looping, reading tokens and reporting the errors, until we hit a
-non-error one or reach the end. That way, the rest of the parser sees only valid
-tokens. The current and previous token are stored in this struct:
+我们**不断**循环，读取 token 并报告错误，直至**撞上**一个**非**错误 token 或**抵达**末尾。如此一来，解析器的**其余**部分便**只会**看到**合法**的 token。当下与前一个 token 都被**存**在这个结构体中：
 
 ^code parser (1 before, 2 after)
 
-Like we did in other modules, we have a single global variable of this struct
-type so we don't need to pass the state around from function to function in the
-compiler.
+正如我们在其它模块中所做的那样，我们**拥有**一份该结构体类型的**全局**变量，从而**不必**在编译器的各函数之间将**状态**传来传去。
 
-### Handling syntax errors
+### 处理语法错误
 
-If the scanner hands us an error token, we need to actually tell the user. That
-happens using this:
+若扫描器**抛给**我们**一个**错误 token，我们便需要**真正**通知用户。那一步**通过**这个函数**完成**：
 
 ^code error-at-current
 
-We pull the location out of the current token in order to tell the user where
-the error occurred and forward it to `errorAt()`. More often, we'll report an
-error at the location of the token we just consumed, so we give the shorter name
-to this other function:
+我们**从**当下 token 中**取**出位置，以便告知用户错误发生**在哪**一行，并将其**传**给 `errorAt()`。更多的时候，我们**会**在**刚**才**消费**的那个 token 的位置报告错误，因此我们为**这个**另一个函数起了个更短的名字：
 
 ^code error
 
-The actual work happens here:
+真正的工作**在**这里**进行**：
 
 ^code error-at
 
-First, we print where the error occurred. We try to show the lexeme if it's
-human-readable. Then we print the error message itself. After that, we set this
-`hadError` flag. That records whether any errors occurred during compilation.
-This field also lives in the parser struct.
+首先，我们**打印**错误发生的位置。若**词素**是人类可读的，我们**便**试着把它**展示**出来。然后我们**打印**错误消息**本身**。此后，我们**设置** `hadError` 标志位。它**记录**编译过程中**是否**出现过任何错误。这个字段**也**栖身于 parser 结构体之中。
 
 ^code had-error-field (1 before, 1 after)
 
-Earlier I said that `compile()` should return `false` if an error occurred. Now
-we can make it do that.
+先前我曾说过，若出现错误，`compile()` 应当返回 `false`。现在我们可以**真正**让它做到这一点了。
 
 ^code return-had-error (1 before, 1 after)
 
-I've got another flag to introduce for error handling. We want to avoid error
-cascades. If the user has a mistake in their code and the parser gets confused
-about where it is in the grammar, we don't want it to spew out a whole pile of
-meaningless knock-on errors after the first one.
+为了处理错误，我**还得**引入**一个**标志位。我们**希望**避免错误的**级联**。若用户的代码**有**一个错误，且解析器**在**文法**中**搞不清**自己**的位置，我们**并不**希望它在**第一**个错误**之后**再**吐**出**一**大堆**无意义**的连锁错误。
 
-We fixed that in jlox using panic mode error recovery. In the Java interpreter,
-we threw an exception to unwind out of all of the parser code to a point where
-we could skip tokens and resynchronize. We don't have <span
-name="setjmp">exceptions</span> in C. Instead, we'll do a little smoke and
-mirrors. We add a flag to track whether we're currently in panic mode.
+我们在 jlox 中借助紧急模式错误恢复来**解决**了这一问题。在**那**款 Java 解释器中，我们**抛出**一个异常，以便**从**解析器的所有代码**中**一路**展开** **回到**一点**可以**跳过 token 并**重新**同步的位置。在 C 中**我们** **并**没有<span name="setjmp">异常</span>。取而代之，我们将**耍**一点障眼法。我们**在**解析器**中** **添加**一个标志位， **以**追踪**我们是否**正处于紧急模式**中**。
 
 <aside name="setjmp">
 
-There is `setjmp()` and `longjmp()`, but I'd rather not go there. Those make it
-too easy to leak memory, forget to maintain invariants, or otherwise have a Very
-Bad Day.
+确实有 `setjmp()` 与 `longjmp()`，但我**实在**不想**碰**它们。那些东西**太**容易导致内存泄漏、忘记维护不变式、抑或**其他**各种"非常糟糕的一天"。
 
 </aside>
 
 ^code panic-mode-field (1 before, 1 after)
 
-When an error occurs, we set it.
+当**发生**一个错误时，我们**将**它**置**位。
 
 ^code set-panic-mode (1 before, 1 after)
 
-After that, we go ahead and keep compiling as normal as if the error never
-occurred. The bytecode will never get executed, so it's harmless to keep on
-trucking. The trick is that while the panic mode flag is set, we simply suppress
-any other errors that get detected.
+此后，我们**继续**照常编译，仿佛**那个**错误**从未**发生过。所**生成**的字节码**永远**不会**被**执行，因此**接着**干下去**是** **无**害的。诀窍在于： **当**紧急模式标志位**被**置位**时**，我们**仅仅**抑制**随后**检测**到**的**任何** **其**他**错误**。
 
 ^code check-panic-mode (1 before, 1 after)
 
-There's a good chance the parser will go off in the weeds, but the user won't
-know because the errors all get swallowed. Panic mode ends when the parser
-reaches a synchronization point. For Lox, we chose statement boundaries, so when
-we later add those to our compiler, we'll clear the flag there.
+解析器**很**有**可能**在野草丛中**迷失**，但用户**不会**知道，因为所有错误**都**被**默默吞下**。紧急模式**在**解析器**抵达**一个同步点**时**结束。就 Lox 而言，我们**选择**的是语句**交界处**，所以当我们**之后**在编译器中**添**上那些**之后**，我们**便**在**那里**清除该标志位。
 
-These new fields need to be initialized.
+这些新字段**需要**被初始化。
 
 ^code init-parser-error (1 before, 1 after)
 
-And to display the errors, we need a standard header.
+而**为了**显示错误，我们**需要**一个标准的头文件。
 
 ^code compiler-include-stdlib (1 before, 2 after)
 
-There's one last parsing function, another old friend from jlox.
+我们**还**有一个**最**后一个解析函数，jlox 中的另一位老朋友。
 
 ^code consume
 
-It's similar to `advance()` in that it reads the next token. But it also
-validates that the token has an expected type. If not, it reports an error. This
-function is the foundation of most syntax errors in the compiler.
+它与 `advance()` **类似**， **也**会读取下一个 token。但**它** **还**会**验证**该 token **是否**拥有所期待的类型。若**没有**，它**会**报告一个错误。 **这个**函数**是**编译器中绝大多数语法错误的基石。
 
-OK, that's enough on the front end for now.
+好了，前端部分**先**到这里。
 
-## Emitting Bytecode
+## 生成字节码
 
-After we parse and understand a piece of the user's program, the next step is to
-translate that to a series of bytecode instructions. It starts with the easiest
-possible step: appending a single byte to the chunk.
+在我们解析并理解了用户程序的某**一片**段**之后**，下一步**是**将其**翻译**为一**串**字节码指令。一切都**从**最**简朴**的那一步**开始**：往 chunk **中**追加**一个**字节。
 
 ^code emit-byte
 
-It's hard to believe great things will flow through such a simple function. It
-writes the given byte, which may be an opcode or an operand to an instruction.
-It sends in the previous token's line information so that runtime errors are
-associated with that line.
+很难**相信**如此**简朴**的一个函数**竟**能**流淌**出**如此**伟大的事物。它**写入**所给的那个字节——它**可以**是一个**操作码**， **也**可以是一条指令的**操作数**。它**将**前一个 token 的**行**信息**一**并**传**进去，以便运行时错误**能够**与**该**行**关联**起来。
 
-The chunk that we're writing gets passed into `compile()`, but it needs to make
-its way to `emitByte()`. To do that, we rely on this intermediary function:
+我们**正在**写入的那**份** chunk **是被**传给 `compile()` 的，但**它**需要**走**到 `emitByte()` 那里。为了**这**一**步**，我们**倚赖**于这个**中介**函数：
 
 ^code compiling-chunk (1 before, 1 after)
 
-Right now, the chunk pointer is stored in a module-level variable like we store
-other global state. Later, when we start compiling user-defined functions, the
-notion of "current chunk" gets more complicated. To avoid having to go back and
-change a lot of code, I encapsulate that logic in the `currentChunk()` function.
+眼下，chunk 指针**被**存放**在**一个**模块**级的变量**中**，一如我们**存**其它**全局**状态**那般**。日后，当我们**开始**编译用户自定义的函数时，"当前 chunk"这一概念**会**变得**更**为复杂。为了**避免** **回**过头**去**改动**大量**代码，我**将**那套逻辑**封**在 `currentChunk()` 这一函数**中**。
 
-We initialize this new module variable before we write any bytecode:
+我们**在**写入**任何**字节码**之前**， **先**初始化这个**新的**模块**级**变量：
 
 ^code init-compile-chunk (2 before, 2 after)
 
-Then, at the very end, when we're done compiling the chunk, we wrap things up.
+随后， **在** **最**后， **当**我们**编译**完 chunk **之后**，我们**做**收尾**工作**。
 
 ^code finish-compile (1 before, 1 after)
 
-That calls this:
+它**调**用**这个**：
 
 ^code end-compiler
 
-In this chapter, our VM deals only with expressions. When you run clox, it will
-parse, compile, and execute a single expression, then print the result. To print
-that value, we are temporarily using the `OP_RETURN` instruction. So we have the
-compiler add one of those to the end of the chunk.
+在本章中，我们的 VM **只**处理表达式。当你**跑**起 clox **时**，它**会**解析、编译、 **并**执行**一**条表达式， **接着**打印其结果。为了打印**那**个值，我们**暂时**使用 `OP**RETURN` 指令。于是我们**让**编译器**在** chunk 末尾**加**一条。
 
 ^code emit-return
 
-While we're here in the back end we may as well make our lives easier.
+**既然**我们**已经**到了后端， **不**如**顺**便**让**自己的生活**更**轻松**一些**。
 
 ^code emit-bytes
 
-Over time, we'll have enough cases where we need to write an opcode followed by
-a one-byte operand that it's worth defining this convenience function.
+日积月累，我们**会**积累**足够**多**的** "写一个**操作码**后跟**一个**一字节**操作数**" **的**场景，以至于**为**此**封**一个便利函数**是**值得的。
 
-## Parsing Prefix Expressions
+## 解析前缀表达式
 
-We've assembled our parsing and code generation utility functions. The missing
-piece is the code in the middle that connects those together.
+我们**已**搭好了解析与代码生成的**那些**工具函数。**所**缺的那**一**块**是**居**中**的那一段**将**它们**连**起来**的**代码。
 
-<img src="image/compiling-expressions/mystery.png" alt="Parsing functions on the left, bytecode emitting functions on the right. What goes in the middle?"/>
+<img src="image/compiling-expressions/mystery.png" alt="左侧的解析函数，右侧的字节码发射函数。中间**是**什么？" />
 
-The only step in `compile()` that we have left to implement is this function:
+`compile()` 中**唯**一**没**实现的**那**一步**是**这个函数：
 
 ^code expression
 
-We aren't ready to implement every kind of expression in Lox yet. Heck, we don't
-even have Booleans. For this chapter, we're only going to worry about four:
+我**们_ **尚**未准备好去实现 Lox 中的**每**一种表达式。老实**说**，我们**甚**至**连**布尔**值**都没**有**。在本章中，我们**只**关心**四**种：
 
-* Number literals: `123`
-* Parentheses for grouping: `(123)`
-* Unary negation: `-123`
-* The Four Horsemen of the Arithmetic: `+`, `-`, `*`, `/`
+* 数字字面量：`123`
+* 用于分组的圆括号：`(123)`
+* 一元取负：`-123`
+* 算术四骑士：`+`、`-`、`*`、`/`
 
-As we work through the functions to compile each of those kinds of expressions,
-we'll also assemble the requirements for the table-driven parser that calls
-them.
+当我们**走**过**为**各种**表达式**类型**各自**编译的函数时，我们**也**会**凑**齐**驱动**表**的**要求—— **那**张表**是**调用这些函数的**核心**。
 
-### Parsers for tokens
+### 字面量 token 的解析器
 
-For now, let's focus on the Lox expressions that are each only a single token.
-In this chapter, that's just number literals, but there will be more later. Here's
-how we can compile them:
+眼下，让我们**先**关注**那些**仅由**一个** token **构成**的 Lox 表达式。在本章中， **那**就**是**数字字面量，但**之后**还**会**有更多。下面**是**我们**将**如何**去**编译**它们**：
 
-We map each token type to a different kind of expression. We define a function
-for each expression that outputs the appropriate bytecode. Then we build an
-array of function pointers. The indexes in the array correspond to the
-`TokenType` enum values, and the function at each index is the code to compile
-an expression of that token type.
+我们**将**每**种** token 类型**映射**为**一种** **不同**的**表达式**类型。我们**为**每**一种** **表达式**都**定义**一个**函数**， **以**输出**恰当**的字节码。然后我们**搭**起**一个**函数指针**数组**。数组**中**的**索引** **对**应**于** `TokenType` 枚举**值**， **而** **每个**索引**处**的函数**便**是**编译** **该** token 类型**之** **表达式**的**代码**。
 
-To compile number literals, we store a pointer to the following function at the
-`TOKEN_NUMBER` index in the array.
+为了**编译**数字字面量，我们**将**一个**指向**下面**这**个函数的**指针**存**在**数组**的** `TOKEN**NUMBER` 索引**处**。
 
 ^code number
 
-We assume the token for the number literal has already been consumed and is
-stored in `previous`. We take that lexeme and use the C standard library to
-convert it to a double value. Then we generate the code to load that value using
-this function:
+我们**假**设数字字面量的 token **已**被消费**并**存**在_ `previous` **中**。我们**拿**出该**词素**， **并**用 C 标准库**将**其**转换**为一个 double **值**。然后，我们**通过**该函数**生成**代码**以**加载**该** **值**：
 
 ^code emit-constant
 
-First, we add the value to the constant table, then we emit an `OP_CONSTANT`
-instruction that pushes it onto the stack at runtime. To insert an entry in the
-constant table, we rely on:
+首先，我们**将**该**值**添加**至**常量表， **接着**发射**一**条 `OP**CONSTANT` 指令， **以**在运行时**将**其**推**入栈。为了**在**常量表**中**插入**一**条，我们**倚赖**于：
 
 ^code make-constant
 
-Most of the work happens in `addConstant()`, which we defined back in an
-[earlier chapter][bytecode]. That adds the given value to the end of the chunk's
-constant table and returns its index. The new function's job is mostly to make
-sure we don't have too many constants. Since the `OP_CONSTANT` instruction uses
-a single byte for the index operand, we can store and load only up to <span
-name="256">256</span> constants in a chunk.
+大**部**分工作**在_ `addConstant()` **中** **进行**—— **该**函数**定**义**于**一[更**早**的章节][bytecode] **中**。它**将**所给**的** **值** **追**加**至** chunk **常量**表**的**末尾， **并**返回**其**索引。这**个**新函数**的**工作**主要** **是**  **确**保**我们** **没**有**太**多的常量。由于 `OP**CONSTANT` 指令**使用** **一**个**字节** **作**为**其**索引**操作数**， **我们** **在_ **一**个 chunk **中** **最**多**只**能**存**储**并**加载 <span name="256">256</span> **个**常量。
 
 [bytecode]: chunks-of-bytecode.html
 
 <aside name="256">
 
-Yes, that limit is pretty low. If this were a full-sized language
-implementation, we'd want to add another instruction like `OP_CONSTANT_16` that
-stores the index as a two-byte operand so we could handle more constants when
-needed.
+**是**的， **这**个**上**限**有**些**低**。若**这**是**一**款**真**正**的**语言实现，我们**会**想**要**添**上** **另**一**条**指令—— **类**如 `OP_CONSTANT_16` **的**那种**将**索引**存**为两**字**节**操作数**的—— **以**便**我**们**能**在**需**要**时**处理**更**多的常量。
 
-The code to support that isn't particularly illuminating, so I omitted it from
-clox, but you'll want your VMs to scale to larger programs.
+**支**持**这**一**点**的代码**并**不**特**别**有**启**发**性， **所**以我**在** clox **中**略**去**了**它**，但**你**一定**会**想**让**你的 VM **能**扩**展**到**更**大的程序**上**。
 
 </aside>
 
-That's basically all it takes. Provided there is some suitable code that
-consumes a `TOKEN_NUMBER` token, looks up `number()` in the function pointer
-array, and then calls it, we can now compile number literals to bytecode.
+大**体**上**就**是**这**些**了**。**只**要**有** **那**些**恰**当**的**代码**去**消费**一**个 `TOKEN_NUMBER` token， **在**函数指针数组**中**查找 `number()`， **并** **接**着**调**用它，我们**便**可**以** **将**数字字面量**编**译**为**字节码。
 
-### Parentheses for grouping
+### 用于分组的圆括号
 
-Our as-yet-imaginary array of parsing function pointers would be great if every
-expression was only a single token long. Alas, most are longer. However, many
-expressions *start* with a particular token. We call these *prefix* expressions.
-For example, when we're parsing an expression and the current token is `(`, we
-know we must be looking at a parenthesized grouping expression.
+**我**们**那**些**尚**未**出**现**的**函数指针**数组**， **若** **每**条**表达式** **都** **只** **有** **一**个 token **长**， **就**会**很**棒。可惜，大多数**都** **更**长。然而， **许**多表达式**都** **以** **某**个**特**定的 token **打**头。我们**称** **这**些**为** **前缀**表达式。举例**而**言， **当**我们**正**在解析**一**条表达式， **而**当下 token **是** `(` **时**，我们**便** **知**道**我**们**必**然**正**在**面**对**一**个**带**圆括号**的** **分组**表达式。
 
-It turns out our function pointer array handles those too. The parsing function
-for an expression type can consume any additional tokens that it wants to, just
-like in a regular recursive descent parser. Here's how parentheses work:
+**事**实**上**， **我**们的函数指针**数**组**也**能**处**理**这**些情形。**一**条表达式**的**解析函数**可**以**消**费**它** **想**要**的** **任**何**其**他 token， **正**如**在** **一**款**普**通**的**递归**下**降解析**器** **中**那样。 **下**面**是**圆括号**的**工作**方**式：
 
 ^code grouping
 
-Again, we assume the initial `(` has already been consumed. We <span
-name="recursive">recursively</span> call back into `expression()` to compile the
-expression between the parentheses, then parse the closing `)` at the end.
+**再**一次， **我**们**假**设**那**个**起**头**的** `(` **已**被消费。**我**们**递**归**地** **回**调 `expression()` **来**编译**圆**括号**之**间**的**表达式， **接**着**在**末尾解析**那**个 `)`。
 
 <aside name="recursive">
 
-A Pratt parser isn't a recursive *descent* parser, but it's still recursive.
-That's to be expected since the grammar itself is recursive.
+Pratt 解析器**并**不**是**递归**下**降解析**器**， **但**它**依**然**是**递归**的**。 **这** **倒** **不**足**为**奇， **因**为**文**法**本**身**就** **是**递归**的**。
 
 </aside>
 
-As far as the back end is concerned, there's literally nothing to a grouping
-expression. Its sole function is syntactic -- it lets you insert a
-lower-precedence expression where a higher precedence is expected. Thus, it has
-no runtime semantics on its own and therefore doesn't emit any bytecode. The
-inner call to `expression()` takes care of generating bytecode for the
-expression inside the parentheses.
+**就**后端**而**言， **一**个**分**组表达式**实**在**没**什么**花**头。它**唯**一**的**作用**是**句法**上**的—— **它**让**你** **能**够**在** **某**个**期**待**出**现**较**高**优**先级**的** **位**置**插**入**一**条**较**低**优**先级**的**表达式。**因**此， **它** **本**身**并**不**具**有**任**何**运**行时**语**义， **也** **因**此**不**发射**任**何**字**节码。 **其** **内**部**对** `expression()` **的**调**用**负责**为** **圆**括号**内** **的**表达式**生**成**字**节码。
 
-### Unary negation
+### 一元取负
 
-Unary minus is also a prefix expression, so it works with our model too.
+**一**元**减** **号** **也** **是** **一**个**前**缀表达式， **所**以**它** **也** **能** **纳**入**我**们的**这**个**模**型。
 
 ^code unary
 
-The leading `-` token has been consumed and is sitting in `parser.previous`. We
-grab the token type from that to note which unary operator we're dealing with.
-It's unnecessary right now, but this will make more sense when we use this same
-function to compile the `!` operator in [the next chapter][next].
+**那**个**起**头**的** `-` token **已**被**消**费， **并** **坐**在 `parser.previous` **中**。我们**从**其**中** **取**出 token **类**型， **以**记**录**我们**到**底**在**应对**哪**个**一**元运算符。**眼**下**这** **是**多余**的**， **但** **这**会在**[下**一**章][next] **中_ **当**我们**用**这**同**一个函数**来**编译 `!` 运算符**时**变得**有**意**义**。
 
 [next]: types-of-values.html
 
-As in `grouping()`, we recursively call `expression()` to compile the operand.
-After that, we emit the bytecode to perform the negation. It might seem a little
-weird to write the negate instruction *after* its operand's bytecode since the
-`-` appears on the left, but think about it in terms of order of execution:
+**在** `grouping()` **中**一样， **我**们**递**归**地** **调**用 `expression()` **来**编译**那**个运算**对**象。**此**后， **我**们**发**射**字**节码**以**执**行**取负**运**算。**看**起来**有**些**奇**怪——我们**在**运算**对**象**的**字节码**之** **后**才**写**取负指令， **因**为 `-` **在**源**码** **中** **出**现**在**左**边** ——但**请**从**执**行**顺**序**的**角**度** **来**思**考** **一**下：
 
-1. We evaluate the operand first which leaves its value on the stack.
+1. 我**们** **先** **对**运算**对**象**求**值， **其**结果**会** **留**在**栈** **上**。
 
-2. Then we pop that value, negate it, and push the result.
+2. **然**后**我**们**将** **那**个值**弹**出**栈**、 **取**负、 **并**将**结**果**重**新**推** **上** **去**。
 
-So the `OP_NEGATE` instruction should be emitted <span name="line">last</span>.
-This is part of the compiler's job -- parsing the program in the order it
-appears in the source code and rearranging it into the order that execution
-happens.
+**于**是 `OP**NEGATE` 指令**应_ **该**在<span name="line">最**后**</span> 发射。 **这** **是**编译器**的**工作**之**一 —— **按**源**码** **中** **出**现**的**顺**序** **进**行解析， **并**将**其** **重**新**排**列**为**执**行** **发**生**的** **顺**序。
 
 <aside name="line">
 
-Emitting the `OP_NEGATE` instruction after the operands does mean that the
-current token when the bytecode is written is *not* the `-` token. That mostly
-doesn't matter, except that we use that token for the line number to associate
-with that instruction.
+**在**运算**对**象**之** **后** **发**射 `OP**NEGATE` 指令， **意**味着**写**入**字**节码**时**的**当**下 token **并_ **不** **是** `-`。**这** **大**抵**不** **会** **有** **多**大**影**响， **除**非**我**们**使**用**那**个 token **来**获**取** **与** **该**指令**关**联**的** **行**号。
 
-This means if you have a multi-line negation expression, like:
+**这** **意**味**着**，若**你**拥**有**一**个**跨**多**行**的**取负表达式， **比** **如**：
 
 ```lox
 print -
   true;
 ```
 
-Then the runtime error will be reported on the wrong line. Here, it would show
-the error on line 2, even though the `-` is on line 1. A more robust approach
-would be to store the token's line before compiling the operand and then pass
-that into `emitByte()`, but I wanted to keep things simple for the book.
+**则**运行时错误**将** **在** **错**误**的** **行** **上**报告。**在**此**处**， **它** **会** **显**示**错**误**在** **第** 2 **行**， **尽**管 `-` **位** **于** **第** 1 **行**。 **一**个**更**为**稳**健**的** **做**法**是** **在**编译**运**算**对**象**之** **前** **先** **存**储**该** token **的** **行**， **然**后**将** **其** **传** **入** `emitByte()`， **但** **我**希**望**让**本**章**保**持**简**单。
 
 </aside>
 
-There is one problem with this code, though. The `expression()` function it
-calls will parse any expression for the operand, regardless of precedence. Once
-we add binary operators and other syntax, that will do the wrong thing.
-Consider:
+**不**过**这**段代码**有**一**个**问**题**。 **它** **所**调**用**的 `expression()` 函数**会** **为**运算**对**象解析**任**何**表**达式， **无**视**优**先级。**一**旦**我**们**添**上**二**元运算符**和** **其**他**语**法， **这** **会** **成** **为**错**误** **的** **做**法。**思**考**一**下：
 
 ```lox
 -a.b + c;
 ```
 
-Here, the operand to `-` should be just the `a.b` expression, not the entire
-`a.b + c`. But if `unary()` calls `expression()`, the latter will happily chew
-through all of the remaining code including the `+`. It will erroneously treat
-the `-` as lower precendence than the `+`.
+**在**此**处**， `-` **的**运算**对**象**应**该**只** **是** `a.b` **这**条**表**达式， **而** **不** **是**整**个** `a.b + c`。 **但** **若** `unary()` **调**用 `expression()`， **后**者**会** **欣**然**地** **将** **剩**下**的** **所**有**代**码**一** **并**嚼**烂**， **连** `+` **也** **不**放**过**。**它** **会** **错** **误** **地**将 `-` **视**为**比** `+` **更** **低** **的**优**先**级。
 
-When parsing the operand to unary `-`, we need to compile only expressions at a
-certain precedence level or higher. In jlox's recursive descent parser we
-accomplished that by calling into the parsing method for the lowest-precendence
-expression we wanted to allow (in this case, `call()`). Each method for parsing
-a specific expression also parsed any expressions of higher precedence too, so
-that included the rest of the precedence table.
+**在**解析 `-` **的**运算**对**象**时**， **我**们**只**需**要**编译**某** **一**优**先**级**以** **上** **的**表达式。**在** jlox **的**递**归** **下**降解析**器** **中**， **我**们**通**过**调**入**我**们**所**希**望** **允**许**的** **最**低**优**先级**的**解析**方**法（**本** **例** **中** **是** `call()`） **来** **达**到**这** **一**目的。**每**个**用**于解析**特**定表达式**的**方法**也** **会**解析**比**它**更**高**优**先级**的** **那**些表达式， **从**而**也** **覆**盖**了**优**先**级表**的** **其**余部分。
 
-The parsing functions like `number()` and `unary()` here in clox are different.
-Each only parses exactly one type of expression. They don't cascade to include
-higher-precedence expression types too. We need a different solution, and it
-looks like this:
+clox **里** **的** `number()` **与** `unary()` **等**解析函数**则** **不** **同**。**每**一**位** **都** **只**解析**一**种**表**达式。**它**们**不** **会**顺**势** **延**伸**到** **也**涵盖**更**高**优**先级**的**表达式。**我**们**需**要**一**个**不**同**的**解决**方**案， **看**起来**如**下：
 
 ^code parse-precedence
 
-This function -- once we implement it -- starts at the current token and parses
-any expression at the given precedence level or higher. We have some other setup
-to get through before we can write the body of this function, but you can
-probably guess that it will use that table of parsing function pointers I've
-been talking about. For now, don't worry too much about how it works. In order
-to take the "precedence" as a parameter, we define it numerically.
+**这**个函数—— **一**旦**我**们**实**现**了**它—— **会**从**当**下 token **起**步，解析**任**何**处**于**给**定**优**先级**或** **更**高**位**置**的**表达式。 **我**们**还** **有** **别**的**铺**垫**要**做， **然**后**才**能**去**写**这**个函数**的**函数**体**， **但**你**大**概**已**猜**到**它**将**使**用** **我**们**一** **直** **在**念**叨** **的** **那**张**解**析函数指针**表**。 **眼**下， **不**必**太**担**心**它**如**何**工**作。**为**了**将** "优先级" **作**为参数**接**收， **我**们**定**义**它**为**一**个**数**字。
 
 ^code precedence (1 before, 2 after)
 
-These are all of Lox's precedence levels in order from lowest to highest. Since
-C implicitly gives successively larger numbers for enums, this means that
-`PREC_CALL` is numerically larger than `PREC_UNARY`. For example, say the
-compiler is sitting on a chunk of code like:
+**这**些**都** **是** Lox **的** **所** **有**优**先**级**层**级， **按** **从** **低**到**高**排序。**由**于 C **隐**式**地** **为**枚**举** **赋**值**以** **递**增**的**数**字**， **这** **意**味**着** `PREC_CALL` **在**数**值** **上** **比** `PREC_UNARY` **更**大。**比**如**说**， **假**如**编**译器**正**停留**在** **这**样**一**段**代**码**上**：
 
 ```lox
 -a.b + c
 ```
 
-If we call `parsePrecedence(PREC_ASSIGNMENT)`, then it will parse the entire
-expression because `+` has higher precedence than assignment. If instead we
-call `parsePrecedence(PREC_UNARY)`, it will compile the `-a.b` and stop there.
-It doesn't keep going through the `+` because the addition has lower precedence
-than unary operators.
+**若** **我**们**调**用 `parsePrecedence(PREC_ASSIGNMENT)`， **那**么**它** **会**解析**整**条**表**达式， **因**为 `+` **的** **优**先级**比**赋**值** **更**高。 **若** **取**而**代**之**调**用 `parsePrecedence(PREC_UNARY)`， **那**么**它** **会**编译 `-a.b` **并** **在** **此** **处** **停** **下**。**它** **不**会**继**续**穿**过 `+`， **因**为**加**法**的**优**先**级**比**一元运算符**更** **低**。
 
-With this function in hand, it's a snap to fill in the missing body for
-`expression()`.
+**带**上**这**个函数**在**手， **补**上 `expression()` **那**个**空** **缺**的函数**体**实在**是** **小**菜**一**碟。
 
 ^code expression-body (1 before, 1 after)
 
-We simply parse the lowest precedence level, which subsumes all of the
-higher-precedence expressions too. Now, to compile the operand for a unary
-expression, we call this new function and limit it to the appropriate level:
+**我**们**只**是解析**最**低**的**优**先**级**层**级， **而**它**自**然**而**然**地** **也** **会**涵盖**所** **有** **更**高**优**先级**的**表达式。**现**在， **为**了**编**译**一**元**表**达式**的**运算**对**象， **我**们**调**用**这**个**新**函数**并**将**其**限**定** **在** **恰**当**的**优**先**级**上**：
 
 ^code unary-operand (1 before, 2 after)
 
-We use the unary operator's own `PREC_UNARY` precedence to permit <span
-name="useful">nested</span> unary expressions like `!!doubleNegative`. Since
-unary operators have pretty high precedence, that correctly excludes things like
-binary operators. Speaking of which...
+**我**们**使**用**一**元运算符**自**己**的** `PREC**UNARY` 优**先**级， **以_ **允**许<span name="useful">嵌套**的**</span> 一元表达式， **比**如 `!!doubleNegative`。**由**于**一**元运算符**的**优先级**很**高， **这** **恰**当地**排**除**了** **像** **二**元运算符**这**样**的**情形。**说**到**这** **个**……
 
 <aside name="useful">
 
-Not that nesting unary expressions is particularly useful in Lox. But other
-languages let you do it, so we do too.
+**嵌**套**一**元表达式**在** Lox **中** **也** **算** **不**上**特**别**有** **用**。**但** **其**它**语**言**允**许**这**么**做**， **所**以**我**们**也** **跟**着**这**么**做**。
 
 </aside>
 
-## Parsing Infix Expressions
+## 解析中缀表达式
 
-Binary operators are different from the previous expressions because they are
-*infix*. With the other expressions, we know what we are parsing from the very
-first token. With infix expressions, we don't know we're in the middle of a
-binary operator until *after* we've parsed its left operand and then stumbled
-onto the operator token in the middle.
+**二**元运算符**与** **之**前**的**表达式**不**同， **因**为它们**是** **中**缀**的**。**对**于**其**他表达式， **我**们**从** **第**一**个** token **就** **知**道**我**们**在**解析**什**么。**对**于**中**缀表达式， **我**们**要**在**已**经解析**完**它的**左**运算**对**象、 **接**着**撞**上**中**间的**那**个运算符 token **之** **后**， **才** **知**道**我**们**正**处**于**一**个** **二**元运算符**的** **中**间。
 
-Here's an example:
+**举**个**例**子：
 
 ```lox
 1 + 2
 ```
 
-Let's walk through trying to compile it with what we know so far:
+**让** **我**们**走** **一**遍**尝**试**用** **我**们**到** **目**前**为**止**所**知**的** **知**识**来**编译**它**：
 
-1.  We call `expression()`. That in turn calls
-    `parsePrecedence(PREC_ASSIGNMENT)`.
+1. **我**们**调**用 `expression()`。**它** **进**而**调**用 `parsePrecedence(PREC_ASSIGNMENT)`。
 
-2.  That function (once we implement it) sees the leading number token and
-    recognizes it is parsing a number literal. It hands off control to
-    `number()`.
+2. **那**个函数（ **一**旦**我**们**实**现**了**它） **看**到**了**开头**的** **那**个**数**字 token， **并** **认**出**正**在解析**一**条**数**字字面量。**它** **将**控**制**权**交** **给** `number()`。
 
-3.  `number()` creates a constant, emits an `OP_CONSTANT`, and returns back to
-    `parsePrecedence()`.
+3. `number()` **创**建**一**个常量， **发**射**一**条 `OP_CONSTANT`， **并**返**回** **至** `parsePrecedence()`。
 
-Now what? The call to `parsePrecedence()` should consume the entire addition
-expression, so it needs to keep going somehow. Fortunately, the parser is right
-where we need it to be. Now that we've compiled the leading number expression,
-the next token is `+`. That's the exact token that `parsePrecedence()` needs to
-detect that we're in the middle of an infix expression and to realize that the
-expression we already compiled is actually an operand to that.
+**接** **下**来**该** **如**何？ **对** `parsePrecedence()` **的** **调**用**应**该**消**费**整**条**加**法表达式， **所**以**它**需**要** **以**某**种**方**式** **继**续**向** **前**。幸运**的**是，解析器**正**停留**在** **我**们**所**需**要** **的** **位**置。 **既**然**我**们**已**经编译**了** **那**个**开**头**的** **数**字表达式， **下** **一**个 token **就** **是** `+`。**这** **正**是 `parsePrecedence()` **需**要**的** **那**个 token， **以**检**测** **我**们**正**处**于**一**条** **中**缀表达式**之** **中**， **并**意识**到** **我**们**已**经编译**完**的**那**条表达式**实**际**上** **是** **它** **的** **一**个运算**对**象。
 
-So this hypothetical array of function pointers doesn't just list functions to
-parse expressions that start with a given token. Instead, it's a *table* of
-function pointers. One column associates prefix parser functions with token
-types. The second column associates infix parser functions with token types.
+**所**以**这**张**假**想**中** **的**函数指针**数**组**不**仅仅**是** **列**出**一**些**函**数**用**于解析**以** **给**定 token **开**头**的**表达式。 **取**而**代**之， **它** **是**一**张**函数指针**表**。**一**列**将** **前**缀解析函数**与** token 类型**关**联**起**来。 **第**二**列** **则** **将** **中**缀解析函数**与** token 类型**关**联**起**来。
 
-The function we will use as the infix parser for `TOKEN_PLUS`, `TOKEN_MINUS`,
-`TOKEN_STAR`, and `TOKEN_SLASH` is this:
+**我**们**将** **用**作 `+`、`-`、`*`、`/` **的** **中**缀解析函数**的** _， **是** **这**个：
 
 ^code binary
 
-When a prefix parser function is called, the leading token has already been
-consumed. An infix parser function is even more *in medias res* -- the entire
-left-hand operand expression has already been compiled and the subsequent infix
-operator consumed.
+**当**一**个** **前**缀解析函数**被**调**用**时， **那**个**领**头**的** token **已**被消费。**一**个**中**缀解析函数**更**加**中** **的** **是** —— **整**个**左**侧运算**对**象**都** **已**被编译， **接**着**的** **那**个**中**缀运算符**也** **已**被消费。
 
-The fact that the left operand gets compiled first works out fine. It means at
-runtime, that code gets executed first. When it runs, the value it produces will
-end up on the stack. That's right where the infix operator is going to need it.
+**左**侧运算**对**象**会** **先**被编译**这** **回**事**恰**好**很**妙。**这** **意**味**着**运行时**那**段代码**会** **先** **执**行。**当**它**运**行**时**， **其**产**生**的**值** **会** **落**到**栈** **上**。**这** **正**是**中**缀运算符**即**将**需**要**的** **位**置。
 
-Then we come here to `binary()` to handle the rest of the arithmetic operators.
-This function compiles the right operand, much like how `unary()` compiles its
-own trailing operand. Finally, it emits the bytecode instruction that performs
-the binary operation.
+**随**后， **我**们**抵**达 `binary()` **处**理**其**它**算**术运算符。**这**个函数**编**译**其** **右**侧运算**对**象， **类**似**于** `unary()` **编**译**它** **自**己**那**个**后**跟**的**运算**对**象。**最**后， **它**发射**执**行**那**个**二**元运算**的**字节码指令。
 
-When run, the VM will execute the left and right operand code, in that order,
-leaving their values on the stack. Then it executes the instruction for the
-operator. That pops the two values, computes the operation, and pushes the
-result.
+**运**行**时**，VM **会** **先**后**执**行**左**、 **右**侧运算**对**象**的**代码， **顺**序**如**此， **并**将**它**们**的** **值** **留**在**栈** **上**。 **接**着**它** **会**执**行** **那**个**运**算符**对**应**的**指令。**那** **会** **弹**出**两**个**值**、 **计**算**运**算、 **并**将**结**果**推** **回** **去**。
 
-The code that probably caught your eye here is that `getRule()` line. When we
-parse the right-hand operand, we again need to worry about precedence. Take an
-expression like:
+**大**概**引**起**你** **注**意**的** **是** **那**行 `getRule()`。**当** **我**们解析**右**侧运算**对**象**时**， **我**们**再** **一**次**需**要**考**虑**优**先级。**看** **这**样**一**条**表**达式：
 
 ```lox
 2 * 3 + 4
 ```
 
-When we parse the right operand of the `*` expression, we need to just capture
-`3`, and not `3 + 4`, because `+` is lower precedence than `*`. We could define
-a separate function for each binary operator. Each would call
-`parsePrecedence()` and pass in the correct precedence level for its operand.
+**当** **我**们解析 `*` **的** **右**侧运算**对**象**时**， **我**们**只** **需** **捕**获 `3`， **而** **不** **应** **包**括 `3 + 4`， **因**为 `+` **的** **优**先级**比** `*` **更**低。**我**们**本**可**以**为**每**一**个** **二**元运算符**各**自**定**义**一**个**函**数。**每**个**函**数**都** **会** **调**用 `parsePrecedence()` **并** **传**入**其**运算**对**象**应**遵**循** **的** **正**确**优**先级。
 
-But that's kind of tedious. Each binary operator's right-hand operand precedence
-is one level <span name="higher">higher</span> than its own. We can look that up
-dynamically with this `getRule()` thing we'll get to soon. Using that, we call
-`parsePrecedence()` with one level higher than this operator's level.
+**但** **那** **样** **实**在**有**些**繁**琐。**每**一**个** **二**元运算符**其** **右**侧运算**对**象**的**优**先**级**都** **比** **它** **自**己**高**一档。<span name="higher">更高</span> **一**档。**我**们**可**以**通**过**马**上**就**要**介**绍**的** `getRule()` **动**态**地**查**到** **那** **个** **值**。**利**用**这** **一**点， **我**们**调**用 `parsePrecedence()` **并** **传**入**比** **当**前运算符**的**优先级**更**高**一**档**的**参数。
 
 <aside name="higher">
 
-We use one *higher* level of precedence for the right operand because the binary
-operators are left-associative. Given a series of the *same* operator, like:
+**我**们**为** **右**侧运算**对**象**使**用**比** **其**自身**更**高**一**档**的**优**先**级， **是** **因**为**这**些**二**元运算符**都**是**左**结合**的**。**面**对**一**串**相**同**的**运算符， **比**如：
 
 ```lox
 1 + 2 + 3 + 4
 ```
 
-We want to parse it like:
+**我**们**希**望**将**其**解**析**为**：
 
 ```lox
 ((1 + 2) + 3) + 4
 ```
 
-Thus, when parsing the right-hand operand to the first `+`, we want to consume
-the `2`, but not the rest, so we use one level above `+`'s precedence. But if
-our operator was *right*-associative, this would be wrong. Given:
+**于**是， **当**解析**第**一**个** `+` **的** **右**侧运算**对**象**时**， **我**们**希**望**捕**获 `2`， **而** **不** **包**括**其**余**部**分， **所**以**我**们**使**用**比** `+` **更**高**一**档**的**优先级。**但** **若** **我**们的运算符**是** **右**结合**的**， **这** **就**错**了**。**面**对：
 
 ```lox
 a = b = c = d
 ```
 
-Since assignment is right-associative, we want to parse it as:
+**由**于赋**值** **是** **右**结合**的**， **我**们**希**望**将**其**解**析**为**：
 
 ```lox
 a = (b = (c = d))
 ```
 
-To enable that, we would call `parsePrecedence()` with the *same* precedence as
-the current operator.
+**为**了**支**持**这** **一**点， **我**们**会** **用** **与**当**前**运算符**相**同**的**优**先**级**来**调**用** `parsePrecedence()`。
 
 </aside>
 
-This way, we can use a single `binary()` function for all binary operators even
-though they have different precedences.
+**以** **这**种**方**式， **我**们**便** **可**以**为** **所** **有** **的** **二**元运算符**使**用**同**一**个** `binary()` 函数， **即**使它们**具** **有** **不**同**的**优先级。
 
-## A Pratt Parser
+## Pratt 解析器
 
-We now have all of the pieces and parts of the compiler laid out. We have a
-function for each grammar production: `number()`, `grouping()`, `unary()`, and
-`binary()`. We still need to implement `parsePrecedence()`, and `getRule()`. We
-also know we need a table that, given a token type, lets us find
+**我**们**现**在**已**经将**编**译器**的** **各**个**零**件**与**部**件**摆**好** **了**位。**我**们**为**文法**的** **每**一**个** **产**生式**都** **有**一**个**函数： `number()`、`grouping()`、`unary()` **以**及 `binary()`。**我**们**还**需**要** `parsePrecedence()` **以**及 `getRule()` **的**实现。**我**们**也** **知**道**我**们**需**要**一**张**表**， **给**定**一**个 token 类型， **它**能**让** **我**们**查**找**到**：
 
-*   the function to compile a prefix expression starting with a token of that
-    type,
+* 解析**以** **该**类型**开**头**的** **前**缀表达式**的**函数；
 
-*   the function to compile an infix expression whose left operand is followed
-    by a token of that type, and
+* 解析**其** **左**侧运算**对**象**之** **后** **跟**着**该**类型**的** **中**缀表达式**的**函数； **以**及
 
-*   the precedence of an <span name="prefix">infix</span> expression that uses
-    that token as an operator.
+* **使**用**该** token **作**为运算符**的** **中**缀表达式**的**优先级。
 
 <aside name="prefix">
 
-We don't need to track the precedence of the *prefix* expression starting with a
-given token because all prefix operators in Lox have the same precedence.
+**我**们**并**不**需**要**记**录**以** **给**定 token **开**头**的** **前**缀表达式**的**优**先**级， **因**为 Lox **中** **所** **有** **的** **前**缀运算符**都**拥**有** **相**同**的**优先级。
 
 </aside>
 
-We wrap these three properties in a little struct which represents a single row
-in the parser table.
+**我**们**将** **这**三**个**属**性** **打**个**包**， **放** **进** **一**个**小**结**构** **里**， **它** **代**表**解**析**表** **中** **的**一**行**。
 
 ^code parse-rule (1 before, 2 after)
 
-That ParseFn type is a simple <span name="typedef">typedef</span> for a function
-type that takes no arguments and returns nothing.
+**那**个 ParseFn **类**型**是**一**个** **简**单**的**<span name="typedef">typedef</span>， **对**应**于**一**个** **不**带参数、 **返**回**空** **的**函数**类**型。
 
 <aside name="typedef" class="bottom">
 
-C's syntax for function pointer types is so bad that I always hide it behind a
-typedef. I understand the intent behind the syntax -- the whole "declaration
-reflects use" thing -- but I think it was a failed syntactic experiment.
+C **在**函数指针**类**型**上**的**语**法**实**在**太** **糟** **糕**了， **所**以**我**们**总**是**把**它**藏** **在**一**个** typedef **后**面。**我** **理**解**这**一语**法** **背** **后**的**设**计**意**图—— **那**些 " **声**明**反**映**使**用" **的** **事**儿—— **但** **我**认**为** **它** **是**一**个**失败**的**语**法** **实**验。
 
 </aside>
 
 ^code parse-fn-type (1 before, 2 after)
 
-The table that drives our whole parser is an array of ParseRules. We've been
-talking about it forever, and finally you get to see it.
+**驱**动**整**款解析器**的** **那**张**表** **是**一**个** ParseRules **数**组。**我**们**为** **它**念**叨**了**许**久， **终**于**你** **能** **看**到**它** **了**。
 
 ^code rules
 
 <aside name="big">
 
-See what I mean about not wanting to revisit the table each time we needed a new
-column? It's a beast.
+**看**到**我** **说** " **我** **不**想**在** **每**次**为** **那**张**表**添**一**列**时** **都** **回**过头**去**修**改**它" **的**意**思**了**吧**？它**是**一头**怪**兽。
 
-If you haven't seen the `[TOKEN_DOT] = ` syntax in a C array literal, that is
-C99's designated initializer syntax. It's clearer than having to count array
-indexes by hand.
+**若**你**还** **没**见**过** C 数组**字**面量**中** **的** `[TOKEN_DOT] = ` **这**种语**法**， **那**它**是** C99 **的**显**式**初始化**器**语**法**。**它** **比** **让** **你**用**手**指**头**数**数**组**索**引**要** **清**晰**得**多。
 
 </aside>
 
-You can see how `grouping` and `unary` are slotted into the prefix parser column
-for their respective token types. In the next column, `binary` is wired up to
-the four arithmetic infix operators. Those infix operators also have their
-precedences set in the last column.
+**你** **可**以**看**到 `grouping` **与** `unary` **如**何**分**别**安**插**在** **与**其**各**自 token 类型**对**应**的** **前**缀解析**列** **里**。**在** **下** **一**列， `binary` **与** **四**个**算**术**中**缀运算符**相**连。**那**些**中**缀运算符**也** **有**其**优**先级， **设**定**在**最**后** **一**列。
 
-Aside from those, the rest of the table is full of `NULL` and `PREC_NONE`. Most
-of those empty cells are because there is no expression associated with those
-tokens. You can't start an expression with, say, `else`, and `}` would make for
-a pretty confusing infix operator.
+**除** **了** **这**些**之**外， **表** **的**其**余**部**分** **填** **满**了 `NULL` **和** `PREC_NONE`。**那**些**空**格子**大**多**是** **因**为**没**有**与** **那**些 token **相**关联**的**表达式。 **比**如**说**， **你** **不**能**以** `else` **作**为**一**条表达式**的**起点， **而** `}` **作**为**中**缀运算符**也**会**让**人**极**为**困**惑。
 
-But, also, we haven't filled in the entire grammar yet. In later chapters, as we
-add new expression types, some of these slots will get functions in them. One of
-the things I like about this approach to parsing is that it makes it very easy
-to see which tokens are in use by the grammar and which are available.
+**但**同时， **我**们**还** **没** **有** **填**满**整**条**文**法。**在** **后**面**的**章节**中**， **当** **我**们**添**上**新**的表达式**类**型**时**， **其** **中** **的** **一**些**格**子**会** **再**次**被** **填**上函数。**我** **喜**欢**这**种解析**方**法**的** **一**个**地**方**是**： **它** **让**我**们** **能** **够**极**其**直**观**地**看**出**哪**些 token **正**在**被**文法**使**用、 **哪**些**还**留**着** **空**位。
 
-Now that we have the table, we are finally ready to write the code that uses it.
-This is where our Pratt parser comes to life. The easiest function to define is
-`getRule()`.
+**现**在**我**们**有**了**这**张**表**， **终**于**可**以**来** **写** **那**些**使**用**它**的代码**了**。**最**容易**定**义**的**函数**是** `getRule()`。
 
 ^code get-rule
 
-It simply returns the rule at the given index. It's called by `binary()` to look
-up the precedence of the current operator. This function exists solely to handle
-a declaration cycle in the C code. `binary()` is defined *before* the rules
-table so that the table can store a pointer to it. That means the body of
-`binary()` cannot access the table directly.
+**它**简**单** **地**返**回** **指**定索引**处**的**那**一**行**。**它** **由** `binary()` **调**用， **以** **查**找**当**前**运**算符**的**优**先**级。**这**个函数**存**在**的** **唯**一**理**由**是** **为**了**处**理 C 代码**中**的**一**个**声**明**顺**序**循**环。`binary()` **在** **那**张**表** **之** **前**定**义**， **这**样**那**张**表** **才**能**存**储**指**向**它**的指针。**这** **意**味_ **着** `binary()` **的**函数**体** **无**法**直**接**访**问**那**张**表**。
 
-Instead, we wrap the lookup in a function. That lets us forward declare
-`getRule()` before the definition of `binary()`, and <span
-name="forward">then</span> *define* `getRule()` after the table. We'll need a
-couple of other forward declarations to handle the fact that our grammar is
-recursive, so let's get them all out of the way.
+**取**而**代**之， **我**们**将**查找**包** **装**在**一**个函数**里**。**这**样**我**们**就**能**在** `binary()` **定**义**之** **前**预**先**声**明** `getRule()`， **然**后<span name="forward">再</span> 在**那**张**表** **之** **后** **定**义 `getRule()`。**我**们**还** **会**需**要** **一**些**其**他**预**声**明** **来** **应**对**文**法**是**递**归**的**这**一**事**实， **所**以**让** **我**们**一**次**性** **都**摆**出**来**吧**。
 
 <aside name="forward">
 
-This is what happens when you write your VM in a language that was designed to
-be compiled on a PDP-11.
+**这** **就**是**当**你**用**一**门** **为** **在** PDP-11 **上**编译**而** **设**计**的**语**言**来_ **写**你**的** VM **时**， **所**会**发**生**的**事**情。
 
 </aside>
 
 ^code forward-declarations (2 before, 1 after)
 
-If you're following along and implementing clox yourself, pay close attention to
-the little annotations that tell you where to put these code snippets. Don't
-worry, though, if you get it wrong, the C compiler will be happy to tell you.
+**若**你**正**在**跟**着**一**步步**实**现 clox， **请**仔**细_ **看**那些**小**标**注** —— **它**们**会**告**诉**你**该** **把**这**些**代码**片**段**放**在**哪**。**不**用**担**心， **即**使**你** **放** **错**了**位**置， C **编**译器**也**会**很**乐**意** **告**诉**你**。
 
-### Parsing with precedence
+### 带优先级的解析
 
-Now we're getting to the fun stuff. The maestro that orchestrates all of the
-parsing functions we've defined is `parsePrecedence()`. Let's start with parsing
-prefix expressions.
+**如**今**我**们**抵**达**了** **有**趣**的**部**分**。**统**领**那**些**我**们**已**经**定**义**的**解析函数**的** **那**位**指**挥**家**， **是** `parsePrecedence()`。**让** **我**们**从**解析**前**缀表达式**开**始。
 
 ^code precedence-body (1 before, 1 after)
 
-We read the next token and look up the corresponding ParseRule. If there is no
-prefix parser, then the token must be a syntax error. We report that and return
-to the caller.
+**我**们**读**取**下**一**个** token， **并**查**找** **相**应**的** ParseRule。**若** **没**有**前**缀解析器， **则** **该** token **一**定**是**一**个**语**法**错误。**我**们**报**告**那**一**点** **并**返**回** **给**调**用**方。
 
-Otherwise, we call that prefix parse function and let it do its thing. That
-prefix parser compiles the rest of the prefix expression, consuming any other
-tokens it needs, and returns back here. Infix expressions are where it gets
-interesting since precedence comes into play. The implementation is remarkably
-simple.
+**否**则， **我**们**调**用**那**个**前**缀解析函数， **让**它**去**干**它**的**事**。**那**个**前**缀解析器**会**编译**那**条**前**缀表达式**的** **其**余部**分**， **消**费**它** **所**需**的** **其**他 token， **并**返**回** **到** **此**。**中**缀表达式**则**是**有**趣**之**处 —— **因**为**优**先级**在** **此**登场。**实**现**起**来**出**奇**地** **简**单。
 
 ^code infix (1 before, 1 after)
 
-That's the whole thing. Really. Here's how the entire function works: At the
-beginning of `parsePrecedence()`, we look up a prefix parser for the current
-token. The first token is *always* going to belong to some kind of prefix
-expression, by definition. It may turn out to be nested as an operand inside one
-or more infix expressions, but as you read the code from left to right, the
-first token you hit always belongs to a prefix expression.
+**这**就**是**整**个**函数。 **真**的。 **下**面**是** **这**个**函**数**的** **整**体**工**作**方**式：**在** `parsePrecedence()` **的**起点， **我**们**去**查**找** **当**前 token **对**应**的**一**个** **前**缀解析器。**第**一**个** token—— **按**定**义**—— **总**是**归**属**于**某**种** **前**缀表达式。**它** **最**终**可**能**会** **被**嵌**套**在**一** **个** **或** **多**个**中**缀表达式**之** **中** **作**为运算**对**象， **但**当**你**自**左**向**右** **读**源**码** **时**， **你** **碰**到**的** **第**一**个** token **总**是**归**属**于**一**个** **前**缀表达式。
 
-After parsing that, which may consume more tokens, the prefix expression is
-done. Now we look for an infix parser for the next token. If we find one, it
-means the prefix expression we already compiled might be an operand for it. But
-only if the call to `parsePrecedence()` has a `precedence` that is low enough to
-permit that infix operator.
+**在**解析**完** **那**些**之** **后**（ **它** **可**能**会** **消**费**更**多**的** token）， **那**条**前**缀表达式**便**完**工**了。**接**下**来**， **我**们**去**查**找** **下**一**个** token **对**应**的**一**个** **中**缀解析器。**若** **我**们**找**到**一**个， **那**意味着**我**们**已**经编译**完**的**那**条**前**缀表达式**可**能**就**是**它**的运算**对**象。**但** **这** **需**要**对** `parsePrecedence()` **的** **那**次**调**用**所** **传**入**的** `precedence` **足**够**低**， **以** **允**许**那**个**中**缀运算符。
 
-If the next token is too low precedence, or isn't an infix operator at all,
-we're done. We've parsed as much expression as we can. Otherwise, we consume the
-operator and hand off control to the infix parser we found. It consumes whatever
-other tokens it needs (usually the right operand) and returns back to
-`parsePrecedence()`. Then we loop back around and see if the *next* token is
-also a valid infix operator that can take the entire preceding expression as its
-operand. We keep looping like that, crunching through infix operators and their
-operands until we hit a token that isn't an infix operator or is too low
-precedence and stop.
+**若** **下**一**个** token **的**优**先**级**太**低、 **或**者**根**本**不** **是**一**个** **中**缀运算符， **那** **我**们**就**完**工**了。**我**们**已**经**按**当**前**优先**级**解析**了** **尽**可**能** **多** **的**表达式。**否**则， **我**们**消**费**那**个运算符， **并**将**控**制**权** **交** **给** **我**们**找**到**的** **中**缀解析器。**它** **会**消费**它** **所**需**的** **其**他 token（**通**常**是** **右**侧运算**对**象）， **并** **返**回**至** `parsePrecedence()`。**接**着**我**们**回** **到**循环**起**点， **看**看**是** **否** **下**一**个** token **也**是**一**个**有**效**的** **中**缀运算符， **能**够**将** **整**条**前**置表达式**作**为**它**的运算**对**象。**我**们**一**直**这**样**循**环**下**去， **一**路**碾**过**中**缀运算符**与**它**们** **的**运算**对**象， **直**到**我**们**撞**上**一**个**不** **是** **中**缀运算符、 **或**者**优**先级**太**低**的** token， **于**是**停** **下**。
 
-That's a lot of prose, but if you really want to mind meld with Vaughan Pratt
-and fully understand the algorithm, step through the parser in your debugger as
-it works through some expressions. Maybe a picture will help. There's only a
-handful of functions, but they are marvelously intertwined:
+**这**段**文**字**不**少， **但**若**你**真**的**想**与** Vaughan Pratt **产**生**思**想**上**的**共**鸣、 **完**全**领**会**这**个**算**法， **请**在**你**的**调**试器**中** **让**解析器**一**步步**地** **走** **过** **一**些表达式。**或**许**一**张**图**会**有**帮**助**。**这**里**只** **有**寥**寥**几**个**函**数**， **但**它们**缠**绕**得**令**人**惊**叹**：
 
 <span name="connections"></span>
 
-<img src="image/compiling-expressions/connections.png" alt="The various parsing functions and how they call each other."/>
+<img src="image/compiling-expressions/connections.png" alt=" **各**个解析函数**以**及它们**如**何**互**相**调**用。" />
 
 <aside name="connections">
 
-The <img src="image/compiling-expressions/calls.png" class="arrow" /> arrow
-connects a function to another function it directly calls. The <img
-src="image/compiling-expressions/points-to.png" class="arrow" /> arrow shows the
-table's pointers to the parsing functions.
+**那**条 <img src="image/compiling-expressions/calls.png" alt=" **一**条**实**心**箭**头。" class="arrow" /> **箭**头**将**一**个**函**数**连_ **到**另**一**个**它** **直**接**调**用**的**函数。 **那**条 <img src="image/compiling-expressions/points-to.png" alt=" **一**条**空**心**箭**头。" class="arrow" /> **箭**头**显**示**那**张**表** **指**向**各**个解析函数**的**指**针**。
 
 </aside>
 
-Later, we'll need to tweak the code in this chapter to handle assignment. But,
-otherwise, what we wrote covers all of our expression compiling needs for the
-rest of the book. We'll plug additional parsing functions into the table when we
-add new kinds of expressions, but `parsePrecedence()` is complete.
+**之**后， **我**们**会** **需**要**对**本章**的** **代**码**略**加**调**整， **以**应**对**赋**值**。**但** **除**此**之**外， **我**们**所**写**的** **这**些**已**经涵盖**了**我**们**在**本**书**其**余部**分** **中**解析表达式**的** **全**部**需**求。**当** **我**们**添**加**新**的表达式**类**型**时**， **我**们**会** **把** **更**多**的**解析函数**插**入**那**张**表** **中**， **但** `parsePrecedence()` **本**身**已**经**完**整**了**。
 
-## Dumping Chunks
+## 转储 chunk
 
-While we're here in the core of our compiler, we should put in some
-instrumentation. To help debug the generated bytecode, we'll add support for
-dumping the chunk once the compiler finishes. We had some temporary logging
-earlier when we hand-authored the chunk. Now we'll put in some real code so that
-we can enable it whenever we want.
+**在**我**们**抵**达** **编**译器**的** **核**心**之**时， **我**们**应**该**顺**便**加**上**一**些**检**测**工**具。**为**了**调**试**所**生**成** **的**字节码， **我**们**将**添加**一**段**在**编译**结**束**后** **转**储 chunk **的**代**码**。**早** **些**时**候**， **在** **我**们**手**工**拼**凑 chunk **时**， **我**们**有**一些**临**时**的** **日**志输**出**。**如**今， **我**们**会**添**上** **一**些**真**正**的**代码， **以**便**我**们**可**以**在** **任**何**想**用**的**时**候** **将**其**打**开。
 
-Since this isn't for end users, we hide it behind a flag.
+**由**于**这** **并**不**是** **为**终**端**用**户** **而** **设**， **我**们**将**它**隐**藏**在**一**个**标**志**后**面。
 
-^code define-debug-print-code (2 before, 1 after)
+^code define-debug-print-code (2 before, 2 after)
 
-When that flag is defined, we use our existing "debug" module to print out the
-chunk's bytecode.
+**当_ **那**个标**志** **被**定**义** **时**， **我**们**使**用**我**们**既**有**的** "debug" **模**块**来** **打**印**那**份 chunk **的**字节码。
 
 ^code dump-chunk (1 before, 1 after)
 
-We do this only if the code was free of errors. After a syntax error, the
-compiler keeps on going but it's in kind of a weird state and might produce
-broken code. That's harmless because it won't get executed, but we'll just
-confuse ourselves if we try to read it.
+**我**们**只**在**编**译**完**全**没**错**的**代码**后** **才** **这**样**做**。**在** **发**生**语**法错误**之** **后**， **编**译器**会** **继**续**向** **前**， **但** **它**此**时**处**于** **一**种**有**点**古**怪**的**状**态**， **并** **可**能**会** **生**成**有**问**题**的代码。 **这** **是** **无**害**的**， **因**为**它** **不**会**被**执**行**， **但**若**我**们**尝**试**去**读**它**， **也**只**会** **让** **我**们**自**己**一**头雾**水**。
 
-Finally, to access `disassembleChunk()`, we need to include its header.
+**最**后， **为**了**访**问 `disassembleChunk()`， **我**们**需**要**包**含**它**的**头** **文**件。
 
 ^code include-debug (1 before, 2 after)
 
-We made it! This was the last major section to install in our VM's compilation
-and execution pipeline. Our interpreter doesn't *look* like much, but inside it
-is scanning, parsing, compiling to bytecode, and executing.
+**我**们**搞**定**了**！**这** **是**我**们** VM **的**编**译**与**执**行**管**道**中** **需**要**安**装**的**最**后**一**大** **部**件。**我**们**的**解释器**看** **起**来**不** **起**眼， **但** **其**内**部**  **却** **在** **扫**描、 **解**析、 **编**译**为**字节码， **并** **执**行**之**。
 
-Fire up the VM and type in an expression. If we did everything right, it should
-calculate and print the result. We now have a very over-engineered arithmetic
-calculator. We have a lot of language features to add in the coming chapters,
-but the foundation is in place.
+**启**动 VM **并** **输**入**一**条**表**达式。**若** **我**们**一**切**都**做**对**了， **它** **应**该**会** **计**算**并** **打**印**其**结果。**我**们**现**在**有**了**一**款**过**度**工**程**的**算**术** **计**算**器**。**在** **接**下**来** **的**几**章** **里**， **我**们**还** **有** **大**批**的**语**言**特**性** **要** **添** **上**， **但** **地**基**已**经**就**位。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  To really understand the parser, you need to see how execution threads
-    through the interesting parsing functions -- `parsePrecedence()` and the
-    parser functions stored in the table. Take this (strange) expression:
+1.  **要** **真**正**理**解**解**析器， **你** **需**要**看** **一** **看** **执**行**线**程**是** **如**何**穿** **过** **那**些**有**趣**的**解析函数——`parsePrecedence()` **以**及**存** **放**在**那**张**表** **中**的**各**解析函数**的**。**请** **拿** **这**条（有**些**古**怪**）**的**表达式：
 
     ```lox
     (-1 + 2) * 3 - -4
     ```
 
-    Write a trace of how those functions are called. Show the order they are
-    called, which calls which, and the arguments passed to them.
+    **请** **写** **出** **那**些函数**被**调**用**的**顺**序—— **哪**个**调**用**哪**个， **以**及**向**它**们** **传**入**的** **参**数。
 
-2.  The ParseRule row for `TOKEN_MINUS` has both prefix and infix function
-    pointers. That's because `-` is both a prefix operator (unary negation) and
-    an infix one (subtraction).
+1.  `TOKEN_MINUS` **对**应**的** **那**一**行** ParseRule **同**时**具** **有** **前**缀**与** **中**缀函数**指**针。**这** **是** **因**为 `-` **既** **是**一**个** **前**缀运算符（一元取负） **又** **是**一**个** **中**缀运算符（减**法**）。
 
-    In the full Lox language, what other tokens can be used in both prefix and
-    infix positions? What about in C or in another language of your choice?
+    **在**完**整** **的** Lox **语**言**中**， **还** **有**哪**些** token **可**以**同**时**用** **于** **前**缀**与** **中**缀**位**置？ **在** C **或** **你**选**的**另**一**门**语**言**中** **又** **如**何？
 
-3.  You might be wondering about complex "mixfix" expressions that have more
-    than two operands separated by tokens. C's conditional or "ternary"
-    operator, `?:`, is a widely known one.
+1.  **你** **或**许**正**在**好**奇**那**些**具** **有** **两**个**以**上**由** token **分**隔**的**运算**对**象**的**复杂 " **混**合缀" **表**达式。C **的** **条**件**或** " **三**元" 运算符 `?:` **是**一**个**广**为**人**知** **的**例子。
 
-    Add support for that operator to the compiler. You don't have to generate
-    any bytecode, just show how you would hook it up to the parser and handle
-    the operands.
+    **请**  **为**编译**器**添**上** **对** **该**运算符**的** **支**持。**你** **不**用**发**射**任**何字节码， **只**需**显**示**如**何**将**其**接** **入**解析器**并**  **处**理**那**些运算**对**象**即**可。
 
 </div>
 
 <div class="design-note">
 
-## Design Note: It's Just Parsing
+## 设计笔记：只是解析而已
 
-I'm going to make a claim here that will be unpopular with some compiler and
-language people. It's OK if you don't agree. Personally, I learn more from
-strongly stated opinions that I disagree with than I do from several pages of
-qualifiers and equivocation. My claim is that *parsing doesn't matter*.
+**我** **要**在**这**里**抛** **出**一**个** **可**能**会** **惹** **不**少编译器**与** **语**言**人** **士** **不**痛**快**的**主**张。**你**不同意**也** **没**关系。**个** **人** **而**言， **我** **从**那些**表**述**强**硬、 **让** **我** **不**同意**的**观点**中** **学** **到**的， **远** **比** **从** **好**几**页** **的** **限**定**词** **与**含糊**之**辞**中** **学**到**的** **多**。**我**的**主**张**是**，*解析**并**不**重**要*。
 
-Over the years, many programming language people, especially in academia, have
-gotten *really* into parsers and taken them very seriously. Initially, it was
-the compiler folks who got into <span name="yacc">compiler-compilers</span>,
-LALR, and other stuff like that. The first half of the Dragon book is a long
-love letter to the wonders of parser generators.
+**这**些**年**来， **许**多数**程**序**设**计**语**言**方**面**的** **人** —— **尤**其**是** **学**术**界** **的** **那** **些**——**对**解析**器** **走** **火**入**魔**， **并** **把**它**们** **看** **得** **极**为**重**要。**最**初， **是** **那**些 <span name="yacc">编译**器**编译器</span>、LALR **以**及**类**似**的**玩**意**儿**的**编译器**人**士_ **们**玩**得**不**可** **开**交。**龙**书**的** **前**半**部**就**是**一**封** **长**长**的**情**书**， **献**给**解**析器**生**成**器** **的**奇**妙**。
 
 <aside name="yacc">
 
-All of us suffer from the vice of "when all you have is a hammer, everything
-looks like a nail", but perhaps none so visibly as compiler people. You wouldn't
-believe the breadth of software problems that miraculously seem to require a new
-little language in their solution as soon as you ask a compiler hacker for help.
+**我**们**所** **有** **人** **都** **有** " **手**里**有** **了** **一**把**锤**子**之**后， **看** **什**么**都**像**钉**子" **的**坏**毛**病， **但** **编**译器**人**士**的** **这** **种**毛**病** **可**能**最**为**触**目**惊**心。**你**简**直** **无**法**相**信， **一**旦**你**向**一**位**编**译器**黑**客**求**助**某** **个** **软**件**问**题， **下**一**秒**他**就** **会** **掏**出**一**堆**新**的**小** **语**言**来** **解**决_ **它**。
 
-Yacc and other compiler-compilers are the most delightfully recursive example.
-"Wow, writing compilers is a chore. I know, let's write a compiler to write our
-compiler for us."
+Yacc **以**及**其**他**编**译器**编译器**， **是**这**种**毛**病** **最**令**人**愉**快** **的** **递**归**范**例。_" **哇**， **写**编译器**真**是**一**桩**苦**差。**我** **知**道**了**， **让** **我**们**写** **一**款**编**译器**来** **为** **我**们**写** **这**款**编**译器。"*
 
-For the record, I don't claim immunity to this affliction.
+**在** **这** **里**， **我** **不** **声**称**自**己**对** **此** **免**疫_。
 
 </aside>
 
-Later, the functional programming folks got into parser combinators, packrat
-parsers, and other sorts of things. Because, obviously, if you give a functional
-programmer a problem, the first thing they'll do is whip out a pocketful of
-higher-order functions.
+**之**后， **函**数**式** **编**程**的** **那**帮**人** **又** **对**解析**器** **组**合**子**、Packrat 解析**器** **以**及**其**它**种**类**的** **玩**意**儿** **走** **火**入**魔**。**因**为， **显**然， **如**果**你**给**一**位**函**数**式** **编**程**者** **一** **个** **问**题， **他** **会** **马**上**掏**出**一**把**高**阶**函**数**来**解决**它**。
 
-Over in math and algorithm analysis land, there is a long legacy of research
-into proving time and memory usage for various parsing techniques, transforming
-parsing problems into other problems and back, and assigning complexity classes
-to different grammars.
+**数**学**与** **算**法**分**析**阵** **地**， **那**边**也** **有** **大**批**的**研**究**， **去**证**明** **各** **种**解析**技**术**的** **时**间**与** **空**间**复**杂**度**， **去**将解析**问**题**与** **其**他**问**题**相**互**转**换， **以**及**去**给**各** **种** **文**法**分**配**复**杂**度**类**别**。
 
-At one level, this stuff is important. If you're implementing a language, you
-want some assurance that your parser won't go exponential and take 7,000 years
-to parse a weird edge case in the grammar. Parser theory gives you that bound.
-As an intellectual exercise, learning about parsing techniques is also fun and
-rewarding.
+**从** **某**个**层**面**来**说， **这** **些** **都** **是** **重**要**的**。**如**果**你** **正** **在**实**现** **一**门**语**言， **你**希**望** **有**些**保**障**以**证**明** **你**的解析**器** **不**会**退** **化**到**指**数**级**， **从**而**花** 7000 **年**去解析**一**段**文**法**中**某**个** **奇**怪**的**边**角**情**形**。**解**析**理**论**给** **你** **了** **这**一**下**界。**作**为**一**项**智**力**活**动， **学** **一** **学**解析**技**术**也** **是**趣**味**盎**然**、 **报**酬**丰** **厚** **的**。
 
-But if your goal is just to implement a language and get it in front of users,
-almost all of that stuff doesn't matter. It's really easy to get worked up by
-the enthusiasm of the people who *are* into it and think that your front end
-*needs* some whiz-bang generated combinator-parser-factory thing. I've seen
-people burn tons of time writing and rewriting their parser using whatever
-today's hot library or technique is.
+**但** **如**果**你**的**目**标**不**过**是**实**现** **一**门**语**言， **并**把它**摆**到**用**户**面**前， **那** **几**乎**所** **有** **这**些**都** **不** **重**要。**它**真**的** **很**容易**被**那些**对**解析**热**情**洋**溢**的** **人** **的**情**绪** **感**染， **以**为**你**的前**端** **必**须**有** **某**种**又**酷**又** **潮**的**解**析**器** **生**成**器** **组**合**子** **工**厂**的**玩**意**儿。**我** **看** **到** **过** **不**少**人** **把** **大** **量** **时**间**耗** **在** **用** **当**下**最**热**门**的**库**或_ **技**术**一** **遍**又**一**遍**地** **重**写**他**们**的**解析**器** **上**。
 
-That's time that doesn't add any value to your user's life. If you're just
-trying to get your parser done, pick one of the bog-standard techniques, use it,
-and move on. Recursive descent, Pratt parsing, and the popular parser generators
-like ANTLR or Bison are all fine.
+**那** **是** **一** **段** **不** **会** **为** **用**户**的** **生**活**增**添**任**何**价**值**的** **时**间。**如**果**你** **只** **是** **想**赶**快** **把**解析**器** **做** **完**， **挑** **一** **个** **那**些**烂** **大**街**的** **技**术， **用** **上**它， **然**后**往** **前**走**就** **是** **了**。递归**下**降、Pratt 解析**法**、 **以**及**那**些**流**行**的**解析**器** **生**成**器**（**比**如 ANTLR **或** Bison） **都** **是** **相**当**不**错**的**选**择**。
 
-Take the extra time you saved not rewriting your parsing code and spend it
-improving the compile error messages your compiler shows users. Good error
-handling and reporting is more valuable to users than almost anything else you
-can put time into in the front end.
+**请**把**你** **因** **不**反复**重**写**解**析代码**而** **省** **下**的**那** **些** **时**间， **花** **在** **改**进**你**的**编**译器**向** **用**户**展**示**的** **那**些**编**译错误**消**息**上**。**良**好**的** **错**误**处**理**与** **报**告， **比** **你** **能**放**进**前**端**的_ **几**乎**任**何**其**他**东**西， **对** **用**户**而**言**都** **更** **有**价**值**。
 
 </div>

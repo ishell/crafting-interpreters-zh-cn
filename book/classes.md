@@ -1,57 +1,35 @@
-> One has no right to love or hate anything if one has not acquired a thorough
-> knowledge of its nature. Great love springs from great knowledge of the
-> beloved object, and if you know it but little you will be able to love it only
-> a little or not at all.
+# 类
+
+> 一个人若尚未对其本性获得彻底的了解，便无权去爱它或恨它。深厚的爱，源于对所爱之物的博大认识；倘若你只识得皮毛，那你也只能爱它一二，甚至全然无法去爱。
 >
-> <cite>Leonardo da Vinci</cite>
+> <cite>列奥纳多·达·芬奇</cite>
 
-We're eleven chapters in, and the interpreter sitting on your machine is nearly
-a complete scripting language. It could use a couple of built-in data structures
-like lists and maps, and it certainly needs a core library for file I/O, user
-input, etc. But the language itself is sufficient. We've got a little procedural
-language in the same vein as BASIC, Tcl, Scheme (minus macros), and early
-versions of Python and Lua.
+我们一路走到了第十一章，栖身于你机器上的那款解释器，几乎已是一门完整无缺的脚本语言了。它还可以添上几样内建的数据结构——诸如列表与映射——并且它无疑还需要一份用于文件 I/O、用户输入等操作的核心库。但语言本身已经够用了。我们已然拥有了一门小巧的过程式语言，与 BASIC、Tcl、Scheme（去掉宏的部分）、以及早期版本的 Python 和 Lua 属于同宗。
 
-If this were the '80s, we'd stop here. But today, many popular languages support
-"object-oriented programming". Adding that to Lox will give users a familiar set
-of tools for writing larger programs. Even if you personally don't <span
-name="hate">like</span> OOP, this chapter and [the next][inheritance] will help
-you understand how others design and build object systems.
+若这是八十年代，我们便就此打住了。但放眼今天，许多流行的语言都支持"面向对象编程"。为 Lox 引入这一点，将为用户奉上一套他们耳熟能详的工具，用以编写更大的程序。即便你个人并<span name="hate">不钟爱</span>OOP，本章与[下一章][inheritance]仍将助你理解他人是如何设计与构建对象系统的。
 
 [inheritance]: inheritance.html
 
 <aside name="hate">
 
-If you *really* hate classes, though, you can skip these two chapters. They are
-fairly isolated from the rest of the book. Personally, I find it's good to learn
-more about the things I dislike. Things look simple at a distance, but as I get
-closer, details emerge and I gain a more nuanced perspective.
+不过，若你**当真**反感类，大可跳过这两章。它们与本书的其余部分相当独立。说来有趣的是，我个人倒是觉得多去了解那些自己不喜欢的事物是一件好事。远观时事物看似简单，但当真走近，细节便会浮现而出，而你便会获得一份更为细腻的认知。
 
 </aside>
 
-## OOP and Classes
+## OOP 与类
 
-There are three broad paths to object-oriented programming: classes,
-[prototypes][], and <span name="multimethods">[multimethods][]</span>. Classes
-came first and are the most popular style. With the rise of JavaScript (and to a
-lesser extent [Lua][]), prototypes are more widely known than they used to be.
-I'll talk more about those [later][]. For Lox, we're taking the, ahem, classic
-approach.
+通往面向对象编程的道路大抵有三条：类、<span name="multimethods">[原型][prototypes]</span>、以及<span name="multimethods">多重分派[multimethods]</span>。类最先出现，也是最为流行的风格。伴随着 JavaScript 的崛起（以及在较小范围内的 [Lua][]），原型也变得比以往更广为人知。关于原型，我会在[稍后][later]再谈。就 Lox 而言，我们——咳咳——采取了经典路线。
 
 [prototypes]: http://gameprogrammingpatterns.com/prototype.html
-[multimethods]: https://en.wikipedia.org/wiki/Multiple_dispatch
+[multimethods]: https://en.wikipedia.org/wiki/Multiple**dispatch
 [lua]: https://www.lua.org/pil/13.4.1.html
 [later]: #design-note
 
 <aside name="multimethods">
 
-Multimethods are the approach you're least likely to be familiar with. I'd love
-to talk more about them -- I designed [a hobby language][magpie] around them
-once and they are *super rad* -- but there are only so many pages I can fit in.
-If you'd like to learn more, take a look at [CLOS][] (the object system in
-Common Lisp), [Dylan][], [Julia][], or [Raku][].
+多重分派大概是你最不熟悉的一种。我很乐意再多聊几句——我曾围绕它设计过[一门业余爱好语言][magpie]，那种体验**简直妙不可言** ——但本书的篇幅毕竟有限。若你意欲了解更多，不妨看看 [CLOS][]（Common Lisp 中的对象系统）、[Dylan][]、[Julia][]，或 [Raku][]。
 
-[clos]: https://en.wikipedia.org/wiki/Common_Lisp_Object_System
+[clos]: https://en.wikipedia.org/wiki/Common**Lisp_Object**System
 [magpie]: http://magpie-lang.org/
 [dylan]: https://opendylan.org/
 [julia]: https://julialang.org/
@@ -59,41 +37,31 @@ Common Lisp), [Dylan][], [Julia][], or [Raku][].
 
 </aside>
 
-Since you've written about a thousand lines of Java code with me already, I'm
-assuming you don't need a detailed introduction to object orientation. The main
-goal is to bundle data with the code that acts on it. Users do that by declaring
-a *class* that:
+既然你已与我共同书写了大约一千行 Java 代码，我便假定你不必再需要一份关于面向对象的详尽介绍。其主要目的在于将数据与作用于其上的代码捆绑在一起。用户通过声明**类**来达成此目的，而类则：
 
 <span name="circle"></span>
 
-1. Exposes a *constructor* to create and initialize new *instances* of the
-   class
+1. 暴露一个**构造器**，用以创建并初始化该类的新**实例**；
 
-1. Provides a way to store and access *fields* on instances
+1. 提供一种方式来存储并访问实例上的**字段**；
 
-1. Defines a set of *methods* shared by all instances of the class that
-   operate on each instances' state.
+1. 定义一组被该类所有实例所共享的**方法**，这些方法将作用于各自实例的状态之上。
 
-That's about as minimal as it gets. Most object-oriented languages, all the way
-back to Simula, also do inheritance to reuse behavior across classes. We'll add
-that in the [next chapter][inheritance]. Even kicking that out, we still have a
-lot to get through. This is a big chapter and everything doesn't quite come
-together until we have all of the above pieces, so gather your stamina.
+这已经是最精简的版本了。大多数面向对象的语言——一路追溯到 Simula——还提供继承机制，以便跨类复用行为。我们将在[下一章][inheritance]中加入这一点。即便将继承排除在外，我们仍旧有许多事情要做。这一章内容很长，而所有这些零碎的部分要凑在一起才能完全成形——所以，请攒足你的耐力。
 
 <aside name="circle">
 
-<img src="image/classes/circle.png" alt="The relationships between classes, methods, instances, constructors, and fields.">
+<img src="image/classes/circle.png" alt="类、方法、实例、构造器、字段之间的关系图。" />
 
-It's like the circle of life, *sans* Sir Elton John.
+这就像生命的轮回，只是少了 Elton John 爵士。
 
 </aside>
 
 [inheritance]: inheritance.html
 
-## Class Declarations
+## 类声明
 
-Like we do, we're gonna start with syntax. A `class` statement introduces a new
-name, so it lives in the `declaration` grammar rule.
+如同以往，我们从语法入手。一条 `class` 语句引入了一个新名字，因此它归属于 `declaration` 文法规则。
 
 ```ebnf
 declaration    → classDecl
@@ -104,8 +72,7 @@ declaration    → classDecl
 classDecl      → "class" IDENTIFIER "{" function* "}" ;
 ```
 
-The new `classDecl` rule relies on the `function` rule we defined
-[earlier][function rule]. To refresh your memory:
+这条新的 `classDecl` 规则倚赖于我们先前所定义的 `function` 规则。为唤起回忆：
 
 [function rule]: functions.html#function-declarations
 
@@ -114,15 +81,11 @@ function       → IDENTIFIER "(" parameters? ")" block ;
 parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
 ```
 
-In plain English, a class declaration is the `class` keyword, followed by the
-class's name, then a curly-braced body. Inside that body is a list of method
-declarations. Unlike function declarations, methods don't have a leading <span
-name="fun">`fun`</span> keyword. Each method is a name, parameter list, and
-body. Here's an example:
+简而言之，一个类声明由 `class` 关键字、类的名字、以及一对花括号包裹的类体构成。类体内部是一系列方法声明。不同于函数声明，方法并不带一个前置的 <span name="fun">`fun`</span> 关键字。每一个方法都是一个名字、一个参数列表、以及一个函数体。示例如下：
 
 <aside name="fun">
 
-Not that I'm trying to say methods aren't fun or anything.
+我并不是要说方法就不好玩了。
 
 </aside>
 
@@ -138,81 +101,53 @@ class Breakfast {
 }
 ```
 
-Like most dynamically typed languages, fields are not explicitly listed in the
-class declaration. Instances are loose bags of data and you can freely add
-fields to them as you see fit using normal imperative code.
+与大多数动态类型语言一样，字段并不会在类声明中显式罗列。实例乃是数据的松散集合，你可以按自己的喜好，用普通的命令式代码自由地往里增添字段。
 
-Over in our AST generator, the `classDecl` grammar rule gets its own statement
-<span name="class-ast">node</span>.
+在我们这边的 AST 生成器中，`classDecl` 文法规则拥有它自己的语句<span name="class-ast">节点</span>。
 
 ^code class-ast (1 before, 1 after)
 
 <aside name="class-ast">
 
-The generated code for the new node is in [Appendix II][appendix-class].
+新节点的生成代码收录于[附录 II][appendix-class]。
 
 [appendix-class]: appendix-ii.html#class-statement
 
 </aside>
 
-It stores the class's name and the methods inside its body. Methods are
-represented by the existing Stmt.Function class that we use for function
-declaration AST nodes. That gives us all the bits of state that we need for a
-method: name, parameter list, and body.
+它存储了类的名字及其类体中的方法。方法由现有的 `Stmt.Function` 类加以表示——那是我们用于函数声明 AST 节点的类。如此一来，我们便拥有了表示一个方法所需的全部状态：名字、参数列表、以及函数体。
 
-A class can appear anywhere a named declaration is allowed, triggered by the
-leading `class` keyword.
+类可以出现在任何允许具名声明出现的位置，并由那个前置的 `class` 关键字加以触发。
 
 ^code match-class (1 before, 1 after)
 
-That calls out to:
+它转而调用：
 
 ^code parse-class-declaration
 
-There's more meat to this than most of the other parsing methods, but it roughly
-follows the grammar. We've already consumed the `class` keyword, so we look for
-the expected class name next, followed by the opening curly brace. Once inside
-the body, we keep parsing method declarations until we hit the closing brace.
-Each method declaration is parsed by a call to `function()`, which we defined
-back in the [chapter where functions were introduced][functions].
+相比其它大多数解析方法，这一处的内容更为丰盈，但大体上仍紧贴文法。我们已经消耗掉了 `class` 关键字，因此接下来便去寻找那个所期待出现的类名，再接着是作为开头的花括号。一旦进入类体内部，我们便反复解析方法声明，直至撞上作为结尾的花括号。每一份方法声明都由一次对 `function()` 的调用进行解析——该函数定义于我们[介绍函数的那一章][functions]。
 
 [functions]: functions.html
 
-Like we do in any open-ended loop in the parser, we also check for hitting the
-end of the file. That won't happen in correct code since a class should have a
-closing brace at the end, but it ensures the parser doesn't get stuck in an
-infinite loop if the user has a syntax error and forgets to correctly end the
-class body.
+正如我们在语法分析器中任何一处开放式循环里所做的那样，我们同样会去检查是否撞上了文件末尾。这种情况在正确的代码中不会发生，因为一个类理应以一个作为结尾的花括号收尾；但它能确保语法分析器**不会**在用户犯了语法错误、忘记正确地结束类体时，被卡在一个死循环之中。
 
-We wrap the name and list of methods into a Stmt.Class node and we're done.
-Previously, we would jump straight into the interpreter, but now we need to
-plumb the node through the resolver first.
+我们将类名与方法列表打包进一个 `Stmt.Class` 节点，便大功告成。此前，我们都是直接跳入解释器；但现在我们需要先让这个节点流过解析器。
 
 ^code resolver-visit-class
 
-We aren't going to worry about resolving the methods themselves yet, so for now
-all we need to do is declare the class using its name. It's not common to
-declare a class as a local variable, but Lox permits it, so we need to handle it
-correctly.
+我们眼下并不需要操心对方法本身的解析工作，所以现在我们只需要以其名字**声明**该类即可。在局部变量中声明类并不常见，但 Lox 允许这么做，因此我们需要正确地处理它。
 
-Now we interpret the class declaration.
+现在我们来解释类声明。
 
 ^code interpreter-visit-class
 
-This looks similar to how we execute function declarations. We declare the
-class's name in the current environment. Then we turn the class *syntax node*
-into a LoxClass, the *runtime* representation of a class. We circle back and
-store the class object in the variable we previously declared. That two-stage
-variable binding process allows references to the class inside its own methods.
+这与执行函数声明的方式颇为相似。我们在当前环境中声明该类的名字。随后，我们将类**语法节点**转换为一个 `LoxClass`，即类的**运行时**表示。我们回过头来，将类对象存放在我们先前声明的那个变量之中。这种两阶段的变量绑定过程，允许我们在类自己的方法内部引用类自身。
 
-We will refine it throughout the chapter, but the first draft of LoxClass looks
-like this:
+我们在本章中会不断打磨它，但 `LoxClass` 的初版大致是这样的：
 
 ^code lox-class
 
-Literally a wrapper around a name. We don't even store the methods yet. Not
-super useful, but it does have a `toString()` method so we can write a trivial
-script and test that class objects are actually being parsed and executed.
+字面上看，它只是一个名字的外壳。眼下我们甚至尚未存储方法。这一点儿也不实用，但至少它带有一个 `toString()` 方法，使得我们能写一段简陋的脚本来测试类的对象确实正在被解析与执行。
 
 ```lox
 class DevonshireCream {
@@ -221,101 +156,65 @@ class DevonshireCream {
   }
 }
 
-print DevonshireCream; // Prints "DevonshireCream".
+print DevonshireCream; // 打印 "DevonshireCream"。
 ```
 
-## Creating Instances
+## 创建实例
 
-We have classes, but they don't do anything yet. Lox doesn't have "static"
-methods that you can call right on the class itself, so without actual
-instances, classes are useless. Thus instances are the next step.
+我们已有了类，但它们眼下还无所事事。Lox 没有"静态"方法——即可以直接在类对象本身调用的方法——所以没有真正的实例，类便毫无用处。因此，下一步便是实例。
 
-While some syntax and semantics are fairly standard across OOP languages, the
-way you create new instances isn't. Ruby, following Smalltalk, creates instances
-by calling a method on the class object itself, a <span
-name="turtles">recursively</span> graceful approach. Some, like C++ and Java,
-have a `new` keyword dedicated to birthing a new object. Python has you "call"
-the class itself like a function. (JavaScript, ever weird, sort of does both.)
+虽然某些语法与语义在面向对象语言之间相当标准化，但创建新实例的方式却各有不同。Ruby 沿袭 Smalltalk 的做法，通过在类对象自身上调用一个方法来创建实例——这是一种<span name="turtles">递归式</span>优雅的途径。某些语言——比如 C++ 与 Java——则拥有一枚专门用于诞生新对象的 `new` 关键字。Python 则让你像调用一个函数那般"调用"类本身。（总是与众不同 JavaScript，则两者皆有几分。）
 
 <aside name="turtles">
 
-In Smalltalk, even *classes* are created by calling methods on an existing
-object, usually the desired superclass. It's sort of a turtles-all-the-way-down
-thing. It ultimately bottoms out on a few magical classes like Object and
-Metaclass that the runtime conjures into being *ex nihilo*.
+在 Smalltalk 中，甚至连**类**自身也是通过对一个既有对象（通常是其所需的父类）调用方法而来。这是一种"乌龟一路背到天"的哲学。它最终落在几块运行时就**凭空**召唤出来的魔法类上——比如 Object 与 Metaclass。
 
 </aside>
 
-I took a minimal approach with Lox. We already have class objects, and we
-already have function calls, so we'll use call expressions on class objects to
-create new instances. It's as if a class is a factory function that generates
-instances of itself. This feels elegant to me, and also spares us the need to
-introduce syntax like `new`. Therefore, we can skip past the front end straight
-into the runtime.
+我对 Lox 采用了极简主义路线。我们已有类对象，亦有函数调用，因此我们将借助对类对象的调用表达式来创建新实例。就好像类乃是一座能自我复制的工厂函数。这对我来说颇为优雅，也免得我们引入诸如 `new` 之类的语法。因此，我们可以径直穿过前端，直抵运行时。
 
-Right now, if you try this:
+眼下，若你尝试下面这段：
 
 ```lox
 class Bagel {}
 Bagel();
 ```
 
-You get a runtime error. `visitCallExpr()` checks to see if the called object
-implements `LoxCallable` and reports an error since LoxClass doesn't. Not *yet*,
-that is.
+你会收到一个运行时错误。`visitCallExpr()` 会检查被调用对象是否实现了 `LoxCallable` 接口，由于 LoxClass **尚未**实现该接口，它便会报告一个错误。但尚未实现而已。
 
 ^code lox-class-callable (2 before, 1 after)
 
-Implementing that interface requires two methods.
+实现该接口要求两个方法。
 
 ^code lox-class-call-arity
 
-The interesting one is `call()`. When you "call" a class, it instantiates a new
-LoxInstance for the called class and returns it. The `arity()` method is how the
-interpreter validates that you passed the right number of arguments to a
-callable. For now, we'll say you can't pass any. When we get to user-defined
-constructors, we'll revisit this.
+真正有趣的是 `call()`。当你"调用"一个类时，它会为那个被调用的类实例化一份新的 `LoxInstance` 并将其返回。`arity()` 方法是解释器用来核验你传给 callable 的实参数量是否正确的途径。眼下，我们规定**不能**传入任何实参。等到我们引入用户自定义的构造器时，我们再回头修订这一限制。
 
-That leads us to LoxInstance, the runtime representation of an instance of a Lox
-class. Again, our first implementation starts small.
+由此便引出了 `LoxInstance`——Lox 中一个实例的运行时表示。同样地，我们的初版实现保持小巧。
 
 ^code lox-instance
 
-Like LoxClass, it's pretty bare bones, but we're only getting started. If you
-want to give it a try, here's a script to run:
+与 `LoxClass` 一样，它目前还相当简陋，但我们才刚刚起步。若你想试一试，可以跑跑下面这段脚本：
 
 ```lox
 class Bagel {}
 var bagel = Bagel();
-print bagel; // Prints "Bagel instance".
+print bagel; // 打印 "Bagel instance"。
 ```
 
-This program doesn't do much, but it's starting to do *something*.
+这段程序尚无太多作为，但它已开始做**一些**事情了。
 
-## Properties on Instances
+## 实例上的属性
 
-We have instances, so we should make them useful. We're at a fork in the road.
-We could add behavior first -- methods -- or we could start with state --
-properties. We're going to take the latter because, as we'll see, the two get
-entangled in an interesting way and it will be easier to make sense of them if
-we get properties working first.
+我们已有实例，接下来该让它们有用武之地了。我们正站在一处岔路口。我们可以先添加行为——方法——也可以先着手状态——属性。我们将选择后者，因为正如你将看到的，这两者将以一种有趣的方式纠缠在一起，而若先把属性跑通，再去理解它们则会容易得多。
 
-Lox follows JavaScript and Python in how it handles state. Every instance is an
-open collection of named values. Methods on the instance's class can access and
-modify properties, but so can <span name="outside">outside</span> code.
-Properties are accessed using a `.` syntax.
+Lox 在如何处理状态这一问题上，效仿 JavaScript 与 Python。每一个实例都是一组命名值的开放集合。实例所属类上的方法能够访问并修改这些属性，但<span name="outside">外部</span>的代码同样可以。属性通过 `.` 语法加以访问。
 
 <aside name="outside">
 
-Allowing code outside of the class to directly modify an object's fields goes
-against the object-oriented credo that a class *encapsulates* state. Some
-languages take a more principled stance. In Smalltalk, fields are accessed using
-simple identifiers -- essentially, variables that are only in scope inside a
-class's methods. Ruby uses `@` followed by a name to access a field in an
-object. That syntax is only meaningful inside a method and always accesses state
-on the current object.
+允许类之外的代码直接修改对象的字段，这与面向对象信条中"类**封装**状态"的理念背道而驰。一些语言采取了更为坚定的立场。在 Smalltalk 中，字段通过简单的标识符访问——本质上，它们只是仅在类的方法内部处于作用域的变量。Ruby 使用 `@` 后跟一个名字来访问对象中的字段。这种语法仅在方法内部才有意义，且始终访问当前对象上的状态。
 
-Lox, for better or worse, isn't quite so pious about its OOP faith.
+Lox，无论好坏，对它 OOP 信仰的虔诚度并不那么高。
 
 </aside>
 
@@ -323,242 +222,173 @@ Lox, for better or worse, isn't quite so pious about its OOP faith.
 someObject.someProperty
 ```
 
-An expression followed by `.` and an identifier reads the property with that
-name from the object the expression evaluates to. That dot has the same
-precedence as the parentheses in a function call expression, so we slot it into
-the grammar by replacing the existing `call` rule with:
+一个表达式后跟一个 `.` 与一个标识符，即从该表达式所求值到的那个对象中读取那个名字的属性。这个点号与函数调用表达式中那对括号具有相同的优先级，因此我们通过用以下的规则替换既有的 `call` 规则来将其嵌进文法：
 
 ```ebnf
 call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 ```
 
-After a primary expression, we allow a series of any mixture of parenthesized
-calls and dotted property accesses. "Property access" is a mouthful, so from
-here on out, we'll call these "get expressions".
+在一级表达式之后，我们允许任意混合的括号调用与点号属性访问这两种语法形式。"属性访问"念起来颇为拗口，因此从现在起，我们将其简称为"get 表达式"。
 
-### Get expressions
+### get 表达式
 
-The <span name="get-ast">syntax tree node</span> is:
+<span name="get-ast">语法树节点</span>长这样：
 
 ^code get-ast (1 before, 1 after)
 
 <aside name="get-ast">
 
-The generated code for the new node is in [Appendix II][appendix-get].
+新节点的生成代码收录于[附录 II][appendix-get]。
 
 [appendix-get]: appendix-ii.html#get-expression
 
 </aside>
 
-Following the grammar, the new parsing code goes in our existing `call()`
-method.
+依照文法，新的解析代码被安插于我们既有的 `call()` 方法之中。
 
 ^code parse-property (3 before, 4 after)
 
-The outer `while` loop there corresponds to the `*` in the grammar rule. We zip
-along the tokens building up a chain of calls and gets as we find parentheses
-and dots, like so:
+外层的那个 `while` 循环对应于文法规则中的 `*`。我们沿着词法单元一路前行，每当遇到括号或点号，便构建出一条由调用与 get 相互串联的链条，过程如下图：
 
-<img src="image/classes/zip.png" alt="Parsing a series of '.' and '()' expressions to an AST." />
+<img src="image/classes/zip.png" alt="解析一连串 '.' 与 '()' 表达式为 AST 的过程。" />
 
-Instances of the new Expr.Get node feed into the resolver.
+新 `Expr.Get` 节点的实例会被送入解析器之中。
 
 ^code resolver-visit-get
 
-OK, not much to that. Since properties are looked up <span
-name="dispatch">dynamically</span>, they don't get resolved. During resolution,
-we recurse only into the expression to the left of the dot. The actual property
-access happens in the interpreter.
+好的，这部分没什么可说的。因为属性是<span name="dispatch">动态地</span>查找的，它们并不参与解析。在解析过程中，我们仅仅递归地进入点号左侧的那个表达式。真正的属性访问发生在解释器中。
 
 <aside name="dispatch">
 
-You can literally see that property dispatch in Lox is dynamic since we don't
-process the property name during the static resolution pass.
+你其实可以**直接**看出 Lox 中的属性分派是**动态的**，因为我们**并不**在静态解析 pass 中处理属性名。
 
 </aside>
 
 ^code interpreter-visit-get
 
-First, we evaluate the expression whose property is being accessed. In Lox, only
-instances of classes have properties. If the object is some other type like a
-number, invoking a getter on it is a runtime error.
+首先，我们对那个其属性正在被访问的表达式进行求值。在 Lox 中，只有类的实例才拥有属性。倘若该对象是某种其它类型——例如一个数字——那么对它发起一次 getter 操作便是一个运行时错误。
 
-If the object is a LoxInstance, then we ask it to look up the property. It must
-be time to give LoxInstance some actual state. A map will do fine.
+倘若该对象是一个 `LoxInstance`，那么我们便会让它去查找该属性。看来是时候给 `LoxInstance` 一些真实的状态了。一张 Map 足矣。
 
 ^code lox-instance-fields (1 before, 2 after)
 
-Each key in the map is a property name and the corresponding value is the
-property's value. To look up a property on an instance:
+Map 中的每一个键皆是一个属性名，与之对应的值便是该属性的值。要在一个实例上查找一个属性：
 
 ^code lox-instance-get-property
 
 <aside name="hidden">
 
-Doing a hash table lookup for every field access is fast enough for many
-language implementations, but not ideal. High performance VMs for languages like
-JavaScript use sophisticated optimizations like "[hidden classes][]" to avoid
-that overhead.
+对每一次字段访问都做一次哈希表查找，对于许多语言实现而言已然足够快，但并非上乘之选。JavaScript 之类语言的高性能 VM 会使用诸如"[隐藏类][hidden classes]"这样的复杂优化手段来规避这一开销。
 
-Paradoxically, many of the optimizations invented to make dynamic languages fast
-rest on the observation that -- even in those languages -- most code is fairly
-static in terms of the types of objects it works with and their fields.
+颇具反讽意味的是，许多为**动态**语言发明的速度优化手段，却建立在这样一项观察之上——即便在这些语言中，大多数代码在**所操作的对象的类型以及它们的字段**方面，仍然相当静态。
 
 [hidden classes]: http://richardartoul.github.io/jekyll/update/2015/04/26/hidden-classes.html
 
 </aside>
 
-An interesting edge case we need to handle is what happens if the instance
-doesn't *have* a property with the given name. We could silently return some
-dummy value like `nil`, but my experience with languages like JavaScript is that
-this behavior masks bugs more often than it does anything useful. Instead, we'll
-make it a runtime error.
+我们需要处理的一个饶有趣味的边角情形是：当实例**并不**拥有那个指定名字的属性时，会发生什么。我们本可以默默地返回一个 `nil` 之类的哑值，但根据我在 JavaScript 等语言上的经验，这种行为比起其它任何用途，都更容易掩盖 bug。取而代之，我们让它成为一个运行时错误。
 
-So the first thing we do is see if the instance actually has a field with the
-given name. Only then do we return it. Otherwise, we raise an error.
+因此，我们首先要做的是检查该实例是否真的拥有给定名字的字段。只有当它确实拥有时，我们才将其返回。否则，我们便抛出一个错误。
 
-Note how I switched from talking about "properties" to "fields". There is a
-subtle difference between the two. Fields are named bits of state stored
-directly in an instance. Properties are the named, uh, *things*, that a get
-expression may return. Every field is a property, but as we'll see <span
-name="foreshadowing">later</span>, not every property is a field.
+请注意，我是如何从谈论"属性"切换到"字段"的。两者之间存在着一处细微的差别。字段乃是直接存储于实例中的命名状态。属性则是 get 表达式可能返回的那个命名**东西**。每一个字段都是一个属性，但正如我们<span name="foreshadowing">稍后</span>将看到的，并非每一个属性都是一个字段。
 
 <aside name="foreshadowing">
 
-Ooh, foreshadowing. Spooky!
+哦，伏笔。阴森森的。
 
 </aside>
 
-In theory, we can now read properties on objects. But since there's no way to
-actually stuff any state into an instance, there are no fields to access. Before
-we can test out reading, we must support writing.
+理论上，我们**现在**终于能够读取对象上的属性了。但由于尚无任何办法真正将状态塞进一个实例之中，因此根本没有字段可供访问。在我们能够测试读取之前，我们必须先支持写入。
 
-### Set expressions
+### set 表达式
 
-Setters use the same syntax as getters, except they appear on the left side of
-an assignment.
+setter 使用与 getter 相同的语法，只不过它们出现在赋值表达式的左侧。
 
 ```lox
 someObject.someProperty = value;
 ```
 
-In grammar land, we extend the rule for assignment to allow dotted identifiers
-on the left-hand side.
+在文法的世界里，我们将 assignment 规则扩展为允许在左侧出现以点号连接的标识符。
 
 ```ebnf
 assignment     → ( call "." )? IDENTIFIER "=" assignment
-               | logic_or ;
+               | logic**or ;
 ```
 
-Unlike getters, setters don't chain. However, the reference to `call` allows any
-high-precedence expression before the last dot, including any number of
-*getters*, as in:
+与 getter 不同，setter 并不串联。然而，规则中对 `call` 的引用，允许在最后一个点号之前出现任意高优先级的表达式，其中包括任意数量的 _getter**，例如：
 
 <img src="image/classes/setter.png" alt="breakfast.omelette.filling.meat = ham" />
 
-Note here that only the *last* part, the `.meat` is the *setter*. The
-`.omelette` and `.filling` parts are both *get* expressions.
+请注意，此处**只有**最后一部分——即 `.meat` 那部分——是**setter**。`.omelette` 与 `.filling` 两部分都是**get**表达式。
 
-Just as we have two separate AST nodes for variable access and variable
-assignment, we need a <span name="set-ast">second setter node</span> to
-complement our getter node.
+正如我们对变量访问与变量赋值各自拥有独立的 AST 节点一样，我们也需要一个<span name="set-ast">独立的 setter 节点</span>，与我们先前的 getter 节点相互呼应。
 
 ^code set-ast (1 before, 1 after)
 
 <aside name="set-ast">
 
-The generated code for the new node is in [Appendix II][appendix-set].
+新节点的生成代码收录于[附录 II][appendix-set]。
 
 [appendix-set]: appendix-ii.html#set-expression
 
 </aside>
 
-In case you don't remember, the way we handle assignment in the parser is a
-little funny. We can't easily tell that a series of tokens is the left-hand side
-of an assignment until we reach the `=`. Now that our assignment grammar rule
-has `call` on the left side, which can expand to arbitrarily large expressions,
-that final `=` may be many tokens away from the point where we need to know
-we're parsing an assignment.
+万一你已然忘了，对于赋值，我们语法分析器的处理方式多少有些奇特。我们无法轻易判断一连串词法单元是赋值的左侧，直至我们撞上那个 `=`。如今——既然我们的赋值文法规则的左侧有了 `call`，它可以扩展为任意庞大的表达式——那个作为结尾的 `=` 可能会出现在与我们需要知道"我们正在解析一个赋值"的位置相距许多个词法单元之处。
 
-Instead, the trick we do is parse the left-hand side as a normal expression.
-Then, when we stumble onto the equal sign after it, we take the expression we
-already parsed and transform it into the correct syntax tree node for the
-assignment.
+取而代之，我们所使用的招数是：把左侧当作一个普通表达式来解析。待我们随后撞上那道等号之后，我们再去取那份已然解析好的表达式，并将其变形为赋值的正确语法树节点。
 
-We add another clause to that transformation to handle turning an Expr.Get
-expression on the left into the corresponding Expr.Set.
+我们向那一变形过程中再添加一条分支，用以将一条位于左侧的 `Expr.Get` 表达式转化为对应的 `Expr.Set`。
 
 ^code assign-set (1 before, 1 after)
 
-That's parsing our syntax. We push that node through into the resolver.
+至此完成了语法解析。我们将那个节点向下推入解析器。
 
 ^code resolver-visit-set
 
-Again, like Expr.Get, the property itself is dynamically evaluated, so there's
-nothing to resolve there. All we need to do is recurse into the two
-subexpressions of Expr.Set, the object whose property is being set, and the
-value it's being set to.
+同样地，与 `Expr.Get` 一样，属性本身是动态求值的，因此那里没有什么需要解析的。我们所需要做的，仅仅是递归地进入 `Expr.Set` 的两个子表达式——那个其属性正在被设置的对象，以及那个被设置的值。
 
-That leads us to the interpreter.
+这便把我们带到了解释器。
 
 ^code interpreter-visit-set
 
-We evaluate the object whose property is being set and check to see if it's a
-LoxInstance. If not, that's a runtime error. Otherwise, we evaluate the value
-being set and store it on the instance. That relies on a new method in
-LoxInstance.
+我们对那个其属性正在被设置的对象进行求值，并检查它是否是一个 `LoxInstance`。若不是，那便是一个运行时错误。否则，我们对那个被设置的值进行求值，并将其存储到实例之上。这有赖于 `LoxInstance` 中新增的一个方法。
 
 <aside name="order">
 
-This is another semantic edge case. There are three distinct operations:
+这又是另一个语义上的边角情形。一共存在三个截然不同的操作：
 
-1. Evaluate the object.
+1.  对该对象进行求值。
 
-2. Raise a runtime error if it's not an instance of a class.
+2.  若它并非一个类的实例，则抛出一个运行时错误。
 
-3. Evaluate the value.
+3.  对该值进行求值。
 
-The order that those are performed in could be user visible, which means we need
-to carefully specify it and ensure our implementations do these in the same
-order.
+这三者的执行顺序对用户而言可能可见，这意味着我们需要仔细地明确它，并确保我们的实现都以相同的顺序执行它们。
 
 </aside>
 
 ^code lox-instance-set-property
 
-No real magic here. We stuff the values straight into the Java map where fields
-live. Since Lox allows freely creating new fields on instances, there's no need
-to see if the key is already present.
+这其中并无任何真正的魔法。我们直接将那些值塞进 Java 的 Map——字段所栖身之处。既然 Lox 允许在实例上自由地创建新字段，便无需先去查看该键是否已然存在。
 
-## Methods on Classes
+## 类上的方法
 
-You can create instances of classes and stuff data into them, but the class
-itself doesn't really *do* anything. Instances are just maps and all instances
-are more or less the same. To make them feel like instances *of classes*, we
-need behavior -- methods.
+你可以在类上创建实例并往里塞数据，但类本身**实质上**还没有**做**任何事情。实例仅仅是一张 Map，所有的实例大致都是相同的。要让它们感觉是**某**一类的实例，我们需要行为——方法。
 
-Our helpful parser already parses method declarations, so we're good there. We
-also don't need to add any new parser support for method *calls*. We already
-have `.` (getters) and `()` (function calls). A "method call" simply chains
-those together.
+我们那位勤勉的语法分析器已然在做方法声明的解析工作，所以这一步我们无需多虑。我们也**不**需要为方法**调用**添加任何新的语法支持。我们已经拥有了 `.`（getter）与 `()`（函数调用）。所谓"方法调用"只不过是将这两者串联起来。
 
-<img src="image/classes/method.png" alt="The syntax tree for 'object.method(argument)" />
+<img src="image/classes/method.png" alt="'object.method(argument)' 的语法树" />
 
-That raises an interesting question. What happens when those two expressions are
-pulled apart? Assuming that `method` in this example is a method on the class of
-`object` and not a field on the instance, what should the following piece of
-code do?
+这便引出了一个有趣的问题。当那两个表达式被分开时，会发生什么？假设此处的 `method` 是 `object` 所属类上的一个方法，而非该实例上的一个字段，那么下面这段代码应当作何行为？
 
 ```lox
 var m = object.method;
 m(argument);
 ```
 
-This program "looks up" the method and stores the result -- whatever that is --
-in a variable and then calls that object later. Is this allowed? Can you treat a
-method like it's a function on the instance?
+这段程序"查找"出了那个方法，并将结果——无论那是什么——存入一个变量中，稍后再去调用它。这样被允许吗？你能否如同对待实例上的一个函数那般，去对待一个方法？
 
-What about the other direction?
+那反过来呢？
 
 ```lox
 class Box {}
@@ -572,45 +402,28 @@ box.function = notMethod;
 box.function("argument");
 ```
 
-This program creates an instance and then stores a function in a field on it.
-Then it calls that function using the same syntax as a method call. Does that
-work?
+这段程序创建了一个实例，并将一个函数存入它的一个字段中。随后，它使用与一次方法调用相同的语法调用了该函数。这样能跑通吗？
 
-Different languages have different answers to these questions. One could write a
-treatise on it. For Lox, we'll say the answer to both of these is yes, it does
-work. We have a couple of reasons to justify that. For the second example --
-calling a function stored in a field -- we want to support that because
-first-class functions are useful and storing them in fields is a perfectly
-normal thing to do.
+不同的语言对于这些问题各有不同的答案。要写一篇专题论文都不为过。就 Lox 而言，我们且说这两种情况的答案都是**能**。我们有几条理由来支持这一决定。对于第二个例子——即调用一个存储在字段中的函数——我们希望支持它，因为一等函数本就很有用，而将它们存储在字段中也完全是件稀松平常的事。
 
-The first example is more obscure. One motivation is that users generally expect
-to be able to hoist a subexpression out into a local variable without changing
-the meaning of the program. You can take this:
+第一个例子则更为冷门。一种动机是用户通常期望能够将一个子表达式提取到一个局部变量之中，而**不**改变程序的语义。你可以这样写：
 
 ```lox
 breakfast(omelette.filledWith(cheese), sausage);
 ```
 
-And turn it into this:
+然后改成这样：
 
 ```lox
 var eggs = omelette.filledWith(cheese);
 breakfast(eggs, sausage);
 ```
 
-And it does the same thing. Likewise, since the `.` and the `()` in a method
-call *are* two separate expressions, it seems you should be able to hoist the
-*lookup* part into a variable and then call it <span
-name="callback">later</span>. We need to think carefully about what the *thing*
-you get when you look up a method is, and how it behaves, even in weird cases
-like:
+两者做的是同一件事。类似地，由于方法调用中的 `.` 与 `()` 原本就是两个相互独立的表达式，似乎理应能够将那个**查找**步骤提取到一个变量里，然后稍后再去**调用**它<span name="callback">。</span>我们需要仔细思索一下，当你查找一个方法时所**得到**的究竟**是**什么东西，以及它**如何**行为——即便是在下面这样诡异的情况下：
 
 <aside name="callback">
 
-A motivating use for this is callbacks. Often, you want to pass a callback whose
-body simply invokes a method on some object. Being able to look up the method and
-pass it directly saves you the chore of manually declaring a function to wrap
-it. Compare this:
+这种用法的一个有动机的用例是回调。你常常希望传递一个回调，其函数体仅仅是在某个对象上调用一个方法。能够直接查找该方法并将其原样传入，便可省去手动声明一个函数以包裹它的麻烦。请对比下面这两种写法：
 
 ```lox
 fun callback(a, b, c) {
@@ -620,7 +433,7 @@ fun callback(a, b, c) {
 takeCallback(callback);
 ```
 
-With this:
+与：
 
 ```lox
 takeCallback(object.method);
@@ -639,14 +452,12 @@ var jane = Person();
 jane.name = "Jane";
 
 var method = jane.sayName;
-method(); // ?
+method(); // ？
 ```
 
-If you grab a handle to a method on some instance and call it later, does it
-"remember" the instance it was pulled off from? Does `this` inside the method
-still refer to that original object?
+如果你获取了某个实例上的一个方法的句柄，并在稍后调用它，那么它会"记得"当初它是从哪个实例上取下来的吗？方法中的 `this` 仍会指向那个原始的对象吗？
 
-Here's a more pathological example to bend your brain:
+这里有一道更令人费解的例子来折磨你的脑子：
 
 ```lox
 class Person {
@@ -662,95 +473,64 @@ var bill = Person();
 bill.name = "Bill";
 
 bill.sayName = jane.sayName;
-bill.sayName(); // ?
+bill.sayName(); // ？
 ```
 
-Does that last line print "Bill" because that's the instance that we *called*
-the method through, or "Jane" because it's the instance where we first grabbed
-the method?
+这最后一行究竟会打印 "Bill"——因为那是我们**调用**方法所穿过的那个实例——还是 "Jane"——因为它是我们最初抓取方法的源头？
 
-Equivalent code in Lua and JavaScript would print "Bill". Those languages don't
-really have a notion of "methods". Everything is sort of functions-in-fields, so
-it's not clear that `jane` "owns" `sayName` any more than `bill` does.
+Lua 与 JavaScript 中的等价代码会打印 "Bill"。这些语言**其实**并没有真正意义上的"方法"概念。一切都多少像是"字段里装着的函数"，因此"jane 比 bill 更加**拥有** `sayName`"这一说法并不明确。
 
-Lox, though, has real class syntax so we do know which callable things are
-methods and which are functions. Thus, like Python, C#, and others, we will have
-methods "bind" `this` to the original instance when the method is first grabbed.
-Python calls <span name="bound">these</span> **bound methods**.
+Lox 则拥有货真价实的类语法，因此我们确实**知道**哪些可调用之物是方法、哪些是函数。因此，与 Python、C# 以及其它一些语言一样，我们将让方法在**首次**被抓取时便将 `this` **绑定**到那个原始的实例。Python 称之为<span name="bound">**绑定方法**</span>。
 
 <aside name="bound">
 
-I know, imaginative name, right?
+我知道，这名字可真够富于想象力的，对吧？
 
 </aside>
 
-In practice, that's usually what you want. If you take a reference to a method
-on some object so you can use it as a callback later, you want to remember the
-instance it belonged to, even if that callback happens to be stored in a field
-on some other object.
+在实践中，这通常正是你想要的。倘若你在某个对象上抓取一个方法的引用，以便日后将其作为回调使用，你自然希望它**记住**那个原本所属的实例，即便那个回调碰巧被存放在了**另一个**对象的字段里。
 
-OK, that's a lot of semantics to load into your head. Forget about the edge
-cases for a bit. We'll get back to those. For now, let's get basic method calls
-working. We're already parsing the method declarations inside the class body, so
-the next step is to resolve them.
+好了，这一番语义上的重头戏就这样塞进了你的脑子里。暂时把那些边角情形放到一边。我们稍后再回过头去处理它们。现在，让我们先把基本的方法调用跑通。方法声明已经在类体的解析中处理完毕了，所以下一步便是对它们进行解析。
 
 ^code resolve-methods (1 before, 1 after)
 
 <aside name="local">
 
-Storing the function type in a local variable is pointless right now, but we'll
-expand this code before too long and it will make more sense.
+将函数类型存于一个局部变量之中眼下有些多余，但过不了多久我们便会扩展这段代码，届时它的意义便会显现。
 
 </aside>
 
-We iterate through the methods in the class body and call the
-`resolveFunction()` method we wrote for handling function declarations already.
-The only difference is that we pass in a new FunctionType enum value.
+我们遍历类体中的方法，并调用我们先前为处理函数声明而写就的 `resolveFunction()` 方法。唯一的不同之处在于，我们传入一个新的 `FunctionType` 枚举值。
 
 ^code function-type-method (1 before, 1 after)
 
-That's going to be important when we resolve `this` expressions. For now, don't
-worry about it. The interesting stuff is in the interpreter.
+当我们解析 `this` 表达式时，这一点会变得重要起来。眼下，先别担心它。真正有趣的内容在解释器之中。
 
 ^code interpret-methods (1 before, 1 after)
 
-When we interpret a class declaration statement, we turn the syntactic
-representation of the class -- its AST node -- into its runtime representation.
-Now, we need to do that for the methods contained in the class as well. Each
-method declaration blossoms into a LoxFunction object.
+当我们解释一条类声明语句时，我们便将类的语法表示——其 AST 节点——转换为它的运行时表示。现在，我们还需要对类中所包含的各个方法做同样的事。每一份方法声明都绽放为一枚 `LoxFunction` 对象。
 
-We take all of those and wrap them up into a map, keyed by the method names.
-That gets stored in LoxClass.
+我们将它们全部收入一张 Map，以方法名作为键。这张 Map 会被存储于 `LoxClass` 之中。
 
 ^code lox-class-methods (1 before, 3 after)
 
-Where an instance stores state, the class stores behavior. LoxInstance has its
-map of fields, and LoxClass gets a map of methods. Even though methods are
-owned by the class, they are still accessed through instances of that class.
+实例用于存储状态，而类用于存储行为。`LoxInstance` 拥有一张它的字段 Map，而 `LoxClass` 则拥有一张它的方法 Map。尽管方法为类所"拥有"，它们依然需要通过该类的实例来访问。
 
 ^code lox-instance-get-method (5 before, 2 after)
 
-When looking up a property on an instance, if we don't <span
-name="shadow">find</span> a matching field, we look for a method with that name
-on the instance's class. If found, we return that. This is where the distinction
-between "field" and "property" becomes meaningful. When accessing a property,
-you might get a field -- a bit of state stored on the instance -- or you could
-hit a method defined on the instance's class.
+当在一个实例上查找一个属性时，若我们**没有**找到匹配的字段，我们便去其所属类上寻找同名方法。若找到了，我们便将其返回。正是在这里，"字段"与"属性"之间的区分才真正具有意义。当访问一个属性时，你可能拿到一个字段——一小块存储于实例之上的状态——亦可能命中定义于该实例所属类上的一个方法。
 
-The method is looked up using this:
+该方法是通过下面这一函数查找到的：
 
 <aside name="shadow">
 
-Looking for a field first implies that fields shadow methods, a subtle but
-important semantic point.
+先查找字段意味着字段会遮蔽方法——这是一个微妙却重要的语义细节。
 
 </aside>
 
 ^code lox-class-find-method
 
-You can probably guess this method is going to get more interesting later. For
-now, a simple map lookup on the class's method table is enough to get us
-started. Give it a try:
+你大概能猜到，这个方法日后会变得更为有趣。眼下，简单地在类的方法表上做一次 Map 查找，便足以让我们起步。试试看：
 
 <span name="crunch"></span>
 
@@ -761,41 +541,30 @@ class Bacon {
   }
 }
 
-Bacon().eat(); // Prints "Crunch crunch crunch!".
+Bacon().eat(); // 打印 "Crunch crunch crunch!"。
 ```
 
 <aside name="crunch">
 
-Apologies if you prefer chewy bacon over crunchy. Feel free to adjust the script
-to your taste.
+若你偏爱嚼劲的培根而非酥脆的那种，敬请调整脚本以贴合你的口味。
 
 </aside>
 
-## This
+## this
 
-We can define both behavior and state on objects, but they aren't tied together
-yet. Inside a method, we have no way to access the fields of the "current"
-object -- the instance that the method was called on -- nor can we call other
-methods on that same object.
+我们既能在对象上定义行为，又能存储状态，但它们**尚未**关联到一起。在一个方法内部，我们既无法访问"当前"对象——也就是那个方法被调用时所**针对**的实例——的字段，也无法在同一对象上调用其它方法。
 
-To get at that instance, it needs a <span name="i">name</span>. Smalltalk,
-Ruby, and Swift use "self". Simula, C++, Java, and others use "this". Python
-uses "self" by convention, but you can technically call it whatever you like.
+为了访问那个实例，它需要一个<span name="i">名字</span>。Smalltalk、Ruby 与 Swift 使用 "self"。Simula、C++、Java 以及其它一些语言使用 "this"。Python 约定俗成地使用 "self"，但技术上你也可以随你喜好给它起个别的名字。
 
 <aside name="i">
 
-"I" would have been a great choice, but using "i" for loop variables predates
-OOP and goes all the way back to Fortran. We are victims of the incidental
-choices of our forebears.
+"I" 倒是个绝佳选择，但将 "i" 用作循环变量这一惯例早在 OOP 出现之前便已存在，它一路可以追溯到 Fortran。我们都是前辈们那些偶然选择之下的受害者。
 
 </aside>
 
-For Lox, since we generally hew to Java-ish style, we'll go with "this". Inside
-a method body, a `this` expression evaluates to the instance that the method was
-called on. Or, more specifically, since methods are accessed and then invoked as
-two steps, it will refer to the object that the method was *accessed* from.
+就 Lox 而言，由于我们大体上沿袭 Java 风格，因此我们也选用 "this"。在一个方法体内部，一个 `this` 表达式会求值为那个方法被调用时所**针对**的实例。或者，更准确地说——由于方法先是**被访问**，然后再被**调用**这两个步骤——它所指的将是那个方法**被访问时所******针对**的对象。
 
-That makes our job harder. Peep at:
+这让我们的工作变得更为棘手。请看一眼：
 
 ```lox
 class Egotist {
@@ -808,22 +577,13 @@ var method = Egotist().speak;
 method();
 ```
 
-On the second-to-last line, we grab a reference to the `speak()` method off an
-instance of the class. That returns a function, and that function needs to
-remember the instance it was pulled off of so that *later*, on the last line, it
-can still find it when the function is called.
+在倒数第二行，我们从某个类的一个实例上抓取了对 `speak()` 方法的引用。那会返回一个函数，而那个函数需要记住它**是从**哪个实例上取下来的，以便**日后** ——在最后一行——当该函数被调用时，它依然能在其中找到它。
 
-We need to take `this` at the point that the method is accessed and attach it to
-the function somehow so that it stays around as long as we need it to. Hmm... a
-way to store some extra data that hangs around a function, eh? That sounds an
-awful lot like a *closure*, doesn't it?
+我们需要在方法被访问的那一时刻便取下 `this`，并以某种方式将其与该函数绑定在一起，以使它在我们需要它的时间里始终存在。嗯……一种用来存放那些伴随函数而存在的额外数据的方法？这听起来**是不是**有点像一个**闭包**？
 
-If we defined `this` as a sort of hidden variable in an environment that
-surrounds the function returned when looking up a method, then uses of `this` in
-the body would be able to find it later. LoxFunction already has the ability to
-hold on to a surrounding environment, so we have the machinery we need.
+如果我们把 `this` 定义为一个隐藏的变量，存在于一个包裹着"当我们查找一个方法时所返回的那个函数"的环境之中，那么方法体中对 `this` 的引用便能在日后找到它。`LoxFunction` 已经具备了抓住一份外层环境的能力，因此我们手头已然拥有所需的工具。
 
-Let's walk through an example to see how it works:
+让我们通过一个例子走一遍，看看它究竟是如何工作的：
 
 ```lox
 class Cake {
@@ -835,35 +595,24 @@ class Cake {
 
 var cake = Cake();
 cake.flavor = "German chocolate";
-cake.taste(); // Prints "The German chocolate cake is delicious!".
+cake.taste(); // 打印 "The German chocolate cake is delicious!"。
 ```
 
-When we first evaluate the class definition, we create a LoxFunction for
-`taste()`. Its closure is the environment surrounding the class, in this case
-the global one. So the LoxFunction we store in the class's method map looks
-like so:
+当我们首次对类定义进行求值时，我们为 `taste()` 创建了一枚 `LoxFunction`。它的闭包是包裹该类的那份环境，于此例中便是全局环境。因此，我们存放在类方法 Map 中的那枚 `LoxFunction`，其形如下：
 
-<img src="image/classes/closure.png" alt="The initial closure for the method." />
+<img src="image/classes/closure.png" alt="该方法最初的闭包。" />
 
-When we evaluate the `cake.taste` get expression, we create a new environment
-that binds `this` to the object the method is accessed from (here, `cake`). Then
-we make a *new* LoxFunction with the same code as the original one but using
-that new environment as its closure.
+当我们对那条 `cake.taste` 的 get 表达式进行求值时，我们创建了一份新的环境，它将 `this` 绑定到那个方法被访问时所针对的对象（在此处为 `cake`）。随后，我们用一份新的 `LoxFunction` 来承载同一段代码，但将那份新的环境作为它的闭包。
 
-<img src="image/classes/bound-method.png" alt="The new closure that binds 'this'." />
+<img src="image/classes/bound-method.png" alt="绑定了 'this' 的新闭包。" />
 
-This is the LoxFunction that gets returned when evaluating the get expression
-for the method name. When that function is later called by a `()` expression,
-we create an environment for the method body as usual.
+这便是当对方法名的 get 表达式进行求值时所返回的那枚 `LoxFunction`。当那枚函数稍后被一条 `()` 表达式所调用时，我们照例为方法体创建一份新的环境。
 
-<img src="image/classes/call.png" alt="Calling the bound method and creating a new environment for the method body." />
+<img src="image/classes/call.png" alt="调用绑定方法并为方法体创建一份新环境。" />
 
-The parent of the body environment is the environment we created earlier to bind
-`this` to the current object. Thus any use of `this` inside the body
-successfully resolves to that instance.
+那方法体环境的父环境，正是我们先前所创建的那份用于将 `this` 绑定到当前对象的环境。于是，在方法体中对 `this` 的任何一次使用，都能够顺利地解析到那个实例。
 
-Reusing our environment code for implementing `this` also takes care of
-interesting cases where methods and functions interact, like:
+复用我们既有的环境代码来实现 `this`，同时也妥善处理了方法与函数彼此交互的一些有趣情形，例如：
 
 ```lox
 class Thing {
@@ -880,92 +629,64 @@ var callback = Thing().getCallback();
 callback();
 ```
 
-In, say, JavaScript, it's common to return a callback from inside a method. That
-callback may want to hang on to and retain access to the original object -- the
-`this` value -- that the method was associated with. Our existing support for
-closures and environment chains should do all this correctly.
+比如说在 JavaScript 中，从一个方法内部返回一个回调是件寻常事。那个回调或许希望**抓住**并保留对那个原始对象——那个方法原本所关联的 `this` 值——的访问。我们对闭包与环境链的既有支持理应能正确地处理这一切。
 
-Let's code it up. The first step is adding <span name="this-ast">new
-syntax</span> for `this`.
+让我们来动手实现它。第一步是为 `this` 新增<span name="this-ast">语法</span>。
 
 ^code this-ast (1 before, 1 after)
 
 <aside name="this-ast">
 
-The generated code for the new node is in [Appendix II][appendix-this].
+新节点的生成代码收录于[附录 II][appendix-this]。
 
-[appendix-this]: appendix-ii.html#this-expression
+[appendix-this]: appendix-xi.html#this-expression
 
 </aside>
 
-Parsing is simple since it's a single token which our lexer already
-recognizes as a reserved word.
+由于它只是一个单一词法单元，而我们的词法分析器早已将其识别为保留字，解析这一步简单得很。
 
 ^code parse-this (2 before, 2 after)
 
-You can start to see how `this` works like a variable when we get to the
-resolver.
+待到解析器之中，你便能开始看到 `this` 工作起来有多像一个变量。
 
 ^code resolver-visit-this
 
-We resolve it exactly like any other local variable using "this" as the name for
-the "variable". Of course, that's not going to work right now, because "this"
-*isn't* declared in any scope. Let's fix that over in `visitClassStmt()`.
+我们将以字符串 "this" 作为"变量"的名字，仿照其它任何局部变量那般解析它。当然，眼下这么做还**不行**，因为 "this" 并没有在任何作用域中被声明。我们这就到 `visitClassStmt()` 中去补上它。
 
 ^code resolver-begin-this-scope (2 before, 1 after)
 
-Before we step in and start resolving the method bodies, we push a new scope and
-define "this" in it as if it were a variable. Then, when we're done, we discard
-that surrounding scope.
+在我们踏入并开始解析方法体之前，我们推入一个新的作用域，并将 "this" 定义于其中，仿佛它是一个变量。而当我们搞定之后，我们便丢弃掉那份外层的作用域。
 
 ^code resolver-end-this-scope (2 before, 1 after)
 
-Now, whenever a `this` expression is encountered (at least inside a method) it
-will resolve to a "local variable" defined in an implicit scope just outside of
-the block for the method body.
+如今，每当遇上 `this` 表达式（至少在方法内部）时，它都会解析为一个定义于方法体的花括号**之外**那一处隐式作用域中的"局部变量"。
 
-The resolver has a new *scope* for `this`, so the interpreter needs to create a
-corresponding *environment* for it. Remember, we always have to keep the
-resolver's scope chains and the interpreter's linked environments in sync with
-each other. At runtime, we create the environment after we find the method on
-the instance. We replace the previous line of code that simply returned the
-method's LoxFunction with this:
+解析器为 `this` 引入了一个新的**作用域**，因此解释器也需要为之创建一份对应的**环境**。记住，我们必须始终保持解析器的作用域链与解释器的链接环境彼此同步。在运行时，我们在从实例上找到方法之后才创建那份环境。我们将之前那条仅返回方法 `LoxFunction` 的代码替换为如下：
 
 ^code lox-instance-bind-method (1 before, 3 after)
 
-Note the new call to `bind()`. That looks like so:
+请注意新增的那次 `bind()` 调用。它的实现如下：
 
 ^code bind-instance
 
-There isn't much to it. We create a new environment nestled inside the method's
-original closure. Sort of a closure-within-a-closure. When the method is called,
-that will become the parent of the method body's environment.
+内容并不多。我们创建了一份新的环境，嵌于该方法原有的闭包之内。可以视为"闭包中的闭包"。当该方法被调用时，这将成为方法体环境的父环境。
 
-We declare "this" as a variable in that environment and bind it to the given
-instance, the instance that the method is being accessed from. *Et voilà*, the
-returned LoxFunction now carries around its own little persistent world where
-"this" is bound to the object.
+我们将 "this" 声明为该环境中的一个变量，并将其绑定到给定的实例——即那个方法**被访问时所******针对**的实例。**Voilà**，所返回的 `LoxFunction` 如今便随身携带着它自己那一小片持久化的天地，其中 "this" 已被绑定到那个对象。
 
-The remaining task is interpreting those `this` expressions. Similar to the
-resolver, it is the same as interpreting a variable expression.
+剩下的任务便是解释那些 `this` 表达式。与解析器类似，这完全同于解释一个变量表达式。
 
 ^code interpreter-visit-this
+去试试吧，用一下前面那个 `cake` 的例子。区区不到二十行代码，我们的解释器便能在方法内部处理 `this`——包括它与嵌套类、方法内部的函数、方法的句柄等等之间所有**诡异**的交互。
 
-Go ahead and give it a try using that cake example from earlier. With less than
-twenty lines of code, our interpreter handles `this` inside methods even in all
-of the weird ways it can interact with nested classes, functions inside methods,
-handles to methods, etc.
+### this 的无效使用
 
-### Invalid uses of this
-
-Wait a minute. What happens if you try to use `this` *outside* of a method? What
-about:
+且慢。倘若你试图在方法**之外**使用 `this`，会怎样？比如：
 
 ```lox
 print this;
 ```
 
-Or:
+或者：
 
 ```lox
 fun notAMethod() {
@@ -973,123 +694,77 @@ fun notAMethod() {
 }
 ```
 
-There is no instance for `this` to point to if you're not in a method. We could
-give it some default value like `nil` or make it a runtime error, but the user
-has clearly made a mistake. The sooner they find and fix that mistake, the
-happier they'll be.
+既然你并不身处一个方法之中，那么 `this` 便无所指代。我们可以给它一个 `nil` 之类的默认值，或将其作为一个运行时错误；但用户显然已经犯了一个错。越早令他们察觉并修补此错，他们便越开心。
 
-Our resolution pass is a fine place to detect this error statically. It already
-detects `return` statements outside of functions. We'll do something similar for
-`this`. In the vein of our existing FunctionType enum, we define a new ClassType
-one.
+我们的解析 pass 是检测这一错误的绝佳之处。它早已能够检测函数外的 `return` 语句。我们对 `this` 也照此办理。沿袭我们已有的 `FunctionType` 枚举的思路，我们新定义一个 `ClassType`。
 
 ^code class-type (1 before, 1 after)
 
-Yes, it could be a Boolean. When we get to inheritance, it will get a third
-value, hence the enum right now. We also add a corresponding field,
-`currentClass`. Its value tells us if we are currently inside a class
-declaration while traversing the syntax tree. It starts out `NONE` which means
-we aren't in one.
+是的，它本可以是一个布尔值。等我们讲到继承时，它会添上第三种取值，正因如此，我们才在此先以枚举的形式出现。我们还顺带添加一个与之对应的字段 `currentClass`。它的取值会告诉我们，在遍历语法树的过程中，我们是否正身处某条类声明之中。最初它为 `NONE`，意味着我们并不身处其中。
 
-When we begin to resolve a class declaration, we change that.
+当我们开始解析一条类声明时，便改变该字段。
 
 ^code set-current-class (1 before, 1 after)
 
-As with `currentFunction`, we store the previous value of the field in a local
-variable. This lets us piggyback onto the JVM to keep a stack of `currentClass`
-values. That way we don't lose track of the previous value if one class nests
-inside another.
+如同 `currentFunction` 那样，我们先将字段的旧值存放于一个局部变量之中。这让我们得以借力于 JVM 自身来维护一座 `currentClass` 值的栈——如此一来，即便一个类嵌套于另一个类之中，我们也不会丢失对先前值的追踪。
 
-Once the methods have been resolved, we "pop" that stack by restoring the old
-value.
+待类中的方法解析完毕之后，我们便通过恢复旧值来"弹出"那座栈。
 
 ^code restore-current-class (2 before, 1 after)
 
-When we resolve a `this` expression, the `currentClass` field gives us the bit
-of data we need to report an error if the expression doesn't occur nestled
-inside a method body.
+当我们解析 `this` 表达式时，`currentClass` 字段会给我们提供所需的这份数据——以报告当该表达式**不是**出现在某个方法体内部时出现的错误。
 
 ^code this-outside-of-class (1 before, 1 after)
 
-That should help users use `this` correctly, and it saves us from having to
-handle misuse at runtime in the interpreter.
+这应当能帮助用户正确地使用 `this`，并省去我们在解释器中处理运行时误用的麻烦。
 
-## Constructors and Initializers
+## 构造器与初始化器
 
-We can do almost everything with classes now, and as we near the end of the
-chapter we find ourselves strangely focused on a beginning. Methods and fields
-let us encapsulate state and behavior together so that an object always *stays*
-in a valid configuration. But how do we ensure a brand new object *starts* in a
-good state?
+时至今日，类上几乎所有的功能都已就绪，而当我们行至本章的尾声时，我们发现自己竟奇怪地聚焦于一个"开始"。方法与字段让我们能将状态与行为封装在一起，从而保证一个对象始终**保持**在一种合法的状态之中。但我们如何保证一个全新的对象**起始**便处于一种良好的状态呢？
 
-For that, we need constructors. I find them one of the trickiest parts of a
-language to design, and if you peer closely at most other languages, you'll see
-<span name="cracks">cracks</span> around object construction where the seams of
-the design don't quite fit together perfectly. Maybe there's something
-intrinsically messy about the moment of birth.
+为此，我们需要构造器。我觉得它们是语言设计中最棘手的部分之一，若你仔细端详大多数其它语言，你会发现那些围绕"对象构造"所留下的<span name="cracks">裂痕</span>——设计的接缝处总是难以严丝合缝。或许，在"诞生"的那一时刻，某些本质性的混乱便是躲不掉的。
 
 <aside name="cracks">
 
-A few examples: In Java, even though final fields must be initialized, it is
-still possible to read one *before* it has been. Exceptions -- a huge, complex
-feature -- were added to C++ mainly as a way to emit errors from constructors.
+几个例子：在 Java 中，即便 `final` 字段必须被初始化，但依然可能在它们被赋值**之前**读取它们。异常——一项庞大而复杂的特性——被加入到 C++ 中，主要便是作为一种从构造器中发出错误的方式。
 
 </aside>
 
-"Constructing" an object is actually a pair of operations:
+"构造"一个对象事实上是一对操作：
 
-1.  The runtime <span name="allocate">*allocates*</span> the memory required for
-    a fresh instance. In most languages, this operation is at a fundamental
-    level beneath what user code is able to access.
+1.  运行时为一份崭新的实例<span name="allocate">**分配**</span>其所需的内存。在大多数语言中，这项操作处于用户代码所能触及的层面**之下**。
 
     <aside name="allocate">
 
-    C++'s "[placement new][]" is a rare example where the bowels of allocation
-    are laid bare for the programmer to prod.
+    C++ 的"[placement new][]"是少数几个将分配的肠肚裸露出来供程序员戳弄的例子之一。
 
     </aside>
 
-2.  Then, a user-provided chunk of code is called which *initializes* the
-    unformed object.
+2.  随后，一段由用户提供的代码段被调用，对那份尚未成形的对象进行**初始化**。
 
-[placement new]: https://en.wikipedia.org/wiki/Placement_syntax
+[placement new]: https://en.wikipedia.org/wiki/Placement**syntax
 
-The latter is what we tend to think of when we hear "constructor", but the
-language itself has usually done some groundwork for us before we get to that
-point. In fact, our Lox interpreter already has that covered when it creates a
-new LoxInstance object.
+后者便是我们听到"构造器"一词时通常会想到的那个东西，但语言本身在我们抵达那一步之前往往已经替我们做好了铺垫。事实上，我们的 Lox 解释器在创建一份新的 `LoxInstance` 对象时便已经完成了这部分工作。
 
-We'll do the remaining part -- user-defined initialization -- now. Languages
-have a variety of notations for the chunk of code that sets up a new object for
-a class. C++, Java, and C# use a method whose name matches the class name. Ruby
-and Python call it `init()`. The latter is nice and short, so we'll do that.
+我们现在要来兑现剩下的部分——用户自定义的初始化。语言为那段"为一个新对象做好铺垫"的代码提供了多种多样的记法。C++、Java 与 C# 使用一个与类同名的方法。Ruby 与 Python 则称之为 `init()`。后者简短利落，我们便采用这种。
 
-In LoxClass's implementation of LoxCallable, we add a few more lines.
+我们向 `LoxClass` 的 `LoxCallable` 实现中再添几行代码。
 
 ^code lox-class-call-initializer (2 before, 1 after)
 
-When a class is called, after the LoxInstance is created, we look for an "init"
-method. If we find one, we immediately bind and invoke it just like a normal
-method call. The argument list is forwarded along.
+当一个类被调用时，在 `LoxInstance` 创建之后，我们便会去查找一个名为 "init" 的方法。若我们找到了它，便立刻将其绑定并调用，如同一次普通的方法调用。实参列表会被原样转发。
 
-That argument list means we also need to tweak how a class declares its arity.
+那个实参列表意味着我们也需要稍稍调整一下一个类声明其元数的方式。
 
 ^code lox-initializer-arity (1 before, 1 after)
 
-If there is an initializer, that method's arity determines how many arguments
-you must pass when you call the class itself. We don't *require* a class to
-define an initializer, though, as a convenience. If you don't have an
-initializer, the arity is still zero.
+若存在一个初始化器，那么该方法的元数便决定了你必须在调用类**本身**时传入多少个实参。不过为了方便起见，我们**并不**强制要求一个类必须定义一个初始化器。若你没有初始化器，则元数依然为零。
 
-That's basically it. Since we bind the `init()` method before we call it, it has
-access to `this` inside its body. That, along with the arguments passed to the
-class, are all you need to be able to set up the new instance however you
-desire.
+大体上就是这样。由于我们在调用 `init()` 之前便已将 `this` 与之绑定，因此在 `init()` 体内部可以访问到 `this`。再加上传入给类的实参，这些便足以让你随心所欲地设置那个新实例了。
 
-### Invoking init() directly
+### 直接调用 init()
 
-As usual, exploring this new semantic territory rustles up a few weird
-creatures. Consider:
+一如既往，探索这片新的语义疆域又会掀出几头诡异的怪物。考虑：
 
 ```lox
 class Foo {
@@ -1102,57 +777,37 @@ var foo = Foo();
 print foo.init();
 ```
 
-Can you "re-initialize" an object by directly calling its `init()` method? If
-you do, what does it return? A <span name="compromise">reasonable</span> answer
-would be `nil` since that's what it appears the body returns.
+你能通过直接调用其 `init()` 方法来"重新初始化"一个对象吗？若你这么做了，它会返回什么？一个<span name="compromise">合理的</span>答案会是 `nil`——因为看上去函数体所返回的便是 `nil`。
 
-However -- and I generally dislike compromising to satisfy the
-implementation -- it will make clox's implementation of constructors much
-easier if we say that `init()` methods always return `this`, even when
-directly called. In order to keep jlox compatible with that, we add a little
-special case code in LoxFunction.
+然而——我向来不太喜欢为了迁就实现而妥协——倘若我们宣称 `init()` 方法**总是**返回 `this`（即便它是被直接调用的），那么 clox 中构造器的实现便会容易得多。为了让 jlox 与之兼容，我们在 `LoxFunction` 中加入了一小段特殊情形代码。
 
 <aside name="compromise">
 
-Maybe "dislike" is too strong a claim. It's reasonable to have the constraints
-and resources of your implementation affect the design of the language. There
-are only so many hours in the day, and if a cut corner here or there lets you get
-more features to users in less time, it may very well be a net win for their
-happiness and productivity. The trick is figuring out *which* corners to cut
-that won't cause your users and future self to curse your shortsightedness.
+或许"不喜欢"这个词用得太过强烈了。让实现的种种约束与资源影响语言的设计，这本身是合理的。一天之中可用的时间就那么多，倘若在某处少走一条弯路便能让你更快地将更多特性交付到用户手中，那么这或许能使他们的愉悦与效率得到净收益。诀窍在于弄清**哪些**弯路可以走——而不会让你的用户以及未来的自己去咒骂你的短视。
 
 </aside>
 
 ^code return-this (2 before, 1 after)
 
-If the function is an initializer, we override the actual return value and
-forcibly return `this`. That relies on a new `isInitializer` field.
+若该函数是一个初始化器，那么我们便覆写其实际的返回值，并强制令其返回 `this`。这有赖于一个新的 `isInitializer` 字段。
 
 ^code is-initializer-field (2 before, 2 after)
 
-We can't simply see if the name of the LoxFunction is "init" because the user
-could have defined a *function* with that name. In that case, there *is* no
-`this` to return. To avoid *that* weird edge case, we'll directly store whether
-the LoxFunction represents an initializer method. That means we need to go back
-and fix the few places where we create LoxFunctions.
+我们不能简单地通过查看 `LoxFunction` 的名字是否为 "init" 来判断，因为用户可以定义一个**函数**与之同名。在这种情况下，**便**没有 `this` 值得返回。为了避免**那种**诡异的边角情形，我们将直接存储该 `LoxFunction` 是否代表一个初始化器方法。这意味着我们需要回过头去修一修那些创建 `LoxFunction` 的地方。
 
 ^code construct-function (1 before, 1 after)
 
-For actual function declarations, `isInitializer` is always false. For methods,
-we check the name.
+对于真正的函数声明，`isInitializer` 始终为 `false`。对于方法，我们则去检查其名字。
 
 ^code interpreter-method-initializer (1 before, 1 after)
 
-And then in `bind()` where we create the closure that binds `this` to a method,
-we pass along the original method's value.
+然后在 `bind()` 中——在我们创建那份将 `this` 绑定到某个方法的闭包之处——我们把原方法的值一并传过去。
 
 ^code lox-function-bind-with-initializer (1 before, 1 after)
 
-### Returning from init()
+### 从 init() 返回
 
-We aren't out of the woods yet. We've been assuming that a user-written
-initializer doesn't explicitly return a value because most constructors don't.
-What should happen if a user tries:
+我们**仍未**走出深山老林。我们一直假设用户编写的初始化器并不会显式地返回一个值，因为大多数构造器都不这么做。若用户尝试下面这样：
 
 ```lox
 class Foo {
@@ -1162,23 +817,19 @@ class Foo {
 }
 ```
 
-It's definitely not going to do what they want, so we may as well make it a
-static error. Back in the resolver, we add another case to FunctionType.
+这显然**不会**做出他们想要的事，因此我们不妨将其作为一道静态错误。回到解析器中，我们再向 `FunctionType` 中添加一种情形。
 
 ^code function-type-initializer (1 before, 1 after)
 
-We use the visited method's name to determine if we're resolving an initializer
-or not.
+我们借被访问方法的名字来判断我们究竟是在解析一个初始化器与否。
 
 ^code resolver-initializer-type (1 before, 1 after)
 
-When we later traverse into a `return` statement, we check that field and make
-it an error to return a value from inside an `init()` method.
+当我们之后审视到一条 `return` 语句时，我们便去检查该字段，并使"从一个 `init()` 方法内部返回一个值"成为一种错误。
 
 ^code return-in-initializer (1 before, 1 after)
 
-We're *still* not done. We statically disallow returning a *value* from an
-initializer, but you can still use an empty early `return`.
+我们**仍然**尚未完事。我们静态地禁止从一个初始化器内部返回一个**值**，但你仍然可以使用一条空白的提前 `return`。
 
 ```lox
 class Foo {
@@ -1188,27 +839,19 @@ class Foo {
 }
 ```
 
-That is actually kind of useful sometimes, so we don't want to disallow it
-entirely. Instead, it should return `this` instead of `nil`. That's an easy fix
-over in LoxFunction.
+这有时其实挺有用，因此我们不愿完全封禁它。取而代之，它应当返回 `this` 而非 `nil`。这只需在 `LoxFunction` 中做一处小小的修补即可。
 
 ^code early-return-this (1 before, 1 after)
 
-If we're in an initializer and execute a `return` statement, instead of
-returning the value (which will always be `nil`), we again return `this`.
+若我们身处一个初始化器之中并执行了一条 `return` 语句，那么我们便不再返回那个值（它永远会是 `nil`），而改为再次返回 `this`。
 
-Phew! That was a whole list of tasks but our reward is that our little
-interpreter has grown an entire programming paradigm. Classes, methods, fields,
-`this`, and constructors. Our baby language is looking awfully grown-up.
+呼！这一长串任务一口气列下来确实可观，但我们的回报是，我们那款小小的解释器已然长出了一整片编程范式。类、方法、字段、`this`，以及构造器。我们这门蹒跚学步的语言，如今看起来已然相当成熟。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  We have methods on instances, but there is no way to define "static" methods
-    that can be called directly on the class object itself. Add support for
-    them. Use a `class` keyword preceding the method to indicate a static method
-    that hangs off the class object.
+1.  我们在实例上拥有方法，但还没有办法定义"静态"方法——即可以直接在类对象自身上调用的方法。请为它们添加支持。在方法之前使用 `class` 关键字来指示一个静态方法，它挂载在类对象之上。
 
     ```lox
     class Math {
@@ -1217,18 +860,12 @@ interpreter has grown an entire programming paradigm. Classes, methods, fields,
       }
     }
 
-    print Math.square(3); // Prints "9".
+    print Math.square(3); // 打印 "9"。
     ```
 
-    You can solve this however you like, but the "[metaclasses][]" used by
-    Smalltalk and Ruby are a particularly elegant approach. *Hint: Make LoxClass
-    extend LoxInstance and go from there.*
+    你可以随心所欲地解决它，但Smalltalk 与 Ruby 所采用的"[元类][metaclasses]"是一种尤为优雅的途径。*提示：让 LoxClass 继承自 LoxInstance，然后从那里出发。*
 
-2.  Most modern languages support "getters" and "setters" -- members on a class
-    that look like field reads and writes but that actually execute user-defined
-    code. Extend Lox to support getter methods. These are declared without a
-    parameter list. The body of the getter is executed when a property with that
-    name is accessed.
+1.  大多数现代语言都支持"getter"与"setter"——类中那些看起来像字段读写、实则执行用户自定义代码的成员。请扩展 Lox 以支持 getter 方法。它们在声明时不带参数列表。getter 的函数体会在访问与该同名的属性时执行。
 
     ```lox
     class Circle {
@@ -1242,18 +879,12 @@ interpreter has grown an entire programming paradigm. Classes, methods, fields,
     }
 
     var circle = Circle(4);
-    print circle.area; // Prints roughly "50.2655".
+    print circle.area; // 粗略地打印 "50.2655"。
     ```
 
-3.  Python and JavaScript allow you to freely access an object's fields from
-    outside of its own methods. Ruby and Smalltalk encapsulate instance state.
-    Only methods on the class can access the raw fields, and it is up to the
-    class to decide which state is exposed. Most statically typed languages
-    offer modifiers like `private` and `public` to control which parts of a
-    class are externally accessible on a per-member basis.
+1.  Python 与 JavaScript 允许你从方法外部自由地访问对象的字段。Ruby 与 Smalltalk 则封装实例状态。只有类上的方法能够访问原始字段，至于对外暴露哪些状态，则由类自己决定。大多数静态类型语言提供诸如 `private` 与 `public` 之类的修饰符，以便在每一个成员的基础上控制外部可访问的类成员。
 
-    What are the trade-offs between these approaches and why might a language
-    prefer one or the other?
+    这些方法各自的取舍如何？一种语言为何可能偏好其中某一种？
 
 [metaclasses]: https://en.wikipedia.org/wiki/Metaclass
 
@@ -1261,99 +892,52 @@ interpreter has grown an entire programming paradigm. Classes, methods, fields,
 
 <div class="design-note">
 
-## Design Note: Prototypes and Power
+## 设计笔记：原型与威力
 
-In this chapter, we introduced two new runtime entities, LoxClass and
-LoxInstance. The former is where behavior for objects lives, and the latter is
-for state. What if you could define methods right on a single object, inside
-LoxInstance? In that case, we wouldn't need LoxClass at all. LoxInstance would
-be a complete package for defining the behavior and state of an object.
+在本章中，我们引入了两种新的运行时实体——`LoxClass` 与 `LoxInstance`。前者用于存放对象的行为，后者用于存放状态。倘若你能够直接在某一份 `LoxInstance` 上定义方法，会怎样？那样的话，我们便根本不需要 `LoxClass`。`LoxInstance` 自身便会是一份定义对象行为与状态的完整包。
 
-We'd still want some way, without classes, to reuse behavior across multiple
-instances. We could let a LoxInstance [*delegate*][delegate] directly to another
-LoxInstance to reuse its fields and methods, sort of like inheritance.
+我们仍会希望有某种方式——不借助类——在多个实例之间复用行为。我们可以让一份 `LoxInstance` *直接* **委托**给另一份 `LoxInstance**`，以复用其后者的字段与方法，多少有一点像继承的味道。
 
-Users would model their program as a constellation of objects, some of which
-delegate to each other to reflect commonality. Objects used as delegates
-represent "canonical" or "prototypical" objects that others refine. The result
-is a simpler runtime with only a single internal construct, LoxInstance.
+用户便可以将其程序建模为一片由对象组成的星座，其中某些对象彼此委托，以反映它们之间的共性。那些被当作委托目标的对象，便是代表"规范的"或"原型的"对象，供其他对象去精炼。其结果是一个更为简单的运行时，仅有 `LoxInstance` 这一个内部构件。
 
-That's where the name **[prototypes][proto]** comes from for this paradigm. It
-was invented by David Ungar and Randall Smith in a language called [Self][].
-They came up with it by starting with Smalltalk and following the above mental
-exercise to see how much they could pare it down.
+这种范式之所以被称作**原型**[prototypes]，便是因为此故。它由 David Ungar 与 Randall Smith 在一门名为 [Self][] 的语言中发明。他们通过从 Smalltalk 出发，沿着上述思路反复推演，问自己：究竟能砍到多简？
 
-Prototypes were an academic curiosity for a long time, a fascinating one that
-generated interesting research but didn't make a dent in the larger world of
-programming. That is, until Brendan Eich crammed prototypes into JavaScript,
-which then promptly took over the world. Many (many) <span
-name="words">words</span> have been written about prototypes in JavaScript.
-Whether that shows that prototypes are brilliant or confusing -- or both! -- is
-an open question.
+原型曾长期停留在学术圈子的冷门处——的确有趣，也催生了不少研究，但并未对更广阔的程序设计世界有多大影响。直到 Brendan Eich 将原型硬塞进 JavaScript，而 JavaScript 又旋即席卷了整个世界。关于 JavaScript 中的原型，已有（海量）<span name="words">著作</span>面世。这究竟证明原型是天才还是令人困惑——抑或两者兼而有之——依然是一个悬而未决的问题。
 
 <aside name="words">
 
-Including [more than a handful][prototypes] by yours truly.
+其中也包括[你眼前这位的几篇][prototypes]。
 
 </aside>
 
-I won't get into whether or not I think prototypes are a good idea for a
-language. I've made languages that are [prototypal][finch] and
-[class-based][wren], and my opinions of both are complex. What I want to discuss
-is the role of *simplicity* in a language.
+我无意在此对原型是否是一门语言的好主意发表意见。我曾既设计过原型的语言，也设计过[基于类][wren] 的语言，对两者的看法都颇为复杂。我想讨论的是**简洁性**在一门语言中所扮演的角色。
 
-Prototypes are simpler than classes -- less code for the language implementer to
-write, and fewer concepts for the user to learn and understand. Does that make
-them better? We language nerds have a tendency to fetishize minimalism.
-Personally, I think simplicity is only part of the equation. What we really want
-to give the user is *power*, which I define as:
+原型比类更简洁——语言实现者要写的代码更少，用户需要学习与理解的概念也更少。这是否就使其更佳？我们这群语言书呆子往往会过分崇拜极简主义。说实话，在我看来，简洁只是等式的一部分。我们真正想要赋予用户的是**威力**，我将其定义为：
 
 ```text
-power = breadth × ease ÷ complexity
+威力 = 广度 × 易用性 ÷ 复杂度
 ```
 
-None of these are precise numeric measures. I'm using math as analogy here, not
-actual quantification.
+这些并非精确的数值度量。我在此用的是数学的比喻，而非真正的量化。
 
-*   **Breadth** is the range of different things the language lets you express.
-    C has a lot of breadth -- it's been used for everything from operating
-    systems to user applications to games. Domain-specific languages like
-    AppleScript and Matlab have less breadth.
+*   **广度**指的是语言允许你表达的事物的范围。C 语言具有相当广的广度——它既被用于操作系统，也为用户应用与游戏所青睐。诸如 AppleScript 与 Matlab 之类的领域特定语言，其广度则相对有限。
 
-*   **Ease** is how little effort it takes to make the language do what you
-    want. "Usability" might be another term, though it carries more baggage than
-    I want to bring in. "Higher-level" languages tend to have more ease than
-    "lower-level" ones. Most languages have a "grain" to them where some things
-    feel easier to express than others.
+*   **易用性**是指让语言去做你想做的事情需要付出的努力。"可用性"或许也是另一个说法，只是它所背负的包袱超出了我此刻愿意引入的范围。"更高级"语言往往比"较低级"语言拥有更高的易用性。大多数语言都有其"纹理"，某些事情表达起来更为顺手，另一些则不然。
 
-*   **Complexity** is how big the language (including its runtime, core libraries,
-    tools, ecosystem, etc.) is. People talk about how many pages are in a
-    language's spec, or how many keywords it has. It's how much the user has to
-    load into their wetware before they can be productive in the system. It is
-    the antonym of simplicity.
+*   **复杂度**涵盖了语言本身的体量（包括其运行时、核心库、工具、生态系统等）。人们谈论一门语言规范有多少页、它拥有多少关键字。它衡量的是用户在一门语言中具备生产力之前，必须将自己的"湿件"装进多少东西。它是简洁的反义词。
 
-[proto]: https://en.wikipedia.org/wiki/Prototype-based_programming
+[proto]: https://en.wikipedia.org/wiki/Prototype-based**programming
 
-Reducing complexity *does* increase power. The smaller the denominator, the
-larger the resulting value, so our intuition that simplicity is good is valid.
-However, when reducing complexity, we must take care not to sacrifice breadth or
-ease in the process, or the total power may go down. Java would be a strictly
-*simpler* language if it removed strings, but it probably wouldn't handle text
-manipulation tasks well, nor would it be as easy to get things done.
+降低复杂度**确实**会提升威力。分母越小，结果便越大，因此我们对"简洁是好事"的直觉自有其道理。然而，在降低复杂度时，我们必须小心，不要因此牺牲广度或易用性，否则总体威力反而可能下降。倘若 Java 删去字符串，那么它会是一门**更**简洁的语言，但它在文本处理任务方面多半也会失灵，且用户搞定事情也不会那么顺手。
 
-The art, then, is finding *accidental* complexity that can be omitted --
-language features and interactions that don't carry their weight by increasing
-the breadth or ease of using the language.
+由此，这门手艺便在于找出那些**偶然的**复杂度——即那些无法通过提升语言的广度或易用性来证明自身分量的语言特性与交互。
 
-If users want to express their program in terms of categories of objects, then
-baking classes into the language increases the ease of doing that, hopefully by
-a large enough margin to pay for the added complexity. But if that isn't how
-users are using your language, then by all means leave classes out.
+若用户希望用"对象类别"来表达他们的程序，那么将类烘焙进语言便会提升这样做的易用性——但愿提升的幅度足以抵消因此而带来的复杂度。然而，若用户并非如此使用你的语言，那么将类一概留出也自无妨。
 
 </div>
 
 [delegate]: https://en.wikipedia.org/wiki/Prototype-based_programming#Delegation
 [prototypes]: http://gameprogrammingpatterns.com/prototype.html
-[self]: http://www.selflanguage.org/
+[self]: http://selflanguage.org/
 [finch]: http://finch.stuffwithstuff.com/
 [wren]: http://wren.io/

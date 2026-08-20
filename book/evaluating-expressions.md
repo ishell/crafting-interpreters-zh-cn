@@ -1,82 +1,56 @@
-> You are my creator, but I am your master; Obey!
->
-> <cite>Mary Shelley, <em>Frankenstein</em></cite>
+# 求值表达式
 
-If you want to properly set the mood for this chapter, try to conjure up a
-thunderstorm, one of those swirling tempests that likes to yank open shutters at
-the climax of the story. Maybe toss in a few bolts of lightning. In this
-chapter, our interpreter will take breath, open its eyes, and execute some code.
+> 你乃吾之造物主，然吾乃汝之主宰；服从！
+>
+> <cite>玛丽·雪莱，<em>《弗兰肯斯坦》</em></cite>
+
+倘若你想要为本章烘托出恰如其分的氛围，不妨试着在脑海中唤起一场雷雨——那种会在故事高潮处猛然扯开百叶窗的旋转风暴。或许再添上几道闪电。在本章中，我们的解释器将深吸一口气、睁开双眼，并执行一段代码。
 
 <span name="spooky"></span>
 
-<img src="image/evaluating-expressions/lightning.png" alt="A bolt of lightning strikes a Victorian mansion. Spooky!" />
+<img src="image/evaluating-expressions/lightning.png" alt="一道闪电击中一幢维多利亚式宅邸。好吓人！" />
 
 <aside name="spooky">
 
-A decrepit Victorian mansion is optional, but adds to the ambiance.
+一座摇摇欲坠的维多利亚式宅邸属于可选配置，但的确有助于营造氛围。
 
 </aside>
 
-There are all manner of ways that language implementations make a computer do
-what the user's source code commands. They can compile it to machine code,
-translate it to another high-level language, or reduce it to some bytecode
-format for a virtual machine to run. For our first interpreter, though, we are
-going to take the simplest, shortest path and execute the syntax tree itself.
+语言实现让计算机听从用户源代码号令的方式可谓五花八门。它们可以将代码编译为机器码，可以将其翻译为另一种高级语言，也可以将其归约为某种字节码格式，再交由虚拟机去运行。然而，对于我们这第一款解释器，我们打算走上那条最简单、最短的路——直接执行语法树本身。
 
-Right now, our parser only supports expressions. So, to "execute" code, we will
-evaluate an expression and produce a value. For each kind of expression syntax
-we can parse -- literal, operator, etc. -- we need a corresponding chunk of code
-that knows how to evaluate that tree and produce a result. That raises two
-questions:
+眼下，我们的语法分析器只支持表达式。因此，所谓"执行"代码，便意味着我们对一个表达式求值，并产出一个**值**。对于我们能够解析的每一种表达式语法——字面量、运算符，等等——我们都需要一段与之相对应的代码，由它来知晓如何对那棵树进行求值并产出结果。这便引出了两个问题：
 
-1. What kinds of values do we produce?
+1. 我们究竟会产出何种**值**？
+2. 我们又应当如何组织这些代码片段？
 
-2. How do we organize those chunks of code?
+我们逐一来过。
 
-Taking them on one at a time...
+## 表示值
 
-## Representing Values
-
-In Lox, <span name="value">values</span> are created by literals, computed by
-expressions, and stored in variables. The user sees these as *Lox* objects, but
-they are implemented in the underlying language our interpreter is written in.
-That means bridging the lands of Lox's dynamic typing and Java's static types. A
-variable in Lox can store a value of any (Lox) type, and can even store values
-of different types at different points in time. What Java type might we use to
-represent that?
+在 Lox 中，<span name="value">值</span>由字面量所创建，由表达式所计算，并被存放在变量之中。从用户视角看去，它们是 _Lox**对象；但它们实际是由我们解释器所使用的底层语言来实现的。这意味着我们要在 Lox 动态类型的世界与 Java 静态类型的世界之间架起一座桥梁。Lox 中的一个变量能够存放任何（Lox）类型的值，甚至能在不同的时间点存放不同类型的值。我们究竟可以使用哪一种 Java 类型来表征这一切呢？
 
 <aside name="value">
 
-Here, I'm using "value" and "object" pretty much interchangeably.
+此处，我将"值"与"对象"两词基本上是混用的。
 
-Later in the C interpreter we'll make a slight distinction between them, but
-that's mostly to have unique terms for two different corners of the
-implementation -- in-place versus heap-allocated data. From the user's
-perspective, the terms are synonymous.
+等日后到用 C 编写的解释器中，我们会在这两者之间作一细微的区分，但那主要是为了给实现中两个不同角落——就地存储的数据与堆上分配的数据——各自起一个独一无二的术语。从用户的视角出发，这两个词则是同义的。
 
 </aside>
 
-Given a Java variable with that static type, we must also be able to determine
-which kind of value it holds at runtime. When the interpreter executes a `+`
-operator, it needs to tell if it is adding two numbers or concatenating two
-strings. Is there a Java type that can hold numbers, strings, Booleans, and
-more? Is there one that can tell us what its runtime type is? There is! Good old
-java.lang.Object.
+给定一个具有那种静态类型的 Java 变量，我们还必须能够在运行时弄清楚它究竟持有哪一种值。当解释器执行一个 `+` 运算符时，它需要判断自己究竟是在对两个数字求和，还是在对两个字符串进行拼接。是否存在某种 Java 类型，能够既容纳数字、字符串、布尔值乃至更多，又能够告知我们其运行时的类型？还真有！那就是历久弥新的 `java.lang.Object`。
 
-In places in the interpreter where we need to store a Lox value, we can use
-Object as the type. Java has boxed versions of its primitive types that all
-subclass Object, so we can use those for Lox's built-in types:
+在我们解释器中需要存放一个 Lox 值的地方，我们可以使用 Object 作为类型。Java 为其基本类型都提供了相应的装箱版本，它们统统继承自 Object，因此我们可以借助它们来表示 Lox 的内建类型：
 
 <table>
 <thead>
 <tr>
-  <td>Lox type</td>
-  <td>Java representation</td>
+  <td>Lox 类型</td>
+  <td>Java 表示</td>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Any Lox value</td>
+  <td>任意 Lox 值</td>
   <td>Object</td>
 </tr>
 <tr>
@@ -84,652 +58,421 @@ subclass Object, so we can use those for Lox's built-in types:
   <td><code>null</code></td>
 </tr>
 <tr>
-  <td>Boolean</td>
+  <td>布尔值</td>
   <td>Boolean</td>
 </tr>
 <tr>
-  <td>number</td>
+  <td>数字</td>
   <td>Double</td>
 </tr>
 <tr>
-  <td>string</td>
+  <td>字符串</td>
   <td>String</td>
 </tr>
 </tbody>
 </table>
 
-Given a value of static type Object, we can determine if the runtime value is a
-number or a string or whatever using Java's built-in `instanceof` operator. In
-other words, the <span name="jvm">JVM</span>'s own object representation
-conveniently gives us everything we need to implement Lox's built-in types.
-We'll have to do a little more work later when we add Lox's notions of
-functions, classes, and instances, but Object and the boxed primitive classes
-are sufficient for the types we need right now.
+给定一个静态类型为 Object 的值，我们便可以借助 Java 内建的 `instanceof` 运算符来判定该运行时值究竟是一个数字、一个字符串，抑或别的什么。换言之，<span name="jvm">JVM</span> 自身的对象表示形式恰好为我们实现 Lox 的内建类型提供了所需的一切。待到我们日后添加 Lox 中关于函数、类与实例的概念时，还有更多的工作要做；但就眼下我们所需的这些类型而言，Object 与那些装箱后的基本类型类已然绰绰有余。
 
 <aside name="jvm">
 
-Another thing we need to do with values is manage their memory, and Java does
-that too. A handy object representation and a really nice garbage collector are
-the main reasons we're writing our first interpreter in Java.
+另一件我们需要对值去做的事情是管理其内存，而 Java 也替我们包办了这件事。一个趁手的对象表示形式，外加一款相当不错的垃圾收集器，便是我们选用 Java 来编写这第一款解释器的主要原因。
 
 </aside>
 
-## Evaluating Expressions
+## 求值表达式
 
-Next, we need blobs of code to implement the evaluation logic for each kind of
-expression we can parse. We could stuff that code into the syntax tree classes
-in something like an `interpret()` method. In effect, we could tell each syntax
-tree node, "Interpret thyself". This is the Gang of Four's
-[Interpreter design pattern][]. It's a neat pattern, but like I mentioned
-earlier, it gets messy if we jam all sorts of logic into the tree classes.
+接下来，我们需要为每一种我们能够解析的表达式编写实现其求值逻辑的代码片段。我们本可以将那些代码塞进语法树类中的某个类似 `interpret()` 的方法里。事实上，我们本可以告诉每一个语法树节点："自己解释自己"。这便是"四人帮"所著的[《设计模式》][interpreter design pattern]中所说的**Interpreter 模式**。这是一种相当精巧的模式，但正如我先前所指出的，若把各式各样的逻辑都硬塞进那些树类之中，事情便会变得一团糟。
 
-[interpreter design pattern]: https://en.wikipedia.org/wiki/Interpreter_pattern
+[interpreter design pattern]: https://en.wikipedia.org/wiki/Interpreter**pattern
 
-Instead, we're going to reuse our groovy [Visitor pattern][]. In the previous
-chapter, we created an AstPrinter class. It took in a syntax tree and
-recursively traversed it, building up a string which it ultimately returned.
-That's almost exactly what a real interpreter does, except instead of
-concatenating strings, it computes values.
+我们将转而复用我们已然驾轻就熟的[访问者模式][visitor pattern]。在上一章中，我们创建了 AstPrinter 这个类。它接受一棵语法树，对其进行递归遍历，并最终拼出一段字符串返回。那与我们一款货真价实的解释器所做的事情几乎如出一辙——区别仅在于，我们不再是去拼接字符串，而是去计算**值**。
 
 [visitor pattern]: representing-code.html#the-visitor-pattern
 
-We start with a new class.
+我们先来新建一个类。
 
 ^code interpreter-class
 
-The class declares that it's a visitor. The return type of the visit methods
-will be Object, the root class that we use to refer to a Lox value in our Java
-code. To satisfy the Visitor interface, we need to define visit methods for each
-of the four expression tree classes our parser produces. We'll start with the
-simplest...
+该类声明它自身是一个 visitor。各个 visit 方法的返回类型将是 Object——那是我们 Java 代码中用来指代 Lox 值的那个根类。为了满足 Visitor 接口，我们还需要为我们语法分析器所能产出的四个表达式树类各自定义一个 visit 方法。我们先从最简单的那个开始……
 
-### Evaluating literals
+### 求值字面量
 
-The leaves of an expression tree -- the atomic bits of syntax that all other
-expressions are composed of -- are <span name="leaf">literals</span>. Literals
-are almost values already, but the distinction is important. A literal is a *bit
-of syntax* that produces a value. A literal always appears somewhere in the
-user's source code. Lots of values are produced by computation and don't exist
-anywhere in the code itself. Those aren't literals. A literal comes from the
-parser's domain. Values are an interpreter concept, part of the runtime's world.
+表达式树中的那些"叶子"——即所有其它表达式赖以组合而成的原子级语法单元——便是 <span name="leaf">字面量</span>。字面量几乎已经算得上是值了，但这两者之间的区别却至关重要。字面量是一段**语法**，它会**产出**一个值。字面量总是出现在用户的源代码中。而大量的值是由计算所产出的，它们并不以任何形式出现在代码之中。这些便不是字面量。字面量出自语法分析器的领域；值则是解释器的概念，属于运行时世界的一部分。
 
 <aside name="leaf">
 
-In the [next chapter][vars], when we implement variables, we'll add identifier
-expressions, which are also leaf nodes.
+在[下一章][vars]中，当我们实现变量之时，我们还会加入标识符表达式，它们同样也是叶节点。
 
 [vars]: statements-and-state.html
 
 </aside>
 
-So, much like we converted a literal *token* into a literal *syntax tree node*
-in the parser, now we convert the literal tree node into a runtime value. That
-turns out to be trivial.
+于是，一如我们在语法分析器中将一个字面量**词法单元**转换为一个字面量**语法树节点**那样，眼下我们要将那个字面量树节点转换为一个运行时值。结果证明，这件事简单得不能再简单。
 
 ^code visit-literal
 
-We eagerly produced the runtime value way back during scanning and stuffed it in
-the token. The parser took that value and stuck it in the literal tree node,
-so to evaluate a literal, we simply pull it back out.
+我们早在扫描阶段便已将那个运行时值迫不及待地计算出来，并塞进了词法单元之中。语法分析器取过那个值，再将其塞进字面量树节点。因此，要对一个字面量求值，我们只需将它原样取出即可。
 
-### Evaluating parentheses
+### 求值括号表达式
 
-The next simplest node to evaluate is grouping -- the node you get as a result
-of using explicit parentheses in an expression.
+下一个最简单的待求值节点是 grouping——也就是你在表达式中使用显式括号时所得到的那个节点。
 
 ^code visit-grouping
 
-A <span name="grouping">grouping</span> node has a reference to an inner node
-for the expression contained inside the parentheses. To evaluate the grouping
-expression itself, we recursively evaluate that subexpression and return it.
+一个 <span name="grouping">grouping</span> 节点持有对括号内部那个表达式的引用。要对 grouping 表达式本身进行求值，我们只需递归地对那个子表达式求值并将其返回即可。
 
-We rely on this helper method which simply sends the expression back into the
-interpreter's visitor implementation:
+我们倚赖于下面这个辅助方法，它只是简单地将那个表达式重新交还给解释器的 visitor 实现：
 
 <aside name="grouping">
 
-Some parsers don't define tree nodes for parentheses. Instead, when parsing a
-parenthesized expression, they simply return the node for the inner expression.
-We do create a node for parentheses in Lox because we'll need it later to
-correctly handle the left-hand sides of assignment expressions.
+有些语法分析器并不为括号定义树节点。它们转而会在解析一个带括号的表达式时，直接返回其内部表达式所对应的节点。我们在 Lox 中之所以仍要为括号创建一个节点，是因为日后我们需要用它来正确处理赋值表达式的左侧。
 
 </aside>
 
 ^code evaluate
 
-### Evaluating unary expressions
+### 求值一元表达式
 
-Like grouping, unary expressions have a single subexpression that we must
-evaluate first. The difference is that the unary expression itself does a little
-work afterwards.
+与 grouping 类似，一元表达式也含有一个我们必须率先求值的子表达式。不同之处在于，一元表达式本身在求值之后还会再做一点小小的工作。
 
 ^code visit-unary
 
-First, we evaluate the operand expression. Then we apply the unary operator
-itself to the result of that. There are two different unary expressions,
-identified by the type of the operator token.
+首先，我们对那个操作数表达式求值。随后，我们将那个一元运算符本身施加到该子表达式的求值结果之上。一元表达式共有两种，它们由运算符词法单元的类型加以区分。
 
-Shown here is `-`, which negates the result of the subexpression. The
-subexpression must be a number. Since we don't *statically* know that in Java,
-we <span name="cast">cast</span> it before performing the operation. This type
-cast happens at runtime when the `-` is evaluated. That's the core of what makes
-a language dynamically typed right there.
+此处所展示的是 `-`，它会将子表达式的结果取负。该子表达式必须是一个数字。由于我们在 Java 中并**非静态地**知道这一点，我们便在执行该运算之前进行一次<span name="cast">类型转换</span>。这次类型转换发生在运行时，也就是那个 `-` 正在被求值的时候。这便是动态类型语言的核心所在——仅此一处而已。
 
 <aside name="cast">
 
-You're probably wondering what happens if the cast fails. Fear not, we'll get
-into that soon.
+你大概很想知道：倘若类型转换失败了，会发生什么？不必担心，我们很快就会讲到。
 
 </aside>
 
-You can start to see how evaluation recursively traverses the tree. We can't
-evaluate the unary operator itself until after we evaluate its operand
-subexpression. That means our interpreter is doing a **post-order traversal** --
-each node evaluates its children before doing its own work.
+你已经开始能够看到求值是如何递归地遍历整棵树的了。在我们对那个一元运算符本身进行求值之前，我们必须先对它的操作数子表达式求值。这意味着，我们的解释器正在进行一次**后序遍历**——每一个节点都会先完成对其子节点的求值，然后才去做自己的那份工作。
 
-The other unary operator is logical not.
+另一个一元运算符则是逻辑非。
 
 ^code unary-bang (1 before, 1 after)
 
-The implementation is simple, but what is this "truthy" thing about? We need to
-make a little side trip to one of the great questions of Western philosophy:
-*What is truth?*
+实现起来直白得很，但何谓"真值"（truthy）？这里我们不得不稍稍绕道，去直面西方哲学中的一大根本问题：*何谓真理？*
 
-### Truthiness and falsiness
+### 真值与假值
 
-OK, maybe we're not going to really get into the universal question, but at
-least inside the world of Lox, we need to decide what happens when you use
-something other than `true` or `false` in a logic operation like `!` or any
-other place where a Boolean is expected.
+好吧，或许我们其实并不打算去深究那个普遍性的问题，但至少在 Lox 这个小小的天地之内，我们需要去弄清楚一件事：当你在一个逻辑运算——比如 `!`，抑或任何其他期待布尔值的位置——中使用一个既非 `true` 又非 `false` 的值时，究竟会发生什么。
 
-We *could* just say it's an error because we don't roll with implicit
-conversions, but most dynamically typed languages aren't that ascetic. Instead,
-they take the universe of values of all types and partition them into two sets,
-one of which they define to be "true", or "truthful", or (my favorite) "truthy",
-and the rest which are "false" or "falsey". This partitioning is somewhat
-arbitrary and gets <span name="weird">weird</span> in a few languages.
+我们**本可以**直截了当地将其判为错误——毕竟我们不打算引入隐式转换——但大多数动态类型语言都不那么严苛。取而代之的是，它们将所有类型的所有值划归为两个阵营，其中之一被定义为"真"——或者"truthful"——或者（我个人最为钟爱的说法）"真值（truthy）"，而其余的则被称为"假"或"假值（falsey）"。这一划分多少带有几分武断的成分，在某些语言中甚至会显得<span name="weird">古怪</span>。
 
 <aside name="weird" class="bottom">
 
-In JavaScript, strings are truthy, but empty strings are not. Arrays are truthy
-but empty arrays are... also truthy. The number `0` is falsey, but the *string*
-`"0"` is truthy.
+在 JavaScript 中，字符串是真值，但空字符串却不是。数组是真值，但空数组……也是真值。数字 `0` 是假值，但 *字符串* `"0"` 却是真值。
 
-In Python, empty strings are falsey like in JS, but other empty sequences are
-falsey too.
+在 Python 中，空字符串与 JS 一样是假值，但其它空序列也是假值。
 
-In PHP, both the number `0` and the string `"0"` are falsey. Most other
-non-empty strings are truthy.
+在 PHP 中，数字 `0` 与字符串 `"0"` 都是假值。大多数其它的非空字符串则是真值。
 
-Get all that?
+记住了吗？
 
 </aside>
 
-Lox follows Ruby's simple rule: `false` and `nil` are falsey, and everything else
-is truthy. We implement that like so:
+Lox 沿用了 Ruby 那条简洁的规则：`false` 与 `nil` 是假值，除此之外的一切皆是真值。我们将其实现如下：
 
 ^code is-truthy
 
-### Evaluating binary operators
+### 求值二元运算符
 
-On to the last expression tree class, binary operators. There's a handful of
-them, and we'll start with the arithmetic ones.
+接下来是最后一类表达式树节点——二元运算符。其门下有诸多成员，我们先从算术运算符讲起。
 
 ^code visit-binary
 
 <aside name="left">
 
-Did you notice we pinned down a subtle corner of the language semantics here?
-In a binary expression, we evaluate the operands in left-to-right order. If
-those operands have side effects, that choice is user visible, so this isn't
-simply an implementation detail.
+你是否注意到，我们在此悄然为这门语言的语义钉下了一个微妙的角落？在一个二元表达式中，我们以自左向右的顺序对各个操作数求值。倘若那些操作数各自带有副作用，这一选择便是用户可感知的，因此它并不仅仅是一项实现细节。
 
-If we want our two interpreters to be consistent (hint: we do), we'll need to
-make sure clox does the same thing.
+倘若我们希望这两款解释器彼此保持一致（提示：我们确实希望如此），我们便需要确保 clox 也照此办理。
 
 </aside>
 
-I think you can figure out what's going on here. The main difference from the
-unary negation operator is that we have two operands to evaluate.
+我想你已经能猜到这里在做什么了。它与一元取负运算符的主要区别在于：我们需要对两个操作数求值。
 
-I left out one arithmetic operator because it's a little special.
+我故意略去了一个算术运算符，因为它多少有些与众不同。
 
 ^code binary-plus (3 before, 1 after)
 
-The `+` operator can also be used to concatenate two strings. To handle that, we
-don't just assume the operands are a certain type and *cast* them, we
-dynamically *check* the type and choose the appropriate operation. This is why
-we need our object representation to support `instanceof`.
+`+` 运算符同样可以用于拼接两个字符串。为了处理这种情况，我们不能想当然地假定操作数属于某一类型便去进行**类型转换**，而是需要动态地**检查**类型，再挑选出恰当的运算。这便解释了为什么我们需要我们的对象表示形式能够支持 `instanceof`。
 
 <aside name="plus">
 
-We could have defined an operator specifically for string concatenation. That's
-what Perl (`.`), Lua (`..`), Smalltalk (`,`), Haskell (`++`), and others do.
+我们本可以专门为字符串拼接定义一个运算符。Perl（`.`）、Lua（`..`）、Smalltalk（`,`）、Haskell（`++`）等语言正是这么做的。
 
-I thought it would make Lox a little more approachable to use the same syntax as
-Java, JavaScript, Python, and others. This means that the `+` operator is
-**overloaded** to support both adding numbers and concatenating strings. Even in
-languages that don't use `+` for strings, they still often overload it for
-adding both integers and floating-point numbers.
+我琢磨着，让 Lox 与 Java、JavaScript、Python 等语言沿用同一套语法，或许会令它更平易近人些。这意味着 `+` 运算符是被**重载**的，它既支持数字相加，也支持字符串拼接。即便是那些不为字符串而采用 `+` 的语言，它们也常常将其重载以同时支持整数与浮点数的加法。
 
 </aside>
 
-Next up are the comparison operators.
+接下来登场的是比较运算符。
 
 ^code binary-comparison (1 before, 1 after)
 
-They are basically the same as arithmetic. The only difference is that where the
-arithmetic operators produce a value whose type is the same as the operands
-(numbers or strings), the comparison operators always produce a Boolean.
+它们基本上与算术运算符如出一辙。唯一的区别在于：算术运算符产出的是与操作数类型相同的值（数字或字符串），而比较运算符则总是产出布尔值。
 
-The last pair of operators are equality.
+最后一组运算符是相等性运算符。
 
 ^code binary-equality
 
-Unlike the comparison operators which require numbers, the equality operators
-support operands of any type, even mixed ones. You can't ask Lox if 3 is *less*
-than `"three"`, but you can ask if it's <span name="equal">*equal*</span> to
-it.
+与要求操作数为数字的比较运算符不同，相等性运算符支持任意类型的操作数，即便是混搭的类型也未尝不可。你不能向 Lox 询问 3 是否**小于** `"three"`，但你**可以**询问它是否<span name="equal">**等于**</span>它。
 
 <aside name="equal">
 
-Spoiler alert: it's not.
+剧透一下：并不等于。
 
 </aside>
 
-Like truthiness, the equality logic is hoisted out into a separate method.
+与真值判定一样，相等性判定逻辑也被抽离出来，归入一个独立的方法之中。
 
 ^code is-equal
 
-This is one of those corners where the details of how we represent Lox objects
-in terms of Java matter. We need to correctly implement *Lox's* notion of
-equality, which may be different from Java's.
+这是那种"我们如何用 Java 来表示 Lox 对象"的细节至关重要的边角之一。我们需要正确地实现**Lox 自身**的相等性概念——它或许与 Java 的并不相同。
 
-Fortunately, the two are pretty similar. Lox doesn't do implicit conversions in
-equality and Java does not either. We do have to handle `nil`/`null` specially
-so that we don't throw a NullPointerException if we try to call `equals()` on
-`null`. Otherwise, we're fine. Java's <span name="nan">`equals()`</span> method
-on Boolean, Double, and String have the behavior we want for Lox.
+所幸，这两者还是颇为相似的。Lox 不在相等性比较中做任何隐式转换，Java 同样如此。我们确实需要特殊地处理一下 `nil`/`null`，以免我们在 `null` 上调用 `equals()` 时抛出 `NullPointerException`。除此之外，一切安好。Java 中 Boolean、Double 与 String 上的 <span name="nan">`equals()`</span> 方法所表现出的行为，恰恰就是我们 Lox 所需的。
 
 <aside name="nan">
 
-What do you expect this to evaluate to:
+你期望下面这段代码求值为多少？
 
 ```lox
 (0 / 0) == (0 / 0)
 ```
 
-According to [IEEE 754][], which specifies the behavior of double-precision
-numbers, dividing a zero by zero gives you the special **NaN** ("not a number")
-value. Strangely enough, NaN is *not* equal to itself.
+根据 [IEEE 754][]——它规定了双精度浮点数的种种行为——将零除以零会得到那个特殊的**NaN**（"非数字"，Not a Number）值。颇为吊诡的是，NaN 居然**不等于**它自身。
 
-In Java, the `==` operator on primitive doubles preserves that behavior, but the
-`equals()` method on the Double class does not. Lox uses the latter, so doesn't
-follow IEEE. These kinds of subtle incompatibilities occupy a dismaying fraction
-of language implementers' lives.
+在 Java 中，对原生类型 double 使用 `==` 运算符时会保留这一行为，但 Double 类上的 `equals()` 方法却并非如此。Lox 采用的是后者，因此并未遵循 IEEE。这类细微的不兼容性占据了语言实现者生活中令人沮丧的相当一部分时间。
 
-[ieee 754]: https://en.wikipedia.org/wiki/IEEE_754
+[ieee 754]: https://en.wikipedia.org/wiki/IEEE**754
 
 </aside>
 
-And that's it! That's all the code we need to correctly interpret a valid Lox
-expression. But what about an *invalid* one? In particular, what happens when a
-subexpression evaluates to an object of the wrong type for the operation being
-performed?
+至此，大功告成！这便是一切所需的代码，用来正确地解释一条合法的 Lox 表达式。然而，对于一条**非法**的表达式呢？尤其是，当某个子表达式求值的结果对于正在执行的运算而言类型不符时，又会发生什么？
 
-## Runtime Errors
+## 运行时错误
 
-I was cavalier about jamming casts in whenever a subexpression produces an
-Object and the operator requires it to be a number or a string. Those casts can
-fail. Even though the user's code is erroneous, if we want to make a <span
-name="fail">usable</span> language, we are responsible for handling that error
-gracefully.
+先前，每当一个子表达式产出一个 Object、而运算符又要求它是一个数字或字符串时，我都大大咧咧地直接进行类型转换。这些转换是有可能失败的。即便用户的代码出了错，倘若我们希望打造一门**真正可用**的语言，我们便有责任优雅地处理这种错误。
 
 <aside name="fail">
 
-We could simply not detect or report a type error at all. This is what C does if
-you cast a pointer to some type that doesn't match the data that is actually
-being pointed to. C gains flexibility and speed by allowing that, but is
-also famously dangerous. Once you misinterpret bits in memory, all bets are off.
+我们本可以压根不去检测或报告类型错误。C 语言便是这么做的——倘若你将一个指针转换为某种类型，而该类型又与实际所指向的数据不相吻合。C 语言由此获得了灵活性与速度，但也因之而臭名昭著地危险。一旦你错误地解读了内存中的位元，一切便再无定数可言。
 
-Few modern languages accept unsafe operations like that. Instead, most are
-**memory safe** and ensure -- through a combination of static and runtime checks
--- that a program can never incorrectly interpret the value stored in a piece of
-memory.
+鲜有现代语言会容忍这种不安全的操作。相反，它们大多是**内存安全**的，并通过静态检查与运行时检查的双重手段，确保一段程序永远不会错误地解读某一内存位置所存储的值。
 
 </aside>
 
-It's time for us to talk about **runtime errors**. I spilled a lot of ink in the
-previous chapters talking about error handling, but those were all *syntax* or
-*static* errors. Those are detected and reported before *any* code is executed.
-Runtime errors are failures that the language semantics demand we detect and
-report while the program is running (hence the name).
+如今，是时候让我们好好聊聊**运行时错误**了。我在前面几章里洋洋洒洒地挥洒了大量笔墨来谈论错误处理，但那些统统是 *语法* 错误或 *静态* 错误——它们会在**任何**代码被执行之前就被检测并报告出来。运行时错误则是那些语言语义要求我们在程序运行过程中（这便是其名字的由来）去检测并报告的失败。
 
-Right now, if an operand is the wrong type for the operation being performed,
-the Java cast will fail and the JVM will throw a ClassCastException. That
-unwinds the whole stack and exits the application, vomiting a Java stack trace
-onto the user. That's probably not what we want. The fact that Lox is
-implemented in Java should be a detail hidden from the user. Instead, we want
-them to understand that a *Lox* runtime error occurred, and give them an error
-message relevant to our language and their program.
+眼下，倘苦一个操作数的类型与正在执行的运算不相匹配，Java 的类型转换便会失败，JVM 也便会抛出一个 ClassCastException。这会一路展开整个调用栈，并退出应用程序，将一串 Java 栈跟踪一股脑儿地吐到用户脸上。这多半不是我们想要的。Lox 是由 Java 实现的这件事实，理应作为一个隐藏在幕后的细节。相反，我们希望用户能够明白：这是一条**Lox 的**运行时错误，并给出一条与我们的语言及其程序息息相关的错误消息。
 
-The Java behavior does have one thing going for it, though. It correctly stops
-executing any code when the error occurs. Let's say the user enters some
-expression like:
+不过，Java 的行为倒也有一处可取之处：它能够正确地在错误发生时停止执行任何代码。假设用户输入了下面这样的表达式：
 
 ```lox
 2 * (3 / -"muffin")
 ```
 
-You can't negate a <span name="muffin">muffin</span>, so we need to report a
-runtime error at that inner `-` expression. That in turn means we can't evaluate
-the `/` expression since it has no meaningful right operand. Likewise for the
-`*`. So when a runtime error occurs deep in some expression, we need to escape
-all the way out.
+你不能对一个<span name="muffin">松饼</span>取负，因此我们需要在内层那个 `-` 表达式处报告一个运行时错误。这反过来又意味着我们无法对那个 `/` 表达式求值——因为它已经没有有意义的右操作数了。`*` 同理。因此，当一个运行时错误在表达式深处某处发生时，我们需要一路逃逸出去。
 
 <aside name="muffin">
 
-I don't know, man, *can* you negate a muffin?
+谁知道呢，老兄，松饼到底能不能取负呢？
 
-<img src="image/evaluating-expressions/muffin.png" alt="A muffin, negated.">
+<img src="image/evaluating-expressions/muffin.png" alt="一个被取负的松饼。" />
 
 </aside>
 
-We could print a runtime error and then abort the process and exit the
-application entirely. That has a certain melodramatic flair. Sort of the
-programming language interpreter equivalent of a mic drop.
+我们本可以打印一条运行时错误，然后中止整个进程、彻底退出应用程序。这颇有几分戏剧化的风采，颇有几分"摔麦下台"的豪迈。
 
-Tempting as that is, we should probably do something a little less cataclysmic.
-While a runtime error needs to stop evaluating the *expression*, it shouldn't
-kill the *interpreter*. If a user is running the REPL and has a typo in a line
-of code, they should still be able to keep the session going and enter more code
-after that.
+虽说此举颇为诱人，但我们或许还是应当采取某种稍显温和的手段。诚然，运行时错误需要停止对该**表达式**的求值，但它不应让**解释器**本身陪葬。倘若用户正在使用 REPL，且其代码中有一行打错了字，他们理应能够继续维持这段会话，并在那一行之后输入更多的代码。
 
-### Detecting runtime errors
+### 检测运行时错误
 
-Our tree-walk interpreter evaluates nested expressions using recursive method
-calls, and we need to unwind out of all of those. Throwing an exception in Java
-is a fine way to accomplish that. However, instead of using Java's own cast
-failure, we'll define a Lox-specific one so that we can handle it how we want.
+我们这款树遍历解释器借助递归的方法调用来对嵌套的表达式求值；而我们需要从那一摞摞的方法调用中脱身而出。在 Java 中，抛出一个异常便是达成此目的的不错手段。不过，我们并不打算直接复用 Java 自身的类型转换失败异常，而是要自己定义一个 Lox 专属的异常，以便我们能够按照自己的方式来处置它。
 
-Before we do the cast, we check the object's type ourselves. So, for unary `-`,
-we add:
+在进行类型转换之前，我们先亲自动手检查对象的类型。于是，对于一元 `-`，我们追加如下：
 
 ^code check-unary-operand (1 before, 1 after)
 
-The code to check the operand is:
+用以检查操作数的代码如下：
 
 ^code check-operand
 
-When the check fails, it throws one of these:
+当检查失败时，它会抛出下面这一种东西：
 
 ^code runtime-error-class
 
-Unlike the Java cast exception, our <span name="class">class</span> tracks the
-token that identifies where in the user's code the runtime error came from. As
-with static errors, this helps the user know where to fix their code.
+与我们 Java 自身的类型转换异常不同，我们的这个 <span name="class">类</span> 会追踪那个指明该运行时错误源自用户代码何处的词法单元。和静态错误一样，这一点能够帮助用户知晓应当去哪里修复自己的代码。
 
 <aside name="class">
 
-I admit the name "RuntimeError" is confusing since Java defines a
-RuntimeException class. An annoying thing about building interpreters is your
-names often collide with ones already taken by the implementation language. Just
-wait until we support Lox classes.
+我承认"RuntimeError"这个名字着实令人困惑——毕竟 Java 已经定义了一个 RuntimeException 类。编写解释器有一件颇为恼人的事情，那便是：你所起的名字常常会与实现语言中已然被占用的那些不期而遇。等到我们日后支持 Lox 的类时，你就会见识到更多。
 
 </aside>
 
-We need similar checking for the binary operators. Since I promised you every
-single line of code needed to implement the interpreters, I'll run through them
-all.
+我们还需要为二元运算符进行类似的检查。既然我先前向你许诺过：为了实现这些解释器，每一行必需的代码我都会逐一过一遍，那我们便将它们一一走完。
 
-Greater than:
+大于：
 
 ^code check-greater-operand (1 before, 1 after)
 
-Greater than or equal to:
+大于等于：
 
 ^code check-greater-equal-operand (1 before, 1 after)
 
-Less than:
+小于：
 
 ^code check-less-operand (1 before, 1 after)
 
-Less than or equal to:
+小于等于：
 
 ^code check-less-equal-operand (1 before, 1 after)
 
-Subtraction:
+减法：
 
 ^code check-minus-operand (1 before, 1 after)
 
-Division:
+除法：
 
 ^code check-slash-operand (1 before, 1 after)
 
-Multiplication:
+乘法：
 
 ^code check-star-operand (1 before, 1 after)
 
-All of those rely on this validator, which is virtually the same as the unary
-one:
+以上所有这些都依赖于下面这个校验器，它与一元的那位几乎别无二致：
 
 ^code check-operands
 
 <aside name="operand">
 
-Another subtle semantic choice: We evaluate *both* operands before checking the
-type of *either*. Imagine we have a function `say()` that prints its argument
-then returns it. Using that, we write:
+又一个微妙的语义抉择：我们会先对**两个**操作数都求值，**然后**再去检查**其中任意一个**的类型。试想我们有一个 `say()` 函数，它会打印自己的参数，再将其原样返回。借助它，我们可以写出：
 
 ```lox
 say("left") - say("right");
 ```
 
-Our interpreter prints "left" and "right" before reporting the runtime error. We
-could have instead specified that the left operand is checked before even
-evaluating the right.
+我们的解释器会先打印出"left"，再打印出"right"，然后才报告运行时错误。我们本可以换一种方案，规定先去检查左操作数的类型，而根本不去对右操作数求值。
 
 </aside>
 
-The last remaining operator, again the odd one out, is addition. Since `+` is
-overloaded for numbers and strings, it already has code to check the types. All
-we need to do is fail if neither of the two success cases match.
+剩下最后一个运算符——又是那个格格不入的家伙——加法。由于 `+` 同时被重载用于数字与字符串，它本身便已内含类型检查的代码。我们所需要做的，便是当那两种成功情形皆不匹配时，让它宣告失败。
 
 ^code string-wrong-type (3 before, 1 after)
 
-That gets us detecting runtime errors deep in the innards of the evaluator. The
-errors are getting thrown. The next step is to write the code that catches them.
-For that, we need to wire up the Interpreter class into the main Lox class that
-drives it.
+如此一来，我们便能在求值器的五脏六腑深处检测运行时错误了。这些错误正在被抛出。接下来要做的，便是编写捕获它们的代码。为此，我们需要将 Interpreter 类接入到驱动它的那个主 Lox 类之中。
 
-## Hooking Up the Interpreter
+## 把解释器接入系统
 
-The visit methods are sort of the guts of the Interpreter class, where the real
-work happens. We need to wrap a skin around them to interface with the rest of
-the program. The Interpreter's public API is simply one method.
+那些 visit 方法大致算得上是 Interpreter 类的五脏六腑——真正的工作都在此处发生。我们还需要在它们外围裹上一层皮，以便与程序的其余部分相接。Interpreter 类的公开 API 简简单单，就只有一个方法。
 
 ^code interpret
 
-This takes in a syntax tree for an expression and evaluates it. If that
-succeeds, `evaluate()` returns an object for the result value. `interpret()`
-converts that to a string and shows it to the user. To convert a Lox value to a
-string, we rely on:
+该方法接受一棵表示某个表达式的语法树并对其进行求值。若求值成功，`evaluate()` 会返回一个用于表示该结果值的对象。`interpret()` 则将该对象转换为一个字符串并展示给用户。要将一个 Lox 值转换为字符串，我们仰仗于：
 
 ^code stringify
 
-This is another of those pieces of code like `isTruthy()` that crosses the
-membrane between the user's view of Lox objects and their internal
-representation in Java.
+这又是一段诸如 `isTruthy()` 那般、跨越用户视角下的 Lox 对象与其在 Java 内部表示形式之间那道膜的代码。
 
-It's pretty straightforward. Since Lox was designed to be familiar to someone
-coming from Java, things like Booleans look the same in both languages. The two
-edge cases are `nil`, which we represent using Java's `null`, and numbers.
+它相当直白。由于 Lox 在设计之初便刻意追求让那些来自 Java 背景的人感到熟悉，诸如布尔值之类的东西在这两门语言中看起来别无二致。两个边界情况是 `nil`（我们以 Java 的 `null` 来表示它）以及数字。
 
-Lox uses double-precision numbers even for integer values. In that case, they
-should print without a decimal point. Since Java has both floating point and
-integer types, it wants you to know which one you're using. It tells you by
-adding an explicit `.0` to integer-valued doubles. We don't care about that, so
-we <span name="number">hack</span> it off the end.
+Lox 一律使用双精度浮点数来表示数字，哪怕它是一个整数值。在这种情况下，它们理应在打印时省去小数点。Java 同时拥有浮点类型与整数类型，因此它希望你清楚自己正在使用的是哪一种。它会通过在一个整数值的 double 后面显式地追加一个 `.0` 来告知你。我们并不在意这些，因此我们便<span name="number">砍去</span>那多余的小尾巴。
 
 <aside name="number">
 
-Yet again, we take care of this edge case with numbers to ensure that jlox and
-clox work the same. Handling weird corners of the language like this will drive
-you crazy but is an important part of the job.
+我们再一次费心地处理了关于数字的这些边角情况，以确保 jlox 与 clox 能够以同样的方式工作。处理此类语言中的诡异角落虽会令人抓狂，但却是这份工作中至关重要的部分。
 
-Users rely on these details -- either deliberately or inadvertently -- and if
-the implementations aren't consistent, their program will break when they run it
-on different interpreters.
+用户——无论是有意还是无意——都会依赖于这些细节；倘若各实现之间无法保持一致，他们的程序换到不同的解释器上便会出错。
 
 </aside>
 
-### Reporting runtime errors
+### 报告运行时错误
 
-If a runtime error is thrown while evaluating the expression, `interpret()`
-catches it. This lets us report the error to the user and then gracefully
-continue. All of our existing error reporting code lives in the Lox class, so we
-put this method there too:
+倘若在表达式求值的过程中抛出了一个运行时错误，`interpret()` 会将其捕获。这便使我们能够将错误报告给用户，随后从容地继续。我们既有的全部错误报告代码都栖身于 Lox 类之中，因此我们也将这个方法安置在彼处：
 
 ^code runtime-error-method
 
-We use the token associated with the RuntimeError to tell the user what line of
-code was executing when the error occurred. Even better would be to give the
-user an entire call stack to show how they *got* to be executing that code. But
-we don't have function calls yet, so I guess we don't have to worry about it.
+我们借助与 RuntimeError 相关联的那个词法单元，告知用户错误发生时正在执行哪一行代码。更上一层楼的做法是，为用户奉上一份完整的调用栈，以展示他们究竟是如何**走到**那段正在执行的代码的。但我们眼下还没有函数调用，所以我想我们暂时还无需为此操心。
 
-After showing the error, `runtimeError()` sets this field:
+在展示完错误之后，`runtimeError()` 会设置下面这个字段：
 
 ^code had-runtime-error-field (1 before, 1 after)
 
-That field plays a small but important role.
+这个字段扮演着一个小而重要的角色。
 
 ^code check-runtime-error (4 before, 1 after)
 
-If the user is running a Lox <span name="repl">script from a file</span> and a
-runtime error occurs, we set an exit code when the process quits to let the
-calling process know. Not everyone cares about shell etiquette, but we do.
+若用户正在<span name="repl">以脚本文件的方式</span>运行 Lox 且发生了一个运行时错误，我们会在进程退出时设置一个退出码，以便调用它的那个进程知晓此事。并非所有人都讲究 shell 礼仪，但我们讲究。
 
 <aside name="repl">
 
-If the user is running the REPL, we don't care about tracking runtime errors.
-After they are reported, we simply loop around and let them input new code and
-keep going.
+若用户正在运行 REPL，我们便不再关心追踪运行时错误。一旦错误被报告出来，我们只是回过头去继续循环，让用户得以输入新的代码并继续前进。
 
 </aside>
 
-### Running the interpreter
+### 运行解释器
 
-Now that we have an interpreter, the Lox class can start using it.
+如今，解释器已然成型，Lox 类可以开始使用它了。
 
 ^code interpreter-instance (1 before, 1 after)
 
-We make the field static so that successive calls to `run()` inside a REPL
-session reuse the same interpreter. That doesn't make a difference now, but it
-will later when the interpreter stores global variables. Those variables should
-persist throughout the REPL session.
+我们将该字段设为 static，以便 REPL 会话中一次次对 `run()` 的调用能够复用同一个解释器。眼下这么做并不会产生什么差别，但日后当解释器需要存放全局变量时，这种做法便会显出它的意义——这些变量理应贯穿整个 REPL 会话的始终。
 
-Finally, we remove the line of temporary code from the [last chapter][] for
-printing the syntax tree and replace it with this:
+最后，我们把[上一章][]里那段用于打印语法树的临时代码删去，换成下面这段：
 
 [last chapter]: parsing-expressions.html
 
 ^code interpreter-interpret (3 before, 1 after)
 
-We have an entire language pipeline now: scanning, parsing, and
-execution. Congratulations, you now have your very own arithmetic calculator.
+至此，我们已然拥有一条完整的语言流水线：扫描、解析，再加执行。恭喜你，你拥有了一台专属于你自己的算术计算器。
 
-As you can see, the interpreter is pretty bare bones. But the Interpreter class
-and the Visitor pattern we've set up today form the skeleton that later chapters
-will stuff full of interesting guts -- variables, functions, etc. Right now, the
-interpreter doesn't do very much, but it's alive!
+正如你所见，这款解释器实在算得上骨瘦如柴。但 Interpreter 类以及我们今日所搭建的访问者模式，构成了后续章节将要填满各种有趣五脏六腑的一副骨架——变量、函数，等等。眼下，这款解释器尚不能做太多事情，但它已**活过来了**！
 
-<img src="image/evaluating-expressions/skeleton.png" alt="A skeleton waving hello." />
+<img src="image/evaluating-expressions/skeleton.png" alt="一具正在挥手问好的骷髅。" />
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  Allowing comparisons on types other than numbers could be useful. The
-    operators might have a reasonable interpretation for strings. Even
-    comparisons among mixed types, like `3 < "pancake"` could be handy to enable
-    things like ordered collections of heterogeneous types. Or it could simply
-    lead to bugs and confusion.
+1.  允许在数字以外的类型上进行比较，可能会是一个有用的特性。运算符或许能够为字符串给出合理的解释。甚至是在混合类型之间进行比较——比如 `3 < "pancake"`——也可能派上用场，使我们得以构建由异质类型组成的有序集合。当然，它也可能只是徒然招致 bug 与困惑。
 
-    Would you extend Lox to support comparing other types? If so, which pairs of
-    types do you allow and how do you define their ordering? Justify your
-    choices and compare them to other languages.
+    你是否会扩展 Lox 以支持对其它类型的比较？若会，你允许哪些类型对之间的比较，又将如何定义它们之间的序关系？请为你的选择给出理由，并将它们与其它语言的做法作一番比较。
 
-2.  Many languages define `+` such that if *either* operand is a string, the
-    other is converted to a string and the results are then concatenated. For
-    example, `"scone" + 4` would yield `scone4`. Extend the code in
-    `visitBinaryExpr()` to support that.
+1.  许多语言对 `+` 运算符的定义如下：若**任意一个**操作数是字符串，则另一个操作数会被转换为字符串，再将二者拼接起来。例如，`"scone" + 4` 将得到 `scone4`。请扩展 `visitBinaryExpr()` 中的代码以支持此特性。
 
-3.  What happens right now if you divide a number by zero? What do you think
-    should happen? Justify your choice. How do other languages you know handle
-    division by zero, and why do they make the choices they do?
+1.  若你用一个数字除以零，眼下会发生什么？你认为**应当**发生什么？请为你的选择给出理由。你所了解的其他语言是如何处理除以零的情形的，它们又为何做出那样的选择？
 
-    Change the implementation in `visitBinaryExpr()` to detect and report a
-    runtime error for this case.
+    请修改 `visitBinaryExpr()` 中的实现，以检测并报告此种情形下的运行时错误。
 
 </div>
 
 <div class="design-note">
 
-## Design Note: Static and Dynamic Typing
+## 设计笔记：静态类型与动态类型
 
-Some languages, like Java, are statically typed which means type errors are
-detected and reported at compile time before any code is run. Others, like Lox,
-are dynamically typed and defer checking for type errors until runtime right
-before an operation is attempted. We tend to consider this a black-and-white
-choice, but there is actually a continuum between them.
+某些语言——例如 Java——是静态类型的，这意味着类型错误会在编译期——任何代码运行之前——便被检测并报告出来。另一些语言——例如 Lox——则是动态类型的，它们会将类型错误的检查推迟到运行时——也就是在某个运算即将被执行的前一刻。我们往往将这种选择视作非此即彼、非黑即白，但事实上，在这两者之间还存在着一个连续的光谱。
 
-It turns out even most statically typed languages do *some* type checks at
-runtime. The type system checks most type rules statically, but inserts runtime
-checks in the generated code for other operations.
+结果是，即便是大多数静态类型语言，也确实会在运行时做一些类型检查。其类型系统会在静态层面校验大部分类型规则，但会在所产生的代码中为某些运算插入运行时的检查。
 
-For example, in Java, the *static* type system assumes a cast expression will
-always safely succeed. After you cast some value, you can statically treat it as
-the destination type and not get any compile errors. But downcasts can fail,
-obviously. The only reason the static checker can presume that casts always
-succeed without violating the language's soundness guarantees, is because the
-cast is checked *at runtime* and throws an exception on failure.
+举例而言，在 Java 中，*静态的* 类型系统假设一次类型转换表达式总是能够安全地完成。一旦你对某个值作了类型转换，你便可以静态地将其视作目标类型而不会招致任何编译错误。然而向下转型显然是有可能失败的。静态检查器之所以能够假定类型转换必然成功、而不会违反语言所承诺的可靠性，唯一的原因便在于：该类型转换会在**运行时**接受校验，并在失败时抛出一个异常。
 
-A more subtle example is [covariant arrays][] in Java and C#. The static
-subtyping rules for arrays allow operations that are not sound. Consider:
+一个更为微妙的例子是 Java 与 C# 中的[协变数组][covariant arrays]。其数组的静态子类型规则允许一些其实并不安全的操作。试看：
 
-[covariant arrays]: https://en.wikipedia.org/wiki/Covariance_and_contravariance_(computer_science)#Covariant_arrays_in_Java_and_C.23
+[covariant arrays]: https://en.wikipedia.org/wiki/Covariance**and_contravariance_(computer_science)#Covariant_arrays_in_Java_and**C.23
 
 ```java
 Object[] stuff = new Integer[1];
 stuff[0] = "not an int!";
 ```
 
-This code compiles without any errors. The first line upcasts the Integer array
-and stores it in a variable of type Object array. The second line stores a
-string in one of its cells. The Object array type statically allows that
--- strings *are* Objects -- but the actual Integer array that `stuff` refers to
-at runtime should never have a string in it! To avoid that catastrophe, when you
-store a value in an array, the JVM does a *runtime* check to make sure it's an
-allowed type. If not, it throws an ArrayStoreException.
+这段代码编译起来毫无差错。第一行将 Integer 数组向上转型，并将其存入一个 Object 数组类型的变量。第二行则在它的一个槽位里存入了一个字符串。从静态的角度来看，Object 数组类型是允许这样做的——字符串**确实**是 Object——但 `stuff` 在运行时所实际指向的那个 Integer 数组中，**理应**永远不存放字符串！为了避免这场灾难，当你向数组中存入一个值时，JVM 会做一次**运行时**的检查，以确保所存入的值是允许的类型。若不是，它便会抛出一个 ArrayStoreException。
 
-Java could have avoided the need to check this at runtime by disallowing the
-cast on the first line. It could make arrays *invariant* such that an array of
-Integers is *not* an array of Objects. That's statically sound, but it prohibits
-common and safe patterns of code that only read from arrays. Covariance is safe
-if you never *write* to the array. Those patterns were particularly important
-for usability in Java 1.0 before it supported generics. James Gosling and the
-other Java designers traded off a little static safety and performance -- those
-array store checks take time -- in return for some flexibility.
+Java 本可以通过禁止第一行的那种转型来规避这一运行时的检查。它本可以使数组成为**不变的**，从而一个 Integer 数组**便不再**是一个 Object 数组。从静态的角度来说这是稳妥的，但它会禁止那些仅从数组中读取元素的常见而安全的代码模式。倘若你从不对数组执行**写_ 操作，那么协变便是安全的。这些模式在 Java 1.0 那个还不支持泛型的年代，对可用性而言尤为重要。James Gosling 以及其他的 Java 设计者们牺牲了一点点静态安全性与性能——那些数组存储检查毕竟要耗时——以换取一定的灵活性。
 
-There are few modern statically typed languages that don't make that trade-off
-*somewhere*. Even Haskell will let you run code with non-exhaustive matches. If
-you find yourself designing a statically typed language, keep in mind that you
-can sometimes give users more flexibility without sacrificing *too* many of the
-benefits of static safety by deferring some type checks until runtime.
+鲜有现代的静态类型语言不在某处做出这一**取舍**。即便是 Haskell 也允许你运行那些并未穷尽所有情况的模式匹配代码。倘若你正在着手设计一门静态类型语言，请务必牢记：你常常能够通过将一部分类型检查推迟到运行时，来赋予用户更多的灵活性，而又不必过多地牺牲静态安全性所提供的好处。
 
-On the other hand, a key reason users choose statically typed languages is
-because of the confidence the language gives them that certain kinds of errors
-can *never* occur when their program is run. Defer too many type checks until
-runtime, and you erode that confidence.
+而另一方面，用户之所以选择静态类型语言，一个关键原因便是：这类语言能够带给他们一种笃定——某些类型的错误**永远不会**在程序运行时出现。倘若你把过多的类型检查都推迟到运行时，便会侵蚀这份笃定。
 
 </div>

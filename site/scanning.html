@@ -38,16 +38,15 @@
 <h3><a href="#top">Scanning<small>4</small></a></h3>
 
 <ul>
-    <li><a href="#the-interpreter-framework"><small>4.1</small> The Interpreter Framework</a></li>
-    <li><a href="#lexemes-and-tokens"><small>4.2</small> Lexemes and Tokens</a></li>
-    <li><a href="#regular-languages-and-expressions"><small>4.3</small> Regular Languages and Expressions</a></li>
-    <li><a href="#the-scanner-class"><small>4.4</small> The Scanner Class</a></li>
-    <li><a href="#recognizing-lexemes"><small>4.5</small> Recognizing Lexemes</a></li>
-    <li><a href="#longer-lexemes"><small>4.6</small> Longer Lexemes</a></li>
-    <li><a href="#reserved-words-and-identifiers"><small>4.7</small> Reserved Words and Identifiers</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
-    <li class="end-part"><a href="#design-note"><small>note</small>Implicit Semicolons</a></li>
+    <li><a href="#解释器框架"><small>4.1</small> 解释器框架</a></li>
+    <li><a href="#词素与词法单元"><small>4.2</small> 词素与词法单元</a></li>
+    <li><a href="#正则语言与正则表达式"><small>4.3</small> 正则语言与正则表达式</a></li>
+    <li><a href="#scanner-类"><small>4.4</small> Scanner 类</a></li>
+    <li><a href="#识别词素"><small>4.5</small> 识别词素</a></li>
+    <li><a href="#更长的词素"><small>4.6</small> 更长的词素</a></li>
+    <li><a href="#保留字与标识符"><small>4.7</small> 保留字与标识符</a></li>
+    <li><a href="#挑战"><small>4.8</small> 挑战</a></li>
+    <li><a href="#设计笔记：隐式分号"><small>4.9</small> 设计笔记：隐式分号</a></li>
 </ul>
 
 
@@ -73,16 +72,15 @@
 <h3><a href="#top">Scanning<small>4</small></a></h3>
 
 <ul>
-    <li><a href="#the-interpreter-framework"><small>4.1</small> The Interpreter Framework</a></li>
-    <li><a href="#lexemes-and-tokens"><small>4.2</small> Lexemes and Tokens</a></li>
-    <li><a href="#regular-languages-and-expressions"><small>4.3</small> Regular Languages and Expressions</a></li>
-    <li><a href="#the-scanner-class"><small>4.4</small> The Scanner Class</a></li>
-    <li><a href="#recognizing-lexemes"><small>4.5</small> Recognizing Lexemes</a></li>
-    <li><a href="#longer-lexemes"><small>4.6</small> Longer Lexemes</a></li>
-    <li><a href="#reserved-words-and-identifiers"><small>4.7</small> Reserved Words and Identifiers</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
-    <li class="end-part"><a href="#design-note"><small>note</small>Implicit Semicolons</a></li>
+    <li><a href="#解释器框架"><small>4.1</small> 解释器框架</a></li>
+    <li><a href="#词素与词法单元"><small>4.2</small> 词素与词法单元</a></li>
+    <li><a href="#正则语言与正则表达式"><small>4.3</small> 正则语言与正则表达式</a></li>
+    <li><a href="#scanner-类"><small>4.4</small> Scanner 类</a></li>
+    <li><a href="#识别词素"><small>4.5</small> 识别词素</a></li>
+    <li><a href="#更长的词素"><small>4.6</small> 更长的词素</a></li>
+    <li><a href="#保留字与标识符"><small>4.7</small> 保留字与标识符</a></li>
+    <li><a href="#挑战"><small>4.8</small> 挑战</a></li>
+    <li><a href="#设计笔记：隐式分号"><small>4.9</small> 设计笔记：隐式分号</a></li>
 </ul>
 
 
@@ -118,35 +116,20 @@
   <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
 </div>
 
+<h1><a href="#扫描" name="扫描"><small>4&#8202;.&#8202;0</small>扫描</a></h1>
 <blockquote>
-<p>Take big bites. Anything worth doing is worth overdoing.</p>
-<p><cite>Robert A. Heinlein, <em>Time Enough for Love</em></cite></p>
+<p>大胆下口吧。值得做的事，就值得做过头。</p>
+<p><cite>罗伯特·海因莱因，<em>《时间足够你爱》</em></cite></p>
 </blockquote>
-<p>The first step in any compiler or interpreter is <span
-name="lexing">scanning</span>. The scanner takes in raw source code as a series
-of characters and groups it into a series of chunks we call <strong>tokens</strong>. These
-are the meaningful &ldquo;words&rdquo; and &ldquo;punctuation&rdquo; that make up the language&rsquo;s
-grammar.</p>
+<p>无论是编译器还是解释器，其首要的工作步骤便是<span
+name="lexing"><strong>扫描</strong></span>（scanning）。扫描器接受一串原始的源代码字符，并将它们切分成一系列的代码块，我们称之为<strong>词法单元</strong>（token）。这些代码块构成了程序设计语言文法中那些具有特定意义的&ldquo;词汇&ldquo;与&ldquo;标点符号&ldquo;。</p>
 <aside name="lexing">
-<p>This task has been variously called &ldquo;scanning&rdquo; and &ldquo;lexing&rdquo; (short for &ldquo;lexical
-analysis&rdquo;) over the years. Way back when computers were as big as Winnebagos but
-had less memory than your watch, some people used &ldquo;scanner&rdquo; only to refer to the
-piece of code that dealt with reading raw source code characters from disk and
-buffering them in memory. Then &ldquo;lexing&rdquo; was the subsequent phase that did useful
-stuff with the characters.</p>
-<p>These days, reading a source file into memory is trivial, so it&rsquo;s rarely a
-distinct phase in the compiler. Because of that, the two terms are basically
-interchangeable.</p>
+<p>多年来，这项工作在不同场合下有过不同的叫法——人们有时称之为&ldquo;扫描&ldquo;（scanning），有时又称之为&ldquo;词法化&ldquo;（lexing，&ldquo;lexical analysis&rdquo;的简写）。早在计算机还大如房车、内存却比你的手表还小的那个年代，有些人仅用&ldquo;扫描器&ldquo;（scanner）一词来指代那些负责从磁盘读取源代码原始字符，并将它们缓存至内存的代码片段；而&ldquo;词法化&ldquo;则是紧随其后、对这些字符施以有用处理的下一阶段。</p>
+<p>如今，将源文件读取至内存已是不值一提的小事，因此这一过程在编译器中已鲜少再独立成一&ldquo;阶段&ldquo;。基于此，这两个术语在当下基本可以互换使用。</p>
 </aside>
-<p>Scanning is a good starting point for us too because the code isn&rsquo;t very hard<span class="em">&mdash;</span>pretty much a <code>switch</code> statement with delusions of grandeur. It will help us
-warm up before we tackle some of the more interesting material later. By the end
-of this chapter, we&rsquo;ll have a full-featured, fast scanner that can take any
-string of Lox source code and produce the tokens that we&rsquo;ll feed into the parser
-in the next chapter.</p>
-<h2><a href="#the-interpreter-framework" name="the-interpreter-framework"><small>4&#8202;.&#8202;1</small>The Interpreter Framework</a></h2>
-<p>Since this is our first real chapter, before we get to actually scanning some
-code we need to sketch out the basic shape of our interpreter, jlox. Everything
-starts with a class in Java.</p>
+<p>对我们而言，扫描同样是一个不错的起点，因为相关的代码并不算太复杂——说白了，无非是一个自我感觉良好的 <code>switch</code> 语句罢了。它将帮助我们在应对后续那些更为有趣的章节之前，先活动活动筋骨。待到本章结束时，我们手头将会拥有一款功能完备、运行迅捷的扫描器，它能接收任意一段 Lox 源代码，并产出一组词法单元以供下一章中的语法分析器消化。</p>
+<h2><a href="#解释器框架" name="解释器框架"><small>4&#8202;.&#8202;1</small>解释器框架</a></h2>
+<p>既然这是我们的第一个真正意义上的章节，在我们真正动手去扫描一些代码之前，我们需要先勾勒出 jlox 解释器的基本雏形。一切都要从一个 Java 类开始。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Lox.java</em><br>
 create new file</div>
 <pre>
@@ -176,15 +159,12 @@ create new file</div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, create new file</div>
 
 <aside name="64">
-<p>For exit codes, I&rsquo;m using the conventions defined in the UNIX
-<a href="https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropos=0&sektion=0&manpath=FreeBSD+4.3-RELEASE&format=html">&ldquo;sysexits.h&rdquo;</a> header. It&rsquo;s the closest thing to a standard I could
-find.</p>
+<p>关于退出码，我使用的是 UNIX 中
+<a href="https://www.freebsd.org/cgi/man.cgi?query=sysexits&amp;apropos=0&amp;sektion=0&amp;manpath=FreeBSD+4.3-RELEASE&amp;format=html">&ldquo;sysexits.h&rdquo;</a>
+头文件里定义的惯例。这已是我所能找到的、距离&ldquo;标准&ldquo;最近的东西了。</p>
 </aside>
-<p>Stick that in a text file, and go get your IDE or Makefile or whatever set up.
-I&rsquo;ll be right here when you&rsquo;re ready. Good? OK!</p>
-<p>Lox is a scripting language, which means it executes directly from source. Our
-interpreter supports two ways of running code. If you start jlox from the
-command line and give it a path to a file, it reads the file and executes it.</p>
+<p>把它放进一个文本文件里，然后去折腾你的 IDE 或者 Makefile，无论你用什么方式都好。我在这里等你。搞定了？好的！</p>
+<p>Lox 是一门脚本语言，这意味着它直接基于源代码执行。我们的解释器支持两种运行代码的方式。如果你在命令行中启动 jlox 并向它传入一个文件路径，它便会读取该文件并执行之。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Lox.java</em><br>
 add after <em>main</em>()</div>
 <pre>
@@ -195,18 +175,13 @@ add after <em>main</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, add after <em>main</em>()</div>
 
-<p>If you want a more intimate conversation with your interpreter, you can also run
-it interactively. Fire up jlox without any arguments, and it drops you into a
-prompt where you can enter and execute code one line at a time.</p>
+<p>如果你想与解释器进行一场更为亲密的对话，你也可以以交互方式运行它。无需传入任何参数即可启动 jlox，此时它会把你带到一个提示符前，使你能够一行一行地输入并执行代码。</p>
 <aside name="repl">
-<p>An interactive prompt is also called a &ldquo;REPL&rdquo; (pronounced like &ldquo;rebel&rdquo; but with
-a &ldquo;p&rdquo;). The name comes from Lisp where implementing one is as simple as
-wrapping a loop around a few built-in functions:</p>
+<p>这种交互式提示符也被称为 &ldquo;REPL&rdquo;（读作 &ldquo;rebel&rdquo;，但尾巴上要加个 &ldquo;p&rdquo;）。这个名字源自 Lisp——在 Lisp 中，要实现一个 REPL，简单到只需在一个循环里包上几个内置函数即可：</p>
 <div class="codehilite"><pre>
 (<span class="i">print</span> (<span class="i">eval</span> (<span class="i">read</span>)))
 </pre></div>
-<p>Working outwards from the most nested call, you <strong>R</strong>ead a line of input,
-<strong>E</strong>valuate it, <strong>P</strong>rint the result, then <strong>L</strong>oop and do it all over again.</p>
+<p>从最内层调用往外看，你会先<strong>R</strong>ead 读取一行输入，然后<strong>E</strong>valuate 求值，再<strong>P</strong>rint 打印结果，最后<strong>L</strong>oop 循环往复。</p>
 </aside>
 <div class="codehilite"><div class="source-file"><em>lox/Lox.java</em><br>
 add after <em>runFile</em>()</div>
@@ -225,12 +200,8 @@ add after <em>runFile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, add after <em>runFile</em>()</div>
 
-<p>The <code>readLine()</code> function, as the name so helpfully implies, reads a line of
-input from the user on the command line and returns the result. To kill an
-interactive command-line app, you usually type Control-D. Doing so signals an
-&ldquo;end-of-file&rdquo; condition to the program. When that happens <code>readLine()</code> returns
-<code>null</code>, so we check for that to exit the loop.</p>
-<p>Both the prompt and the file runner are thin wrappers around this core function:</p>
+<p>顾名思义，<code>readLine()</code> 函数用于从命令行读取用户输入的一行内容并返回其结果。要终止一个交互式命令行程序，通常需要按下 Ctrl-D。此举相当于向程序发出一个&ldquo;文件结束&ldquo;（end-of-file）信号。当这种情况发生时，<code>readLine()</code> 会返回 <code>null</code>，于是我们便以此作为退出循环的判据。</p>
+<p>无论是提示符模式还是文件运行模式，都只是包裹了如下这一核心函数的薄薄一层皮囊：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Lox.java</em><br>
 add after <em>runPrompt</em>()</div>
 <pre>
@@ -246,26 +217,13 @@ add after <em>runPrompt</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, add after <em>runPrompt</em>()</div>
 
-<p>It&rsquo;s not super useful yet since we haven&rsquo;t written the interpreter, but baby
-steps, you know? Right now, it prints out the tokens our forthcoming scanner
-will emit so that we can see if we&rsquo;re making progress.</p>
-<h3><a href="#error-handling" name="error-handling"><small>4&#8202;.&#8202;1&#8202;.&#8202;1</small>Error handling</a></h3>
-<p>While we&rsquo;re setting things up, another key piece of infrastructure is <em>error
-handling</em>. Textbooks sometimes gloss over this because it&rsquo;s more a practical
-matter than a formal computer science-y problem. But if you care about making a
-language that&rsquo;s actually <em>usable</em>, then handling errors gracefully is vital.</p>
-<p>The tools our language provides for dealing with errors make up a large portion
-of its user interface. When the user&rsquo;s code is working, they aren&rsquo;t thinking
-about our language at all<span class="em">&mdash;</span>their headspace is all about <em>their program</em>. It&rsquo;s
-usually only when things go wrong that they notice our implementation.</p>
-<p><span name="errors">When</span> that happens, it&rsquo;s up to us to give the user all
-the information they need to understand what went wrong and guide them gently
-back to where they are trying to go. Doing that well means thinking about error
-handling all through the implementation of our interpreter, starting now.</p>
+<p>它现在还不是特别有用，因为我们还没把解释器写完——但万事开头难，你说是吧？眼下，它只会将我们即将推出的扫描器所产出的那些词法单元打印出来，好让我们得以窥见进度是否如预期推进。</p>
+<h3><a href="#错误处理" name="错误处理"><small>4&#8202;.&#8202;1&#8202;.&#8202;1</small>错误处理</a></h3>
+<p>在我们搭建脚手架的过程中，另一项关键的基础设施便是 <em>错误处理</em>。教科书有时会一笔带过这部分内容，理由是它更多是一个工程实践问题，而非形式化的计算机科学问题。但是，如果你希望打造一门真正<strong>可用</strong>的程序设计语言，那么优雅地处理错误便是至关重要的。</p>
+<p>我们这门语言为应对错误所提供的种种工具，构成了其用户界面中相当大的一块。当用户的代码一切正常时，他们压根不会去考虑我们这门语言——他们的脑子里装的都是<strong>他们自己的程序</strong>。而往往是当问题出现时，他们才会注意到我们这些幕后的实现。</p>
+<p><span name="errors">当</span>那一刻到来时，我们有责任向用户提供他们所需要的一切信息，帮助他们弄清楚到底哪里出了错，并温柔地引导他们回到他们原本想要去的方向。要做好这一点，意味着我们要从现在开始，在解释器实现的各个阶段都贯穿着对错误处理的思考。</p>
 <aside name="errors">
-<p>Having said all that, for <em>this</em> interpreter, what we&rsquo;ll build is pretty bare
-bones. I&rsquo;d love to talk about interactive debuggers, static analyzers, and other
-fun stuff, but there&rsquo;s only so much ink in the pen.</p>
+<p>话虽如此，对于<strong>这一版</strong>解释器而言，我们即将构建的还算相当简陋。我很乐意和你聊聊交互式调试器、静态分析器以及其他有趣的东西，但无奈本书的墨水有限。</p>
 </aside>
 <div class="codehilite"><div class="source-file"><em>lox/Lox.java</em><br>
 add after <em>run</em>()</div>
@@ -283,27 +241,17 @@ add after <em>run</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, add after <em>run</em>()</div>
 
-<p>This <code>error()</code> function and its <code>report()</code> helper tells the user some syntax
-error occurred on a given line. That is really the bare minimum to be able to
-claim you even <em>have</em> error reporting. Imagine if you accidentally left a
-dangling comma in some function call and the interpreter printed out:</p>
+<p>这个 <code>error()</code> 函数及其 <code>report()</code> 帮助方法，会告诉用户：在某一指定的行号上，发生了一个语法错误。要想声称自己<strong>拥有</strong>错误报告功能，这实在是最低限度了。想象一下，如果你不小心在某个函数调用里遗留了一个悬空的逗号，然后解释器给你吐出这么一句：</p>
 <div class="codehilite"><pre>Error: Unexpected &quot;,&quot; somewhere in your code. Good luck finding it!
 </pre></div>
-<p>That&rsquo;s not very helpful. We need to at least point them to the right line. Even
-better would be the beginning and end column so they know <em>where</em> in the line.
-Even better than <em>that</em> is to <em>show</em> the user the offending line, like:</p>
+<p>这可真谈不上有多贴心。我们至少得把他们指向正确的行号。更好一点的话，应该告知起始列与结束列，让他们清楚错误<strong>具体</strong>在行内的哪个位置。再好一档的话，便是直接将出错的那一行<strong>展示</strong>给用户，例如：</p>
 <div class="codehilite"><pre>Error: Unexpected &quot;,&quot; in argument list.
 
     15 | function(first, second,);
                                ^-- Here.
 </pre></div>
-<p>I&rsquo;d love to implement something like that in this book but the honest truth is
-that it&rsquo;s a lot of grungy string manipulation code. Very useful for users, but
-not super fun to read in a book and not very technically interesting. So we&rsquo;ll
-stick with just a line number. In your own interpreters, please do as I say and
-not as I do.</p>
-<p>The primary reason we&rsquo;re sticking this error reporting function in the main Lox
-class is because of that <code>hadError</code> field. It&rsquo;s defined here:</p>
+<p>我其实非常乐意在本书中实现类似这样的效果，但诚实地说，那将涉及到大量乏味的字符串处理代码。对用户来说固然非常实用，但放在书里读起来既不有趣，技术上也没什么看头。所以我们权且只用行号。在你自己打造解释器时，请务必嘴上听我的，而不要照着我做的来。</p>
+<p>我们将这个错误报告函数置于主 Lox 类中，主要原因便在于那个 <code>hadError</code> 字段。它在此处定义：</p>
 <div class="codehilite"><pre class="insert-before">
 public class Lox {
 </pre><div class="source-file"><em>lox/Lox.java</em><br>
@@ -313,9 +261,7 @@ in class <em>Lox</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, in class <em>Lox</em></div>
 
-<p>We&rsquo;ll use this to ensure we don&rsquo;t try to execute code that has a known error.
-Also, it lets us exit with a non-zero exit code like a good command line citizen
-should.</p>
+<p>我们将借此确保不会去执行那些已经知道存在错误的代码。同时，它还能让我们像一个称职的命令行工具那样，在出错时返回一个非零退出码。</p>
 <div class="codehilite"><pre class="insert-before">
     run(new String(bytes, Charset.defaultCharset()));
 </pre><div class="source-file"><em>lox/Lox.java</em><br>
@@ -329,8 +275,7 @@ in <em>runFile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, in <em>runFile</em>()</div>
 
-<p>We need to reset this flag in the interactive loop. If the user makes a mistake,
-it shouldn&rsquo;t kill their entire session.</p>
+<p>我们需要在交互式循环中重置这个标志位。如果用户犯了个错，不应该就此把他们整段会话都一刀切掉。</p>
 <div class="codehilite"><pre class="insert-before">
       run(line);
 </pre><div class="source-file"><em>lox/Lox.java</em><br>
@@ -342,56 +287,27 @@ in <em>runPrompt</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, in <em>runPrompt</em>()</div>
 
-<p>The other reason I pulled the error reporting out here instead of stuffing it
-into the scanner and other phases where the error might occur is to remind you
-that it&rsquo;s good engineering practice to separate the code that <em>generates</em> the
-errors from the code that <em>reports</em> them.</p>
-<p>Various phases of the front end will detect errors, but it&rsquo;s not really their
-job to know how to present that to a user. In a full-featured language
-implementation, you will likely have multiple ways errors get displayed: on
-stderr, in an IDE&rsquo;s error window, logged to a file, etc. You don&rsquo;t want that
-code smeared all over your scanner and parser.</p>
-<p>Ideally, we would have an actual abstraction, some kind of <span
-name="reporter">&ldquo;ErrorReporter&rdquo;</span> interface that gets passed to the scanner
-and parser so that we can swap out different reporting strategies. For our
-simple interpreter here, I didn&rsquo;t do that, but I did at least move the code for
-error reporting into a different class.</p>
+<p>我把错误报告抽离出来，而不是把它塞进扫描器以及其他可能发生错误的阶段里，还有另一个原因——是想提醒你：<strong>将&ldquo;产生&ldquo;错误的代码与&ldquo;报告&ldquo;错误的代码分离开来</strong>是一种良好的工程实践。</p>
+<p>编译器前端的各个阶段都会检测到错误，但知道如何把错误展示给用户，并不是它们真正的工作。在一款功能完备的语言实现中，你大概会有多种展示错误的方式：输出到 stderr、显示在 IDE 的错误窗口中、记录到文件里，诸如此类。你可不想把这些代码弄得扫描器、语法分析器到处都是。</p>
+<p>理想情况下，我们应该有一个真正的抽象——某种名为<span
+name="reporter">&ldquo;ErrorReporter&rdquo;</span>的接口——传给扫描器与语法分析器，从而我们可以方便地替换不同的报告策略。对于我们这个简易的解释器而言，我并没有那么做，但我至少还是把错误报告相关的代码挪到了一个不同的类中。</p>
 <aside name="reporter">
-<p>I had exactly that when I first implemented jlox. I ended up tearing it out
-because it felt over-engineered for the minimal interpreter in this book.</p>
+<p>我最初实现 jlox 的时候，确实就是那么做的。但最终我又把它拆了出来，因为对于本书中这枚小巧玲珑的解释器来说，这么做显得有些过度设计。</p>
 </aside>
-<p>With some rudimentary error handling in place, our application shell is ready.
-Once we have a Scanner class with a <code>scanTokens()</code> method, we can start running
-it. Before we get to that, let&rsquo;s get more precise about what tokens are.</p>
-<h2><a href="#lexemes-and-tokens" name="lexemes-and-tokens"><small>4&#8202;.&#8202;2</small>Lexemes and Tokens</a></h2>
-<p>Here&rsquo;s a line of Lox code:</p>
+<p>随着一套粗略但可用的错误处理机制就位，我们应用程序的骨架也就准备好了。一旦我们手头拥有了一个带 <code>scanTokens()</code> 方法的 Scanner 类，我们就可以真正开始运行它了。在我们一头扎进去之前，让我们先把&ldquo;词法单元&ldquo;这个概念琢磨得更精确一些。</p>
+<h2><a href="#词素与词法单元" name="词素与词法单元"><small>4&#8202;.&#8202;2</small>词素与词法单元</a></h2>
+<p>这是 Lox 中的一行代码：</p>
 <div class="codehilite"><pre>
 <span class="k">var</span> <span class="i">language</span> = <span class="s">&quot;lox&quot;</span>;
 </pre></div>
-<p>Here, <code>var</code> is the keyword for declaring a variable. That three-character
-sequence &ldquo;v-a-r&rdquo; means something. But if we yank three letters out of the
-middle of <code>language</code>, like &ldquo;g-u-a&rdquo;, those don&rsquo;t mean anything on their own.</p>
-<p>That&rsquo;s what lexical analysis is about. Our job is to scan through the list of
-characters and group them together into the smallest sequences that still
-represent something. Each of these blobs of characters is called a <strong>lexeme</strong>.
-In that example line of code, the lexemes are:</p><img src="image/scanning/lexemes.png" alt="'var', 'language', '=', 'lox', ';'" />
-<p>The lexemes are only the raw substrings of the source code. However, in the
-process of grouping character sequences into lexemes, we also stumble upon some
-other useful information. When we take the lexeme and bundle it together with
-that other data, the result is a token. It includes useful stuff like:</p>
-<h3><a href="#token-type" name="token-type"><small>4&#8202;.&#8202;2&#8202;.&#8202;1</small>Token type</a></h3>
-<p>Keywords are part of the shape of the language&rsquo;s grammar, so the parser often
-has code like, &ldquo;If the next token is <code>while</code> then do<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span>&rdquo; That means the parser
-wants to know not just that it has a lexeme for some identifier, but that it has
-a <em>reserved</em> word, and <em>which</em> keyword it is.</p>
-<p>The <span name="ugly">parser</span> could categorize tokens from the raw lexeme
-by comparing the strings, but that&rsquo;s slow and kind of ugly. Instead, at the
-point that we recognize a lexeme, we also remember which <em>kind</em> of lexeme it
-represents. We have a different type for each keyword, operator, bit of
-punctuation, and literal type.</p>
+<p>这里，<code>var</code> 是声明变量的关键字。这个由三个字符构成的序列&ldquo;v-a-r&rdquo;自有其含义。但如果我们从 <code>language</code> 中间抽出三个字母，比如&ldquo;g-u-a&rdquo;，那它们本身却什么都不是。</p>
+<p>这便是词法分析所要做的事情。我们的工作是逐个扫过这些字符，把它们归并成最小的、仍然能代表某种含义的字符序列。这些字符的&ldquo;一团一伙&ldquo;，我们称之为<strong>词素</strong>（lexeme）。在上面这行代码中，词素分别是：</p><img src="image/scanning/lexemes.png" alt="'var'、'language'、'='、'lox'、';'" />
+<p>词素仅仅是源代码中那些原始的子串而已。然而，在将字符序列归组为词素的过程中，我们也会顺带发现一些其它有用的信息。当我们拿到一个词素，并把这些附带数据打包在一起时，其结果便是一个<strong>词法单元</strong>（token）。它包含了一些实用的信息，比如：</p>
+<h3><a href="#词法单元类型" name="词法单元类型"><small>4&#8202;.&#8202;2&#8202;.&#8202;1</small>词法单元类型</a></h3>
+<p>关键字是程序设计语言文法形态的一部分，因此语法分析器常常需要这样的逻辑：&ldquo;如果下一个词法单元是 <code>while</code>，那么就……&ldquo;这意味着语法分析器不仅希望知道自己手里握有某个标识符的词素，还希望知道它是否为<strong>保留字</strong>，以及<strong>究竟是哪</strong>一个关键字。</p>
+<p><span name="ugly">语法分析器</span>本可以粗暴地直接比较词素字符串来对词法单元进行分类，但这样做既慢又有些丑陋。不如这样：当我们识别出一个词素时，也一并记住它所代表的是<strong>哪一种</strong>词素。每一个关键字、运算符、一块标点以及一种字面量类型，我们都为其分别定义一个类型。</p>
 <aside name="ugly">
-<p>After all, string comparison ends up looking at individual characters, and isn&rsquo;t
-that the scanner&rsquo;s job?</p>
+<p>毕竟，字符串比较最终还是要落到逐字符的比较上去，而这难道不正是扫描器的工作吗？</p>
 </aside>
 <div class="codehilite"><div class="source-file"><em>lox/TokenType.java</em><br>
 create new file</div>
@@ -421,29 +337,15 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/TokenType.java</em>, create new file</div>
 
-<h3><a href="#literal-value" name="literal-value"><small>4&#8202;.&#8202;2&#8202;.&#8202;2</small>Literal value</a></h3>
-<p>There are lexemes for literal values<span class="em">&mdash;</span>numbers and strings and the like. Since
-the scanner has to walk each character in the literal to correctly identify it,
-it can also convert that textual representation of a value to the living runtime
-object that will be used by the interpreter later.</p>
-<h3><a href="#location-information" name="location-information"><small>4&#8202;.&#8202;2&#8202;.&#8202;3</small>Location information</a></h3>
-<p>Back when I was preaching the gospel about error handling, we saw that we need
-to tell users <em>where</em> errors occurred. Tracking that starts here. In our simple
-interpreter, we note only which line the token appears on, but more
-sophisticated implementations include the column and length too.</p>
+<h3><a href="#字面量值" name="字面量值"><small>4&#8202;.&#8202;2&#8202;.&#8202;2</small>字面量值</a></h3>
+<p>有些词素对应着字面量值——数字、字符串，诸如此类。既然扫描器为了正确识别一个字面量，不得不逐字符地遍历它，那顺道把这种文本形式的值，转换为稍后解释器运行时将要使用的那个鲜活的运行时对象，也便是举手之劳。</p>
+<h3><a href="#位置信息" name="位置信息"><small>4&#8202;.&#8202;2&#8202;.&#8202;3</small>位置信息</a></h3>
+<p>还记得我方才喋喋不休地向你布道的那段关于错误处理的内容吗？我们曾提及，需要告诉用户错误<strong>发生在哪里</strong>。对位置的追踪便是从这里起步的。在我们这枚小巧的解释器里，我们仅记录该词法单元出现在哪一行；但更为精密的实现还会同时记录列号与长度。</p>
 <aside name="location">
-<p>Some token implementations store the location as two numbers: the offset from
-the beginning of the source file to the beginning of the lexeme, and the length
-of the lexeme. The scanner needs to know these anyway, so there&rsquo;s no overhead to
-calculate them.</p>
-<p>An offset can be converted to line and column positions later by looking back at
-the source file and counting the preceding newlines. That sounds slow, and it
-is. However, you need to do it <em>only when you need to actually display a line
-and column to the user</em>. Most tokens never appear in an error message. For
-those, the less time you spend calculating position information ahead of time,
-the better.</p>
+<p>有些词法单元的实现将位置存储为两个数字：从源文件起始处到词素起始处的偏移量，以及词素的长度。扫描器本来就需要知道这两个值，因此计算它们并不带来额外的开销。</p>
+<p>偏移量日后可以通过回查源文件、统计此前的换行数，转换为具体的行列位置。这听起来似乎挺慢的，事实上也确实如此。然而，你<strong>仅在需要向用户展示行列位置时</strong>才需要这样做。大多数词法单元永远都不会出现在错误消息中——对于它们而言，越少预先计算位置信息，便越是省时。</p>
 </aside>
-<p>We take all of this data and wrap it in a class.</p>
+<p>我们将所有这些数据打包封装到一个类中。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Token.java</em><br>
 create new file</div>
 <pre>
@@ -469,56 +371,28 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Token.java</em>, create new file</div>
 
-<p>Now we have an object with enough structure to be useful for all of the later
-phases of the interpreter.</p>
-<h2><a href="#regular-languages-and-expressions" name="regular-languages-and-expressions"><small>4&#8202;.&#8202;3</small>Regular Languages and Expressions</a></h2>
-<p>Now that we know what we&rsquo;re trying to produce, let&rsquo;s, well, produce it. The core
-of the scanner is a loop. Starting at the first character of the source code, it
-figures out what lexeme it belongs to, and consumes it and any following
-characters that are part of that lexeme. When it reaches the end of that lexeme,
-it emits a token.</p>
-<p>Then it loops back and does it again, starting from the very next character in
-the source code. It keeps doing that, eating characters and occasionally, uh,
-excreting tokens, until it reaches the end of the input.</p>
-<p><span name="alligator"></span></p><img src="image/scanning/lexigator.png" alt="An alligator eating characters and, well, you don't want to know." />
+<p>这下子，我们就拥有了一个结构丰满、足以应对后续解释器各个阶段的对象了。</p>
+<h2><a href="#正则语言与正则表达式" name="正则语言与正则表达式"><small>4&#8202;.&#8202;3</small>正则语言与正则表达式</a></h2>
+<p>如今，我们已然清楚自己想要产出的东西是什么，那就开工吧——产出它。扫描器的核心是一个循环。扫描器从源代码的第一个字符起步，琢磨出这个字符属于哪一个词素，然后把这个字符以及该词素后续的所有字符统统吃掉。当它抵达该词素的末尾时，便吐出一个词法单元。</p>
+<p>然后它便折返回来，从源代码中的下一个字符开始，周而复始。它就这样不停地吞下字符，再时不时地，呃，&ldquo;排泄&ldquo;出词法单元，直到抵达输入的末尾。</p>
+<p><span name="alligator"></span></p><img src="image/scanning/lexigator.png" alt="一只鳄鱼正在吞食字符，至于后续……你不会想知道的。" />
 <aside name="alligator">
-<p>Lexical analygator.</p>
+<p>所谓&ldquo;词法小鳄鱼&ldquo;（Lexical analygator）。</p>
 </aside>
-<p>The part of the loop where we look at a handful of characters to figure out
-which kind of lexeme it &ldquo;matches&rdquo; may sound familiar. If you know regular
-expressions, you might consider defining a regex for each kind of lexeme and
-using those to match characters. For example, Lox has the same rules as C for
-identifiers (variable names and the like). This regex matches one:</p>
-<div class="codehilite"><pre>[a-zA-Z_][a-zA-Z_0-9]*
+<p>这个循环里需要窥视少数几个字符以判断它&ldquo;匹配&ldquo;的是哪一类词素的部分，听起来或许并不陌生。如果你熟悉正则表达式，你大概会琢磨：能否为每一类词素定义一条正则，然后让它们来匹配字符？比如，Lox 的标识符（变量名以及类似的东西）与 C 有着同样的规则。下列正则便可匹配一个标识符：</p>
+<div class="codehilite"><pre>[a-zA-Z_][a-zA-Z**0-9]*
 </pre></div>
-<p>If you did think of regular expressions, your intuition is a deep one. The rules
-that determine how a particular language groups characters into lexemes are
-called its <span name="theory"><strong>lexical grammar</strong></span>. In Lox, as in most
-programming languages, the rules of that grammar are simple enough for the
-language to be classified a <strong><a href="https://en.wikipedia.org/wiki/Regular_language">regular language</a></strong>. That&rsquo;s the same &ldquo;regular&rdquo;
-as in regular expressions.</p>
+<p>如果你确实想到了正则表达式，那你的直觉相当深刻。决定某门程序设计语言如何将字符归组为词素的那些规则，我们称之为它的<span name="theory"><strong>词法文法</strong></span>。在 Lox 中，正如在大多数程序设计语言中一样，该文法的规则足够简单，以至于这门语言可以被归类为一种<strong>正则语言</strong>（regular language）。这里的&ldquo;正则&ldquo;与正则表达式中的&ldquo;正则&ldquo;含义相同。</p>
 <aside name="theory">
-<p>It pains me to gloss over the theory so much, especially when it&rsquo;s as
-interesting as I think the <a href="https://en.wikipedia.org/wiki/Chomsky_hierarchy">Chomsky hierarchy</a> and <a href="https://en.wikipedia.org/wiki/Finite-state_machine">finite-state machines</a>
-are. But the honest truth is other books cover this better than I could.
-<a href="https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools"><em>Compilers: Principles, Techniques, and Tools</em></a> (universally known as
-&ldquo;the Dragon Book&rdquo;) is the canonical reference.</p>
+<p>我对不得不在书中对理论部分如此一笔带过感到十分痛心——尤其是当我个人也觉得<a href="https://en.wikipedia.org/wiki/Chomsky_hierarchy">乔姆斯基谱系</a>以及<a href="https://en.wikipedia.org/wiki/Finite-state**machine">有限状态机</a>饶有趣味时。但实情是，其他书籍对这些内容的论述会比我要好得多。<a href="https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools"><em>编译原理</em></a>（人称&ldquo;龙书&ldquo;）便是这方面公认的权威之作。</p>
 </aside>
-<p>You very precisely <em>can</em> recognize all of the different lexemes for Lox using
-regexes if you want to, and there&rsquo;s a pile of interesting theory underlying why
-that is and what it means. Tools like <a href="http://dinosaur.compilertools.net/lex/">Lex</a> or
-<a href="https://github.com/westes/flex">Flex</a> are designed expressly to let you do this<span class="em">&mdash;</span>throw a handful of regexes
-at them, and they give you a complete scanner <span name="lex">back</span>.</p>
+<p>你确实可以——如果你愿意的话——使用正则表达式来精确地识别 Lox 中所有不同种类的词素；其背后还蕴含着一大堆饶有趣味的理论，解释着为什么这是可行的，以及它的深层含义。像 <a href="http://dinosaur.compilertools.net/lex/">Lex</a> 或 <a href="https://github.com/westes/flex">Flex</a> 这样的工具，正是为此而生——向它们投喂一把正则表达式，它们便会回馈给你一枚完整的扫描器<span name="lex">回来</span>。</p>
 <aside name="lex">
-<p>Lex was created by Mike Lesk and Eric Schmidt. Yes, the same Eric Schmidt who
-was executive chairman of Google. I&rsquo;m not saying programming languages are a
-surefire path to wealth and fame, but we <em>can</em> count at least one
-mega billionaire among us.</p>
+<p>Lex 由 Mike Lesk 与 Eric Schmidt 共同打造。是的，就是那位曾任 Google 执行董事长的 Eric Schmidt。我倒不是说程序设计语言是通往财富与名声的必由之路，但我们之中确确实实诞生过亿万富翁。</p>
 </aside>
-<p>Since our goal is to understand how a scanner does what it does, we won&rsquo;t be
-delegating that task. We&rsquo;re about handcrafted goods.</p>
-<h2><a href="#the-scanner-class" name="the-scanner-class"><small>4&#8202;.&#8202;4</small>The Scanner Class</a></h2>
-<p>Without further ado, let&rsquo;s make ourselves a scanner.</p>
+<p>既然我们的目标是搞懂扫描器究竟是如何完成其工作的，我们便不打算假手于人。我们即将亲手打造。</p>
+<h2><a href="#scanner-类" name="scanner-类"><small>4&#8202;.&#8202;4</small>Scanner 类</a></h2>
+<p>闲言少叙，我们这就来打造一个扫描器。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 create new file</div>
 <pre>
@@ -543,13 +417,9 @@ create new file</div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, create new file</div>
 
 <aside name="static-import">
-<p>I know static imports are considered bad style by some, but they save me from
-having to sprinkle <code>TokenType.</code> all over the scanner and parser. Forgive me, but
-every character counts in a book.</p>
+<p>我知道某些人认为静态导入（static import）是有失风格的写法，但它能让我免于在扫描器与语法分析器中到处撒上 <code>TokenType.</code>。还请见谅——毕竟在书里，每一个字符都得精打细算。</p>
 </aside>
-<p>We store the raw source code as a simple string, and we have a list ready to
-fill with tokens we&rsquo;re going to generate. The aforementioned loop that does that
-looks like this:</p>
+<p>我们将原始的源代码以一个简单字符串的形式存储，并准备了一个列表，用于填充我们即将生成的词法单元。完成这项工作的那个循环，长这样：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>Scanner</em>()</div>
 <pre>
@@ -566,11 +436,8 @@ add after <em>Scanner</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>Scanner</em>()</div>
 
-<p>The scanner works its way through the source code, adding tokens until it runs
-out of characters. Then it appends one final &ldquo;end of file&rdquo; token. That isn&rsquo;t
-strictly needed, but it makes our parser a little cleaner.</p>
-<p>This loop depends on a couple of fields to keep track of where the scanner is in
-the source code.</p>
+<p>扫描器自始至终地在源代码中推进，不断地往列表里添加词法单元，直至字符耗尽。随后它会再追加一个&ldquo;文件结束&ldquo;（end of file）词法单元。这并非严格必需，但它能让我们的语法分析器稍稍清爽一些。</p>
+<p>这个循环依赖于若干字段，用以记录扫描器当前在源代码中所处的位置。</p>
 <div class="codehilite"><pre class="insert-before">
   private final List&lt;Token&gt; tokens = new ArrayList&lt;&gt;();
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -585,13 +452,8 @@ in class <em>Scanner</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in class <em>Scanner</em></div>
 
-<p>The <code>start</code> and <code>current</code> fields are offsets that index into the string. The
-<code>start</code> field points to the first character in the lexeme being scanned, and
-<code>current</code> points at the character currently being considered. The <code>line</code> field
-tracks what source line <code>current</code> is on so we can produce tokens that know their
-location.</p>
-<p>Then we have one little helper function that tells us if we&rsquo;ve consumed all the
-characters.</p>
+<p><code>start</code> 与 <code>current</code> 字段是两个偏移量，用以索引到该字符串。<code>start</code> 指向当前正在扫描的这个词素的第一个字符，而 <code>current</code> 则指向当前正在被考察的那个字符。<code>line</code> 字段用以追踪 <code>current</code> 所处的源代码行号，这样我们便能产出带有位置信息的词法单元。</p>
+<p>接下来，我们还有一个不起眼的辅助函数，用来告诉我们是否已经吃光了所有的字符。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>scanTokens</em>()</div>
 <pre>
@@ -601,12 +463,8 @@ add after <em>scanTokens</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>scanTokens</em>()</div>
 
-<h2><a href="#recognizing-lexemes" name="recognizing-lexemes"><small>4&#8202;.&#8202;5</small>Recognizing Lexemes</a></h2>
-<p>In each turn of the loop, we scan a single token. This is the real heart of the
-scanner. We&rsquo;ll start simple. Imagine if every lexeme were only a single character
-long. All you would need to do is consume the next character and pick a token type for
-it. Several lexemes <em>are</em> only a single character in Lox, so let&rsquo;s start with
-those.</p>
+<h2><a href="#识别词素" name="识别词素"><small>4&#8202;.&#8202;5</small>识别词素</a></h2>
+<p>在循环的每一轮中，我们扫描出一个词法单元。这才是扫描器真正的心脏。我们先从简单的开始。假设每个词素都只有一个字符的长度——那么你所需要做的仅仅是吃掉下一个字符，并为之挑选一个词法单元类型即可。在 Lox 中，确实有好些个词素只有一个字符那么长，所以我们就先从它们开始。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>scanTokens</em>()</div>
 <pre>
@@ -629,9 +487,9 @@ add after <em>scanTokens</em>()</div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>scanTokens</em>()</div>
 
 <aside name="slash">
-<p>Wondering why <code>/</code> isn&rsquo;t in here? Don&rsquo;t worry, we&rsquo;ll get to it.</p>
+<p>是不是好奇为什么 <code>/</code> 不在这里面？别急，我们马上就会讲到它。</p>
 </aside>
-<p>Again, we need a couple of helper methods.</p>
+<p>同样，我们需要几个辅助方法。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>isAtEnd</em>()</div>
 <pre>
@@ -650,17 +508,9 @@ add after <em>isAtEnd</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>isAtEnd</em>()</div>
 
-<p>The <code>advance()</code> method consumes the next character in the source file and
-returns it. Where <code>advance()</code> is for input, <code>addToken()</code> is for output. It grabs
-the text of the current lexeme and creates a new token for it. We&rsquo;ll use the
-other overload to handle tokens with literal values soon.</p>
-<h3><a href="#lexical-errors" name="lexical-errors"><small>4&#8202;.&#8202;5&#8202;.&#8202;1</small>Lexical errors</a></h3>
-<p>Before we get too far in, let&rsquo;s take a moment to think about errors at the
-lexical level. What happens if a user throws a source file containing some
-characters Lox doesn&rsquo;t use, like <code>@#^</code>, at our interpreter? Right now, those
-characters get silently discarded. They aren&rsquo;t used by the Lox language, but
-that doesn&rsquo;t mean the interpreter can pretend they aren&rsquo;t there. Instead, we
-report an error.</p>
+<p><code>advance()</code> 方法消化源文件中的下一个字符并将其返回。如果说 <code>advance()</code> 负责&ldquo;输入&ldquo;，那么 <code>addToken()</code> 便负责&ldquo;输出&ldquo;。它抓取当前词素的文本，并为之创建一个新的词法单元。我们很快就会用上它的另一个重载版本，以处理那些带有字面量值的词法单元。</p>
+<h3><a href="#词法错误" name="词法错误"><small>4&#8202;.&#8202;5&#8202;.&#8202;1</small>词法错误</a></h3>
+<p>在我们继续深入之前，让我们花点时间来思考一下词法层面的错误。如果用户甩给我们一份包含某些 Lox 根本用不到的字符（比如 <code>@#^</code>）的源文件，会发生什么？眼下，这些字符会被悄无声息地丢弃。它们虽然不是 Lox 语言的一部分，但这并不代表解释器可以假装它们不存在。我们应当报错。</p>
 <div class="codehilite"><pre class="insert-before">
       case '*': addToken(STAR); break;<span name="slash"> </span>
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -675,31 +525,15 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>()</div>
 
-<p>Note that the erroneous character is still <em>consumed</em> by the earlier call to
-<code>advance()</code>. That&rsquo;s important so that we don&rsquo;t get stuck in an infinite loop.</p>
-<p>Note also that we <span name="shotgun"><em>keep scanning</em></span>. There may be
-other errors later in the program. It gives our users a better experience if we
-detect as many of those as possible in one go. Otherwise, they see one tiny
-error and fix it, only to have the next error appear, and so on. Syntax error
-Whac-A-Mole is no fun.</p>
-<p>(Don&rsquo;t worry. Since <code>hadError</code> gets set, we&rsquo;ll never try to <em>execute</em> any of the
-code, even though we keep going and scan the rest of it.)</p>
+<p>注意，那个出错的字符已经被前面那次 <code>advance()</code> 调用<strong>吞掉了</strong>。这一点至关重要——否则我们便会陷入一个无限循环之中。</p>
+<p>还请注意，我们 <span name="shotgun"><em>仍在继续扫描</em></span>。在程序的后面可能还潜伏着别的错误。如果我们能一次性地把它们都揪出来，对用户而言将是更好的体验。否则，他们修复了第一个微小的错误，紧接着下一个错误又冒出来，如此往复。&ldquo;打地鼠&ldquo;式的语法错误可不怎么好玩。</p>
+<p>（别担心。由于 <code>hadError</code> 已被置位，即便我们继续往后扫描余下的内容，我们也不会去<strong>执行</strong>任何代码。）</p>
 <aside name="shotgun">
-<p>The code reports each invalid character separately, so this shotguns the user
-with a blast of errors if they accidentally paste a big blob of weird text.
-Coalescing a run of invalid characters into a single error would give a nicer
-user experience.</p>
+<p>由于每一处非法字符都会被单独报告，因此倘若用户不小心粘贴了一大坨乱七八糟的字符进来，错误便会像霰弹枪一样炸得用户满脸都是。将连续的一串非法字符归并为单个错误，用户的体验会更佳。</p>
 </aside>
-<h3><a href="#operators" name="operators"><small>4&#8202;.&#8202;5&#8202;.&#8202;2</small>Operators</a></h3>
-<p>We have single-character lexemes working, but that doesn&rsquo;t cover all of Lox&rsquo;s
-operators. What about <code>!</code>? It&rsquo;s a single character, right? Sometimes, yes, but
-if the very next character is an equals sign, then we should instead create a
-<code>!=</code> lexeme. Note that the <code>!</code> and <code>=</code> are <em>not</em> two independent operators. You
-can&rsquo;t write <code>!   =</code> in Lox and have it behave like an inequality operator.
-That&rsquo;s why we need to scan <code>!=</code> as a single lexeme. Likewise, <code>&lt;</code>, <code>&gt;</code>, and <code>=</code>
-can all be followed by <code>=</code> to create the other equality and comparison
-operators.</p>
-<p>For all of these, we need to look at the second character.</p>
+<h3><a href="#操作符" name="操作符"><small>4&#8202;.&#8202;5&#8202;.&#8202;2</small>操作符</a></h3>
+<p>我们已能让单字符的词素工作，但这并未涵盖 Lox 中所有的操作符。比如 <code>!</code>，它不是只有一个字符吗？有时候确实是，但如果紧随其后的字符是等号，那么我们就应当创建 <code>!=</code> 这个词素。请注意，<code>!</code> 与 <code>=</code> 本身并非两个相互独立的操作符——你不能在 Lox 里写成 <code>!   =</code> 然后指望它充当不等号操作符。这就是为什么我们需要把 <code>!=</code> 作为一个整体词素来扫描。同理，<code>&lt;</code>、<code>&gt;</code> 与 <code>=</code> 后面都可以再跟一个 <code>=</code>，从而构成等号与比较操作符。</p>
+<p>对于上述这些情况，我们都需要再往后再看一个字符。</p>
 <div class="codehilite"><pre class="insert-before">
       case '*': addToken(STAR); break;<span name="slash"> </span>
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -723,7 +557,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>()</div>
 
-<p>Those cases use this new method:</p>
+<p>这些情形使用到了下面这个新方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>scanToken</em>()</div>
 <pre>
@@ -737,15 +571,10 @@ add after <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>scanToken</em>()</div>
 
-<p>It&rsquo;s like a conditional <code>advance()</code>. We only consume the current character if
-it&rsquo;s what we&rsquo;re looking for.</p>
-<p>Using <code>match()</code>, we recognize these lexemes in two stages. When we reach, for
-example, <code>!</code>, we jump to its switch case. That means we know the lexeme <em>starts</em>
-with <code>!</code>. Then we look at the next character to determine if we&rsquo;re on a <code>!=</code> or
-merely a <code>!</code>.</p>
-<h2><a href="#longer-lexemes" name="longer-lexemes"><small>4&#8202;.&#8202;6</small>Longer Lexemes</a></h2>
-<p>We&rsquo;re still missing one operator: <code>/</code> for division. That character needs a
-little special handling because comments begin with a slash too.</p>
+<p>它有些像一个有条件的 <code>advance()</code>——仅当当前字符正是我们所寻找的目标时，才将其吃掉。</p>
+<p>借助于 <code>match()</code>，我们可以分两阶段来识别这些词素。举例来说，当我们抵达 <code>!</code> 时，便跳入其对应的 switch 分支。这意味着我们已经知道这个词素<strong>以</strong> <code>!</code> <strong>开头</strong>。随后我们再瞅一眼下一个字符，以判断这究竟是一个 <code>!=</code>，还是一个单独的 <code>!</code>。</p>
+<h2><a href="#更长的词素" name="更长的词素"><small>4&#8202;.&#8202;6</small>更长的词素</a></h2>
+<p>我们仍遗漏了一个操作符：除号 <code>/</code>。这个字符需要一点特殊处理，因为注释也是以斜杠开头的。</p>
 <div class="codehilite"><pre class="insert-before">
         break;
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -765,13 +594,9 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>()</div>
 
-<p>This is similar to the other two-character operators, except that when we find a
-second <code>/</code>, we don&rsquo;t end the token yet. Instead, we keep consuming characters
-until we reach the end of the line.</p>
-<p>This is our general strategy for handling longer lexemes. After we detect the
-beginning of one, we shunt over to some lexeme-specific code that keeps eating
-characters until it sees the end.</p>
-<p>We&rsquo;ve got another helper:</p>
+<p>这与前面提到的那些双字符操作符颇为相似，唯一不同的是，当我们遇到第二个 <code>/</code> 时，我们并不就此结束这个词法单元。相反，我们会继续吞下字符，直至抵达行末。</p>
+<p>这便是我们处理更长的词素时的一般策略。在我们识别出某个词素的起始之后，便会转去该词素专属的那段代码，由它继续吞咽字符，直至瞧见词素的末尾。</p>
+<p>我们还有一个辅助方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>match</em>()</div>
 <pre>
@@ -782,22 +607,12 @@ add after <em>match</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>match</em>()</div>
 
-<p>It&rsquo;s sort of like <code>advance()</code>, but doesn&rsquo;t consume the character. This is called
-<span name="match"><strong>lookahead</strong></span>. Since it only looks at the current
-unconsumed character, we have <em>one character of lookahead</em>. The smaller this
-number is, generally, the faster the scanner runs. The rules of the lexical
-grammar dictate how much lookahead we need. Fortunately, most languages in wide
-use peek only one or two characters ahead.</p>
+<p>它有点像 <code>advance()</code>，但并不会消耗掉那个字符。这种做法被称为<span name="match"><strong>前瞻</strong></span>（lookahead）。由于它仅仅窥视当前尚未被消耗的那个字符，我们因而拥有<strong>一字符的前瞻</strong>。一般来说，这个数字越小，扫描器便跑得越快。词法文法的规则决定了我们需要多少前瞻量。所幸的是，大多数广为使用的语言仅需要向前窥探一两个字符。</p>
 <aside name="match">
-<p>Technically, <code>match()</code> is doing lookahead too. <code>advance()</code> and <code>peek()</code> are the
-fundamental operators and <code>match()</code> combines them.</p>
+<p>严格来说，<code>match()</code> 也属于一种前瞻。<code>advance()</code> 与 <code>peek()</code> 才是更基础的算子，<code>match()</code> 不过是它们俩的组合罢了。</p>
 </aside>
-<p>Comments are lexemes, but they aren&rsquo;t meaningful, and the parser doesn&rsquo;t want
-to deal with them. So when we reach the end of the comment, we <em>don&rsquo;t</em> call
-<code>addToken()</code>. When we loop back around to start the next lexeme, <code>start</code> gets
-reset and the comment&rsquo;s lexeme disappears in a puff of smoke.</p>
-<p>While we&rsquo;re at it, now&rsquo;s a good time to skip over those other meaningless
-characters: newlines and whitespace.</p>
+<p>注释本身是一种词素，但它们并没有任何实际意义，语法分析器也不想与它们打交道。因此，当我们抵达注释的末尾时，我们并<strong>不</strong>调用 <code>addToken()</code>。当我们回过头来开始扫描下一个词素时，<code>start</code> 会被重置，于是这段注释所对应的词素便如一缕青烟般消散无踪。</p>
+<p>既然都说到这儿了，我们不妨顺手把另一些无足轻重的字符也跳过去——换行符与空白字符。</p>
 <div class="codehilite"><pre class="insert-before">
         break;
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -820,20 +635,15 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>()</div>
 
-<p>When encountering whitespace, we simply go back to the beginning of the scan
-loop. That starts a new lexeme <em>after</em> the whitespace character. For newlines,
-we do the same thing, but we also increment the line counter. (This is why we
-used <code>peek()</code> to find the newline ending a comment instead of <code>match()</code>. We want
-that newline to get us here so we can update <code>line</code>.)</p>
-<p>Our scanner is getting smarter. It can handle fairly free-form code like:</p>
+<p>遇到空白字符时，我们仅仅折返回扫描循环的起点。这会在该空白字符<strong>之后</strong>开启一个新词素。对于换行符，我们亦采取同样的做法，只不过会顺手将行号加一。（这便解释了我们为什么使用 <code>peek()</code> 来定位注释末尾的换行符，而不是 <code>match()</code>——我们要让那个换行符落到此处，以便更新 <code>line</code>。）</p>
+<p>我们的扫描器正在变得越来越聪明。它已经能应对相当自由形式的代码，比如：</p>
 <div class="codehilite"><pre>
 <span class="c">// this is a comment</span>
 (( )){} <span class="c">// grouping stuff</span>
 !*+-/=&lt;&gt; &lt;= == <span class="c">// operators</span>
 </pre></div>
-<h3><a href="#string-literals" name="string-literals"><small>4&#8202;.&#8202;6&#8202;.&#8202;1</small>String literals</a></h3>
-<p>Now that we&rsquo;re comfortable with longer lexemes, we&rsquo;re ready to tackle literals.
-We&rsquo;ll do strings first, since they always begin with a specific character, <code>"</code>.</p>
+<h3><a href="#字符串字面量" name="字符串字面量"><small>4&#8202;.&#8202;6&#8202;.&#8202;1</small>字符串字面量</a></h3>
+<p>既然我们对处理更长的词素已然轻车熟路，我们便可以着手攻克字面量了。我们先从字符串开始，因为它总是以一个特定的字符——<code>"</code>——打头。</p>
 <div class="codehilite"><pre class="insert-before">
         break;
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -847,7 +657,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>()</div>
 
-<p>That calls:</p>
+<p>这会调用到：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>scanToken</em>()</div>
 <pre>
@@ -872,53 +682,34 @@ add after <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>scanToken</em>()</div>
 
-<p>Like with comments, we consume characters until we hit the <code>"</code> that ends the
-string. We also gracefully handle running out of input before the string is
-closed and report an error for that.</p>
-<p>For no particular reason, Lox supports multi-line strings. There are pros and
-cons to that, but prohibiting them was a little more complex than allowing them,
-so I left them in. That does mean we also need to update <code>line</code> when we hit a
-newline inside a string.</p>
-<p>Finally, the last interesting bit is that when we create the token, we also
-produce the actual string <em>value</em> that will be used later by the interpreter.
-Here, that conversion only requires a <code>substring()</code> to strip off the surrounding
-quotes. If Lox supported escape sequences like <code>\n</code>, we&rsquo;d unescape those here.</p>
-<h3><a href="#number-literals" name="number-literals"><small>4&#8202;.&#8202;6&#8202;.&#8202;2</small>Number literals</a></h3>
-<p>All numbers in Lox are floating point at runtime, but both integer and decimal
-literals are supported. A number literal is a series of <span
-name="minus">digits</span> optionally followed by a <code>.</code> and one or more trailing
-digits.</p>
+<p>与注释类似，我们不断地吞咽字符，直至碰上作为字符串结尾的那个 <code>"</code>。我们还优雅地处理了&ldquo;在字符串尚未闭合之前输入就已耗尽&ldquo;的情况，并对此报错。</p>
+<p>无甚特别缘由，Lox 支持多行字符串。这一设计有利有弊，但禁止它比起允许它要稍稍复杂一些，于是我便将它保留了下来。这意味着我们还需要在字符串内部遇到换行符时更新 <code>line</code>。</p>
+<p>最后，有意思的一点是：在我们创建词法单元时，还会一并产出<strong>真正的</strong>字符串<strong>值</strong>，供稍后的解释器使用。此处的转换仅需一次 <code>substring()</code> 调用，将字符串两端的引号剥去即可。如果 Lox 还支持诸如 <code>\n</code> 这样的转义序列，我们便会在此处将其反转义。</p>
+<h3><a href="#数字字面量" name="数字字面量"><small>4&#8202;.&#8202;6&#8202;.&#8202;2</small>数字字面量</a></h3>
+<p>Lox 中所有的数字在运行时均为浮点数，但它同时也支持整数与十进制小数字面量。一个数字字面量是一串<span name="minus">数字</span>，其后可选地跟上一个 <code>.</code> 以及一位或多位尾随数字。</p>
 <aside name="minus">
-<p>Since we look only for a digit to start a number, that means <code>-123</code> is not a
-number <em>literal</em>. Instead, <code>-123</code>, is an <em>expression</em> that applies <code>-</code> to the
-number literal <code>123</code>. In practice, the result is the same, though it has one
-interesting edge case if we were to add method calls on numbers. Consider:</p>
+<p>由于我们仅以数字作为数字词素的开头，这意味着 <code>-123</code> 并非一个数字<strong>字面量</strong>。实际上，<code>-123</code> 是一个<strong>表达式</strong>，它将一元 <code>-</code> 作用于数字字面量 <code>123</code> 之上。实际效果是一样的，不过假如我们日后打算为数字添加方法调用的话，这里便存在一个有趣的边界情况。试看：</p>
 <div class="codehilite"><pre>
 <span class="k">print</span> -<span class="n">123</span>.<span class="i">abs</span>();
 </pre></div>
-<p>This prints <code>-123</code> because negation has lower precedence than method calls. We
-could fix that by making <code>-</code> part of the number literal. But then consider:</p>
+<p>这会打印出 <code>-123</code>，这是因为取负的优先级低于方法调用。我们当然也可以将 <code>-</code> 划入数字字面量的一部分来解决这个问题。但随后再来看：</p>
 <div class="codehilite"><pre>
 <span class="k">var</span> <span class="i">n</span> = <span class="n">123</span>;
 <span class="k">print</span> -<span class="i">n</span>.<span class="i">abs</span>();
 </pre></div>
-<p>This still produces <code>-123</code>, so now the language seems inconsistent. No matter
-what you do, some case ends up weird.</p>
+<p>这同样会产出 <code>-123</code>，于是这门语言就显得前后不一了。无论你怎么做，总有些情形会变得古怪。</p>
 </aside>
 <div class="codehilite"><pre>
 <span class="n">1234</span>
 <span class="n">12.34</span>
 </pre></div>
-<p>We don&rsquo;t allow a leading or trailing decimal point, so these are both invalid:</p>
+<p>我们不允许前导或后置的小数点，因此下面这两种都是不合法的：</p>
 <div class="codehilite"><pre>
 .<span class="n">1234</span>
 <span class="n">1234</span>.
 </pre></div>
-<p>We could easily support the former, but I left it out to keep things simple. The
-latter gets weird if we ever want to allow methods on numbers like <code>123.sqrt()</code>.</p>
-<p>To recognize the beginning of a number lexeme, we look for any digit. It&rsquo;s kind
-of tedious to add cases for every decimal digit, so we&rsquo;ll stuff it in the
-default case instead.</p>
+<p>支持前者其实易如反掌，但为了让事情保持简单，我便没有将其纳入。至于后者，假如日后我们想要允许在数字上调用类似 <code>123.sqrt()</code> 的方法，那便会带来一些怪异的行为。</p>
+<p>为了识别数字词素的起始，我们只需查看是否有任何一位数字。逐个为十进制数字罗列 case 分支未免太过繁琐，因此我们索性将其塞入 default 分支中。</p>
 <div class="codehilite"><pre class="insert-before">
       default:
 </pre><div class="source-file"><em>lox/Scanner.java</em><br>
@@ -935,7 +726,7 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>(), replace 1 line</div>
 
-<p>This relies on this little utility:</p>
+<p>这有赖于下面这个小小的工具方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>peek</em>()</div>
 <pre>
@@ -946,12 +737,9 @@ add after <em>peek</em>()</div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>peek</em>()</div>
 
 <aside name="is-digit">
-<p>The Java standard library provides <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Character.html#isDigit(char)"><code>Character.isDigit()</code></a>, which seems
-like a good fit. Alas, that method allows things like Devanagari digits,
-full-width numbers, and other funny stuff we don&rsquo;t want.</p>
+<p>Java 标准库提供了 <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Character.html#isDigit(char)"><code>Character.isDigit()</code></a>，看上去似乎正中下怀。可惜的是，那个方法同时还允许诸如天城文数字、全角数字以及其他一些我们并不想接受的奇怪字符。</p>
 </aside>
-<p>Once we know we are in a number, we branch to a separate method to consume the
-rest of the literal, like we do with strings.</p>
+<p>一旦我们意识到自己正身处一个数字之中，便会转去另一个独立的方法去消费该字面量的剩余部分——这与我们处理字符串时的做法如出一辙。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>scanToken</em>()</div>
 <pre>
@@ -972,13 +760,8 @@ add after <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>scanToken</em>()</div>
 
-<p>We consume as many digits as we find for the integer part of the literal. Then
-we look for a fractional part, which is a decimal point (<code>.</code>) followed by at
-least one digit. If we do have a fractional part, again, we consume as many
-digits as we can find.</p>
-<p>Looking past the decimal point requires a second character of lookahead since we
-don&rsquo;t want to consume the <code>.</code> until we&rsquo;re sure there is a digit <em>after</em> it. So
-we add:</p>
+<p>对于整数部分，我们尽可能多地吞下连续的数字字符。随后，我们再去寻找小数部分——那便是小数点（<code>.</code>），其后跟着至少一位数字。如果我们确实找到了小数部分，那么同样地，我们会尽可能多地吞下能找到的数字。</p>
+<p>在小数点之后进行窥视，依赖于<strong>两字符</strong>的前瞻——我们并不想在小数点<strong>之后</strong>确实存在数字之前就贸然吞掉那个 <code>.</code>。因此我们新增：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>peek</em>()</div>
 <pre>
@@ -990,23 +773,12 @@ add after <em>peek</em>()</div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>peek</em>()</div>
 
 <aside name="peek-next">
-<p>I could have made <code>peek()</code> take a parameter for the number of characters ahead
-to look instead of defining two functions, but that would allow <em>arbitrarily</em>
-far lookahead. Providing these two functions makes it clearer to a reader of the
-code that our scanner looks ahead at most two characters.</p>
+<p>我本可以让 <code>peek()</code> 接受一个参数，用以指定向前窥探的字符数，而不必另行定义两个函数——但那将允许<strong>任意远</strong>的前瞻。提供这两个函数，能让代码的读者更清楚地知道：我们的扫描器至多只向前窥探两个字符。</p>
 </aside>
-<p>Finally, we convert the lexeme to its numeric value. Our interpreter uses Java&rsquo;s
-<code>Double</code> type to represent numbers, so we produce a value of that type. We&rsquo;re
-using Java&rsquo;s own parsing method to convert the lexeme to a real Java double. We
-could implement that ourselves, but, honestly, unless you&rsquo;re trying to cram for
-an upcoming programming interview, it&rsquo;s not worth your time.</p>
-<p>The remaining literals are Booleans and <code>nil</code>, but we handle those as keywords,
-which gets us to<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span></p>
-<h2><a href="#reserved-words-and-identifiers" name="reserved-words-and-identifiers"><small>4&#8202;.&#8202;7</small>Reserved Words and Identifiers</a></h2>
-<p>Our scanner is almost done. The only remaining pieces of the lexical grammar to
-implement are identifiers and their close cousins, the reserved words. You might
-think we could match keywords like <code>or</code> in the same way we handle
-multiple-character operators like <code>&lt;=</code>.</p>
+<p>最后，我们将该词素转换为其对应的数值。我们的解释器使用 Java 的 <code>Double</code> 类型来表示数字，因此我们产出的也便是该类型的一个值。我们直接借用了 Java 自带的解析方法将词素转换为真正的 Java double。我们本可以自己来实现，但说实话，除非你正在为即将到来的某场面试临阵磨枪，否则实在不值得你在这上面浪费时间。</p>
+<p>剩下的字面量是布尔值与 <code>nil</code>，不过我们会将它们视作关键字来处理，这便引出了……</p>
+<h2><a href="#保留字与标识符" name="保留字与标识符"><small>4&#8202;.&#8202;7</small>保留字与标识符</a></h2>
+<p>我们的扫描器已几近完工。词法文法中尚未实现的部分仅剩标识符，以及它们形影不离的兄弟——保留字。你或许会觉得，我们可以用与处理 <code>&lt;=</code> 这类多字符操作符相同的方式，来匹配诸如 <code>or</code> 这般的关键字。</p>
 <div class="codehilite"><pre>
 <span class="k">case</span> <span class="s">&#39;o&#39;</span>:
   <span class="k">if</span> (<span class="i">match</span>(<span class="s">&#39;r&#39;</span>)) {
@@ -1014,40 +786,25 @@ multiple-character operators like <code>&lt;=</code>.</p>
   }
   <span class="k">break</span>;
 </pre></div>
-<p>Consider what would happen if a user named a variable <code>orchid</code>. The scanner
-would see the first two letters, <code>or</code>, and immediately emit an <code>or</code> keyword
-token. This gets us to an important principle called <span
-name="maximal"><strong>maximal munch</strong></span>. When two lexical grammar rules can both
-match a chunk of code that the scanner is looking at, <em>whichever one matches the
-most characters wins</em>.</p>
-<p>That rule states that if we can match <code>orchid</code> as an identifier and <code>or</code> as a
-keyword, then the former wins. This is also why we tacitly assumed, previously,
-that <code>&lt;=</code> should be scanned as a single <code>&lt;=</code> token and not <code>&lt;</code> followed by <code>=</code>.</p>
+<p>试想一下，如果用户将一个变量命名为 <code>orchid</code>，将会发生什么。扫描器看到前两个字母 <code>or</code>，便会立刻吐出一个 <code>or</code> 关键字词法单元。这把我们引向了一条重要原则——<span name="maximal"><strong>最长匹配</strong></span>（maximal munch）。当词法文法的两条规则都能匹配扫描器当前所盯着的这一段代码时，<strong>匹配字符更多的那条规则获胜</strong>。</p>
+<p>该原则告诉我们：如果我们既能将 <code>orchid</code> 匹配为一个标识符，又能将 <code>or</code> 匹配为一个关键字，那么前者胜出。这同样解释了我们先前为何理所当然地假设 <code>&lt;=</code> 应当作为一个完整的 <code>&lt;=</code> 词法单元来扫描，而不是先扫一个 <code>&lt;</code> 再跟一个 <code>=</code>。</p>
 <aside name="maximal">
-<p>Consider this nasty bit of C code:</p>
+<p>不妨思考下面这段令人头疼的 C 代码：</p>
 <div class="codehilite"><pre>
 ---<span class="i">a</span>;
 </pre></div>
-<p>Is it valid? That depends on how the scanner splits the lexemes. What if the scanner
-sees it like this:</p>
+<p>它合法吗？这取决于扫描器如何切分词素。要是扫描器将其切分为：</p>
 <div class="codehilite"><pre>
 - --<span class="i">a</span>;
 </pre></div>
-<p>Then it could be parsed. But that would require the scanner to know about the
-grammatical structure of the surrounding code, which entangles things more than
-we want. Instead, the maximal munch rule says that it is <em>always</em> scanned like:</p>
+<p>那它就可以被解析。但那将要求扫描器了解周围代码的语法结构，而这又会让事情变得纠缠不清，远非我们所欲。因此，最长匹配原则规定，它<strong>始终</strong>应被切分为：</p>
 <div class="codehilite"><pre>
 -- -<span class="i">a</span>;
 </pre></div>
-<p>It scans it that way even though doing so leads to a syntax error later in the
-parser.</p>
+<p>扫描器如此切分，哪怕这样做会稍后在语法分析器那里招致一个语法错误。</p>
 </aside>
-<p>Maximal munch means we can&rsquo;t easily detect a reserved word until we&rsquo;ve reached
-the end of what might instead be an identifier. After all, a reserved word <em>is</em>
-an identifier, it&rsquo;s just one that has been claimed by the language for its own
-use. That&rsquo;s where the term <strong>reserved word</strong> comes from.</p>
-<p>So we begin by assuming any lexeme starting with a letter or underscore is an
-identifier.</p>
+<p>最长匹配原则意味着，在我们抵达一个可能的标识符的末尾之前，我们其实并不能轻松地识别出一个保留字。毕竟，一个保留字<strong>本身</strong>就是一个标识符，只不过它已被该语言霸占为己用罢了。这便是<strong>保留字</strong>（reserved word）这一称呼的由来。</p>
+<p>因此，我们不妨先做这样一个假设：任何一个以字母或下划线开头的词素，都是一个标识符。</p>
 <div class="codehilite"><pre class="insert-before">
       default:
         if (isDigit(c)) {
@@ -1064,7 +821,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>scanToken</em>()</div>
 
-<p>The rest of the code lives over here:</p>
+<p>剩余的代码则栖息于彼处：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>scanToken</em>()</div>
 <pre>
@@ -1076,7 +833,7 @@ add after <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>scanToken</em>()</div>
 
-<p>We define that in terms of these helpers:</p>
+<p>我们借助于下面这些辅助方法来定义它：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 add after <em>peekNext</em>()</div>
 <pre>
@@ -1092,9 +849,7 @@ add after <em>peekNext</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, add after <em>peekNext</em>()</div>
 
-<p>That gets identifiers working. To handle keywords, we see if the identifier&rsquo;s
-lexeme is one of the reserved words. If so, we use a token type specific to that
-keyword. We define the set of reserved words in a map.</p>
+<p>至此，标识符便能跑起来了。至于关键字，我们会去查看该标识符的词素是否属于保留字之列。若是，我们便使用与该关键字专属的词法单元类型。我们在一个映射中定义这组保留字。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Scanner.java</em><br>
 in class <em>Scanner</em></div>
 <pre>
@@ -1122,8 +877,7 @@ in class <em>Scanner</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in class <em>Scanner</em></div>
 
-<p>Then, after we scan an identifier, we check to see if it matches anything in the
-map.</p>
+<p>然后，在我们扫描完一个标识符之后，我们便会去查看它是否与该映射中的某个条目相吻合。</p>
 <div class="codehilite"><pre class="insert-before">
     while (isAlphaNumeric(peek())) advance();
 
@@ -1140,151 +894,117 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Scanner.java</em>, in <em>identifier</em>(), replace 1 line</div>
 
-<p>If so, we use that keyword&rsquo;s token type. Otherwise, it&rsquo;s a regular user-defined
-identifier.</p>
-<p>And with that, we now have a complete scanner for the entire Lox lexical
-grammar. Fire up the REPL and type in some valid and invalid code. Does it
-produce the tokens you expect? Try to come up with some interesting edge cases
-and see if it handles them as it should.</p>
+<p>若是匹配，我们便使用该关键字对应的词法单元类型。否则，它便是一个普通的用户自定义标识符。</p>
+<p>至此，我们已然拥有了一款完整的扫描器，足以应付整个 Lox 的词法文法。启动 REPL，敲入一些合法与不合法的代码试试看。它是否如你所预期的那样产出了对应的词法单元？不妨自己构思一些刁钻的边界情形，看看它是否处理得当。</p>
 <div class="challenges">
-<h2><a href="#challenges" name="challenges">Challenges</a></h2>
+<h2><a href="#挑战" name="挑战"><small>4&#8202;.&#8202;8</small>挑战</a></h2>
 <ol>
 <li>
-<p>The lexical grammars of Python and Haskell are not <em>regular</em>. What does that
-mean, and why aren&rsquo;t they?</p>
+<p>Python 与 Haskell 的词法文法并非<strong>正则</strong>。这意味着什么，为什么它们不是正则的？</p>
 </li>
 <li>
-<p>Aside from separating tokens<span class="em">&mdash;</span>distinguishing <code>print foo</code> from <code>printfoo</code><span class="em">&mdash;</span>spaces aren&rsquo;t used for much in most languages. However, in a couple of
-dark corners, a space <em>does</em> affect how code is parsed in CoffeeScript,
-Ruby, and the C preprocessor. Where and what effect does it have in each of
-those languages?</p>
+<p>除了用于分隔词法单元——区分 <code>print foo</code> 与 <code>printfoo</code> 之外，在大多数语言里，空格的存在感其实很弱。然而，在几处隐秘的角落里，空格<strong>确实</strong>会影响代码的解析方式——CoffeeScript、Ruby 以及 C 预处理器便是如此。它们分别是在哪里、产生了怎样的影响？</p>
 </li>
 <li>
-<p>Our scanner here, like most, discards comments and whitespace since those
-aren&rsquo;t needed by the parser. Why might you want to write a scanner that does
-<em>not</em> discard those? What would it be useful for?</p>
+<p>我们的扫描器——与大多数扫描器一样——会丢弃注释与空白字符，因为语法分析器并不需要它们。那么在什么情况下，你可能会想要编写一款<strong>不</strong>丢弃它们的扫描器？它将能派上什么用场？</p>
 </li>
 <li>
-<p>Add support to Lox&rsquo;s scanner for C-style <code>/* ... */</code> block comments. Make
-sure to handle newlines in them. Consider allowing them to nest. Is adding
-support for nesting more work than you expected? Why?</p>
+<p>为 Lox 的扫描器添加对 C 风格 <code>/* ... */</code> 块注释的支持。务必正确处理其中嵌套的换行。不妨考虑允许它们相互嵌套。添加嵌套支持是否比你预想的要复杂得多？为什么？</p>
 </li>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#design-note" name="design-note">Design Note: Implicit Semicolons</a></h2>
-<p>Programmers today are spoiled for choice in languages and have gotten picky
-about syntax. They want their language to look clean and modern. One bit of
-syntactic lichen that almost every new language scrapes off (and some ancient
-ones like BASIC never had) is <code>;</code> as an explicit statement terminator.</p>
-<p>Instead, they treat a newline as a statement terminator where it makes sense to
-do so. The &ldquo;where it makes sense&rdquo; part is the challenging bit. While <em>most</em>
-statements are on their own line, sometimes you need to spread a single
-statement across a couple of lines. Those intermingled newlines should not be
-treated as terminators.</p>
-<p>Most of the obvious cases where the newline should be ignored are easy to
-detect, but there are a handful of nasty ones:</p>
+<h2><a href="#设计笔记：隐式分号" name="设计笔记：隐式分号"><small>4&#8202;.&#8202;9</small>设计笔记：隐式分号</a></h2>
+<p>如今的程序员在程序设计语言的选项上被宠坏了，对语法也变得挑剔起来。他们希望自己的语言看起来既清爽又现代。一处几乎被每一门新兴语言都刮除干净的语法寄生物（以及某些像 BASIC 这样古老到从未沾染的语言）是那个用作显式语句终结符的 <code>;</code>。</p>
+<p>取而代之的是，他们将换行符视作语句的终结符——在该这么做的地方。&ldquo;在该这么做的地方&ldquo;才是棘手之处。虽然<strong>大多数</strong>语句都独占一行，但有时你也需要将单个语句拆分到几行之中。这些夹杂其间的换行符不应被当作终结符来处理。</p>
+<p>大多数换行符应当被忽略的明显情形是易于识别的，但仍有一些棘手的家伙：</p>
 <ul>
 <li>
-<p>A return value on the next line:</p>
+<p><strong>返回值出现在下一行：</strong></p>
 <div class="codehilite"><pre>
 <span class="k">if</span> (<span class="i">condition</span>) <span class="k">return</span>
 <span class="s">&quot;value&quot;</span>
 </pre></div>
-<p>Is &ldquo;value&rdquo; the value being returned, or do we have a <code>return</code> statement with
-  no value followed by an expression statement containing a string literal?</p>
+<p>这里的 &ldquo;value&rdquo; 究竟是被返回的值，还是一个 <code>return</code> 语句（不带值）后跟一个由字符串字面量构成的表达式语句？</p>
 </li>
 <li>
-<p>A parenthesized expression on the next line:</p>
+<p><strong>括号内的表达式出现在下一行：</strong></p>
 <div class="codehilite"><pre>
 <span class="i">func</span>
 (<span class="i">parenthesized</span>)
 </pre></div>
-<p>Is this a call to <code>func(parenthesized)</code>, or two expression statements, one
-  for <code>func</code> and one for a parenthesized expression?</p>
+<p>这究竟是 <code>func(parenthesized)</code> 这一函数调用，还是两个表达式语句——一个是 <code>func</code>，另一个是一个带括号的表达式？</p>
 </li>
 <li>
-<p>A <code>-</code> on the next line:</p>
+<p><strong>一个 <code>-</code> 出现在下一行：</strong></p>
 <div class="codehilite"><pre>
 <span class="i">first</span>
 -<span class="i">second</span>
 </pre></div>
-<p>Is this <code>first - second</code><span class="em">&mdash;</span>an infix subtraction<span class="em">&mdash;</span>or two expression
-  statements, one for <code>first</code> and one to negate <code>second</code>?</p>
+<p>这究竟是 <code>first - second</code>——一个中缀减法表达式，还是两个表达式语句——一个是 <code>first</code>，另一个是对 <code>second</code> 取负？</p>
 </li>
 </ul>
-<p>In all of these, either treating the newline as a separator or not would both
-produce valid code, but possibly not the code the user wants. Across languages,
-there is an unsettling variety of rules used to decide which newlines are
-separators. Here are a couple:</p>
+<p>在上述所有情形中，无论将换行符视作分隔符与否，都能生成合法的代码，但所得到的未必是用户真正想要的代码。纵观各种语言，用于判定&ldquo;哪些换行符算作分隔符&ldquo;的规则可谓形形色色、五花八门。以下略举两例：</p>
 <ul>
 <li>
-<p><a href="https://www.lua.org/pil/1.1.html">Lua</a> completely ignores newlines, but carefully controls its grammar such
-that no separator between statements is needed at all in most cases. This is
-perfectly legit:</p>
+<p><a href="https://www.lua.org/pil/1.1.html">Lua</a> 完全忽略换行符，但通过精心控制其文法，使得在大多数情况下语句之间根本不
+需要分隔符。例如以下写法是完全合法的：</p>
 <div class="codehilite"><pre>
 <span class="i">a</span> = <span class="n">1</span> <span class="i">b</span> = <span class="n">2</span>
 </pre></div>
-<p>Lua avoids the <code>return</code> problem by requiring a <code>return</code> statement to be the
-very last statement in a block. If there is a value after <code>return</code> before
-the keyword <code>end</code>, it <em>must</em> be for the <code>return</code>. For the other two cases,
-they allow an explicit <code>;</code> and expect users to use that. In practice, that
-almost never happens because there&rsquo;s no point in a parenthesized or unary
-negation expression statement.</p>
+<p>Lua 通过要求 <code>return</code> 语句必须是某一块中的最后一条语句来回避 <code>return</code> 那
+个麻烦。若在关键字 <code>end</code> 之前、<code>return</code> 之后还有某个值，那它<strong>必然</strong>是 <code>return</code>
+所返回的。至于其余两种情形，Lua 允许显式书写分号，并期望用户使用之。实
+践中几乎不会出现这种写法，因为括号表达式或一元取负表达式作为独立的语句本
+就没有任何意义。</p>
 </li>
 <li>
-<p><a href="https://golang.org/ref/spec#Semicolons">Go</a> handles newlines in the scanner. If a newline appears following one
-of a handful of token types that are known to potentially end a statement,
-the newline is treated like a semicolon, otherwise it is ignored. The Go
-team provides a canonical code formatter, <a href="https://golang.org/cmd/gofmt/">gofmt</a>, and the ecosystem is
-fervent about its use, which ensures that idiomatic styled code works well
-with this simple rule.</p>
+<p><a href="https://golang.org/ref/spec#Semicolons">Go</a> 在扫描器层面处理换行符。如果换行符出现在若干已知&ldquo;可能结束一条语句&ldquo;
+的词法单元类型之后，那么该换行符将被视作一个分号；否则便将其忽略。Go 团
+队还提供了一款规范化的代码格式化器 <a href="https://golang.org/cmd/gofmt/">gofmt</a>，整个 Go 生态圈对它推崇备至，
+这便保证了符合惯用风格的代码能够与这条简单规则和谐共处。</p>
 </li>
 <li>
-<p><a href="https://docs.python.org/3.5/reference/lexical_analysis.html#implicit-line-joining">Python</a> treats all newlines as significant unless an explicit backslash
-is used at the end of a line to continue it to the next line. However,
-newlines anywhere inside a pair of brackets (<code>()</code>, <code>[]</code>, or <code>{}</code>) are
-ignored. Idiomatic style strongly prefers the latter.</p>
-<p>This rule works well for Python because it is a highly statement-oriented
-language. In particular, Python&rsquo;s grammar ensures a statement never appears
-inside an expression. C does the same, but many other languages which have a
-&ldquo;lambda&rdquo; or function literal syntax do not.</p>
-<p>An example in JavaScript:</p>
+<p><a href="https://docs.python.org/3.5/reference/lexical**analysis.html#implicit-line-joining">Python</a> 默认将所有换行符都视作有意义的，除非在行末显式地使用反斜杠来
+延续至下一行。然而，任何位于一对括号（<code>()</code>, <code>[]</code> 或 <code>{}</code>）之中的换行符
+均会被忽略。Python 的惯用风格强烈地倾向于后者。</p>
+<p>这条规则之所以能在 Python 中运作良好，是因为 Python 是一门高度语句导向
+的语言。具体而言，Python 的文法保证语句永远不会出现在表达式之内。C 语言
+也具备同样的特性，但许多其它语言——尤其是那些拥有&ldquo;lambda&rdquo;或函数字面量
+语法特性的语言——却并不如此。</p>
+<p>来看一段 JavaScript 的示例：</p>
 <div class="codehilite"><pre>
 <span class="i">console</span>.<span class="i">log</span>(<span class="k">function</span>() {
   <span class="i">statement</span>();
 });
 </pre></div>
-<p>Here, the <code>console.log()</code> <em>expression</em> contains a function literal which
-in turn contains the <em>statement</em> <code>statement();</code>.</p>
-<p>Python would need a different set of rules for implicitly joining lines if
-you could get back <em>into</em> a <span name="lambda">statement</span> where
-newlines should become meaningful while still nested inside brackets.</p>
+<p>这里的 <code>console.log()</code> <strong>表达式</strong>内部包含了一个函数字面量，而该函数字面量
+又包含了<strong>语句</strong> <code>statement();</code>。</p>
+<p>如果你能够在仍嵌套于括号之内的某个地方重新<strong>进入</strong>一处<span name="lambda">语句</span>
+——而在这条语句中换行符又重新变得有意义——那么 Python 便需要一套不同的
+隐式行连接规则了。</p>
 </li>
 </ul>
 <aside name="lambda">
-<p>And now you know why Python&rsquo;s <code>lambda</code> allows only a single expression body.</p>
+<p>这下你就明白了，为什么 Python 的 <code>lambda</code> 只能拥有一个表达式体的原因。</p>
 </aside>
 <ul>
 <li>
-<p>JavaScript&rsquo;s &ldquo;<a href="https://www.ecma-international.org/ecma-262/5.1/#sec-7.9">automatic semicolon insertion</a>&rdquo; rule is the real odd
-one. Where other languages assume most newlines <em>are</em> meaningful and only a
-few should be ignored in multi-line statements, JS assumes the opposite. It
-treats all of your newlines as meaningless whitespace <em>unless</em> it encounters
-a parse error. If it does, it goes back and tries turning the previous
-newline into a semicolon to get something grammatically valid.</p>
-<p>This design note would turn into a design diatribe if I went into complete
-detail about how that even <em>works</em>, much less all the various ways that
-JavaScript&rsquo;s &ldquo;solution&rdquo; is a bad idea. It&rsquo;s a mess. JavaScript is the only
-language I know where many style guides demand explicit semicolons after
-every statement even though the language theoretically lets you elide them.</p>
+<p>JavaScript 的&ldquo;自动分号插入&ldquo;（<a href="https://www.ecma-international.org/ecma-262/5.1/#sec-7.9">automatic semicolon insertion</a>）规则可
+算得上真正的异类。当其他语言都默认<strong>大多数</strong>换行符是有意义的、仅在多行
+语句中才应忽略少数几个时，JavaScript 却走向了反面——它默认将你的所有换
+行符都视作无意义的空白，<strong>除非</strong>它撞上了一个语法错误。一旦撞上，它便会
+回头尝试把上一处的换行符变成一个分号，以期能拼凑出某种语法上合法的结果。</p>
+<p>如果要把这套规则的工作原理以及 JavaScript 这一&ldquo;解决方案&ldquo;是如何糟糕的
+诸多细节悉数道尽，这份设计笔记便得膨胀成一份设计檄文了。JavaScript 是
+我所知的唯一一门语言——许多风格指南都要求在每条语句之后都显式地写上分
+号，尽管这门语言在理论上允许你省略它们。这是一团糟。</p>
 </li>
 </ul>
-<p>If you&rsquo;re designing a new language, you almost surely <em>should</em> avoid an explicit
-statement terminator. Programmers are creatures of fashion like other humans, and
-semicolons are as passé as ALL CAPS KEYWORDS. Just make sure you pick a set of
-rules that make sense for your language&rsquo;s particular grammar and idioms. And
-don&rsquo;t do what JavaScript did.</p>
+<p>如果你正在设计一门新的语言，你几乎<strong>必然</strong>应该摒弃显式的语句终结符。程序员
+与其他人类一样，都是时尚的奴隶，而分号早已如全大写关键字那般过时了。只不
+过，请务必挑选一套与你这门语言特定的文法与惯用风格相契合的规则。另外——
+千万不要重蹈 JavaScript 的覆辙。</p>
 </div>
 
 <footer>

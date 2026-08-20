@@ -1,308 +1,198 @@
-> Magicians protect their secrets not because the secrets are large and
-> important, but because they are so small and trivial. The wonderful effects
-> created on stage are often the result of a secret so absurd that the magician
-> would be embarrassed to admit that that was how it was done.
+# 虚拟机
+
+> 魔术师守护他们的秘密，并非因为那些秘密有多么宏大与重要，而是因为它们实在太过渺小平凡。舞台上那些美轮美奂的奇效，往往源于一个荒谬到如此地步的秘密，以至于魔术师都不好意思承认事情**就是**这样做的。
 >
-> <cite>Christopher Priest, <em>The Prestige</em></cite>
+> <cite>克里斯托弗·普里斯特，<em>《致命魔术》</em></cite>
 
-We've spent a lot of time talking about how to represent a program as a sequence
-of bytecode instructions, but it feels like learning biology using only stuffed,
-dead animals. We know what instructions are in theory, but we've never seen them
-in action, so it's hard to really understand what they *do*. It would be hard to
-write a compiler that outputs bytecode when we don't have a good understanding
-of how that bytecode behaves.
+我们已经花了大量时间讨论如何将一段程序表示为一串字节码指令，但要不是那些填满内脏的标本，你很难真正理解它们**究竟**在做什么。当我们还没见过它们在**执行**时究竟如何行事，便很难想象编译器会如何将用户的源代码翻译成它们的一连串。
 
-So, before we go and build the front end of our new interpreter, we will begin
-with the back end -- the virtual machine that executes instructions. It breathes
-life into the bytecode. Watching the instructions prance around gives us a
-clearer picture of how a compiler might translate the user's source code into a
-series of them.
+于是，在我们动手打造这款新解释器的前端之前，我们先从后端——执行指令的虚拟机——开始。它为字节码注入生命。观察这些指令在舞台上腾挪跳跃，会让我们对编译器究竟如何翻译有更清晰的画面。
 
-## An Instruction Execution Machine
+## 一台指令执行机
 
-The virtual machine is one part of our interpreter's internal architecture. You
-hand it a chunk of code -- literally a Chunk -- and it runs it. The code and
-data structures for the VM reside in a new module.
+虚拟机是我们解释器内部架构的一个组成部分。你交给它一段代码块——也就是字面意义上的一个 Chunk——它便去执行它。VM 的代码与数据结构栖身于一个新的模块。
 
 ^code vm-h
 
-As usual, we start simple. The VM will gradually acquire a whole pile of state
-it needs to keep track of, so we define a struct now to stuff that all in.
-Currently, all we store is the chunk that it executes.
+按惯例，我们从最简处入手。VM 终将积累一大堆它需要追踪的状态，因此我们现在先定义一个结构体，以便把所有这些都塞进去。眼下，我们只存储它所执行的那个 chunk。
 
-Like we do with most of the data structures we create, we also define functions
-to create and tear down a VM. Here's the implementation:
+一如我们对待大多数数据结构那般，我们也定义一些函数来创建与销毁一个 VM。下面是实现：
 
 ^code vm-c
 
-OK, calling those functions "implementations" is a stretch. We don't have any
-interesting state to initialize or free yet, so the functions are empty. Trust
-me, we'll get there.
+OK，称呼这些函数为"实现"多少有点勉强。我们眼下还没有任何有趣的状态需要初始化或释放，所以这些函数体空空如也。相信我，我们总会走到那一步的。
 
-The slightly more interesting line here is that declaration of `vm`. This module
-is eventually going to have a slew of functions and it would be a chore to pass
-around a pointer to the VM to all of them. Instead, we declare a single global
-VM object. We need only one anyway, and this keeps the code in the book a little
-lighter on the page.
+这里稍微有趣一点的是那一行 `vm` 的声明。这个模块**终将**拥有琳琅满目的函数，若要四处传递一个指向 VM 的指针，将成为一桩苦差。与此相反，我们声明一个全局的 VM 对象。反正我们也只需要一个，这还能让这本书里的代码在页面上看起来稍稍清爽一些。
 
 <aside name="one">
 
-The choice to have a static VM instance is a concession for the book, but not
-necessarily a sound engineering choice for a real language implementation. If
-you're building a VM that's designed to be embedded in other host applications,
-it gives the host more flexibility if you *do* explicitly take a VM pointer
-and pass it around.
+选用一个静态 VM 实例，是一桩为本书而做的妥协，但未必是一项能站得住脚的工程实践。若你正在**为**别的宿主应用程序**打造**的 VM，则让宿主显式地持有一个 VM 指针并四处传递，会给宿主带来更大的灵活性。
 
-That way, the host app can control when and where memory for the VM is
-allocated, run multiple VMs in parallel, etc.
+如此一来，宿主应用便能控制何时、何处为 VM 分配内存，或者同时跑多个 VM，诸如此类。
 
-What I'm doing here is a global variable, and [everything bad you've heard about
-global variables][global] is still true when programming in the large. But when
-keeping things small for a book...
+我在这里做的事情，相当于一个全局变量，而[关于全局变量你所听过的那些坏话][global]，在**大规模**编程时依旧成立。但当为了让书中的样例保持小巧——
 
 [global]: http://gameprogrammingpatterns.com/singleton.html
 
 </aside>
 
-Before we start pumping fun code into our VM, let's go ahead and wire it up to
-the interpreter's main entrypoint.
+在我们开始把有趣的代码塞进 VM 之前，先把它与解释器的主入口接上线。
 
 ^code main-init-vm (1 before, 1 after)
 
-We spin up the VM when the interpreter first starts. Then when we're about to
-exit, we wind it down.
+我们在解释器初次启动时拉起这个 VM。然后当我们即将退出时，再将它关掉。
 
 ^code main-free-vm (1 before, 1 after)
 
-One last ceremonial obligation:
+最后一件例行公事：
 
 ^code main-include-vm (1 before, 2 after)
 
-Now when you run clox, it starts up the VM before it creates that hand-authored
-chunk from the [last chapter][]. The VM is ready and waiting, so let's teach it
-to do something.
+现在当你跑起 clox，它会在创建完[上一章][]那段手工拼凑的 chunk **之前**先启动 VM。VM 已准备就绪，那么让我们教它做点什么。
 
 [last chapter]: chunks-of-bytecode.html#disassembling-chunks
 
-### Executing instructions
+### 执行指令
 
-The VM springs into action when we command it to interpret a chunk of bytecode.
+VM 在我们命令它去解释一段字节码 chunk 时便一跃而起。
 
 ^code main-interpret (1 before, 1 after)
 
-This function is the main entrypoint into the VM. It's declared like so:
+这个函数是通往 VM 的主入口。它声明如下：
 
 ^code interpret-h (1 before, 2 after)
 
-The VM runs the chunk and then responds with a value from this enum:
+VM 跑完那个 chunk，然后从这个枚举中返回一个值：
 
 ^code interpret-result (2 before, 2 after)
 
-We aren't using the result yet, but when we have a compiler that reports static
-errors and a VM that detects runtime errors, the interpreter will use this to
-know how to set the exit code of the process.
+我们暂时还不会用到这个结果，但当我们有了报告静态错误的编译器、以及能检测运行时错误的 VM 时，解释器会用它来决定进程该以何种退出码收尾。
 
-We're inching towards some actual implementation.
+我们正在一步步趋近某些真正的实现。
 
 ^code interpret
 
-First, we store the chunk being executed in the VM. Then we call `run()`, an
-internal helper function that actually runs the bytecode instructions. Between
-those two parts is an intriguing line. What is this `ip` business?
+首先，我们把正在执行的 chunk 存到 VM 之中。然后我们调用 `run()`——一个真正去跑那些字节码指令的内部辅助函数。夹在这两部分之间的是一行耐人寻味的代码。这 `ip` 究竟是什么？
 
-As the VM works its way through the bytecode, it keeps track of where it is --
-the location of the instruction currently being executed. We don't use a <span
-name="local">local</span> variable inside `run()` for this because eventually
-other functions will need to access it. Instead, we store it as a field in VM.
+当 VM 一路穿越字节码时，它会追踪自己身处何处——当前正在执行的那条指令的位置。我们在 `run()` 内部并没有用<span name="local">一个</span>局部变量来保存它，因为日后其它函数也需要访问它。取而代之，我们将其存为 VM 中的一个字段。
 
 <aside name="local">
 
-If we were trying to squeeze every ounce of speed out of our bytecode
-interpreter, we would store `ip` in a local variable. It gets modified so often
-during execution that we want the C compiler to keep it in a register.
+倘若我们**真的**想从我们的字节码解释器里榨出每一滴性能，那么我们便会把 `ip` 存于一个局部变量。它在执行过程中被修改得太频繁了，我们想**让 C 编译器把它保留在寄存器里**。
 
 </aside>
 
 ^code ip (2 before, 1 after)
 
-Its type is a byte pointer. We use an actual real C pointer pointing right into
-the middle of the bytecode array instead of something like an integer index
-because it's faster to dereference a pointer than look up an element in an array
-by index.
+它的类型是一个字节指针。我们使用一个货真价实的 C 指针，指向字节码数组的中间某处，而不是诸如整数索引之类的玩意儿——这是因为解引用一个指针，比按索引在数组里查找一个元素更快。
 
-The name "IP" is traditional, and -- unlike many traditional names in CS --
-actually makes sense: it's an **[instruction pointer][ip]**. Almost every
-instruction set in the <span name="ip">world</span>, real and virtual, has a
-register or variable like this.
+"IP" 这一名字是传统，而且——与计算机科学中许多传统名字**不同**——其名其实符实：它是一个**[指令指针][ip]**（instruction pointer）。现实中或虚拟中的几乎每一种指令集，都拥有这样一个寄存器或变量。
 
-[ip]: https://en.wikipedia.org/wiki/Program_counter
+[ip]: https://en.wikipedia.org/wiki/Program**counter
 
 <aside name="ip">
 
-x86, x64, and the CLR call it "IP". 68k, PowerPC, ARM, p-code, and the JVM call
-it "PC", for **program counter**.
+x86、x64 与 CLR 称之为 "IP"。68k、PowerPC、ARM、p-code 与 JVM 则称之为 "PC"，即**program counter**（程序计数器）。
 
 </aside>
 
-We initialize `ip` by pointing it at the first byte of code in the chunk. We
-haven't executed that instruction yet, so `ip` points to the instruction *about
-to be executed*. This will be true during the entire time the VM is running: the
-IP always points to the next instruction, not the one currently being handled.
+我们通过让 `ip` 指向 chunk 中的第一个字节来初始化它。那条指令**尚未**执行，因此 `ip` 指向的是**即将被执行的**指令。这一点在 VM 运行的整个过程中都为真：IP 始终指向下一条指令，而非**正在被处理的**那一条。
 
-The real fun happens in `run`().
+真正有趣的事情发生在 `run()` 之中。
 
 ^code run
 
-This is the single most <span name="important">important</span> function in all
-of clox, by far. When the interpreter executes a user's program, it will spend
-something like 90% of its time inside `run()`. It is the beating heart of the
-VM.
+这是整个 clox 中**最重要**的一个函数，遥遥领先。当解释器执行用户的程序时，它会把大约 90% 的时间花在这个 `run()` 的内部。它是 VM 跳动的心脏。
 
 <aside name="important">
 
-Or, at least, it *will* be in a few chapters when it has enough content to be
-useful. Right now, it's not exactly a wonder of software wizardry.
+或者至少，在**几章之后**，当它有了足够多的内容、真正变得有用时，才会如此。眼下，它还称不上什么软件巫术的奇观。
 
 </aside>
 
-Despite that dramatic intro, it's conceptually pretty simple. We have an outer
-loop that goes and goes. Each turn through that loop, we read and execute a
-single bytecode instruction.
+尽管开篇如此戏剧化，它的概念其实颇为简单。我们有一个外层循环，不停地转。每一轮循环，我们读取并执行一条字节码指令。
 
-To process an instruction, we first figure out what kind of instruction we're
-dealing with. The `READ_BYTE` macro reads the byte currently pointed at by `ip`
-and then <span name="next">advances</span> the instruction pointer. The first
-byte of any instruction is the opcode. Given a numeric opcode, we need to get to
-the right C code that implements that instruction's semantics. This process is
-called **decoding** or **dispatching** the instruction.
+要处理一条指令，我们首先得弄清我们正在处理的是哪一种指令。`READ**BYTE` 宏读取 `ip` 当前指向的那个字节，然后<span name="next">前移</span>指令指针。任何一条指令的第一个字节都是操作码。给定一个数值操作码，我们需要找到实现该指令语义的对应 C 代码。这一过程被称为对那条指令的**解码**（decoding）或**分派**（dispatching）。
 
 <aside name="next">
 
-Note that `ip` advances as soon as we read the opcode, before we've actually
-started executing the instruction. So, again, `ip` points to the *next*
-byte of code to be used.
+请注意，`ip` 在我们读取操作码的那一时刻就已前移，**先于**我们真正开始执行该指令。于是，同样地，`ip` 指向的是即将被使用的**下一**字节。
 
 </aside>
 
-We do that process for every single instruction, every single time one is
-executed, so this is the most performance critical part of the entire virtual
-machine. Programming language lore is filled with <span
-name="dispatch">clever</span> techniques to do bytecode dispatch efficiently,
-going all the way back to the early days of computers.
+我们对**每一条**指令、**每一次**其被执行时都会做一遍这个过程，因此这是整个虚拟机中**最**讲究性能的一段。程序设计语言的故事里写满了关于如何高效地对字节码进行分派的各种<span name="dispatch">巧妙</span>技巧，一路可以追溯到计算机的早期。
 
 <aside name="dispatch">
 
-If you want to learn some of these techniques, look up "direct threaded code",
-"jump table", and "computed goto".
+如果你想了解其中一些，可以查阅"direct threaded code"、"jump table"与"computed goto"。
 
 </aside>
 
-Alas, the fastest solutions require either non-standard extensions to C, or
-handwritten assembly code. For clox, we'll keep it simple. Just like our
-disassembler, we have a single giant `switch` statement with a case for each
-opcode. The body of each case implements that opcode's behavior.
+可惜，最快的方案要么需要 C 语言的非标准扩展，要么需要手写的汇编代码。对于 clox，我们将保持简单。正如我们的反汇编器那样，我们有一个巨大的 `switch` 语句，为每一种操作码各自配一个 case。每个 case 的函数体实现该操作码的语义。
 
-So far, we handle only a single instruction, `OP_RETURN`, and the only thing it
-does is exit the loop entirely. Eventually, that instruction will be used to
-return from the current Lox function, but we don't have functions yet, so we'll
-repurpose it temporarily to end the execution.
+到目前为止，我们只处理一条指令——`OP**RETURN`——而它所做的**全部**事情就是彻底退出循环。终有一天，那条指令将被用来从当前 Lox 函数返回；但我们眼下还没有函数，所以我们暂时将其改作"终止执行"之用。
 
-Let's go ahead and support our one other instruction.
+让我们继续支持我们那另一条指令。
 
 ^code op-constant (1 before, 1 after)
 
-We don't have enough machinery in place yet to do anything useful with a
-constant. For now, we'll just print it out so we interpreter hackers can see
-what's going on inside our VM. That call to `printf()` necessitates an include.
+我们尚没有足够的机器来用一条常量做一些有用之事。眼下，我们只是将它打印出来，以便我们这些解释器黑客能窥见 VM 内部正在发生什么。那次对 `printf()` 的调用是一次必要的 include。
 
 ^code vm-include-stdio (1 after)
 
-We also have a new macro to define.
+我们还新定义了一个宏。
 
 ^code read-constant (1 before, 2 after)
 
-`READ_CONSTANT()` reads the next byte from the bytecode, treats the resulting
-number as an index, and looks up the corresponding Value in the chunk's constant
-table. In later chapters, we'll add a few more instructions with operands that
-refer to constants, so we're setting up this helper macro now.
+`READ**CONSTANT()` 读取字节码中的下一个字节，将所得的数字当作一个索引，并在 chunk 的常量表中查找相应的 Value。在后续章节里，我们还会增加几道更多带有操作数、指向常量的指令，所以此处我们便顺势把这个辅助宏搭起来。
 
-Like the previous `READ_BYTE` macro, `READ_CONSTANT` is only used inside
-`run()`. To make that scoping more explicit, the macro definitions themselves
-are confined to that function. We <span name="macro">define</span> them at the
-beginning and -- because we care -- undefine them at the end.
+与之前的 `READ**BYTE` 宏一样，`READ**CONSTANT` 也只在 `run()` 内部使用。为了让这一作用域更一目了然，宏的定义本身被限定于该函数之中。我们<span name="macro">定义</span>它们于开头，并——因为我们洁癖——于末尾将它们 `#undef`。
 
 ^code undef-read-constant (1 before, 1 after)
 
 <aside name="macro">
 
-Undefining these macros explicitly might seem needlessly fastidious, but C tends
-to punish sloppy users, and the C preprocessor doubly so.
+显式地 `#undef` 这些宏，看上去多少有些过度讲究，但 C 往往**会**惩罚那些大大咧咧的用户，而 C 预处理器**更**是如此。
 
 </aside>
 
-### Execution tracing
+### 执行追踪
 
-If you run clox now, it executes the chunk we hand-authored in the last chapter
-and spits out `1.2` to your terminal. We can see that it's working, but that's
-only because our implementation of `OP_CONSTANT` has temporary code to log the
-value. Once that instruction is doing what it's supposed to do and plumbing that
-constant along to other operations that want to consume it, the VM will become a
-black box. That makes our lives as VM implementers harder.
+如果你此刻跑一跑 clox，它会执行我们在上一章中手工编写的那段 chunk，并在你的终端上吐出 `1.2`。我们看得出一切**在**跑——但这只是因为我们 `OP**CONSTANT` 的实现里有一行临时代码去记录那个值。一旦这条指令**真的**去做它应当做的事，并将那个常量一路传递给那些想要消费它的其它运算，VM 便会变成一个黑盒。这会让身为 VM 实现者的我们日子难过。
 
-To help ourselves out, now is a good time to add some diagnostic logging to the
-VM like we did with chunks themselves. In fact, we'll even reuse the same code.
-We don't want this logging enabled all the time -- it's just for us VM hackers,
-not Lox users -- so first we create a flag to hide it behind.
+为了帮自己一把，眼下正是为 VM 添一些诊断日志的好时机——与我们当年为 chunk 本身所做的如出一辙。事实上，我们**甚至**会复用同一段代码。我们并不希望**始终**开启这段日志——它只是为我们这些 VM 黑客准备的，Lox 用户并不需要——所以我们先创建一个 flag，把它隐藏在后面。
 
 ^code define-debug-trace (1 before, 2 after)
 
-When this flag is defined, the VM disassembles and prints each instruction right
-before executing it. Where our previous disassembler walked an entire chunk
-once, statically, this disassembles instructions dynamically, on the fly.
+当这个 flag 被定义时，VM 会在执行每一条指令之前，先反汇编并打印它。上一章我们的反汇编器是**静态地**走一遍整个 chunk，而此处则是**动态地**、即时地反汇编指令。
 
 ^code trace-execution (1 before, 1 after)
 
-Since `disassembleInstruction()` takes an integer byte *offset* and we store the
-current instruction reference as a direct pointer, we first do a little pointer
-math to convert `ip` back to a relative offset from the beginning of the
-bytecode. Then we disassemble the instruction that begins at that byte.
+由于 `disassembleInstruction()` 接受一个整数**字节 offset**，而我们存储当前指令引用是用一个直接的指针，所以我们先做一点指针运算，把 `ip` 换算回从字节码开头算起的相对 offset。然后我们再反汇编从该字节开始的那条指令。
 
-As ever, we need to bring in the declaration of the function before we can call
-it.
+一如既往，我们需要先把那个函数的声明 include 进来，然后才能调用它。
 
 ^code vm-include-debug (1 before, 1 after)
 
-I know this code isn't super impressive so far -- it's literally a switch
-statement wrapped in a `for` loop but, believe it or not, this is one of the two
-major components of our VM. With this, we can imperatively execute instructions.
-Its simplicity is a virtue -- the less work it does, the faster it can do it.
-Contrast this with all of the complexity and overhead we had in jlox with the
-Visitor pattern for walking the AST.
+我知道这段代码眼下并不**怎么**引人注目——它字面意义上就是一个 `switch` 语句裹着一个 `for` 循环——但信不信由你，这便是我们 VM 的两大主件之一。借由它，我们便能命令式地执行指令。它的简洁本身就是一种美德——它做的工作越少，它跑得便越快。回想一下我们在 jlox 里为了用访问者模式遍历 AST 而背负的那一切复杂性与开销，今日之 VM 与之形成了鲜明的对比。
 
-## A Value Stack Manipulator
+## 一个值栈操控器
 
-In addition to imperative side effects, Lox has expressions that produce,
-modify, and consume values. Thus, our compiled bytecode needs a way to shuttle
-values around between the different instructions that need them. For example:
+除了命令式的副作用之外，Lox 还有会产生、修改与消费值的表达式。因此，我们所编译出的字节码需要一种方式在那些需要它们的不同指令之间搬运值。举例而言：
 
 ```lox
 print 3 - 2;
 ```
 
-We obviously need instructions for the constants 3 and 2, the `print` statement,
-and the subtraction. But how does the subtraction instruction know that 3 is
-the <span name="word">minuend</span> and 2 is the subtrahend? How does the print
-instruction know to print the result of that?
+我们显然需要为常量 3 与 2、`print` 语句以及减法运算各设一些指令。但那条减法指令**如何**知道 3 是<span name="word">被减数</span>而 2 是减数呢？那条 `print` 指令**又**如何知道要打印那次运算的结果呢？
 
 <aside name="word">
 
-Yes, I did have to look up "subtrahend" and "minuend" in a dictionary. But
-aren't they delightful words? "Minuend" sounds like a kind of Elizabethan dance
-and "subtrahend" might be some sort of underground Paleolithic monument.
+是的，我**确实**不得不查字典才知道"subtrahend"与"minuend"该怎么写。但这两个词**多么**可爱！"Minuend"听起来像一种伊丽莎白时代的舞蹈，而"subtrahend"也许是某种史前的地下纪念碑。
 
 </aside>
 
-To put a finer point on it, look at this thing right here:
+为了把这层意思说得更清楚些，看看下面这段：
 
 ```lox
 fun echo(n) {
@@ -313,493 +203,317 @@ fun echo(n) {
 print echo(echo(1) + echo(2)) + echo(echo(4) + echo(5));
 ```
 
-I wrapped each subexpression in a call to `echo()` that prints and returns its
-argument. That side effect means we can see the exact order of operations.
+我把每个子表达式都包在一次对 `echo()` 的调用中，那个调用会打印并返回它的实参。这一副作用让我们得以一窥确切的运算顺序。
 
-Don't worry about the VM for a minute. Think about just the semantics of Lox
-itself. The operands to an arithmetic operator obviously need to be evaluated
-before we can perform the operation itself. (It's pretty hard to add `a + b` if
-you don't know what `a` and `b` are.) Also, when we implemented expressions in
-jlox, we <span name="undefined">decided</span> that the left operand must be
-evaluated before the right.
+暂且把 VM 放到一边。仅仅思考 Lox 本身的语义。算术运算符的运算对象显然需要在我们能够真正执行运算**之前**被求值。（如果你不知道 `a` 与 `b` 各是什么，要将 `a + b` 相加**可**是件难事。）此外，当年我们在 jlox 中实现表达式时，我们<span name="undefined">决定</span>左侧运算对象必须先于右侧运算对象被求值。
 
 <aside name="undefined">
 
-We could have left evaluation order unspecified and let each implementation
-decide. That leaves the door open for optimizing compilers to reorder arithmetic
-expressions for efficiency, even in cases where the operands have visible side
-effects. C and Scheme leave evaluation order unspecified. Java specifies
-left-to-right evaluation like we do for Lox.
+我们本可以让求值顺序未定义，由每一种实现各自决定。这会为优化编译器敞开一扇门，使其能够为了效率而重新组织算术表达式——即便在运算对象有可见副作用的情况下亦然。C 与 Scheme 让求值顺序未定义。Java 规定**自左向右**的求值顺序，与我们对 Lox 的规定相同。
 
-I think nailing down stuff like this is generally better for users. When
-expressions are not evaluated in the order users intuit -- possibly in different
-orders across different implementations! -- it can be a burning hellscape of
-pain to figure out what's going on.
+我个人倾向于把诸如此类的事情牢牢钉死。每当表达式的求值顺序不合用户的直觉——或许在不同的实现里顺序**还**各不相同！——便会成为排查问题时的一场炼狱。
 
 </aside>
 
-Here is the syntax tree for the `print` statement:
+下面便是这条 `print` 语句的语法树：
 
-<img src="image/a-virtual-machine/ast.png" alt="The AST for the example
-statement, with numbers marking the order that the nodes are evaluated." />
+<img src="image/a-virtual-machine/ast.png" alt="示例语句的 AST，节点上标注的数字标示其被求值的顺序。" />
 
-Given left-to-right evaluation, and the way the expressions are nested, any
-correct Lox implementation *must* print these numbers in this order:
+给定自左向右的求值方式、以及诸表达式彼此嵌套的方式，任何一种正确的 Lox 实现**必然**按下列顺序打印这些数字：
 
 ```text
-1  // from echo(1)
-2  // from echo(2)
-3  // from echo(1 + 2)
-4  // from echo(4)
-5  // from echo(5)
-9  // from echo(4 + 5)
-12 // from print 3 + 9
+1  // 来自 echo(1)
+2  // 来自 echo(2)
+3  // 来自 echo(1 + 2)
+4  // 来自 echo(4)
+5  // 来自 echo(5)
+9  // 来自 echo(4 + 5)
+12 // 来自 print 3 + 9
 ```
 
-Our old jlox interpreter accomplishes this by recursively traversing the AST. It
-does a postorder traversal. First it recurses down the left operand branch,
-then the right operand, then finally it evaluates the node itself.
+我们那款老 jlox 解释器靠**递归**遍历 AST 来实现这一切。它做一次后序遍历。先递归下行至左运算对象的分支，再至右运算对象，最后才评估该节点本身。
 
-After evaluating the left operand, jlox needs to store that result somewhere
-temporarily while it's busy traversing down through the right operand tree. We
-use a local variable in Java for that. Our recursive tree-walk interpreter
-creates a unique Java call frame for each node being evaluated, so we could have
-as many of these local variables as we needed.
+在评估完左运算对象之后，jlox 需要将它临时存放在某个地方——当它正忙于顺着右运算对象树递归向下时。我们用 Java 中的一个局部变量来担当此事。我们那款递归的树遍历解释器会为每一颗被求值的节点生成一份独一无二的 Java 调用帧，因此我们想要多少局部变量就有多少。
 
-In clox, our `run()` function is not recursive -- the nested expression tree is
-flattened out into a linear series of instructions. We don't have the luxury of
-using C local variables, so how and where should we store these temporary
-values? You can probably <span name="guess">guess</span> already, but I want to
-really drill into this because it's an aspect of programming that we take for
-granted, but we rarely learn *why* computers are architected this way.
+在 clox 中，我们的 `run()` 函数并非递归的——嵌套的表达式树被展平为一条线性的指令序列。我们没有像 Java 局部变量那样的便利，那**我们**应当**如何**与**在哪**存放这些临时值呢？你或许已经<span name="guess">猜到</span>了，但我很想把这件事掰开揉碎讲清楚——这是编程中我们习以为常、却很少去弄清**为什么**计算机要被如此设计的一面。
 
 <aside name="guess">
 
-Hint: it's in the name of this section, and it's how Java and C manage recursive
-calls to functions.
+提示：它就在本节的标题里，而 Java 与 C 也是用它来管理对函数的递归调用的。
 
 </aside>
 
-Let's do a weird exercise. We'll walk through the execution of the above program
-a step at a time:
+让我们做一项古怪的练习。我们将一步步走过上面那段程序的执行：
 
-<img src="image/a-virtual-machine/bars.png" alt="The series of instructions with
-bars showing which numbers need to be preserved across which instructions." />
+<img src="image/a-virtual-machine/bars.png" alt="一连串指令，右侧的横条标示出哪些数字需要跨哪些指令被保留。" />
 
-On the left are the steps of code. On the right are the values we're tracking.
-Each bar represents a number. It starts when the value is first produced --
-either a constant or the result of an addition. The length of the bar tracks
-when a previously produced value needs to be kept around, and it ends when that
-value finally gets consumed by an operation.
+左侧是代码的步骤。右侧是我们正在追踪的每一个值。每一根横条代表一个数字。它从该值首次被产生之时——无论是常量还是加法的结果——启。横条的长度则追踪着一个先产生的值需要被保留多久，其终点是那个值最终被某次运算消费的那一刻。
 
-As you step through, you see values appear and then later get eaten. The
-longest-lived ones are the values produced from the left-hand side of an
-addition. Those stick around while we work through the right-hand operand
-expression.
+当你一步步走下来时，你会看到值出现，然后稍后被吃掉。活得最久的那些值，是加法左侧所产生的值。它们会一直驻留，直到我们把右运算对象表达式打通。
 
-In the above diagram, I gave each unique number its own visual column. Let's be
-a little more parsimonious. Once a number is consumed, we allow its column to be
-reused for another later value. In other words, we take all of those gaps
-up there and fill them in, pushing in numbers from the right:
+在上面的图里，我为每个独一无二的数字各自分配了一列。再稍稍节约一些。当一个数字被消费之后，我们允许那一列被另一个更晚出现的值所复用。换言之，我们把上方那些留白统统填满，让数字从右侧向左推进：
 
-<img src="image/a-virtual-machine/bars-stacked.png" alt="Like the previous
-diagram, but with number bars pushed to the left, forming a stack." />
+<img src="image/a-virtual-machine/bars-stacked.png" alt="与上一张图类似，但数字的横条被推到了左边，形成一座栈。" />
 
-There's some interesting stuff going on here. When we shift everything over,
-each number still manages to stay in a single column for its entire life. Also,
-there are no gaps left. In other words, whenever a number appears earlier than
-another, then it will live at least as long as that second one. The first number
-to appear is the last to be consumed. Hmm... last-in, first-out... why, that's a
-<span name="pancakes">stack</span>!
+这里有几处有趣的现象。当我们把一切都向左推过去之后，每个数字依然始终**独占**一列。此外，**没有**留下空隙。换言之，每当一个数字先于另一个出现，那么它**至少**会与后者**活得**一样久。先出现的数字**最后**才被消费。嗯……后进先出……啊哈，这**正**是一座<span name="pancakes">栈</span>！
 
 <aside name="pancakes">
 
-This is also a stack:
+这**也**是一座栈：
 
-<img src="image/a-virtual-machine/pancakes.png" alt="A stack... of pancakes." />
+<img src="image/a-virtual-machine/pancakes.png" alt="一座栈……叠起来的薄饼。" />
 
 </aside>
 
-In the second diagram, each time we introduce a number, we push it onto the
-stack from the right. When numbers are consumed, they are always popped off from
-rightmost to left.
+在第二张图中，每当我们引入一个数字，我们便从右侧把它推入栈。当数字被消费时，它们也总是按**从右至左**的顺序弹出。
 
-Since the temporary values we need to track naturally have stack-like behavior,
-our VM will use a stack to manage them. When an instruction "produces" a value,
-it pushes it onto the stack. When it needs to consume one or more values, it
-gets them by popping them off the stack.
+由于我们所需追踪的临时值天然具有栈的行为，我们的 VM 将使用一座栈来管理它们。当一条指令"产生"一个值时，它将该值推入栈。当它需要消费一个或多个值时，它通过弹出栈来取得它们。
 
-### The VM's Stack
+### 虚拟机的栈
 
-Maybe this doesn't seem like a revelation, but I *love* stack-based VMs. When
-you first see a magic trick, it feels like something actually magical. But then
-you learn how it works -- usually some mechanical gimmick or misdirection -- and
-the sense of wonder evaporates. There are a <span name="wonder">couple</span> of
-ideas in computer science where even after I pulled them apart and learned all
-the ins and outs, some of the initial sparkle remained. Stack-based VMs are one
-of those.
+或许这看起来并不像什么石破天惊的发现，但我**酷爱**栈式虚拟机。当你看一场魔术时，它好像真有什么魔力。但当你弄清了它的门道——通常不过是某种机械的小机关或障眼法——那份惊奇便随之消散。然而，在计算机科学里有那么**几**个想法，即便在我把它们拆解开来、洞悉了它们所有的诀窍之后，依然保留了一份最初的闪耀。栈式虚拟机便是其中之一。
 
 <aside name="wonder">
 
-Heaps -- [the data structure][heap], not [the memory management thing][heap mem]
--- are another. And Vaughan Pratt's top-down operator precedence parsing scheme,
-which we'll learn about [in due time][pratt].
+堆——指的是[数据结构][heap]这层意义上的堆，而非[内存管理][heap mem]中那层意义上的堆——是另一个。Vaughan Pratt 的自顶向下算符优先文法，则是又一个[届时我们将学到][pratt]。
 
-[heap]: https://en.wikipedia.org/wiki/Heap_(data_structure)
-[heap mem]: https://en.wikipedia.org/wiki/Memory_management#HEAP
+[heap]: https://en.wikipedia.org/wiki/Heap**(data_structure)
+[heap mem]: https://en.wikipedia.org/wiki/Memory**management#HEAP
 [pratt]: compiling-expressions.html
 
 </aside>
 
-As you'll see in this chapter, executing instructions in a stack-based VM is
-dead <span name="cheat">simple</span>. In later chapters, you'll also discover
-that compiling a source language to a stack-based instruction set is a piece of
-cake. And yet, this architecture is fast enough to be used by production
-language implementations. It almost feels like cheating at the programming
-language game.
+在接下来这一章里你将看到，在栈式 VM 中执行指令**出奇地简单**。在后续章节里，你还会发现，将一门源语言编译到一套栈式指令集是**小菜一碟**。然而，这一架构**快到足以**被工业级的语言实现所采用。它几乎让人感觉像是在程序设计语言这场游戏中**作弊**。
 
 <aside name="cheat">
 
-To take a bit of the sheen off: stack-based interpreters aren't a silver bullet.
-They're often *adequate*, but modern implementations of the JVM, the CLR, and
-JavaScript all use sophisticated [just-in-time compilation][jit] pipelines to
-generate *much* faster native code on the fly.
+稍稍泼点冷水：栈式解释器**并非**银弹。它们往往**尚能胜任**，但现代的 JVM、CLR 与 JavaScript 实现都采用精密的 [JIT 编译][jit] 流水线，在运行中**实时**地生成**远为**快速的原生代码。
 
-[jit]: https://en.wikipedia.org/wiki/Just-in-time_compilation
+[jit]: https://en.wikipedia.org/wiki/Just-in-time**compilation
 
 </aside>
 
-Alrighty, it's codin' time! Here's the stack:
+好了，是时候撸起袖子了！下面便是栈：
 
 ^code vm-stack (3 before, 1 after)
 
-We implement the stack semantics ourselves on top of a raw C array. The bottom
-of the stack -- the first value pushed and the last to be popped -- is at
-element zero in the array, and later pushed values follow it. If we push the
-letters of "crepe" -- my favorite stackable breakfast item -- onto the stack, in
-order, the resulting C array looks like this:
+我们在一份原始的 C 数组之上亲手实现栈的语义。栈底——第一个被推入、最后一个被弹出的值——位于数组的第 0 个元素，之后被推入的值则跟在它之后。若我们把字符串"crepe"——我喜爱的可堆叠早餐——中的字符依次推入栈，那么所得到的 C 数组便是这样：
 
-<img src="image/a-virtual-machine/array.png" alt="An array containing the
-letters in 'crepe' in order starting at element 0." />
+<img src="image/a-virtual-machine/array.png" alt="一个数组，元素 0 起的顺序为 'crepe' 各字符。" />
 
-Since the stack grows and shrinks as values are pushed and popped, we need to
-track where the top of the stack is in the array. As with `ip`, we use a direct
-pointer instead of an integer index since it's faster to dereference the pointer
-than calculate the offset from the index each time we need it.
+由于栈会随着值的推入与弹出而伸缩，我们需要在数组中追踪栈顶的位置。正如 `ip` 那样，我们使用一个直接的指针，而非整数索引——因为解引用指针比每次需要时都从索引算出偏移量更快。
 
-The pointer points at the array element just *past* the element containing the
-top value on the stack. That seems a little odd, but almost every implementation
-does this. It means we can indicate that the stack is empty by pointing at
-element zero in the array.
+该指针指向**正好处于**包含栈顶值的那个元素**之后**的那个数组元素。这看上去有点古怪，但几乎每一种实现都这么做。它的意思是，我们可以通过让指针指向数组的第 0 个元素来表明栈为空。
 
-<img src="image/a-virtual-machine/stack-empty.png" alt="An empty array with
-stackTop pointing at the first element." />
+<img src="image/a-virtual-machine/stack-empty.png" alt="一份空数组，stackTop 指向第一个元素。" />
 
-If we pointed to the top element, then for an empty stack we'd need to point at
-element -1. That's <span name="defined">undefined</span> in C. As we push values
-onto the stack...
+倘若我们指向栈顶元素，那么对于一座空栈，我们就得指向元素 -1。这在 C 中是<span name="defined">未定义</span>的。随着我们向栈中推入值……
 
 <aside name="defined">
 
-What about when the stack is *full*, you ask, Clever Reader? The C standard is
-one step ahead of you. It *is* allowed and well-specified to have an array
-pointer that points just past the end of an array.
+你问，栈**满**了又当如何？这位聪明的读者——C 标准可比你抢先一步。指针**指向**数组尾端**之后**的位置，是被允许且良定义的。
 
 </aside>
 
-<img src="image/a-virtual-machine/stack-c.png" alt="An array with 'c' at element
-zero." />
+<img src="image/a-virtual-machine/stack-c.png" alt="一个数组，元素 0 处为 'c'。" />
 
-...`stackTop` always points just past the last item.
+……`stackTop` 始终指向**最后**一个元素**之后**的位置。
 
-<img src="image/a-virtual-machine/stack-crepe.png" alt="An array with 'c', 'r',
-'e', 'p', and 'e' in the first five elements." />
+<img src="image/a-virtual-machine/stack-crepe.png" alt="一个数组，前五个元素依次为 'c'、'r'、'e'、'p'、'e'。" />
 
-I remember it like this: `stackTop` points to where the next value to be pushed
-will go. The maximum number of values we can store on the stack (for now, at
-least) is:
+我是这样记的：`stackTop` 指向**下一个**待推入的值将要放置的位置。眼下（暂时）我们能在栈上保存的最大值数量为：
 
 ^code stack-max (1 before, 2 after)
 
-Giving our VM a fixed stack size means it's possible for some sequence of
-instructions to push too many values and run out of stack space -- the classic
-"stack overflow". We could grow the stack dynamically as needed, but for now
-we'll keep it simple. Since VM uses Value, we need to include its declaration.
+为我们的 VM 设定一个固定大小的栈，意味着某些指令序列可能会推入过多的值、耗尽栈空间——经典意义上的"栈溢出"。我们本可以按需动态地扩容栈，但眼下我们先保持简单。由于 VM 使用的是 Value 类型，我们还需要 include 它的声明。
 
 ^code vm-include-value (1 before, 2 after)
 
-Now that VM has some interesting state, we get to initialize it.
+既然 VM 已有了些许有趣的状态，我们便可以初始化它了。
 
 ^code call-reset-stack (1 before, 1 after)
 
-That uses this helper function:
+它会调用这个辅助函数：
 
 ^code reset-stack
 
-Since the stack array is declared directly inline in the VM struct, we don't
-need to allocate it. We don't even need to clear the unused cells in the
-array -- we simply won't access them until after values have been stored in
-them. The only initialization we need is to set `stackTop` to point to the
-beginning of the array to indicate that the stack is empty.
+由于栈数组是直接内联在 VM 结构体中声明的，我们**并不**需要为它分配内存。我们**甚至**都不需要清空数组里那些未使用的格子——除非值已被存入其中，否则我们压根不会去访问它们。我们**只**需要做的初始化，便是将 `stackTop` 指向数组的开头，以表示栈为空。
 
-The stack protocol supports two operations:
+栈的协议支持两件操作：
 
 ^code push-pop (1 before, 2 after)
 
-You can push a new value onto the top of the stack, and you can pop the most
-recently pushed value back off. Here's the first function:
+你可以将一个新值推入栈顶，也可以将最近一次推入的值弹出。下面是第一个函数：
 
 ^code push
 
-If you're rusty on your C pointer syntax and operations, this is a good warm-up.
-The first line stores `value` in the array element at the top of the stack.
-Remember, `stackTop` points just *past* the last used element, at the next
-available one. This stores the value in that slot. Then we increment the pointer
-itself to point to the next unused slot in the array now that the previous slot
-is occupied.
+若你对 C 指针的语法与运算已然生疏，这倒是一个不错的热身。第一行将 `value` 存入栈顶元素所在的数组位置。记住，`stackTop` 指向的是**正好处于**最后一个被使用的元素**之后**的位置，也就是那个空着的槽位。这一行便把值存到了那个槽位中。然后我们让指针本身自增，从而指向数组中下一处空槽——因为此刻前一个槽位已被占用。
 
-Popping is the mirror image.
+弹出则是其镜像。
 
 ^code pop
 
-First, we move the stack pointer *back* to get to the most recent used slot in
-the array. Then we look up the value at that index and return it. We don't need
-to explicitly "remove" it from the array -- moving `stackTop` down is enough to
-mark that slot as no longer in use.
+首先，我们让栈指针**回退**，回到数组中最近一次被使用的那个槽位。然后我们查得位于那一索引处的值并将其返回。我们**并不**需要显式地将该值"移出"数组——只要把 `stackTop` 往下挪，便足以标记该槽位不再被使用。
 
-### Stack tracing
+### 栈追踪
 
-We have a working stack, but it's hard to *see* that it's working. When we start
-implementing more complex instructions and compiling and running larger pieces
-of code, we'll end up with a lot of values crammed into that array. It would
-make our lives as VM hackers easier if we had some visibility into the stack.
+我们已然有了一座能工作的栈，但要**看见**它工作起来并不容易。当我们日后开始实现更复杂的指令、并将更大的 Lox 代码编译、运行起来时，我们将面临一大堆被挤入那份数组的值。如果我们能**看见**栈的状态，那我们的 VM 黑客之路便会轻松不少。
 
-To that end, whenever we're tracing execution, we'll also show the current
-contents of the stack before we interpret each instruction.
+为此，在我们**追踪**执行时，我们也会在解释每一条指令之前展示栈的当前内容。
 
 ^code trace-stack (1 before, 1 after)
 
-We loop, printing each value in the array, starting at the first (bottom of the
-stack) and ending when we reach the top. This lets us observe the effect of each
-instruction on the stack. The output is pretty verbose, but it's useful when
-we're surgically extracting a nasty bug from the bowels of the interpreter.
+我们循环，从第一个（栈底）开始，一一打印数组中的值，直至抵达栈顶为止。这让我们得以观察每一条指令对栈的影响。输出颇有些冗长，但当我们从解释器的五脏六腑里手术般地挖出一条恶心的 bug 时，它便物有所值。
 
-Stack in hand, let's revisit our two instructions. First up:
+栈已就绪，让我们重新审视那两条指令。先看第一条：
 
 ^code push-constant (2 before, 1 after)
 
-In the last chapter, I was hand-wavey about how the `OP_CONSTANT` instruction
-"loads" a constant. Now that we have a stack you know what it means to actually
-produce a value: it gets pushed onto the stack.
+上一章里，我对 `OP**CONSTANT` 指令"加载"一条常量一笔带过。眼下我们已然有了栈，你知道"产生"一个值**究竟**意味着什么了吧：它会被推入栈。
 
 ^code print-return (1 before, 1 after)
 
-Then we make `OP_RETURN` pop the stack and print the top value before exiting.
-When we add support for real functions to clox, we'll change this code. But, for
-now, it gives us a way to get the VM executing simple instruction sequences and
-displaying the result.
+然后我们让 `OP**RETURN` 弹出栈顶的值并打印之，再退出。当我们为 clox 添上真正的函数支持时，我们会回过头来修改这段代码。但**眼**下，它给了我们一条途径，让 VM 能执行一段简单的指令序列并显示其结果。
 
-## An Arithmetic Calculator
+## 一个算术计算器
 
-The heart and soul of our VM are in place now. The bytecode loop dispatches and
-executes instructions. The stack grows and shrinks as values flow through it.
-The two halves work, but it's hard to get a feel for how cleverly they interact
-with only the two rudimentary instructions we have so far. So let's teach our
-interpreter to do arithmetic.
+我们 VM 的灵魂与核心如今已各就各位。字节码循环分派并执行指令。栈随着值在其中的流动而伸缩。这两部分**都**能跑通，但仅凭我们目前这两道粗糙的指令，很难体会到它们彼此配合得**多么**巧妙。所以让我们教我们的解释器去做算术。
 
-We'll start with the simplest arithmetic operation, unary negation.
+我们从最简单的算术运算——一元取负——开始。
 
 ```lox
 var a = 1.2;
-print -a; // -1.2.
+print -a; // -1.2。
 ```
 
-The prefix `-` operator takes one operand, the value to negate. It produces a
-single result. We aren't fussing with a parser yet, but we can add the
-bytecode instruction that the above syntax will compile to.
+前缀 `-` 运算符带一个运算对象——要被取负的那个值——并产生一个结果。我们**暂且**不会去涉及解析器，但我们可以添加上面那段语法将来会编译出的字节码指令。
 
 ^code negate-op (1 before, 1 after)
 
-We execute it like so:
+我们这样执行它：
 
 ^code op-negate (1 before, 1 after)
 
-The instruction needs a value to operate on, which it gets by popping from the
-stack. It negates that, then pushes the result back on for later instructions to
-use. Doesn't get much easier than that. We can disassemble it too.
+该指令需要一个运算对象，它通过从栈中弹出来获得。对那个值取负，再将结果推回栈，以供后续指令使用。再没有比这更简单的了。我们也可以一并反汇编它。
 
-^code disassemble-negate (2 before, 1 after)
+^code disassemble-negate (2 before, 2 after)
 
-And we can try it out in our test chunk.
+我们还可以在我们的测试 chunk 中试试它。
 
 ^code main-negate (1 before, 2 after)
 
-After loading the constant, but before returning, we execute the negate
-instruction. That replaces the constant on the stack with its negation. Then the
-return instruction prints that out:
+在加载完那条常量之后、返回之前，我们执行那条取负指令。它将栈上的那条常量替换为其取负的值。然后那条 return 指令便将其打印出来：
 
 ```text
 -1.2
 ```
 
-Magical!
+神奇！
 
-### Binary operators
+### 二元运算符
 
-OK, unary operators aren't *that* impressive. We still only ever have a single
-value on the stack. To really see some depth, we need binary operators. Lox has
-four binary <span name="ops">arithmetic</span> operators: addition, subtraction,
-multiplication, and division. We'll go ahead and implement them all at the same
-time.
+OK，一元运算符**并不**那么惊艳。我们仍自始至终只在栈上保有**一个**值。要真正看出一些**深度**，我们需要二元运算符。Lox 拥有四种二元<span name="ops">算术</span>运算符：加、减、乘、除。我们干脆一次性把它们都实现。
 
 <aside name="ops">
 
-Lox has some other binary operators -- comparison and equality -- but those
-don't produce numbers as a result, so we aren't ready for them yet.
+Lox 还有一些别的二元运算符——比较与相等——但它们并不会产出数字，所以我们还没准备好。
 
 </aside>
 
 ^code binary-ops (1 before, 1 after)
 
-Back in the bytecode loop, they are executed like this:
+回到字节码循环，它们这样被执行：
 
 ^code op-binary (1 before, 1 after)
 
-The only difference between these four instructions is which underlying C
-operator they ultimately use to combine the two operands. Surrounding that core
-arithmetic expression is some boilerplate code to pull values off the stack and
-push the result. When we later add dynamic typing, that boilerplate will grow.
-To avoid repeating that code four times, I wrapped it up in a macro.
+这四条指令之间唯一的区别，是它们最终究竟用了哪种底层 C 运算符来组合那两个运算对象。围绕着那份核心算术表达式的，是一些模版代码，用于把值从栈上取下来、再把结果推回去。当我们之后加入动态类型支持时，这些模版代码会变长。为了不把同一段代码复制四遍，我把它封装到了一个宏里。
 
 ^code binary-op (1 before, 2 after)
 
-I admit this is a fairly <span name="operator">adventurous</span> use of the C
-preprocessor. I hesitated to do this, but you'll be glad in later chapters when
-we need to add the type checking for each operand and stuff. It would be a chore
-to walk you through the same code four times.
+我承认这是 C 预处理器一种相当<span name="operator">大胆</span>的用法。我原本犹豫要不要这么做，但在我们之后需要为每个运算对象加入类型检查、等等杂事的时候，你会庆幸我这么做的。带你把同一段代码走四遍将是一件苦差。
 
 <aside name="operator">
 
-Did you even know you can pass an *operator* as an argument to a macro? Now you
-do. The preprocessor doesn't care that operators aren't first class in C. As far
-as it's concerned, it's all just text tokens.
+你**知道**你可以把一个运算符当作实参传给宏吗？现在你知道了。预处理器不在乎在 C 中运算符并非一等公民。在它看来，那不过是一堆文本符号。
 
-I know, you can just *feel* the temptation to abuse this, can't you?
+我知道，你完全能**感受到**想要滥用这一点的诱惑，对吧？
 
 </aside>
 
-If you aren't familiar with the trick already, that outer `do while` loop
-probably looks really weird. This macro needs to expand to a series of
-statements. To be careful macro authors, we want to ensure those statements all
-end up in the same scope when the macro is expanded. Imagine if you defined:
+如果你对这一招并不熟悉，外层那个 `do while` 循环看起来多少有点古怪。这个宏需要展开成一系列语句。为了做个严谨的宏作者，我们希望确保这些语句在宏展开后**全部**落入同一个作用域。想象一下你定义了：
 
 ```c
-#define WAKE_UP() makeCoffee(); drinkCoffee();
+#define WAKE**UP() makeCoffee(); drinkCoffee();
 ```
 
-And then used it like:
+然后这样使用它：
 
 ```c
-if (morning) WAKE_UP();
+if (morning) WAKE**UP();
 ```
 
-The intent is to execute both statements of the macro body only if `morning` is
-true. But it expands to:
+你本意是仅当 `morning` 为真时执行宏体的两条语句。但它会被展开为：
 
 ```c
 if (morning) makeCoffee(); drinkCoffee();;
 ```
 
-Oops. The `if` attaches only to the *first* statement. You might think you could
-fix this using a block.
+哎呀。`if` 语句只**搭**上了第一条语句。你或许以为可以用一个块来修一修：
 
 ```c
-#define WAKE_UP() { makeCoffee(); drinkCoffee(); }
+#define WAKE**UP() { makeCoffee(); drinkCoffee(); }
 ```
 
-That's better, but you still risk:
+这好一点了，但你仍然可能面临：
 
 ```c
 if (morning)
-  WAKE_UP();
+  WAKE**UP();
 else
   sleepIn();
 ```
 
-Now you get a compile error on the `else` because of that trailing `;` after the
-macro's block. Using a `do while` loop in the macro looks funny, but it gives
-you a way to contain multiple statements inside a block that *also* permits a
-semicolon at the end.
+现在你会在那个 `else` 上撞上编译错误，因为宏块后跟着一个 `;`。在宏里使用 `do while` 循环看上去很滑稽，但它却给了你一种将多条语句包裹在一个**同时**允许末尾分号的块里的办法。
 
-Where were we? Right, so what the body of that macro does is straightforward. A
-binary operator takes two operands, so it pops twice. It performs the operation
-on those two values and then pushes the result.
+方才说哪儿了？哦对，宏体的行为是直白的。一个二元运算符带两个运算对象，因此它弹出两次。它对那两个值执行运算，再把结果推回栈。
 
-Pay close attention to the *order* of the two pops. Note that we assign the
-first popped operand to `b`, not `a`. It looks backwards. When the operands
-themselves are calculated, the left is evaluated first, then the right. That
-means the left operand gets pushed before the right operand. So the right
-operand will be on top of the stack. Thus, the first value we pop is `b`.
+请**仔细**注意那两次弹出的**顺序**。注意我们将首次弹出的运算对象赋值给了 `b`，而非 `a`。这看上去是反的。当运算对象**自身**被求值时，左侧先于右侧。这意味着左侧运算对象先于右侧运算对象被推入栈。因此，右侧运算对象会位于栈顶。于是，我们第一次弹出的，便是 `b`。
 
-For example, if we compile `3 - 1`, the data flow between the instructions looks
-like so:
+举例而言，若我们编译 `3 - 1`，那么指令之间的数据流便是这样：
 
-<img src="image/a-virtual-machine/reverse.png" alt="A sequence of instructions
-with the stack for each showing how pushing and then popping values reverses
-their order." />
+<img src="image/a-virtual-machine/reverse.png" alt="一连串指令，各指令旁边的栈展示了推入与弹出值如何使它们颠倒顺序。" />
 
-As we did with the other macros inside `run()`, we clean up after ourselves at
-the end of the function.
+正如我们在 `run()` 中的其它宏那样，我们也在函数末尾清理现场。
 
 ^code undef-binary-op (1 before, 1 after)
 
-Last is disassembler support.
+最后是反汇编器的支持。
 
-^code disassemble-binary (2 before, 1 after)
+^code disassemble-binary (2 before, 2 after)
 
-The arithmetic instruction formats are simple, like `OP_RETURN`. Even though the
-arithmetic *operators* take operands -- which are found on the stack -- the
-arithmetic *bytecode instructions* do not.
+这些算术指令的格式与 `OP**RETURN` 一样简单。尽管算术**运算符**带有运算对象——它们位于栈上——算术**字节码指令**本身却不带。
 
-Let's put some of our new instructions through their paces by evaluating a
-larger expression:
+让我们把手头这些新指令好好练一练，通过计算一个更复杂的表达式：
 
-<img src="image/a-virtual-machine/chunk.png" alt="The expression being
-evaluated: -((1.2 + 3.4) / 5.6)" />
+<img src="image/a-virtual-machine/chunk.png" alt="正在被求值的表达式：-((1.2 + 3.4) / 5.6)" />
 
-Building on our existing example chunk, here's the additional instructions we
-need to hand-compile that AST to bytecode.
+在我们已有的示例 chunk 之上，下面是我们用来手工编译那段 AST 为字节码所需的额外指令。
 
 ^code main-chunk (3 before, 3 after)
 
-The addition goes first. The instruction for the left constant, 1.2, is already
-there, so we add another for 3.4. Then we add those two using `OP_ADD`, leaving
-it on the stack. That covers the left side of the division. Next we push the
-5.6, and divide the result of the addition by it. Finally, we negate the result
-of that.
+加法先走。左侧常量 1.2 的指令已经就位，所以我们再添一条 3.4 的指令。然后我们用 `OP**ADD` 把它们相加，把结果留在栈上。这便覆盖了除法的左侧。接下来我们推入 5.6，再让加法结果除以它。最后，我们对那个结果取负。
 
-Note how the output of the `OP_ADD` implicitly flows into being an operand of
-`OP_DIVIDE` without either instruction being directly coupled to each other.
-That's the magic of the stack. It lets us freely compose instructions without
-them needing any complexity or awareness of the data flow. The stack acts like a
-shared workspace that they all read from and write to.
+请注意 `OP**ADD` 的输出**如何**自然而然地流转到成为 `OP**DIVIDE` 的运算对象，而**无需**任何两条指令彼此直接耦合。这就是栈的妙处。它让我们得以自由地组合指令，而它们既不需要任何复杂的数据流意识、也不需要彼此认识。栈就像一份**共享**的工作空间，大家都从那里读、都往那里写。
 
-In this tiny example chunk, the stack still only gets two values tall, but when
-we start compiling Lox source to bytecode, we'll have chunks that use much more
-of the stack. In the meantime, try playing around with this hand-authored chunk
-to calculate different nested arithmetic expressions and see how values flow
-through the instructions and stack.
+在这段小小的示例 chunk 中，栈至多也就两格高，但当我们日后开始将 Lox 源码编译为字节码时，我们将拥有**远为**吃栈的 chunk。在此期间，不妨试着摆弄一下这段手工拼凑的 chunk，去计算不同的嵌套算术表达式，看看值是如何在指令与栈之间流动的。
 
-You may as well get it out of your system now. This is the last chunk we'll
-build by hand. When we next revisit bytecode, we will be writing a compiler to
-generate it for us.
+你不妨现在就把你想玩的都玩一遍。这是我们**最后**一段手工拼凑的 chunk。下一次我们再回顾字节码时，便是编写一款编译器来**为我们**生成它了。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  What bytecode instruction sequences would you generate for the following
-    expressions:
+1.  对于下列表达式，你会生成怎样的字节码指令序列？
 
     ```lox
     1 * 2 + 3
@@ -808,71 +522,47 @@ generate it for us.
     1 + 2 * 3 - 4 / -5
     ```
 
-    (Remember that Lox does not have a syntax for negative number literals, so
-    the `-5` is negating the number 5.)
+    （请记住，Lox 并没有负数字面量的语法，因此那个 `-5` 是在对数字 5 取负。）
 
-1.  If we really wanted a minimal instruction set, we could eliminate either
-    `OP_NEGATE` or `OP_SUBTRACT`. Show the bytecode instruction sequence you
-    would generate for:
+1.  若我们真的想要一套极简的指令集，我们可以砍掉 `OP**NEGATE` 或 `OP**SUBTRACT` 中的任意一个。展示你所生成的字节码指令序列，分别针对：
 
     ```lox
     4 - 3 * -2
     ```
 
-    First, without using `OP_NEGATE`. Then, without using `OP_SUBTRACT`.
+    先是不用 `OP**NEGATE`，然后是不用 `OP**SUBTRACT`。
 
-    Given the above, do you think it makes sense to have both instructions? Why
-    or why not? Are there any other redundant instructions you would consider
-    including?
+    鉴于上述，你认为同时拥有两条指令**有**意义吗？还是**没**有？为什么？还有没有**别**的冗余指令是你会考虑一并删掉的？
 
-1.  Our VM's stack has a fixed size, and we don't check if pushing a value
-    overflows it. This means the wrong series of instructions could cause our
-    interpreter to crash or go into undefined behavior. Avoid that by
-    dynamically growing the stack as needed.
+1.  我们 VM 的栈大小是固定的，而且我们并未检查推入一个值是否超出栈。这意味着一串错误的指令可能会让我们的解释器崩溃或陷入未定义行为。通过按需**动态**扩容栈来避免这一点。
 
-    What are the costs and benefits of doing so?
+    这样做有什么代价与收益？
 
-1.  To interpret `OP_NEGATE`, we pop the operand, negate the value, and then
-    push the result. That's a simple implementation, but it increments and
-    decrements `stackTop` unnecessarily, since the stack ends up the same height
-    in the end. It might be faster to simply negate the value in place on the
-    stack and leave `stackTop` alone. Try that and see if you can measure a
-    performance difference.
+1.  要解释 `OP**NEGATE`，我们弹出那个运算对象，对其取负，再把结果推回去。这是一种最简朴的实现，但它**不必要**地增了再减了 `stackTop`，因为栈的最终高度其实是一样的。更快的做法或许只是直接在栈上对那个值**就地**取负，而不去动 `stackTop`。试试看，看看你是否能测出性能差异。
 
-    Are there other instructions where you can do a similar optimization?
+    还有别的指令可以做类似的优化吗？
 
 </div>
 
 <div class="design-note">
 
-## Design Note: Register-Based Bytecode
+## 设计笔记：基于栈与基于寄存器的虚拟机
 
-For the remainder of this book, we'll meticulously implement an interpreter
-around a stack-based bytecode instruction set. There's another family of
-bytecode architectures out there -- *register-based*. Despite the name, these
-bytecode instructions aren't quite as difficult to work with as the registers in
-an actual chip like <span name="x64">x64</span>. With real hardware registers,
-you usually have only a handful for the entire program, so you spend a lot of
-effort [trying to use them efficiently and shuttling stuff in and out of
-them][register allocation].
+在本书余下的部分里，我们将一丝不苟地围绕一套栈式字节码指令集来实现一款解释器。外面还有另一族字节码架构——*基于寄存器* 的。虽说名称吓人，但这些字节码指令并不像诸如 <span name="x64">x64</span> 那样的真实芯片中的寄存器那般难对付。在真实的硬件寄存器下，你通常整个程序仅有寥寥几个寄存器可用，因此你不得不花费大量精力去**高效地使用它们**，并来回搬运数据。
 
-[register allocation]: https://en.wikipedia.org/wiki/Register_allocation
+[register allocation]: https://en.wikipedia.org/wiki/Register**allocation
 
 <aside name="x64">
 
-Register-based bytecode is a little closer to the [*register windows*][window]
-supported by SPARC chips.
+基于寄存器的字节码与 SPARC 芯片所支持的[**寄存器窗口**][window]有些接近。
 
-[window]: https://en.wikipedia.org/wiki/Register_window
+[window]: https://en.wikipedia.org/wiki/Register**window
 
 </aside>
 
-In a register-based VM, you still have a stack. Temporary values still get
-pushed onto it and popped when no longer needed. The main difference is that
-instructions can read their inputs from anywhere in the stack and can store
-their outputs into specific stack slots.
+在一台基于寄存器的 VM 中，你仍有栈。临时值依然会被推入栈中，并在不再需要时弹出。最大的不同之处在于，指令可以从栈的**任意**位置读取其输入，并可以将它们的输出存入特定的栈槽里。
 
-Take this little Lox script:
+考虑下面这段简短的 Lox 脚本：
 
 ```lox
 var a = 1;
@@ -880,67 +570,41 @@ var b = 2;
 var c = a + b;
 ```
 
-In our stack-based VM, the last statement will get compiled to something like:
+在我们的栈式 VM 中，最后那条语句会被编译成大致如下：
 
 ```lox
-load <a>  // Read local variable a and push onto stack.
-load <b>  // Read local variable b and push onto stack.
-add       // Pop two values, add, push result.
-store <c> // Pop value and store in local variable c.
+load <a>  // 读取局部变量 a，并将其推入栈。
+load <b>  // 读取局部变量 b，并将其推入栈。
+add       // 弹出两个值，相加，推入结果。
+store <c> // 弹出一个值，并将其存入局部变量 c。
 ```
 
-(Don't worry if you don't fully understand the load and store instructions yet.
-We'll go over them in much greater detail [when we implement
-variables][variables].) We have four separate instructions. That means four
-times through the bytecode interpret loop, four instructions to decode and
-dispatch. It's at least seven bytes of code -- four for the opcodes and another
-three for the operands identifying which locals to load and store. Three pushes
-and three pops. A lot of work!
+（不必担心你**尚未**充分理解 load 与 store 指令。一旦我们实现[变量][variables]时，我们会对其作更为详尽的讲解。）我们有四条独立的指令。这意味着要在字节码解释循环里转**四**圈、解码并分派**四**条指令。光是代码就至少需要七个字节——四个用于操作码，再加三个用于指明要加载与存储的局部变量的操作数。三次推入，三次弹出。活儿可真不少！
 
 [variables]: global-variables.html
 
-In a register-based instruction set, instructions can read from and store
-directly into local variables. The bytecode for the last statement above looks
-like:
+在一套基于寄存器的指令集里，指令可以直接从局部变量中读取、并直接存入局部变量。上面那段最后一条语句的字节码便是：
 
 ```lox
-add <a> <b> <c> // Read values from a and b, add, store in c.
+add <a> <b> <c> // 从 a 与 b 读取值，相加，存入 c。
 ```
 
-The add instruction is bigger -- it has three instruction operands that define
-where in the stack it reads its inputs from and writes the result to. But since
-local variables live on the stack, it can read directly from `a` and `b` and
-then store the result right into `c`.
+那条 add 指令本身更大——它带有三个指令操作数，用以定义它在栈中读取输入的位置与写入结果的位置。但由于局部变量**就**栖身于栈上，它可以直接从 `a` 与 `b` 中读取，然后将结果直接**存**入 `c`。
 
-There's only a single instruction to decode and dispatch, and the whole thing
-fits in four bytes. Decoding is more complex because of the additional operands,
-but it's still a net win. There's no pushing and popping or other stack
-manipulation.
+只需解码并分派**一条**指令，整条指令总共恰好四个字节。解码因额外的操作数而更为复杂，但它**仍然**是一项净胜出。没有推入弹出之类的栈操作。
 
-The main implementation of Lua used to be stack-based. For <span name="lua">Lua
-5.0</span>, the implementers switched to a register instruction set and noted a
-speed improvement. The amount of improvement, naturally, depends heavily on the
-details of the language semantics, specific instruction set, and compiler
-sophistication, but that should get your attention.
+Lua 的主实现曾采用栈式方案。到了 [Lua 5.0][lua]，实现者们切换到了一套寄存器指令集，并记下了性能的提升。提升的幅度，自然极大地取决于语言语义、具体指令集与编译器精细度的具体细节，但**这**应当足以引起你的注意。
 
 <aside name="lua">
 
-The Lua dev team -- Roberto Ierusalimschy, Waldemar Celes, and Luiz Henrique de
-Figueiredo -- wrote a *fantastic* paper on this, one of my all time favorite
-computer science papers, "[The Implementation of Lua 5.0][lua]" (PDF).
+Lua 开发者团队——Roberto Ierusalimschy、Waldemar Celes 与 Luiz Henrique de Figueiredo——就这一话题写了一篇**极棒**的论文，是我有史以来最爱的计算机科学论文之一《[The Implementation of Lua 5.0][lua]》（PDF）。
 
 [lua]: https://www.lua.org/doc/jucs05.pdf
 
 </aside>
 
-That raises the obvious question of why I'm going to spend the rest of the book
-doing a stack-based bytecode. Register VMs are neat, but they are quite a bit
-harder to write a compiler for. For what is likely to be your very first
-compiler, I wanted to stick with an instruction set that's easy to generate and
-easy to execute. Stack-based bytecode is marvelously simple.
+这就引出了一个显而易见的问题：既然如此，我为何还要在本书余下的部分里去做一种栈式字节码呢？原因在于，寄存器 VM 固然讨喜，但**写**它的编译器却要难得多。对于很可能是你的**第一**款编译器而言，我希望坚持一套便于生成、便于执行的指令集。栈式字节码简直简单得**像作弊**。
 
-It's also *much* better known in the literature and the community. Even though
-you may eventually move to something more advanced, it's a good common ground to
-share with the rest of your language hacker peers.
+它**也_ 在文献与社区中远为知名。即便你日后可能会转向某种更为进阶的方案，它是一份很好的共同语言，能与你**那些**语言黑客同行彼此交流。
 
 </div>

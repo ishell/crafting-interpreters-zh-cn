@@ -1,0 +1,4 @@
+# This book's build tooling was written for Dart 2.x (pre-null-safety packages).
+# Use 2.8.4; Dart 3 will fail to analyze/run these dependencies.
+[tools]
+dart = "2.8.4"

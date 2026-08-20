@@ -38,12 +38,11 @@
 <h3><a href="#top">Scanning on Demand<small>16</small></a></h3>
 
 <ul>
-    <li><a href="#spinning-up-the-interpreter"><small>16.1</small> Spinning Up the Interpreter</a></li>
-    <li><a href="#a-token-at-a-time"><small>16.2</small> A Token at a Time</a></li>
-    <li><a href="#a-lexical-grammar-for-lox"><small>16.3</small> A Lexical Grammar for Lox</a></li>
-    <li><a href="#identifiers-and-keywords"><small>16.4</small> Identifiers and Keywords</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
+    <li><a href="#启动解释器"><small>16.1</small> 启动解释器</a></li>
+    <li><a href="#一次一个词法单元"><small>16.2</small> 一次一个词法单元</a></li>
+    <li><a href="#lox-的词法文法"><small>16.3</small> Lox 的词法文法</a></li>
+    <li><a href="#标识符与关键字"><small>16.4</small> 标识符与关键字</a></li>
+    <li><a href="#挑战"><small>16.5</small> 挑战</a></li>
 </ul>
 
 
@@ -69,12 +68,11 @@
 <h3><a href="#top">Scanning on Demand<small>16</small></a></h3>
 
 <ul>
-    <li><a href="#spinning-up-the-interpreter"><small>16.1</small> Spinning Up the Interpreter</a></li>
-    <li><a href="#a-token-at-a-time"><small>16.2</small> A Token at a Time</a></li>
-    <li><a href="#a-lexical-grammar-for-lox"><small>16.3</small> A Lexical Grammar for Lox</a></li>
-    <li><a href="#identifiers-and-keywords"><small>16.4</small> Identifiers and Keywords</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
+    <li><a href="#启动解释器"><small>16.1</small> 启动解释器</a></li>
+    <li><a href="#一次一个词法单元"><small>16.2</small> 一次一个词法单元</a></li>
+    <li><a href="#lox-的词法文法"><small>16.3</small> Lox 的词法文法</a></li>
+    <li><a href="#标识符与关键字"><small>16.4</small> 标识符与关键字</a></li>
+    <li><a href="#挑战"><small>16.5</small> 挑战</a></li>
 </ul>
 
 
@@ -110,26 +108,15 @@
   <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
 </div>
 
+<h1><a href="#按需词法分析" name="按需词法分析"><small>16&#8202;.&#8202;0</small>按需词法分析</a></h1>
 <blockquote>
-<p>Literature is idiosyncratic arrangements in horizontal lines in only
-twenty-six phonetic symbols, ten Arabic numbers, and about eight punctuation
-marks.</p>
-<p><cite>Kurt Vonnegut, <em>Like Shaking Hands With God: A Conversation about Writing</em></cite></p>
+<p>文学，不过是仅凭二十六个语音符号、十个阿拉伯数字、以及约八个标点符号，所进行的别具一格的横向排列。</p>
+<p><cite>库尔特·冯内古特，<em>《与上帝握手：一场关于写作的对话》</em></cite></p>
 </blockquote>
-<p>Our second interpreter, clox, has three phases<span class="em">&mdash;</span>scanner, compiler, and virtual
-machine. A data structure joins each pair of phases. Tokens flow from scanner to
-compiler, and chunks of bytecode from compiler to VM. We began our
-implementation near the end with <a href="chunks-of-bytecode.html">chunks</a> and the <a href="a-virtual-machine.html">VM</a>. Now, we&rsquo;re going to
-hop back to the beginning and build a scanner that makes tokens. In the
-<a href="compiling-expressions.html">next chapter</a>, we&rsquo;ll tie the two ends together with our bytecode compiler.</p><img src="image/scanning-on-demand/pipeline.png" alt="Source code &rarr; scanner &rarr; tokens &rarr; compiler &rarr; bytecode chunk &rarr; VM." />
-<p>I&rsquo;ll admit, this is not the most exciting chapter in the book. With two
-implementations of the same language, there&rsquo;s bound to be some redundancy. I did
-sneak in a few interesting differences compared to jlox&rsquo;s scanner. Read on to
-see what they are.</p>
-<h2><a href="#spinning-up-the-interpreter" name="spinning-up-the-interpreter"><small>16&#8202;.&#8202;1</small>Spinning Up the Interpreter</a></h2>
-<p>Now that we&rsquo;re building the front end, we can get clox running like a real
-interpreter. No more hand-authored chunks of bytecode. It&rsquo;s time for a REPL and
-script loading. Tear out most of the code in <code>main()</code> and replace it with:</p>
+<p>我们这第二款解释器 clox 共有三个阶段——扫描器、编译器、虚拟机。一种数据结构将相邻两阶段衔接起来。token 从扫描器流向编译器，字节码块则从编译器流向 VM。我们先前从 <a href="chunks-of-bytecode.html">chunk</a> 与 <a href="a-virtual-machine.html">VM</a> 开始、从<strong>后面</strong>启程。现在，我们要折返至起点，打造一个能产出 token 的扫描器。在<a href="compiling-expressions.html">下一章</a>，我们则会用字节码编译器将这两端缝合起来。</p><img src="image/scanning-on-demand/pipeline.png" alt="源代码 → 扫描器 → token → 编译器 → 字节码块 → VM。" />
+<p>我承认，本章算不上本书里最精彩的一章。既然有了同一门语言的两种实现，免不了会有一些重复。我确实悄悄塞进了几处与 jlox 扫描器不尽相同的趣味差异。请继续读下去，看看它们具体是些什么。</p>
+<h2><a href="#启动解释器" name="启动解释器"><small>16&#8202;.&#8202;1</small>启动解释器</a></h2>
+<p>既然我们正在构建前端，clox 终于可以跑得像一款真正的解释器了。再也不用手工拼凑字节码块。是时候写一个 REPL 与脚本加载器了。拆掉 <code>main()</code> 中的大部分代码，换成下面的内容：</p>
 <div class="codehilite"><pre class="insert-before">
 int main(int argc, const char* argv[]) {
   initVM();
@@ -154,14 +141,11 @@ replace 26 lines</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>(), replace 26 lines</div>
 
-<p>If you pass <span name="args">no arguments</span> to the executable, you are
-dropped into the REPL. A single command line argument is understood to be the
-path to a script to run.</p>
+<p>如果传给可执行文件的<span name="args">参数为零</span>，你便会进入 REPL。若带有一个命令行参数，则将其视为待运行脚本的路径。</p>
 <aside name="args">
-<p>The code tests for one and two arguments, not zero and one, because the first
-argument in <code>argv</code> is always the name of the executable being run.</p>
+<p>代码检查的是参数个数为 1 与 2，而非 0 与 1——这是因为 <code>argv</code> 中的第一个参数始终是正在运行的可执行文件名。</p>
 </aside>
-<p>We&rsquo;ll need a few system headers, so let&rsquo;s get them all out of the way.</p>
+<p>我们需要若干系统头文件，索性一次性都 include 进来。</p>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 add to top of file</div>
 <pre class="insert">
@@ -174,7 +158,7 @@ add to top of file</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, add to top of file</div>
 
-<p>Next, we get the REPL up and REPL-ing.</p>
+<p>接下来，让 REPL 真正跑起来。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;vm.h&quot;
 </pre><div class="source-file"><em>main.c</em></div>
@@ -196,11 +180,8 @@ add to top of file</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em></div>
 
-<p>A quality REPL handles input that spans multiple lines gracefully and doesn&rsquo;t
-have a hardcoded line length limit. This REPL here is a little more, ahem,
-austere, but it&rsquo;s fine for our purposes.</p>
-<p>The real work happens in <code>interpret()</code>. We&rsquo;ll get to that soon, but first let&rsquo;s
-take care of loading scripts.</p>
+<p>一个合格的 REPL 会从容地处理跨多行的输入，并且不会带硬编码的行长度限制。我们这里的 REPL 多少有些……呃……朴素的，但够用。</p>
+<p>真正的工作发生在 <code>interpret()</code> 之中。我们很快就会谈到它，但先让我们处理一下脚本加载。</p>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 add after <em>repl</em>()</div>
 <pre>
@@ -215,18 +196,11 @@ add after <em>repl</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, add after <em>repl</em>()</div>
 
-<p>We read the file and execute the resulting string of Lox source code. Then,
-based on the result of that, we set the exit code appropriately because we&rsquo;re
-scrupulous tool builders and care about little details like that.</p>
-<p>We also need to free the source code string because <code>readFile()</code> dynamically
-allocates it and passes ownership to its caller. That function looks like this:</p>
+<p>我们读取那个文件，并在所得到的 Lox 源代码字符串上执行。然后，根据其结果，恰当地设置退出码——我们是严谨的程序员，并会在意此类小小的细节。</p>
+<p>我们还需要释放 <code>readFile()</code> 所分配的源代码字符串，因为它采用的是动态分配，并将所有权交予调用者。那个函数长这样：</p>
 <aside name="owner">
-<p>C asks us not just to manage memory explicitly, but <em>mentally</em>. We programmers
-have to remember the ownership rules and hand-implement them throughout the
-program. Java just does it for us. C++ gives us tools to encode the policy
-directly so that the compiler validates it for us.</p>
-<p>I like C&rsquo;s simplicity, but we pay a real price for it<span class="em">&mdash;</span>the language requires
-us to be more conscientious.</p>
+<p>C 不仅仅要求我们<strong>显式</strong>地管理内存，还要求我们<strong>在精神上</strong>如此。程序员必须记下那些所有权规则，并亲力亲为地贯彻到程序之中。Java 替我们代劳了这一切。C++ 给了我们一些工具，让我们能直接把这一策略编码到程序里、由编译器去替我们验证。</p>
+<p>我喜欢 C 的简洁，但<strong>代价</strong>也确凿——这门语言要求我们付出更大的谨严。</p>
 </aside>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 add after <em>repl</em>()</div>
@@ -248,31 +222,14 @@ add after <em>repl</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, add after <em>repl</em>()</div>
 
-<p>Like a lot of C code, it takes more effort than it seems like it should,
-especially for a language expressly designed for operating systems. The
-difficult part is that we want to allocate a big enough string to read the whole
-file, but we don&rsquo;t know how big the file is until we&rsquo;ve read it.</p>
-<p>The code here is the classic trick to solve that. We open the file, but before
-reading it, we seek to the very end using <code>fseek()</code>. Then we call <code>ftell()</code>
-which tells us how many bytes we are from the start of the file. Since we seeked
-(sought?) to the end, that&rsquo;s the size. We rewind back to the beginning, allocate
-a string of that <span name="one">size</span>, and read the whole file in a
-single batch.</p>
+<p>就像大量 C 代码那样，它的工作量<strong>看上去</strong>比<strong>本该</strong>的大得多，对于一门<strong>专门</strong>为操作系统而设计的语言而言尤甚。难点在于：我们想要分配一份足够大的字符串来装下整个文件，但<strong>在</strong>读完文件<strong>之前</strong>，我们并不知道文件有多大。</p>
+<p>这里的代码便是解决这一问题的经典套路。我们打开文件，但在读取<strong>之前</strong>，先用 <code>fseek()</code> 定位到文件末尾。然后调用 <code>ftell()</code>，它会告诉我们距离文件头还有多少字节。既然我们（sought?）已 seek 到了末尾，那个数字便是文件大小。我们再倒回文件开头，分配同样大小的一份字符串，一口气读完整个文件。</p>
 <aside name="one">
-<p>Well, that size <em>plus one</em>. Always gotta remember to make room for the null
-byte.</p>
+<p>嗯，那个大小<strong>再加一</strong>。永远记得为那个空字节留出位置。</p>
 </aside>
-<p>So we&rsquo;re done, right? Not quite. These function calls, like most calls in the C
-standard library, can fail. If this were Java, the failures would be thrown as
-exceptions and automatically unwind the stack so we wouldn&rsquo;t <em>really</em> need to
-handle them. In C, if we don&rsquo;t check for them, they silently get ignored.</p>
-<p>This isn&rsquo;t really a book on good C programming practice, but I hate to encourage
-bad style, so let&rsquo;s go ahead and handle the errors. It&rsquo;s good for us, like
-eating our vegetables or flossing.</p>
-<p>Fortunately, we don&rsquo;t need to do anything particularly clever if a failure
-occurs. If we can&rsquo;t correctly read the user&rsquo;s script, all we can really do is
-tell the user and exit the interpreter gracefully. First of all, we might fail
-to open the file.</p>
+<p>这样便万事大吉了，对吧？还没完。C 标准库里的这些函数调用——与大多数一样——都有可能失败。若是 Java，那些失败会以异常的形式抛出，并自动一路展开栈，而我们的确<strong>并不</strong>真的需要处理它们。在 C 中，若我们不去检查它们，它们就会被悄无声息地忽略掉。</p>
+<p>本书<strong>其实</strong>并不是一本关于良好 C 编程实践的书，但我实在不愿助长坏习惯，所以咱们还是老老实实地处理一下错误吧。这对我们有好处，就像吃蔬菜或用牙线一样。</p>
+<p>幸运的是，如果真的发生了失败，我们也不需要搞什么特别精巧的花活儿。如果我们<strong>无法</strong>正确地读取用户的脚本，事实上我们也<strong>只能</strong>告诉用户一下，然后优雅地退出整个解释器。首先，我们可能会<strong>打不开</strong>文件。</p>
 <div class="codehilite"><pre class="insert-before">
   FILE* file = fopen(path, &quot;rb&quot;);
 </pre><div class="source-file"><em>main.c</em><br>
@@ -288,9 +245,8 @@ in <em>readFile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>readFile</em>()</div>
 
-<p>This can happen if the file doesn&rsquo;t exist or the user doesn&rsquo;t have access to it.
-It&rsquo;s pretty common<span class="em">&mdash;</span>people mistype paths all the time.</p>
-<p>This failure is much rarer:</p>
+<p>这种情况在文件不存在或用户没有访问权限时便会发生。它相当常见——人总会输错路径。</p>
+<p>下面这种情况就更罕见了：</p>
 <div class="codehilite"><pre class="insert-before">
   char* buffer = (char*)malloc(fileSize + 1);
 </pre><div class="source-file"><em>main.c</em><br>
@@ -306,10 +262,8 @@ in <em>readFile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>readFile</em>()</div>
 
-<p>If we can&rsquo;t even allocate enough memory to read the Lox script, the user&rsquo;s
-probably got bigger problems to worry about, but we should do our best to at
-least let them know.</p>
-<p>Finally, the read itself may fail.</p>
+<p>倘若我们<strong>连</strong>分配足够的内存以读取 Lox 脚本都做不到，那用户大概有更大的问题要头疼，但我们仍应尽自己所能通知一声。</p>
+<p>最后，读取本身<strong>也</strong>可能失败。</p>
 <div class="codehilite"><pre class="insert-before">
   size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
 </pre><div class="source-file"><em>main.c</em><br>
@@ -325,18 +279,12 @@ in <em>readFile</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>readFile</em>()</div>
 
-<p>This is also unlikely. Actually, the <span name="printf"> calls</span> to
-<code>fseek()</code>, <code>ftell()</code>, and <code>rewind()</code> could theoretically fail too, but let&rsquo;s not
-go too far off in the weeds, shall we?</p>
+<p>这同样不太可能。说实话，那几次对 <span name="printf"><code>fseek()</code>、<code>ftell()</code> 与 <code>rewind()</code> 的</span>调用理论上<strong>也</strong>可能会失败，但我们就此打住，不在那些边角上越陷越深了，可好？</p>
 <aside name="printf">
-<p>Even good old <code>printf()</code> can fail. Yup. How many times have you handled <em>that</em>
-error?</p>
+<p>哪怕是大名鼎鼎的 <code>printf()</code> <strong>也</strong>可能失败。对的。你<strong>几次</strong>处理过<strong>那个</strong>错误？</p>
 </aside>
-<h3><a href="#opening-the-compilation-pipeline" name="opening-the-compilation-pipeline"><small>16&#8202;.&#8202;1&#8202;.&#8202;1</small>Opening the compilation pipeline</a></h3>
-<p>We&rsquo;ve got ourselves a string of Lox source code, so now we&rsquo;re ready to set up a
-pipeline to scan, compile, and execute it. It&rsquo;s driven by <code>interpret()</code>. Right
-now, that function runs our old hardcoded test chunk. Let&rsquo;s change it to
-something closer to its final incarnation.</p>
+<h3><a href="#打开编译流水线" name="打开编译流水线"><small>16&#8202;.&#8202;1&#8202;.&#8202;1</small>打开编译流水线</a></h3>
+<p>我们已然拿到一份 Lox 源代码字符串，所以现在我们准备好搭建<strong>扫描—编译—执行</strong>流水线了。它由 <code>interpret()</code> 驱动。眼下，那个函数跑的还是我们硬编码的那段测试 chunk。让我们把它改写成更接近其最终形态的样子。</p>
 <div class="codehilite"><pre class="insert-before">
 void freeVM();
 </pre><div class="source-file"><em>vm.h</em><br>
@@ -349,8 +297,7 @@ void push(Value value);
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, function <em>interpret</em>(), replace 1 line</div>
 
-<p>Where before we passed in a Chunk, now we pass in the string of source code.
-Here&rsquo;s the new implementation:</p>
+<p>原先我们传入一个 Chunk，如今我们传入一份源代码字符串。新的实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 function <em>interpret</em>()<br>
 replace 4 lines</div>
@@ -363,8 +310,7 @@ replace 4 lines</div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, function <em>interpret</em>(), replace 4 lines</div>
 
-<p>We won&rsquo;t build the actual <em>compiler</em> yet in this chapter, but we can start
-laying out its structure. It lives in a new module.</p>
+<p>我们<strong>还</strong>不会在本章中<strong>真正</strong>搭建编译器，但我们可以先勾勒出它的结构。它栖身于一个新的模块。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;common.h&quot;
 </pre><div class="source-file"><em>vm.c</em></div>
@@ -375,7 +321,7 @@ laying out its structure. It lives in a new module.</p>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
-<p>For now, the one function in it is declared like so:</p>
+<p>目前，该模块里只声明了一个函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.h</em><br>
 create new file</div>
 <pre>
@@ -388,9 +334,8 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.h</em>, create new file</div>
 
-<p>That signature will change, but it gets us going.</p>
-<p>The first phase of compilation is scanning<span class="em">&mdash;</span>the thing we&rsquo;re doing in this
-chapter<span class="em">&mdash;</span>so right now all the compiler does is set that up.</p>
+<p>那个签名日后会变，但眼下足以让我们启程。</p>
+<p>编译的第一阶段是扫描——也就是我们本章<strong>正在</strong>做的事——所以眼下编译器所做的，不过是把这一切搭起来。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 create new file</div>
 <pre>
@@ -406,10 +351,9 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, create new file</div>
 
-<p>This will also grow in later chapters, naturally.</p>
-<h3><a href="#the-scanner-scans" name="the-scanner-scans"><small>16&#8202;.&#8202;1&#8202;.&#8202;2</small>The scanner scans</a></h3>
-<p>There are still a few more feet of scaffolding to stand up before we can start
-writing useful code. First, a new header:</p>
+<p>这在后续章节里自然会逐渐成长。</p>
+<h3><a href="#扫描器扫描" name="扫描器扫描"><small>16&#8202;.&#8202;1&#8202;.&#8202;2</small>扫描器扫描</a></h3>
+<p>在我们开始着手写真正有用的代码之前，还剩几脚脚手架要搭。先来一个新头文件：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.h</em><br>
 create new file</div>
 <pre>
@@ -422,7 +366,7 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.h</em>, create new file</div>
 
-<p>And its corresponding implementation:</p>
+<p>以及它对应的实现：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 create new file</div>
 <pre>
@@ -442,23 +386,14 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, create new file</div>
 
-<p>As our scanner chews through the user&rsquo;s source code, it tracks how far it&rsquo;s
-gone. Like we did with the VM, we wrap that state in a struct and then create a
-single top-level module variable of that type so we don&rsquo;t have to pass it around
-all of the various functions.</p>
-<p>There are surprisingly few fields. The <code>start</code> pointer marks the beginning of
-the current lexeme being scanned, and <code>current</code> points to the current character
-being looked at.</p>
-<p><span name="fields"></span></p><img src="image/scanning-on-demand/fields.png" alt="The start and current fields pointing at 'print bacon;'. Start points at 'b' and current points at 'o'." />
+<p>当我们的扫描器咀嚼着用户的源代码时，它会追踪自己已经走到何处。就像我们对 VM 所做的那样，我们把这一状态封装到一个结构体里，再创建唯一一个该类型的模块级变量，这样一来我们便无需在各个函数之间到处传递它。</p>
+<p>字段少得出乎意料。<code>start</code> 指针指向当前所扫描词素的起点，<code>current</code> 则指向眼下正在查看的字符。</p>
+<p><span name="fields"></span></p><img src="image/scanning-on-demand/fields.png" alt="'start' 与 'current' 字段指向 'print bacon;'。'start' 指向 'b'，'current' 指向 'o'。" />
 <aside name="fields">
-<p>Here, we are in the middle of scanning the identifier <code>bacon</code>. The current
-character is <code>o</code> and the character we most recently consumed is <code>c</code>.</p>
+<p>此处，我们正在扫描标识符 <code>bacon</code> 的中间。当下字符为 <code>o</code>，而我们最近消费的那个字符是 <code>c</code>。</p>
 </aside>
-<p>We have a <code>line</code> field to track what line the current lexeme is on for error
-reporting. That&rsquo;s it! We don&rsquo;t even keep a pointer to the beginning of the
-source code string. The scanner works its way through the code once and is done
-after that.</p>
-<p>Since we have some state, we should initialize it.</p>
+<p>我们有一个 <code>line</code> 字段，用以追踪当前词素所在的行，以备错误报告之需。仅此而已！我们甚至不肯保留一个指向源代码字符串开头的指针。扫描器从头到尾将代码走一遍，便就此结束。</p>
+<p>既然我们有一些状态，便应该初始化它。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after variable <em>scanner</em></div>
 <pre>
@@ -470,22 +405,11 @@ add after variable <em>scanner</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after variable <em>scanner</em></div>
 
-<p>We start at the very first character on the very first line, like a runner
-crouched at the starting line.</p>
-<h2><a href="#a-token-at-a-time" name="a-token-at-a-time"><small>16&#8202;.&#8202;2</small>A Token at a Time</a></h2>
-<p>In jlox, when the starting gun went off, the scanner raced ahead and eagerly
-scanned the whole program, returning a list of tokens. This would be a challenge
-in clox. We&rsquo;d need some sort of growable array or list to store the tokens in.
-We&rsquo;d need to manage allocating and freeing the tokens, and the collection
-itself. That&rsquo;s a lot of code, and a lot of memory churn.</p>
-<p>At any point in time, the compiler needs only one or two tokens<span class="em">&mdash;</span>remember our
-grammar requires only a single token of lookahead<span class="em">&mdash;</span>so we don&rsquo;t need to keep
-them <em>all</em> around at the same time. Instead, the simplest solution is to not
-scan a token until the compiler needs one. When the scanner provides one, it
-returns the token by value. It doesn&rsquo;t need to dynamically allocate anything<span class="em">&mdash;</span>it can just pass tokens around on the C stack.</p>
-<p>Unfortunately, we don&rsquo;t have a compiler yet that can ask the scanner for tokens,
-so the scanner will just sit there doing nothing. To kick it into action, we&rsquo;ll
-write some temporary code to drive it.</p>
+<p>我们从第一行的第一个字符开始，正如赛跑选手蹲在起跑线上一般。</p>
+<h2><a href="#一次一个词法单元" name="一次一个词法单元"><small>16&#8202;.&#8202;2</small>一次一个词法单元</a></h2>
+<p>在 jlox 中，开跑的枪声一响，扫描器便冲上前去，<strong>急切地</strong>将整个程序扫描一遍，返回一份 token 列表。在 clox 中这会是个挑战。我们需要某种可生长的数组或列表来存放 token。我们需要管理 token 的分配与释放，还有那一容器本身。代码量不少，内存的折腾也很多。</p>
+<p>在任何时刻，编译器<strong>仅</strong>需要一两个 token——记住我们的文法只需要一个 token 的前瞻——所以我们并不需要同时把<strong>所有</strong> token 都留在手边。最简单的解法是：不到编译器需要<strong>一个</strong> token 时，我们<strong>不</strong>扫描它。扫描器提供 token 时，以<strong>值</strong>返回——它<strong>无需</strong>动态分配任何东西——只需在 C 栈上传来传去即可。</p>
+<p>可惜，我们还没有一个能向扫描器索要 token 的编译器，所以扫描器此刻只能坐在一旁无所事事。为了让它动起来，我们就先写一点临时代码来驱动它。</p>
 <div class="codehilite"><pre class="insert-before">
   initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -510,20 +434,13 @@ in <em>compile</em>()</div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
 <aside name="format">
-<p>That <code>%.*s</code> in the format string is a neat feature. Usually, you set the output
-precision<span class="em">&mdash;</span>the number of characters to show<span class="em">&mdash;</span>by placing a number inside the
-format string. Using <code>*</code> instead lets you pass the precision as an argument. So
-that <code>printf()</code> call prints the first <code>token.length</code> characters of the string at
-<code>token.start</code>. We need to limit the length like that because the lexeme points
-into the original source string and doesn&rsquo;t have a terminator at the end.</p>
+<p>格式串里那个 <code>%.*s</code> 是个小巧的特性。通常，你会在格式串里放一个数字，以设定输出精度——即要显示的字符数。使用 <code>*</code> 则允许你将精度作为参数传入。于是那一句 <code>printf()</code> 调用便打印出位于 <code>token.start</code> 的字符串的头 <code>token.length</code> 个字符。我们必须以这种方式限制长度，因为那个词素指向原始的源代码字符串，其末尾<strong>没有</strong>终止符。</p>
 </aside>
-<p>This loops indefinitely. Each turn through the loop, it scans one token and
-prints it. When it reaches a special &ldquo;end of file&rdquo; token or an error, it stops.
-For example, if we run the interpreter on this program:</p>
+<p>这会无限循环。每一轮循环，它都扫描一个 token 并将其打印出来。当它撞上一个特殊的&ldquo;文件末尾&rdquo; token 或一个错误时，它会停下来。举例而言，若我们让解释器跑这段程序：</p>
 <div class="codehilite"><pre>
 <span class="k">print</span> <span class="n">1</span> + <span class="n">2</span>;
 </pre></div>
-<p>It prints out:</p>
+<p>它会打印出：</p>
 <div class="codehilite"><pre>   1 31 'print'
    | 21 '1'
    |  7 '+'
@@ -531,15 +448,11 @@ For example, if we run the interpreter on this program:</p>
    |  8 ';'
    2 39 ''
 </pre></div>
-<p>The first column is the line number, the second is the numeric value of the
-token <span name="token">type</span>, and then finally the lexeme. That last
-empty lexeme on line 2 is the EOF token.</p>
+<p>第一列是行号，第二列是 token <span name="token">类型</span>的数值，最后则是词素。最后那个位于第 2 行的空词素，就是 EOF token。</p>
 <aside name="token">
-<p>Yeah, the raw index of the token type isn&rsquo;t exactly human readable, but it&rsquo;s all
-C gives us.</p>
+<p>是啊，token 类型的原始索引<strong>并不</strong>怎么适合人类阅读，但 C 也就只能给我们这么多了。</p>
 </aside>
-<p>The goal for the rest of the chapter is to make that blob of code work by
-implementing this key function:</p>
+<p>本章余下的目标，便是让那一坨代码真正跑起来——通过实现这个关键函数：</p>
 <div class="codehilite"><pre class="insert-before">
 void initScanner(const char* source);
 </pre><div class="source-file"><em>scanner.h</em><br>
@@ -552,8 +465,7 @@ add after <em>initScanner</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.h</em>, add after <em>initScanner</em>()</div>
 
-<p>Each call scans and returns the next token in the source code. A token looks
-like this:</p>
+<p>每次调用都会扫描并返回源代码中的下一个 token。一个 token 长这样：</p>
 <div class="codehilite"><pre class="insert-before">
 #define clox_scanner_h
 </pre><div class="source-file"><em>scanner.h</em></div>
@@ -571,9 +483,7 @@ void initScanner(const char* source);
 </pre></div>
 <div class="source-file-narrow"><em>scanner.h</em></div>
 
-<p>It&rsquo;s pretty similar to jlox&rsquo;s Token class. We have an enum identifying what type
-of token it is<span class="em">&mdash;</span>number, identifier, <code>+</code> operator, etc. The enum is virtually
-identical to the one in jlox, so let&rsquo;s just hammer out the whole thing.</p>
+<p>它与 jlox 的 Token 类颇为相似。我们有一个枚举，用以识别 token 的种类——数字、标识符、<code>+</code> 运算符，等等。这个枚举与 jlox 中的那个几乎一模一样，所以我们就一口气把它敲完。</p>
 <div class="codehilite"><pre class="insert-before">
 #ifndef clox_scanner_h
 #define clox_scanner_h
@@ -607,32 +517,15 @@ typedef struct {
 </pre></div>
 <div class="source-file-narrow"><em>scanner.h</em></div>
 
-<p>Aside from prefixing all the names with <code>TOKEN_</code> (since C tosses enum names in
-the top-level namespace) the only difference is that extra <code>TOKEN_ERROR</code> type.
-What&rsquo;s that about?</p>
-<p>There are only a couple of errors that get detected during scanning:
-unterminated strings and unrecognized characters. In jlox, the scanner reports
-those itself. In clox, the scanner produces a synthetic &ldquo;error&rdquo; token for that
-error and passes it over to the compiler. This way, the compiler knows an error
-occurred and can kick off error recovery before reporting it.</p>
-<p>The novel part in clox&rsquo;s Token type is how it represents the lexeme. In jlox,
-each Token stored the lexeme as its own separate little Java string. If we did
-that for clox, we&rsquo;d have to figure out how to manage the memory for those
-strings. That&rsquo;s especially hard since we pass tokens by value<span class="em">&mdash;</span>multiple tokens could point to the same lexeme string. Ownership gets weird.</p>
-<p>Instead, we use the original source string as our character store. We represent
-a lexeme by a pointer to its first character and the number of characters it
-contains. This means we don&rsquo;t need to worry about managing memory for lexemes at
-all and we can freely copy tokens around. As long as the main source code string
-<span name="outlive">outlives</span> all of the tokens, everything works fine.</p>
+<p>除了在所有名字前加一个 <code>TOKEN**</code> 前缀外（C 语言的枚举名统统位于顶层命名空间），唯一的区别就是那个额外的 <code>TOKEN**ERROR</code> 类型。那是怎么回事？</p>
+<p>扫描阶段能检测到的错误寥寥无几——未闭合的字符串、以及无法识别的字符。在 jlox 中，扫描器<strong>自己</strong>报告这些错误。在 clox 中，扫描器会为那个错误产出一条合成的&ldquo;错误&ldquo;token，并将其传递给编译器。如此一来，编译器便会得知发生了错误，并能在报告之前先启动错误恢复。</p>
+<p>clox 中 Token 类型的创新之处在于它对词素的表示方式。在 jlox 中，每个 Token 都把词素作为自己独有的一小段 Java 字符串存储起来。若我们在 clox 中也这样干，我们就必须想办法管理那些字符串的内存。这<strong>特别</strong>棘手，因为我们按值传递 token——多个 token 完全可能指向同一段词素字符串。所有权关系会变得扑朔迷离。</p>
+<p>取而代之，我们使用原始的源代码字符串作为我们的字符存储。我们以一个指向其首字符的指针与字符数来表示一段词素。这意味着我们根本不必操心为词素管理内存，便可以随意地四处拷贝 token。只要这份主源代码字符串<strong>活得</strong>比所有 token 都久，一切便<strong>都</strong>能正常工作。</p>
 <aside name="outlive">
-<p>I don&rsquo;t mean to sound flippant. We really do need to think about and ensure that
-the source string, which is created far away over in the &ldquo;main&rdquo; module, has a
-long enough lifetime. That&rsquo;s why <code>runFile()</code> doesn&rsquo;t free the string until
-<code>interpret()</code> finishes executing the code and returns.</p>
+<p>我这么说并非要故作轻浮。我们确实需要考虑并确保那份源代码字符串——它诞生于遥远的 <code>main</code> 模块——拥有足够长的生命周期。这便是为何 <code>runFile()</code> 要等到 <code>interpret()</code> 执行完代码并返回<strong>之后</strong>才会释放那份字符串。</p>
 </aside>
-<h3><a href="#scanning-tokens" name="scanning-tokens"><small>16&#8202;.&#8202;2&#8202;.&#8202;1</small>Scanning tokens</a></h3>
-<p>We&rsquo;re ready to scan some tokens. We&rsquo;ll work our way up to the complete
-implementation, starting with this:</p>
+<h3><a href="#扫描-token" name="扫描-token"><small>16&#8202;.&#8202;2&#8202;.&#8202;1</small>扫描 token</a></h3>
+<p>我们已准备好去扫描一些 token 了。我们将一路搭出完整的实现，先从这段开始：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
 <pre>
@@ -646,20 +539,10 @@ add after <em>initScanner</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>initScanner</em>()</div>
 
-<p>Since each call to this function scans a complete token, we know we are at the
-beginning of a new token when we enter the function. Thus, we set
-<code>scanner.start</code> to point to the current character so we remember where the
-lexeme we&rsquo;re about to scan starts.</p>
-<p>Then we check to see if we&rsquo;ve reached the end of the source code. If so, we
-return an EOF token and stop. This is a sentinel value that signals to the
-compiler to stop asking for more tokens.</p>
-<p>If we aren&rsquo;t at the end, we do some<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span>stuff<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span>to scan the next token. But we
-haven&rsquo;t written that code yet. We&rsquo;ll get to that soon. If that code doesn&rsquo;t
-successfully scan and return a token, then we reach the end of the function.
-That must mean we&rsquo;re at a character that the scanner can&rsquo;t recognize, so we
-return an error token for that.</p>
-<p>This function relies on a couple of helpers, most of which are familiar from
-jlox. First up:</p>
+<p>由于对该函数的每一次调用都会扫描一个完整的 token，我们<strong>打从</strong>进入这个函数的那一刻起，<strong>就</strong>知道我们正处在一个全新 token 的起点。于是，我们将 <code>scanner.start</code> 设置为指向当前字符，以便记住我们即将扫描的词素从何而起。</p>
+<p>随后，我们检查一下是否已经抵达源代码的末尾。若是，我们便返回一个 EOF token 并打住。这是一个哨兵值，用以向编译器表明<strong>别再</strong>索要 token 了。</p>
+<p>若我们尚未抵达末尾，我们便要……做点什么……来扫描下一个 token。但我们<strong>还没</strong>写那段代码。很快就会。如果那段代码<strong>未能</strong>成功扫描并返回一个 token，那便会落入本函数的末尾。既然如此，那<strong>一定</strong>是我们正处在一个扫描器<strong>无法</strong>识别的字符上，于是我们为那个字符返回一条错误 token。</p>
+<p>这个函数倚赖于几个辅助函数，其中大多数我们都已在 jlox 中见过。先是：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
 <pre>
@@ -669,9 +552,8 @@ add after <em>initScanner</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>initScanner</em>()</div>
 
-<p>We require the source string to be a good null-terminated C string. If the
-current character is the null byte, then we&rsquo;ve reached the end.</p>
-<p>To create a token, we have this constructor-like function:</p>
+<p>我们要求源代码字符串是一个规范的、以空字符终止的 C 字符串。若当前字符是那个空字节，那我们便已抵达了末尾。</p>
+<p>为了创建一个 token，我们封装了一个类似构造器的小函数：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>isAtEnd</em>()</div>
 <pre>
@@ -686,9 +568,7 @@ add after <em>isAtEnd</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>isAtEnd</em>()</div>
 
-<p>It uses the scanner&rsquo;s <code>start</code> and <code>current</code> pointers to capture the token&rsquo;s
-lexeme. It sets a couple of other obvious fields then returns the token. It has
-a sister function for returning error tokens.</p>
+<p>它借扫描器的 <code>start</code> 与 <code>current</code> 指针来截取 token 的词素。它设定几个其它显而易见的字段，然后返回该 token。它还有一个姐妹函数，用于返回错误 token。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>makeToken</em>()</div>
 <pre>
@@ -705,19 +585,12 @@ add after <em>makeToken</em>()</div>
 
 <p><span name="axolotl"></span></p>
 <aside name="axolotl">
-<p>This part of the chapter is pretty dry, so here&rsquo;s a picture of an axolotl.</p><img src="image/scanning-on-demand/axolotl.png" alt="A drawing of an axolotl." />
+<p>本章的这个部分写得相当干巴，所以这里放一张蝾螈的照片。</p><img src="image/scanning-on-demand/axolotl.png" alt="一幅蝾螈的画。" />
 </aside>
-<p>The only difference is that the &ldquo;lexeme&rdquo; points to the error message string
-instead of pointing into the user&rsquo;s source code. Again, we need to ensure that
-the error message sticks around long enough for the compiler to read it. In
-practice, we only ever call this function with C string literals. Those are
-constant and eternal, so we&rsquo;re fine.</p>
-<p>What we have now is basically a working scanner for a language with an empty
-lexical grammar. Since the grammar has no productions, every character is an
-error. That&rsquo;s not exactly a fun language to program in, so let&rsquo;s fill in the
-rules.</p>
-<h2><a href="#a-lexical-grammar-for-lox" name="a-lexical-grammar-for-lox"><small>16&#8202;.&#8202;3</small>A Lexical Grammar for Lox</a></h2>
-<p>The simplest tokens are only a single character. We recognize those like so:</p>
+<p>两者之间唯一的区别在于，&ldquo;词素&ldquo;指向的是错误消息字符串本身，而非用户源代码中的位置。再说一遍，我们需要确保错误消息<strong>活得</strong>足够久，好让编译器能读到它。实际中，我们<strong>只</strong>会用 C 字符串字面量来调用这个函数。那些常量是永恒的，因此我们就安然无恙。</p>
+<p>至此，我们基本上拥有了一款针对<strong>词法文法为空</strong>的语言的扫描器。既然文法里没有任何产生式，那么<strong>每个</strong>字符都是错误。那可不是一款有趣的语言，所以我们来填充这些规则。</p>
+<h2><a href="#lox-的词法文法" name="lox-的词法文法"><small>16&#8202;.&#8202;3</small>Lox 的词法文法</a></h2>
+<p>最简单的 token 仅有一个字符。识别它们的方式如下：</p>
 <div class="codehilite"><pre class="insert-before">
   if (isAtEnd()) return makeToken(TOKEN_EOF);
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -745,10 +618,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
-<p>We read the next character from the source code, and then do a straightforward
-switch to see if it matches any of Lox&rsquo;s one-character lexemes. To read the next
-character, we use a new helper which consumes the current character and returns
-it.</p>
+<p>我们从源代码中读取下一个字符，然后老老实实地做一个 switch，看看它是否与 Lox 中的某个单字符词素匹配。为了读取下一个字符，我们使用一个<strong>新的</strong>辅助函数，它消费当下的字符并将其返回。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>isAtEnd</em>()</div>
 <pre>
@@ -759,10 +629,7 @@ add after <em>isAtEnd</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>isAtEnd</em>()</div>
 
-<p>Next up are the two-character punctuation tokens like <code>!=</code> and <code>&gt;=</code>. Each of
-these also has a corresponding single-character token. That means that when we
-see a character like <code>!</code>, we don&rsquo;t know if we&rsquo;re in a <code>!</code> token or a <code>!=</code> until
-we look at the next character too. We handle those like so:</p>
+<p>接下来是那些双字符的标点 token，比如 <code>!=</code> 与 <code>&gt;=</code>。每个这样的 token 还各自对应一个单字符 token。这意味着，当我们看到像 <code>!</code> 这样的字符时，在我们看到下一个字符<strong>之前</strong>，我们并不知道我们是身处一个 <code>!</code> token 之中还是一个 <code>!=</code> 之中。我们处理这种情况的方式是：</p>
 <div class="codehilite"><pre class="insert-before">
     case '*': return makeToken(TOKEN_STAR);
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -782,14 +649,12 @@ in <em>scanToken</em>()</div>
           <span class="i">match</span>(<span class="s">&#39;=&#39;</span>) ? <span class="a">TOKEN_GREATER_EQUAL</span> : <span class="a">TOKEN_GREATER</span>);
 </pre><pre class="insert-after">
   }
+
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
-<p>After consuming the first character, we look for an <code>=</code>. If found, we consume it
-and return the corresponding two-character token. Otherwise, we leave the
-current character alone (so it can be part of the <em>next</em> token) and return the
-appropriate one-character token.</p>
-<p>That logic for conditionally consuming the second character lives here:</p>
+<p>在消费完第一个字符之后，我们去寻找一个 <code>=</code>。若找到，我们便消费它并返回相应的双字符 token。否则，我们<strong>将</strong>当前字符原封不动地留下（让它能够成为<strong>下一个</strong> token 的一部分），并返回恰当的单字符 token。</p>
+<p>这种&ldquo;有条件地消费第二个字符&ldquo;的逻辑被安放在这里：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>advance</em>()</div>
 <pre>
@@ -802,19 +667,11 @@ add after <em>advance</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>advance</em>()</div>
 
-<p>If the current character is the desired one, we advance and return <code>true</code>.
-Otherwise, we return <code>false</code> to indicate it wasn&rsquo;t matched.</p>
-<p>Now our scanner supports all of the punctuation-like tokens. Before we get to
-the longer ones, let&rsquo;s take a little side trip to handle characters that aren&rsquo;t
-part of a token at all.</p>
-<h3><a href="#whitespace" name="whitespace"><small>16&#8202;.&#8202;3&#8202;.&#8202;1</small>Whitespace</a></h3>
-<p>Our scanner needs to handle spaces, tabs, and newlines, but those characters
-don&rsquo;t become part of any token&rsquo;s lexeme. We could check for those inside the
-main character switch in <code>scanToken()</code> but it gets a little tricky to ensure
-that the function still correctly finds the next token <em>after</em> the whitespace
-when you call it. We&rsquo;d have to wrap the whole body of the function in a loop or
-something.</p>
-<p>Instead, before starting the token, we shunt off to a separate function.</p>
+<p>若当前字符正是所期望的那一个，我们便前移并返回 <code>true</code>。否则，我们返回 <code>false</code>，以表示并未匹配成功。</p>
+<p>至此，我们的扫描器支持<strong>所有</strong>类标点 token。在我们讨到那些更长的 token 之前，让我们先走一小段岔路，处理那些<strong>不属于</strong>任何 token 的字符。</p>
+<h3><a href="#空白" name="空白"><small>16&#8202;.&#8202;3&#8202;.&#8202;1</small>空白</a></h3>
+<p>我们的扫描器需要处理空格、Tab 与换行，但这些字符<strong>不会</strong>成为任何 token 词素的一部分。我们<strong>本可以</strong>在 <code>scanToken()</code> 中那个主字符 switch 里检查它们，但要想让该函数在被调用时<strong>仍然</strong>能在跳过了空白之后正确地找到下一个 token，就会有点儿棘手。我们得把整个函数体裹在一个循环里，或诸如此类。</p>
+<p>取而代之，我们另设一个函数，在<strong>开始</strong>扫描 token 之前，先将它打发走。</p>
 <div class="codehilite"><pre class="insert-before">
 Token scanToken() {
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -826,9 +683,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
-<p>This advances the scanner past any leading whitespace. After this call returns,
-we know the very next character is a meaningful one (or we&rsquo;re at the end of the
-source code).</p>
+<p>这将使扫描器前移过任何前导的空白。一旦这次调用返回，我们便知道下一字符<strong>或者</strong>是个有意义的字符，<strong>或者</strong>是源代码的末尾。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>errorToken</em>()</div>
 <pre>
@@ -849,9 +704,7 @@ add after <em>errorToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>errorToken</em>()</div>
 
-<p>It&rsquo;s sort of a separate mini-scanner. It loops, consuming every whitespace
-character it encounters. We need to be careful that it does <em>not</em> consume any
-<em>non</em>-whitespace characters. To support that, we use this:</p>
+<p>它就像一个独立的小型扫描器。它不断循环，凡遇空白字符便一律消费。我们需要小心的是，它<strong>不可</strong>消费任何<strong>非</strong>空白字符。为满足这一点，我们使用：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>advance</em>()</div>
 <pre>
@@ -861,8 +714,7 @@ add after <em>advance</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>advance</em>()</div>
 
-<p>This simply returns the current character, but doesn&rsquo;t consume it. The previous
-code handles all the whitespace characters except for newlines.</p>
+<p>这<strong>只是</strong>返回当前字符，但<strong>不</strong>消费它。前面那段代码处理了除换行符之外的所有空白字符。</p>
 <div class="codehilite"><pre class="insert-before">
         break;
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -878,11 +730,9 @@ in <em>skipWhitespace</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>skipWhitespace</em>()</div>
 
-<p>When we consume one of those, we also bump the current line number.</p>
-<h3><a href="#comments" name="comments"><small>16&#8202;.&#8202;3&#8202;.&#8202;2</small>Comments</a></h3>
-<p>Comments aren&rsquo;t technically &ldquo;whitespace&rdquo;, if you want to get all precise with
-your terminology, but as far as Lox is concerned, they may as well be, so we
-skip those too.</p>
+<p>当我们消费一个换行符时，还要顺手把当前行号加一。</p>
+<h3><a href="#注释" name="注释"><small>16&#8202;.&#8202;3&#8202;.&#8202;2</small>注释</a></h3>
+<p>注释<strong>严格地</strong>说<strong>不是</strong> &ldquo;空白&ldquo;，但就 Lox 而言，它们<strong>等同于</strong>空白，所以我们也一并跳过它们。</p>
 <div class="codehilite"><pre class="insert-before">
         break;
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -898,15 +748,11 @@ in <em>skipWhitespace</em>()</div>
         <span class="k">break</span>;
 </pre><pre class="insert-after">
       default:
-        return;
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>skipWhitespace</em>()</div>
 
-<p>Comments start with <code>//</code> in Lox, so as with <code>!=</code> and friends, we need a second
-character of lookahead. However, with <code>!=</code>, we still wanted to consume the <code>!</code>
-even if the <code>=</code> wasn&rsquo;t found. Comments are different. If we don&rsquo;t find a second
-<code>/</code>, then <code>skipWhitespace()</code> needs to not consume the <em>first</em> slash either.</p>
-<p>To handle that, we add:</p>
+<p>Lox 中的注释以 <code>//</code> 开头，所以与 <code>!=</code> 等同理，我们需要第二个字符的前瞻。然而，与 <code>!=</code> 不同的是，注释若我们<strong>未</strong>找到第二个 <code>/</code>，那么 <code>skipWhitespace()</code> 便<strong>不应</strong>消费那个<strong>第一个</strong> <code>/</code>。</p>
+<p>为处理这一点，我们再添：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>peek</em>()</div>
 <pre>
@@ -917,16 +763,10 @@ add after <em>peek</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>peek</em>()</div>
 
-<p>This is like <code>peek()</code> but for one character past the current one. If the current
-character and the next one are both <code>/</code>, we consume them and then any other
-characters until the next newline or the end of the source code.</p>
-<p>We use <code>peek()</code> to check for the newline but not consume it. That way, the
-newline will be the current character on the next turn of the outer loop in
-<code>skipWhitespace()</code> and we&rsquo;ll recognize it and increment <code>scanner.line</code>.</p>
-<h3><a href="#literal-tokens" name="literal-tokens"><small>16&#8202;.&#8202;3&#8202;.&#8202;3</small>Literal tokens</a></h3>
-<p>Number and string tokens are special because they have a runtime value
-associated with them. We&rsquo;ll start with strings because they are easy to
-recognize<span class="em">&mdash;</span>they always begin with a double quote.</p>
+<p>这与 <code>peek()</code> 类似，但窥的是当前字符<strong>之后</strong>的一个字符。若当前字符与下一个字符<strong>都</strong>是 <code>/</code>，我们便把它们以及后续任何字符统统消费，直至撞上下一个换行或源文件的末尾。</p>
+<p>我们用 <code>peek()</code> 来检查换行符，但<strong>不</strong>消费它。如此一来，那个换行符便会成为下一轮 <code>skipWhitespace()</code> 外层循环的当下字符，我们便会识别它并递增 <code>scanner.line</code>。</p>
+<h3><a href="#字面量词法单元" name="字面量词法单元"><small>16&#8202;.&#8202;3&#8202;.&#8202;3</small>字面量词法单元</a></h3>
+<p>数字与字符串 token 很特殊，因为它们各与一个<strong>运行时值</strong>相关联。我们先来搞字符串，因为它们容易识别——它们<strong>总是</strong>以一个双引号打头。</p>
 <div class="codehilite"><pre class="insert-before">
           match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -938,7 +778,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
-<p>That calls a new function.</p>
+<p>它调用一个新函数。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
 <pre>
@@ -957,32 +797,14 @@ add after <em>skipWhitespace</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>skipWhitespace</em>()</div>
 
-<p>Similar to jlox, we consume characters until we reach the closing quote. We also
-track newlines inside the string literal. (Lox supports multi-line strings.)
-And, as ever, we gracefully handle running out of source code before we find the
-end quote.</p>
-<p>The main change here in clox is something that&rsquo;s <em>not</em> present. Again, it
-relates to memory management. In jlox, the Token class had a field of type
-Object to store the runtime value converted from the literal token&rsquo;s lexeme.</p>
-<p>Implementing that in C would require a lot of work. We&rsquo;d need some sort of union
-and type tag to tell whether the token contains a string or double value. If
-it&rsquo;s a string, we&rsquo;d need to manage the memory for the string&rsquo;s character array
-somehow.</p>
-<p>Instead of adding that complexity to the scanner, we defer <span
-name="convert">converting</span> the literal lexeme to a runtime value until
-later. In clox, tokens only store the lexeme<span class="em">&mdash;</span>the character sequence exactly
-as it appears in the user&rsquo;s source code. Later in the compiler, we&rsquo;ll convert
-that lexeme to a runtime value right when we are ready to store it in the
-chunk&rsquo;s constant table.</p>
+<p>与 jlox 类似，我们不断地消费字符，直至撞上作为结尾的那个引号。我们<strong>也</strong>跟踪字符串字面量内部的换行符。（Lox 支持多行字符串。）一如既往，我们还要<strong>体面地</strong>处理在找到结束引号之前就已耗尽源代码的情况。</p>
+<p>clox 这里的<strong>主要</strong>变化是一处<strong>不存在</strong>的东西。同样，它也与内存管理有关。在 jlox 中，Token 类有一个类型为 Object 的字段，用以存储由字面量 token 的词素转换而来的运行时值。</p>
+<p>在 C 中实现这件事需要做大量工作。我们需要某种联合体与类型标签，以便分辨一个 token 装的是字符串还是 double 值。若是字符串，我们还得设法管理该字符串字符数组的内存。</p>
+<p>不去为扫描器添加这种复杂性，我们将词素到运行时值的转换<strong>推迟</strong>到日后。在 clox 中，token <strong>只</strong>存储词素——也就是用户源代码中字符序列的本来面目。稍后在编译器中，当我们需要准备好将之存入 chunk 的常量表时，我们才把那段词素转换为运行时的值。</p>
 <aside name="convert">
-<p>Doing the lexeme-to-value conversion in the compiler does introduce some
-redundancy. The work to scan a number literal is awfully similar to the work
-required to convert a sequence of digit characters to a number value. But there
-isn&rsquo;t <em>that</em> much redundancy, it isn&rsquo;t in anything performance critical, and it
-keeps our scanner simpler.</p>
+<p>把&ldquo;词素到值&ldquo;的转换放在编译器中<strong>确实</strong>引入了一些冗余。扫描一个数字字面量所做的工作，与把一串数字字符转换为一个数字值所需的工作，实在颇为相似。但<strong>冗余</strong>并不算多，又<strong>不</strong>落在任何性能要害之上，并且它让我们的扫描器更简洁。</p>
 </aside>
-<p>Next up, numbers. Instead of adding a switch case for each of the ten digits
-that can start a number, we handle them here:</p>
+<p>接下来是数字。与其为每一个可能作为数字开头的十进制数字各加一个 switch 分支，我们不如在这里统一处理：</p>
 <div class="codehilite"><pre class="insert-before">
   char c = advance();
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -995,7 +817,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
-<p>That uses this obvious utility function:</p>
+<p>它用到了这个显然的小工具函数：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
 <pre>
@@ -1005,7 +827,7 @@ add after <em>initScanner</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>initScanner</em>()</div>
 
-<p>We finish scanning the number using this:</p>
+<p>我们用这个来完成数字的扫描：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
 <pre>
@@ -1025,15 +847,10 @@ add after <em>skipWhitespace</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>skipWhitespace</em>()</div>
 
-<p>It&rsquo;s virtually identical to jlox&rsquo;s version except, again, we don&rsquo;t convert the
-lexeme to a double yet.</p>
-<h2><a href="#identifiers-and-keywords" name="identifiers-and-keywords"><small>16&#8202;.&#8202;4</small>Identifiers and Keywords</a></h2>
-<p>The last batch of tokens are identifiers, both user-defined and reserved. This
-section should be fun<span class="em">&mdash;</span>the way we recognize keywords in clox is quite
-different from how we did it in jlox, and touches on some important data
-structures.</p>
-<p>First, though, we have to scan the lexeme. Names start with a letter or
-underscore.</p>
+<p>除了又<strong>不</strong>立即把词素转换为 double 之外，这几乎与 jlox 的版本一模一样。</p>
+<h2><a href="#标识符与关键字" name="标识符与关键字"><small>16&#8202;.&#8202;4</small>标识符与关键字</a></h2>
+<p>最后一批 token 是标识符，既有用户自定义的，也有保留的。本节应当挺有意思——在 clox 中识别关键字的方式与 jlox 中的截然不同，涉及到一些重要的数据结构。</p>
+<p>不过，首先我们得扫描词素。名字以一个字母或下划线打头。</p>
 <div class="codehilite"><pre class="insert-before">
   char c = advance();
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -1045,7 +862,7 @@ in <em>scanToken</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
-<p>We recognize those using this:</p>
+<p>我们借这个函数来识别这些字符：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
 <pre>
@@ -1057,7 +874,7 @@ add after <em>initScanner</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>initScanner</em>()</div>
 
-<p>Once we&rsquo;ve found an identifier, we scan the rest of it here:</p>
+<p>一旦我们找到了一个标识符，我们便在这里扫描它的剩余部分：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
 <pre>
@@ -1068,9 +885,7 @@ add after <em>skipWhitespace</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>skipWhitespace</em>()</div>
 
-<p>After the first letter, we allow digits too, and we keep consuming alphanumerics
-until we run out of them. Then we produce a token with the proper type.
-Determining that &ldquo;proper&rdquo; type is the unique part of this chapter.</p>
+<p>在第一个字母之后，我们<strong>也</strong>允许数字，并不断地消费字母与数字，直至它们耗尽为止。然后我们用恰当的类型产出一个 token。敲定那个&ldquo;恰当&ldquo;的类型，则是本章<strong>独有</strong>的内容。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
 <pre>
@@ -1080,112 +895,43 @@ add after <em>skipWhitespace</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>skipWhitespace</em>()</div>
 
-<p>Okay, I guess that&rsquo;s not very exciting yet. That&rsquo;s what it looks like if we
-have no reserved words at all. How should we go about recognizing keywords? In
-jlox, we stuffed them all in a Java Map and looked them up by name. We don&rsquo;t
-have any sort of hash table structure in clox, at least not yet.</p>
-<p>A hash table would be overkill anyway. To look up a string in a hash <span
-name="hash">table</span>, we need to walk the string to calculate its hash code,
-find the corresponding bucket in the hash table, and then do a
-character-by-character equality comparison on any string it happens to find
-there.</p>
+<p>好啦，估计这一段读起来并不<strong>怎么</strong>激动人心。那就是当关键字<strong>根本</strong>不存在时，标识符识别的样子。我们当如何识别关键字呢？在 jlox 中，我们把所有关键字塞进了一棵 Java Map，按名字查表。在 clox 中，我们<strong>并</strong>没有任何一种哈希表结构，至少眼前<strong>还</strong>没有。</p>
+<p>一张哈希表<strong>也</strong>算是杀鸡用了牛刀。要在一张哈希<span name="hash">表</span>里查一个字符串，你得遍历字符串以算出其哈希值，再找到哈希表中对应的桶，然后对桶里碰巧出现的字符串逐字符进行相等性比较。</p>
 <aside name="hash">
-<p>Don&rsquo;t worry if this is unfamiliar to you. When we get to <a href="hash-tables.html">building our own hash
-table from scratch</a>, we&rsquo;ll learn all about it in exquisite detail.</p>
+<p>若你对这一切尚未熟悉，也无须担心。当我们<a href="hash-tables.html">亲手构建一张哈希表</a>时，我们会以极致的细节学习这一切。</p>
 </aside>
-<p>Let&rsquo;s say we&rsquo;ve scanned the identifier &ldquo;gorgonzola&rdquo;. How much work <em>should</em> we
-need to do to tell if that&rsquo;s a reserved word? Well, no Lox keyword starts with
-&ldquo;g&rdquo;, so looking at the first character is enough to definitively answer no.
-That&rsquo;s a lot simpler than a hash table lookup.</p>
-<p>What about &ldquo;cardigan&rdquo;? We do have a keyword in Lox that starts with &ldquo;c&rdquo;:
-&ldquo;class&rdquo;. But the second character in &ldquo;cardigan&rdquo;, &ldquo;a&rdquo;, rules that out. What about
-&ldquo;forest&rdquo;? Since &ldquo;for&rdquo; is a keyword, we have to go farther in the string before
-we can establish that we don&rsquo;t have a reserved word. But, in most cases, only a
-character or two is enough to tell we&rsquo;ve got a user-defined name on our hands.
-We should be able to recognize that and fail fast.</p>
-<p>Here&rsquo;s a visual representation of that branching character-inspection logic:</p>
-<p><span name="down"></span></p><img src="image/scanning-on-demand/keywords.png" alt="A trie that contains all of Lox's keywords." />
+<p>假设我们已经扫出了标识符 &ldquo;gorgonzola&rdquo;。那么我们要做多少工作，<strong>才</strong>能判断它<strong>是</strong>保留字？嗯，没有任何 Lox 关键字以 &ldquo;g&rdquo; 开头，所以看第一个字符就足以<strong>一锤定音</strong>——这比一张哈希表查找简单多了。</p>
+<p>那 &ldquo;cardigan&rdquo; 又当如何？我们确实有一个以 &ldquo;c&rdquo; 开头的 Lox 关键字：&ldquo;class&rdquo;。但 &ldquo;cardigan&rdquo; 的第二个字符 &ldquo;a&rdquo; 便<strong>排除</strong>了那种可能。那 &ldquo;forest&rdquo; 呢？既然 &ldquo;for&rdquo; 是个关键字，我们就得往字符串里再深入几个字符，才能断定它<strong>不是</strong>一个保留字。但大多数情况下，只需要一两个字符，便足以让我们断定这是一个用户自定义的名字。我们<strong>应当</strong>能识别出这一点，并<strong>快速</strong>失败。</p>
+<p>下图便是这种逐字符分支判别逻辑的可视化呈现：</p>
+<p><span name="down"></span></p><img src="image/scanning-on-demand/keywords.png" alt="一棵包含 Lox 全部关键字的 trie。" />
 <aside name="down">
-<p>Read down each chain of nodes and you&rsquo;ll see Lox&rsquo;s keywords emerge.</p>
+<p>沿着每一串节点自上而下读下来，你便会看见 Lox 的关键字浮现出来。</p>
 </aside>
-<p>We start at the root node. If there is a child node whose letter matches the
-first character in the lexeme, we move to that node. Then repeat for the next
-letter in the lexeme and so on. If at any point the next letter in the lexeme
-doesn&rsquo;t match a child node, then the identifier must not be a keyword and we
-stop. If we reach a double-lined box, and we&rsquo;re at the last character of the
-lexeme, then we found a keyword.</p>
-<h3><a href="#tries-and-state-machines" name="tries-and-state-machines"><small>16&#8202;.&#8202;4&#8202;.&#8202;1</small>Tries and state machines</a></h3>
-<p>This tree diagram is an example of a thing called a <span
-name="trie"><a href="https://en.wikipedia.org/wiki/Trie"><strong>trie</strong></a></span>. A trie stores a set of strings. Most other
-data structures for storing strings contain the raw character arrays and then
-wrap them inside some larger construct that helps you search faster. A trie is
-different. Nowhere in the trie will you find a whole string.</p>
+<p>我们从根节点起步。若有一个子节点所对应的字符与词素的第一个字符匹配，我们便移至那个子节点。然后对词素的下一个字符重复此过程，依此类推。若在词素中前<strong>某</strong>个字符已无法与子节点匹配，那么该标识符<strong>一定</strong>不是关键字，我们便<strong>打住</strong>。若我们抵达一个双线框的节点且我们<strong>恰好</strong>处在词素的最后一个字符处，那我们就找到了一个关键字。</p>
+<h3><a href="#trie-与状态机" name="trie-与状态机"><small>16&#8202;.&#8202;4&#8202;.&#8202;1</small>Trie 与状态机</a></h3>
+<p>这张树形图示意了一个名为 <span name="trie"><a href="https://en.wikipedia.org/wiki/Trie"><strong>trie</strong></a></span> 的数据结构。trie 用于存储一组字符串。多数其它用于存储字符串的数据结构，都将原始的字符数组<strong>放在</strong>内部，外面再裹上一层更大的构造物来帮你加快搜索。trie 则<strong>不同</strong>。在 trie 中，你<strong>找不到</strong>一段完整的字符串。</p>
 <aside name="trie">
-<p>&ldquo;Trie&rdquo; is one of the most confusing names in CS. Edward Fredkin yanked it out of
-the middle of the word &ldquo;retrieval&rdquo;, which means it should be pronounced like
-&ldquo;tree&rdquo;. But, uh, there is already a pretty important data structure pronounced
-&ldquo;tree&rdquo; <em>which tries are a special case of</em>, so unless you never speak of these
-things out loud, no one can tell which one you&rsquo;re talking about. Thus, people
-these days often pronounce it like &ldquo;try&rdquo; to avoid the headache.</p>
+<p>&ldquo;Trie&rdquo; 是计算机科学里最令人困惑的名字之一。Edward Fredkin 把它从单词 &ldquo;retrieval&rdquo; 的中间抠了出来，按理应读作 &ldquo;tree&rdquo;。但<strong>呃</strong>，我们已经有一个读作 &ldquo;tree&rdquo; 的相当重要的数据结构了——trie 正是其<strong>一个</strong>特例——所以除非你从不开口谈论这些概念，否则没人能搞得清你到底在指哪一个。于是，如今人们常常读作 &ldquo;try&rdquo;，以避免这一头疼。</p>
 </aside>
-<p>Instead, each string the trie &ldquo;contains&rdquo; is represented as a <em>path</em> through the
-tree of character nodes, as in our traversal above. Nodes that match the last
-character in a string have a special marker<span class="em">&mdash;</span>the double lined boxes in the
-illustration. That way, if your trie contains, say, &ldquo;banquet&rdquo; and &ldquo;ban&rdquo;, you are
-able to tell that it does <em>not</em> contain &ldquo;banque&rdquo;<span class="em">&mdash;</span>the &ldquo;e&rdquo; node won&rsquo;t have that
-marker, while the &ldquo;n&rdquo; and &ldquo;t&rdquo; nodes will.</p>
-<p>Tries are a special case of an even more fundamental data structure: a
-<a href="https://en.wikipedia.org/wiki/Deterministic_finite_automaton"><strong>deterministic finite automaton</strong></a> (<strong>DFA</strong>). You might also know these
-by other names: <strong>finite state machine</strong>, or just <strong>state machine</strong>. State
-machines are rad. They end up useful in everything from <a href="http://gameprogrammingpatterns.com/state.html">game
-programming</a> to implementing networking protocols.</p>
-<p>In a DFA, you have a set of <em>states</em> with <em>transitions</em> between them, forming a
-graph. At any point in time, the machine is &ldquo;in&rdquo; exactly one state. It gets to
-other states by following transitions. When you use a DFA for lexical analysis,
-each transition is a character that gets matched from the string. Each state
-represents a set of allowed characters.</p>
-<p>Our keyword tree is exactly a DFA that recognizes Lox keywords. But DFAs are
-more powerful than simple trees because they can be arbitrary <em>graphs</em>.
-Transitions can form cycles between states. That lets you recognize arbitrarily
-long strings. For example, here&rsquo;s a DFA that recognizes number literals:</p>
-<p><span name="railroad"></span></p><img src="image/scanning-on-demand/numbers.png" alt="A syntax diagram that recognizes integer and floating point literals." />
+<p>取而代之的是，trie &ldquo;容纳&ldquo;的每一字符串都被表示为一条<strong>穿越</strong>字符节点树的<strong>路径</strong>，正如我们上面那张遍历图所示。匹配某字符串末字符的那些节点带有一个特殊的标记——图中的双线框。如此一来，譬如<strong>既</strong>含有 &ldquo;banquet&rdquo; <strong>又</strong>含有 &ldquo;ban&rdquo; 的 trie，你<strong>便能</strong>知道它<strong>不</strong>含有 &ldquo;banque&rdquo;——&ldquo;e&rdquo; 节点<strong>没有</strong>那个标记，而 &ldquo;n&rdquo; 与 &ldquo;t&rdquo; 节点<strong>都</strong>有。</p>
+<p>trie 是一种更为基础的数据结构——<a href="https://en.wikipedia.org/wiki/Deterministic_finite**automaton"><strong>确定性有限状态自动机</strong></a>（<strong>DFA</strong>）——的特殊情形。你<strong>或许</strong>也听过它的另一些名字：<strong>有限状态机</strong>，或干脆叫<strong>状态机</strong>。状态机真是太酷了。它们在<a href="http://gameprogrammingpatterns.com/state.html">游戏编程</a>乃至网络协议的实现中都颇有用武之地。</p>
+<p>在一台 DFA 中，你拥有<strong>一组</strong>状态，以及状态<strong>之间</strong>的若干转移，构成一张图。在<strong>任一</strong>时刻，机器恰好&ldquo;处于&ldquo;某一状态。它通过沿转移行走来到达其它状态。当你将 DFA 用于词法分析时，每一次转移便是字符串中<strong>被匹配的</strong>一个字符。每一个状态都代表一组被允许的字符。</p>
+<p>我们的关键字树<strong>恰好</strong>就是一台识别 Lox 关键字的 DFA。但 DFA <strong>比</strong>单纯的树<strong>更</strong>强大，因为它们可以是任意<strong>的</strong>图。转移之间可以形成回路。这使得一台 DFA 能够识别任意<strong>长</strong>的字符串。例如，下面便是这样一台识别数字字面量的 DFA：</p>
+<p><span name="railroad"></span></p><img src="image/scanning-on-demand/numbers.png" alt="一张识别整数与浮点字面量的语法图。" />
 <aside name="railroad">
-<p>This style of diagram is called a <a href="https://en.wikipedia.org/wiki/Syntax_diagram"><strong>syntax diagram</strong></a> or the
-more charming <strong>railroad diagram</strong>. The latter name is because it looks
-something like a switching yard for trains.</p>
-<p>Back before Backus-Naur Form was a thing, this was one of the predominant ways
-of documenting a language&rsquo;s grammar. These days, we mostly use text, but there&rsquo;s
-something delightful about the official specification for a <em>textual language</em>
-relying on an <em>image</em>.</p>
+<p>这种风格的图被称为一张 <a href="https://en.wikipedia.org/wiki/Syntax**diagram"><strong>语法图</strong></a>，或更俏皮的<strong>铁路图</strong>（railroad diagram）。后者之名，是因为它看起来颇像火车的调车场。</p>
+<p>在巴科斯-诺尔范式问世之前，这是记述语言文法的主流方式之一。如今我们大多用文字，但一门<strong>文本语言</strong>的正式规范<strong>竟然</strong>倚赖于一张<strong>图像</strong>，这事儿总归有几分令人愉悦。</p>
 </aside>
-<p>I&rsquo;ve collapsed the nodes for the ten digits together to keep it more readable,
-but the basic process works the same<span class="em">&mdash;</span>you work through the path, entering
-nodes whenever you consume a corresponding character in the lexeme. If we were
-so inclined, we could construct one big giant DFA that does <em>all</em> of the lexical
-analysis for Lox, a single state machine that recognizes and spits out all of
-the tokens we need.</p>
-<p>However, crafting that mega-DFA by <span name="regex">hand</span> would be
-challenging. That&rsquo;s why <a href="https://en.wikipedia.org/wiki/Lex_(software)">Lex</a> was created. You give it a simple textual
-description of your lexical grammar<span class="em">&mdash;</span>a bunch of regular expressions<span class="em">&mdash;</span>and it
-automatically generates a DFA for you and produces a pile of C code that
-implements it.</p>
+<p>我已经把十种数字节点合并了起来以使它更可读，但基本流程一样——你沿着路径前进，每当消费词素中一个相应的字符时便进入下一个节点。倘若我们真<strong>那么</strong>乐意，我们<strong>可以</strong>构造一台巨大的 DFA 来完成 Lox 的<strong>全部</strong>词法分析——一台单一的状态机，识别并吐出我们所需要的所有 token。</p>
+<p>然而，<span name="regex">手工</span>雕琢这样一台巨型 DFA 是件颇具挑战的事。这也是 <a href="https://en.wikipedia.org/wiki/Lex**(software)">Lex</a> 之所以被创造的原因。你只需喂给它一份<strong>你的</strong>词法法法的简单文本描述——一堆正则表达式——它便会自动为你生成一台 DFA，并伴生一大坨实现它的 C 代码。</p>
 <aside name="regex">
-<p>This is also how most regular expression engines in programming languages and
-text editors work under the hood. They take your regex string and convert it to
-a DFA, which they then use to match strings.</p>
-<p>If you want to learn the algorithm to convert a regular expression into a DFA,
-<a href="https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools">the Dragon Book</a> has you covered.</p>
+<p>这也是大多数程序设计语言与文本编辑器中的正则表达式引擎在底层的工作方式。它们<strong>拿</strong>你的正则表达式字符串，把它转换为一台 DFA，然后再用后者去匹配字符串。</p>
+<p>倘若你想学习把正则表达式转换为 DFA 的算法，<a href="https://en.wikipedia.org/wiki/Compilers:**Principles,_Techniques,_and**Tools">龙书</a>已然包揽。</p>
 </aside>
-<p>We won&rsquo;t go down that road. We already have a perfectly serviceable hand-rolled
-scanner. We just need a tiny trie for recognizing keywords. How should we map
-that to code?</p>
-<p>The absolute simplest <span name="v8">solution</span> is to use a switch
-statement for each node with cases for each branch. We&rsquo;ll start with the root
-node and handle the easy keywords.</p>
+<p>我们<strong>不</strong>打算走那条路。我们<strong>已经</strong>拥有了一款<strong>足够</strong>能用的手写扫描器。我们<strong>只</strong>需要一个不起眼的小 trie 用来识别关键字。我们<strong>该</strong>如何将那张图映射到代码中？</p>
+<p>最<span name="v8">简单</span>的方案是：每个节点都使用一个 switch 语句，每个分支对应一条边。我们从根节点出发，先处理那些<strong>只有</strong>一条路径的关键字。</p>
 <aside name="v8">
-<p>Simple doesn&rsquo;t mean dumb. The same approach is <a href="https://github.com/v8/v8/blob/e77eebfe3b747fb315bd3baad09bec0953e53e68/src/parsing/scanner.cc#L1643">essentially what V8 does</a>,
-and that&rsquo;s currently one of the world&rsquo;s most sophisticated, fastest language
-implementations.</p>
+<p>简单<strong>并不</strong>等于愚蠢。同样的思路，恰恰是 <a href="https://github.com/v8/v8/blob/e77eebfe3b747fb315bd3baad09bec0953e53e68/src/parsing/scanner.cc#L1643">V8 引擎所采用的做法</a>，而它<strong>眼下</strong>便是世界上最精密、最快的语言实现之一。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
 static TokenType identifierType() {
@@ -1211,12 +957,8 @@ in <em>identifierType</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>identifierType</em>()</div>
 
-<p>These are the initial letters that correspond to a single keyword. If we see an
-&ldquo;s&rdquo;, the only keyword the identifier could possibly be is <code>super</code>. It might not
-be, though, so we still need to check the rest of the letters too. In the tree
-diagram, this is basically that straight path hanging off the &ldquo;s&rdquo;.</p>
-<p>We won&rsquo;t roll a switch for each of those nodes. Instead, we have a utility
-function that tests the rest of a potential keyword&rsquo;s lexeme.</p>
+<p>这些是<strong>各自</strong>只对应<strong>一个</strong>关键字的首字母。倘若我们看到了一个 &ldquo;s&rdquo;，那这个标识符唯一可能是 <code>super</code>。然而，它<strong>也</strong>未必<strong>就</strong>是，所以我们仍得检查它后续的字符。在这棵树的图示中，这基本上就是从 &ldquo;s&rdquo; 垂下来的那条直路。</p>
+<p>我们<strong>不</strong>会为<strong>那些</strong>节点各写一个 switch。取而代之，我们有一个小工具函数，用于检测某条<strong>潜在</strong>关键字词素余下的部分。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
 <pre>
@@ -1232,17 +974,9 @@ add after <em>skipWhitespace</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>skipWhitespace</em>()</div>
 
-<p>We use this for all of the unbranching paths in the tree. Once we&rsquo;ve found a
-prefix that could only be one possible reserved word, we need to verify two
-things. The lexeme must be exactly as long as the keyword. If the first letter
-is &ldquo;s&rdquo;, the lexeme could still be &ldquo;sup&rdquo; or &ldquo;superb&rdquo;. And the remaining
-characters must match exactly<span class="em">&mdash;</span>&ldquo;supar&rdquo; isn&rsquo;t good enough.</p>
-<p>If we do have the right number of characters, and they&rsquo;re the ones we want, then
-it&rsquo;s a keyword, and we return the associated token type. Otherwise, it must be a
-normal identifier.</p>
-<p>We have a couple of keywords where the tree branches again after the first
-letter. If the lexeme starts with &ldquo;f&rdquo;, it could be <code>false</code>, <code>for</code>, or <code>fun</code>. So
-we add another switch for the branches coming off the &ldquo;f&rdquo; node.</p>
+<p>我们用它来处理树中所有<strong>没有分支</strong>的路径。一旦我们找到了一个<strong>只能</strong>通往一个保留字的前缀，我们需要核验两件事。词素的长度<strong>必须</strong>恰好等于该关键字。若首字母是 &ldquo;s&rdquo;，那么词素<strong>仍</strong>可能是 &ldquo;sup&rdquo; 或 &ldquo;superb&rdquo;。并且余下的字符<strong>必须</strong>严格匹配——&ldquo;supar&rdquo; 是不行的。</p>
+<p>若我们的长度恰好吻合，且字符如我们所愿，那么它<strong>就是</strong>一个关键字，于是我们返回与之对应的 token 类型。否则，它<strong>一定</strong>是一个普通的标识符。</p>
+<p>我们有几条关键字，在第一个字符之后，那棵树<strong>又</strong>分叉了。若词素以 &ldquo;f&rdquo; 开头，它既可能是 <code>false</code>、<code>for</code>、也可能是 <code>fun</code>。因此我们为从 &ldquo;f&rdquo; 节点引出的那些分支再添一个 switch。</p>
 <div class="codehilite"><pre class="insert-before">
     case 'e': return checkKeyword(1, 3, &quot;lse&quot;, TOKEN_ELSE);
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -1262,9 +996,7 @@ in <em>identifierType</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>identifierType</em>()</div>
 
-<p>Before we switch, we need to check that there even <em>is</em> a second letter. &ldquo;f&rdquo; by
-itself is a valid identifier too, after all. The other letter that branches is
-&ldquo;t&rdquo;.</p>
+<p>在切换之前，我们需要先检查一下<strong>到底</strong>有没有第二个字母。孤零零的 &ldquo;f&rdquo; <strong>本身</strong>亦是一个合法的标识符。另一处分叉的字母是 &ldquo;t&rdquo;。</p>
 <div class="codehilite"><pre class="insert-before">
     case 's': return checkKeyword(1, 4, &quot;uper&quot;, TOKEN_SUPER);
 </pre><div class="source-file"><em>scanner.c</em><br>
@@ -1283,71 +1015,46 @@ in <em>identifierType</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>identifierType</em>()</div>
 
-<p>That&rsquo;s it. A couple of nested <code>switch</code> statements. Not only is this code <span
-name="short">short</span>, but it&rsquo;s very, very fast. It does the minimum amount
-of work required to detect a keyword, and bails out as soon as it can tell the
-identifier will not be a reserved one.</p>
-<p>And with that, our scanner is complete.</p>
+<p>便是如此。几段嵌套的 <code>switch</code> 语句而已。这段代码<strong>不仅</strong>简短，而且<strong>非常</strong>、<strong>非常</strong>快。它做完了识别一个关键字所需的<strong>最低限度</strong>的工作，并<strong>在</strong>它<strong>能</strong>判断标识符<strong>并非</strong>保留字的第一时间<strong>就</strong>抽身。</p>
+<p>至此，我们的扫描器便<strong>已</strong>完整。</p>
 <aside name="short">
-<p>We sometimes fall into the trap of thinking that performance comes from
-complicated data structures, layers of caching, and other fancy optimizations.
-But, many times, all that&rsquo;s required is to do less work, and I often find that
-writing the simplest code I can is sufficient to accomplish that.</p>
+<p>我们偶尔会陷入一种思维陷阱，以为性能来自于复杂的数据结构、一层又一层的缓存，以及种种酷炫的优化。但很多时候，所需的<strong>不过</strong>是少做一点工作；而我常常发现，<strong>就</strong>写我能想到的最简代码，便足以达成此目标。</p>
 </aside>
 <div class="challenges">
-<h2><a href="#challenges" name="challenges">Challenges</a></h2>
+<h2><a href="#挑战" name="挑战"><small>16&#8202;.&#8202;5</small>挑战</a></h2>
 <ol>
 <li>
-<p>Many newer languages support <a href="https://en.wikipedia.org/wiki/String_interpolation"><strong>string interpolation</strong></a>. Inside a
-string literal, you have some sort of special delimiters<span class="em">&mdash;</span>most commonly
-<code>${</code> at the beginning and <code>}</code> at the end. Between those delimiters, any
-expression can appear. When the string literal is executed, the inner
-expression is evaluated, converted to a string, and then merged with the
-surrounding string literal.</p>
-<p>For example, if Lox supported string interpolation, then this<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span></p>
+<p>许多较新的语言都支持 <a href="https://en.wikipedia.org/wiki/String_interpolation"><strong>字符串内插</strong></a>。在字符串字面量内部，会有某种特殊的分隔符——最常见的是开头 <code>${</code> 与结尾 <code>}</code>。在那些分隔符之间，可以出现任意表达式。当字符串字面量被执行时，里头的表达式被求值，转换为字符串，再与周围的字符串字面量合并。</p>
+<p>举例而言，若 Lox 支持字符串内插，那么下面这段……</p>
 <div class="codehilite"><pre>
 <span class="k">var</span> <span class="i">drink</span> = <span class="s">&quot;Tea&quot;</span>;
 <span class="k">var</span> <span class="i">steep</span> = <span class="n">4</span>;
 <span class="k">var</span> <span class="i">cool</span> = <span class="n">2</span>;
 <span class="k">print</span> <span class="s">&quot;${drink} will be ready in ${steep + cool} minutes.&quot;</span>;
 </pre></div>
-<p><span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span>would print:</p>
+<p>……会打印：</p>
 <div class="codehilite"><pre>Tea will be ready in 6 minutes.
 </pre></div>
-<p>What token types would you define to implement a scanner for string
-interpolation? What sequence of tokens would you emit for the above string
-literal?</p>
-<p>What tokens would you emit for:</p>
+<p>你会定义哪些 token 类型来实现一个字符串内插的扫描器？上面那段字符串字面量又会<strong>按怎样的</strong>顺序产出一串 token？</p>
+<p>对于下面这段，你<strong>又</strong>会产出哪些 token？</p>
 <div class="codehilite"><pre>&quot;Nested ${&quot;interpolation?! Are you ${&quot;mad?!&quot;}&quot;}&quot;
 </pre></div>
-<p>Consider looking at other language implementations that support
-interpolation to see how they handle it.</p>
+<p>可以参考其它支持内插的语言实现，看看它们如何处理。</p>
 </li>
 <li>
-<p>Several languages use angle brackets for generics and also have a <code>&gt;&gt;</code> right
-shift operator. This led to a classic problem in early versions of C++:</p>
+<p>不少语言使用尖括号来表示泛型，同时又有一个 <code>&gt;&gt;</code> 右移运算符。这在早期版本的 C++ 中曾引发过一个经典的问题：</p>
 <div class="codehilite"><pre>
 <span class="t">vector</span>&lt;<span class="t">vector</span>&lt;<span class="t">string</span>&gt;&gt; <span class="i">nestedVectors</span>;
 </pre></div>
-<p>This would produce a compile error because the <code>&gt;&gt;</code> was lexed to a single
-right shift token, not two <code>&gt;</code> tokens. Users were forced to avoid this by
-putting a space between the closing angle brackets.</p>
-<p>Later versions of C++ are smarter and can handle the above code. Java and C#
-never had the problem. How do those languages specify and implement this?</p>
+<p>这<strong>会</strong>产生一个编译错误，因为 <code>&gt;&gt;</code> 被词法分析成了<strong>一</strong>个右移 token，而非两个 <code>&gt;</code> token。用户被迫在两个右尖括号之间加一个空格来绕过这一问题。</p>
+<p>后续版本的 C++ 更为聪明，能够处理上述代码。Java 与 C# <strong>从未</strong>遇到过这个问题。这些语言<strong>是</strong>如何规约与实现这一切的？</p>
 </li>
 <li>
-<p>Many languages, especially later in their evolution, define &ldquo;contextual
-keywords&rdquo;. These are identifiers that act like reserved words in some
-contexts but can be normal user-defined identifiers in others.</p>
-<p>For example, <code>await</code> is a keyword inside an <code>async</code> method in C#, but
-in other methods, you can use <code>await</code> as your own identifier.</p>
-<p>Name a few contextual keywords from other languages, and the context where
-they are meaningful. What are the pros and cons of having contextual
-keywords? How would you implement them in your language&rsquo;s front end if you
-needed to?</p>
+<p>许多语言——尤其是<strong>在</strong>演进<strong>后</strong>期的语言——定义了&ldquo;上下文关键字&ldquo;。这类标识符在<strong>某些</strong>语境中是关键字，但在<strong>其它</strong>语境中可以是普通的用户自定义标识符。</p>
+<p>举例而言，<code>await</code> 在 C# 的 <code>async</code> 方法<strong>内</strong>是个关键字，但在其它方法中，你<strong>可以</strong>把 `await**当作自己的标识符。</p>
+<p>请列举几个其它语言中的上下文关键字，以及它们所对应的语境。上下文关键字的利弊各是什么？若你的语言前端<strong>需要</strong>上下文关键字，你会如何实现它们？</p>
 </li>
 </ol>
-</div>
 
 <footer>
 <a href="compiling-expressions.html" class="next">

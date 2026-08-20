@@ -1,31 +1,19 @@
-> Once in a while you find yourself in an odd situation. You get into it by
-> degrees and in the most natural way but, when you are right in the midst of
-> it, you are suddenly astonished and ask yourself how in the world it all came
-> about.
->
-> <cite>Thor Heyerdahl, <em>Kon-Tiki</em></cite>
+# 解析与绑定
 
-Oh, no! Our language implementation is taking on water! Way back when we [added
-variables and blocks][statements], we had scoping nice and tight. But when we
-[later added closures][functions], a hole opened in our formerly waterproof
-interpreter. Most real programs are unlikely to slip through this hole, but as
-language implementers, we take a sacred vow to care about correctness even in
-the deepest, dampest corners of the semantics.
+> 偶尔你会发现自己陷入某种奇特的境地。你是一步一步、以最自然的方式走进去的，但当你深陷其中之时，你却会突然惊讶不已，扪心自问这一切究竟是怎么发生的。
+>
+> <cite>托尔·海尔达尔，<em>《孤筏重洋》</em></cite>
+
+哦，糟了！我们的语言实现开始渗水了！早在我们[加入变量与块][statements]那会儿，我们曾把作用域打理得严严实实。然而，当我们[后来加入闭包][functions]之后，一道裂缝便在这台曾经滴水不漏的解释器身上悄然撕开。绝大多数真实程序大概不会从这道裂缝中漏出，但我们作为语言实现者，却曾郑重立下誓言——要去在意那些语义最深、最为幽暗的角落里的正确性。
 
 [statements]: statements-and-state.html
 [functions]: functions.html
 
-We will spend this entire chapter exploring that leak, and then carefully
-patching it up. In the process, we will gain a more rigorous understanding of
-lexical scoping as used by Lox and other languages in the C tradition. We'll
-also get a chance to learn about *semantic analysis* -- a powerful technique for
-extracting meaning from the user's source code without having to run it.
+我们将花整整一章来探寻这道裂缝，然后小心翼翼地将其修补。在这一过程中，我们会对 Lox 及其它沿袭 C 传统的语言所采用的词法作用域获得一份更为严谨的理解。我们也将有机会一窥**语义分析**——这是一种强大的技术，它允许我们在**不必**运行代码的前提下，从用户的源代码中提炼出其含义。
 
-## Static Scope
+## 静态作用域
 
-A quick refresher: Lox, like most modern languages, uses *lexical* scoping. This
-means that you can figure out which declaration a variable name refers to just
-by reading the text of the program. For example:
+简单回顾一下：Lox 与大多数现代语言一样，使用的是**词法**作用域。这意味着，仅凭阅读程序的文本，你便能弄清一个变量名究竟指向哪一个声明。举例而言：
 
 ```lox
 var a = "outer";
@@ -35,38 +23,25 @@ var a = "outer";
 }
 ```
 
-Here, we know that the `a` being printed is the variable declared on the
-previous line, and not the global one. Running the program doesn't -- *can't* --
-affect this. The scope rules are part of the *static* semantics of the language,
-which is why they're also called *static scope*.
+此处，我们知道那个被打印的 `a` 指的是上一行所声明的那个变量，而非全局的那个。运行程序**无法** ——也不可能——改变这一点。作用域规则乃是一门语言**静态**语义的一部分，因此它们又被称作**静态作用域**。
 
-I haven't spelled out those scope rules, but now is the time for <span
-name="precise">precision</span>:
+我尚未将那些作用域规则一一明示，但眼下便是追求<span name="precise">精确</span>的时刻：
 
 <aside name="precise">
 
-This is still nowhere near as precise as a real language specification. Those
-docs must be so explicit that even a Martian or an outright malicious programmer
-would be forced to implement the correct semantics provided they followed the
-letter of the spec.
+这与一份真正语言规范的精确度相比，仍远远不及。那些规范文档必须做到万无一失——即便是一位火星人，或一位彻头彻尾心怀恶意的程序员，只要他严格遵循那份规范的字面意思来实施，便不得不实现出正确的语义。
 
-That exactitude is important when a language may be implemented by competing
-companies who want their product to be incompatible with the others to lock
-customers onto their platform. For this book, we can thankfully ignore those
-kinds of shady shenanigans.
+当一门语言可能由相互竞争的公司各自实现时，这种精确度便显得尤为重要——它们都想让自己的产品与别人互不兼容，从而将用户锁定在自己的平台上。对于本书而言，我们大可谢天谢地，将这些蝇营狗苟的鬼蜮伎俩统统抛诸脑后。
 
 </aside>
 
-**A variable usage refers to the preceding declaration with the same name in the
-innermost scope that encloses the expression where the variable is used.**
+**一处变量用法，应指向**最内层的**那个包裹着该变量被使用之处的、且在文本上先于其出现的同名声明。**
 
-There's a lot to unpack in that:
+这一句话里大有文章可做：
 
-*   I say "variable usage" instead of "variable expression" to cover both
-    variable expressions and assignments. Likewise with "expression where the
-    variable is used".
+*   我使用"变量用法"而非"变量表达式"，是为了同时涵盖变量表达式与赋值表达式。"变量被使用之处所在的表达式"亦同理。
 
-*   "Preceding" means appearing before *in the program text*.
+*   "先于" 指的是在**程序文本**中出现得**更早**。
 
     ```lox
     var a = "outer";
@@ -76,19 +51,11 @@ There's a lot to unpack in that:
     }
     ```
 
-    Here, the `a` being printed is the outer one since it appears <span
-    name="hoisting">before</span> the `print` statement that uses it. In most
-    cases, in straight line code, the declaration preceding in *text* will also
-    precede the usage in *time*. But that's not always true. As we'll see,
-    functions may defer a chunk of code such that its *dynamic temporal*
-    execution no longer mirrors the *static textual* ordering.
+    此处，那个被打印的 `a` 是外层的那一个，因为它出现在那条使用它的 `print` 语句**之前**。在大多数情况下，沿着笔直的代码往下走，文本上**先于**的声明，在时间上也**先于**这一用法。但并非总是如此。稍后我们便会看到，函数可以将一段代码**延迟**执行，使得其**动态的时间**上的执行顺序不再镜像**静态的文本**上的排列。
 
     <aside name="hoisting">
 
-    In JavaScript, variables declared using `var` are implicitly "hoisted" to
-    the beginning of the block. Any use of that name in the block will refer to
-    that variable, even if the use appears before the declaration. When you
-    write this in JavaScript:
+    在 JavaScript 中，使用 `var` 声明的变量会被隐式地"提升"到所在块的开头。该名字在块中的任何一次使用，即使出现在声明之前，也都会指向那条变量。当你写下 JavaScript 这样的代码：
 
     ```js
     {
@@ -97,24 +64,21 @@ There's a lot to unpack in that:
     }
     ```
 
-    It behaves like:
+    其行为等价于：
 
     ```js
     {
-      var a; // Hoist.
+      var a; // 提升。
       console.log(a);
       a = "value";
     }
     ```
 
-    That means that in some cases you can read a variable before its initializer
-    has run -- an annoying source of bugs. The alternate `let` syntax for
-    declaring variables was added later to address this problem.
+    这意味着，在某些情况下，你可以在初始化器尚未运行之前便读取一个变量——这真是一处令人头疼的 bug 来源。后来引入的 `let` 声明语法正是为了解决这一问题。
 
     </aside>
 
-*   "Innermost" is there because of our good friend shadowing. There may be more
-    than one variable with the given name in enclosing scopes, as in:
+*   "最内层的" 这一限定是为了照顾我们那位亦敌亦友的"遮蔽"。在多个外层作用域中，可能不止一个与该名字同名的变量：
 
     ```lox
     var a = "outer";
@@ -124,12 +88,9 @@ There's a lot to unpack in that:
     }
     ```
 
-    Our rule disambiguates this case by saying the innermost scope wins.
+    我们的规则通过"最内层胜出"来消解这种歧义。
 
-Since this rule makes no mention of any runtime behavior, it implies that a
-variable expression always refers to the same declaration through the entire
-execution of the program. Our interpreter so far *mostly* implements the rule
-correctly. But when we added closures, an error snuck in.
+由于这条规则压根没有提及任何运行时行为，它便暗示了：在一个程序执行的整个过程中，一个变量表达式始终指向同一条声明。我们的解释器到目前为止**大体上**正确地实现了这一规则。但当我们加入闭包之后，一个错误便偷偷溜了进来。
 
 ```lox
 var a = "global";
@@ -144,98 +105,60 @@ var a = "global";
 }
 ```
 
-<span name="tricky">Before</span> you type this in and run it, decide what you
-think it *should* print.
+<span name="tricky">在</span>你敲下它并运行之前，先想好它**应该**打印什么。
 
 <aside name="tricky">
 
-I know, it's a totally pathological, contrived program. It's just *weird*. No
-reasonable person would ever write code like this. Alas, more of your life than
-you'd expect will be spent dealing with bizarro snippets of code like this if
-you stay in the programming language game for long.
+我知道，这是一段毫无道理、刻意编造的程序。它单纯**古怪**。任何一位心智正常的人都不会写出这样的代码。唉，若你在程序设计语言这一行当里待得够久，你便会发现——你生命中的相当一部分时间，竟是用来与这样诡异至极的代码片段打交道的。
 
 </aside>
 
-OK... got it? If you're familiar with closures in other languages, you'll expect
-it to print "global" twice. The first call to `showA()` should definitely print
-"global" since we haven't even reached the declaration of the inner `a` yet. And
-by our rule that a variable expression always resolves to the same variable,
-that implies the second call to `showA()` should print the same thing.
+好了……想好了吗？若你熟悉其它语言中的闭包，你会预期它连续打印两次 "global"。第一次调用 `showA()` 显然应该打印 "global"，因为我们彼时甚至还没遇到内层 `a` 的声明。再根据我们那条"变量表达式始终解析到同一变量"的规则，这意味着第二次调用 `showA()` 也应当打印同样的东西。
 
-Alas, it prints:
+然而，它打印的是：
 
 ```text
 global
 block
 ```
 
-Let me stress that this program never reassigns any variable and contains only a
-single `print` statement. Yet, somehow, that `print` statement for a
-never-assigned variable prints two different values at different points in time.
-We definitely broke something somewhere.
+请允许我强调一下：这段程序从未对任何变量进行重新赋值，整个程序中也只有一条 `print` 语句。然而，那条针对一个从未被赋值的变量所进行的 `print`，竟在不同的时刻打印出了两个不同的值。我们肯定在某个地方搞砸了什么。
 
-### Scopes and mutable environments
+### 作用域与可变环境
 
-In our interpreter, environments are the dynamic manifestation of static scopes.
-The two mostly stay in sync with each other -- we create a new environment when
-we enter a new scope, and discard it when we leave the scope. There is one other
-operation we perform on environments: binding a variable in one. This is where
-our bug lies.
+在我们的解释器中，环境乃是静态作用域在动态层面的具象化呈现。两者大多彼此保持同步——我们进入新的作用域时创建一份新的环境，离开作用域时则丢弃之。我们对环境还有另一项操作：绑定一个变量。bug 便藏匿于此。
 
-Let's walk through that problematic example and see what the environments look
-like at each step. First, we declare `a` in the global scope.
+让我们沿着那道反例一步步走一遍，看看在每一步中环境都长什么样。首先，我们在全局作用域中声明 `a`。
 
-<img src="image/resolving-and-binding/environment-1.png" alt="The global environment with 'a' defined in it." />
+<img src="image/resolving-and-binding/environment-1.png" alt="全局环境，其中定义了 'a'。" />
 
-That gives us a single environment with a single variable in it. Then we enter
-the block and execute the declaration of `showA()`.
+这便为我们带来了一份仅含单一变量的环境。随后我们进入那个块，并执行对 `showA()` 的声明。
 
-<img src="image/resolving-and-binding/environment-2.png" alt="A block environment linking to the global one." />
+<img src="image/resolving-and-binding/environment-2.png" alt="一份指向全局环境的块环境。" />
 
-We get a new environment for the block. In that, we declare one name, `showA`,
-which is bound to the LoxFunction object we create to represent the function.
-That object has a `closure` field that captures the environment where the
-function was declared, so it has a reference back to the environment for the
-block.
+我们为该块获得了一份新的环境。其中，我们声明了一个名字 `showA`，它被绑定到我们为表示该函数所创建的那个 LoxFunction 对象之上。该对象带有一个 `closure` 字段，用以捕获该函数被声明时所处的环境，因此它保留着一份回指该块环境的引用。
 
-Now we call `showA()`.
+现在我们调用 `showA()`。
 
-<img src="image/resolving-and-binding/environment-3.png" alt="An empty environment for showA()'s body linking to the previous two. 'a' is resolved in the global environment." />
+<img src="image/resolving-and-binding/environment-3.png" alt="为 showA() 的函数体所创建的一份空环境，链接着前面两份环境。'a' 在全局环境中被解析。" />
 
-The interpreter dynamically creates a new environment for the function body of
-`showA()`. It's empty since that function doesn't declare any variables. The
-parent of that environment is the function's closure -- the outer block
-environment.
+解释器动态地为 `showA()` 的函数体创建了一份新的环境。由于该函数并未声明任何变量，这份环境是空的。那份环境的父环境，乃是该函数的闭包——也就是外层那块环境。
 
-Inside the body of `showA()`, we print the value of `a`. The interpreter looks
-up this value by walking the chain of environments. It gets all the way
-to the global environment before finding it there and printing `"global"`.
-Great.
+在 `showA()` 的函数体内，我们打印 `a` 的值。解释器通过沿着环境链向上遍历来查找这个值。它一路走到全局环境，才在那里找到它，并打印出 "global"。一切很美好。
 
-Next, we declare the second `a`, this time inside the block.
+接着，我们声明第二个 `a`，这一次在块的内部。
 
-<img src="image/resolving-and-binding/environment-4.png" alt="The block environment has both 'a' and 'showA' now." />
+<img src="image/resolving-and-binding/environment-4.png" alt="那块环境此刻同时包含 'a' 与 'showA'。" />
 
-It's in the same block -- the same scope -- as `showA()`, so it goes into the
-same environment, which is also the same environment `showA()`'s closure refers
-to. This is where it gets interesting. We call `showA()` again.
+它与 `showA()` 位于同一块——同一作用域——因此它被放入同一份环境，而那份环境也正是 `showA()` 的闭包所指向的环境。事情变得有趣起来。我们再次调用 `showA()`。
 
-<img src="image/resolving-and-binding/environment-5.png" alt="An empty environment for showA()'s body linking to the previous two. 'a' is resolved in the block environment." />
+<img src="image/resolving-and-binding/environment-5.png" alt="为 showA() 的函数体再次创建的一份空环境，链接着前面两份环境。'a' 在块环境中被解析。" />
 
-We create a new empty environment for the body of `showA()` again, wire it up to
-that closure, and run the body. When the interpreter walks the chain of
-environments to find `a`, it now discovers the *new* `a` in the block
-environment. Boo.
+我们为 `showA()` 的函数体再次创建了一份新的、空空如也的环境，将其连入那份闭包，然后执行函数体。当解释器沿着环境链查找 `a` 时，它**这一次**在那块环境中**发现了那个新的 `a`**。糟了。
 
-I chose to implement environments in a way that I hoped would agree with your
-informal intuition around scopes. We tend to consider all of the code within a
-block as being within the same scope, so our interpreter uses a single
-environment to represent that. Each environment is a mutable hash table. When a
-new local variable is declared, it gets added to the existing environment for
-that scope.
+我选择按一种我希望与你关于作用域的朴素直觉相吻合的方式来实现环境。我们倾向于将一个块内的所有代码视作处于同一作用域，因此我们的解释器使用一份单一的环境来表征这一点。每一份环境都是一个可变的哈希表。当一条新的局部变量被声明时，它便被添加至代表该作用域的那份既有环境之中。
 
-That intuition, like many in life, isn't quite right. A block is not necessarily
-all the same scope. Consider:
+这一直觉——恰如生活中的许多直觉——并不完全正确。一个块**未必**始终是同一个作用域。想想看：
 
 ```lox
 {
@@ -246,242 +169,139 @@ all the same scope. Consider:
 }
 ```
 
-At the first marked line, only `a` is in scope. At the second line, both `a` and
-`b` are. If you define a "scope" to be a set of declarations, then those are
-clearly not the same scope -- they don't contain the same declarations. It's
-like each `var` statement <span name="split">splits</span> the block into two
-separate scopes, the scope before the variable is declared and the one after,
-which includes the new variable.
+在第一处标记行上，作用域中只有 `a`。在第二处标记行上，`a` 与 `b` 皆在作用域之内。若你将"作用域"定义为"一组声明的集合"，那么这两处显然**不是**同一个作用域——它们所包含的声明并不相同。情况就好像是每一条 `var` 语句都会将该块<span name="split">一分为二</span>——该变量声明之前的那一部分作用域，以及包含该新变量的那一份后续作用域。
 
 <aside name="split">
 
-Some languages make this split explicit. In Scheme and ML, when you declare a
-local variable using `let`, you also delineate the subsequent code where the new
-variable is in scope. There is no implicit "rest of the block".
+某些语言使这种"分割"变得显式。在 Scheme 与 ML 中，当你使用 `let` 声明一个局部变量时，你同时也划定了那段后续代码——在该范围内该变量位于作用域之内——的边界。并不存在隐式的"块的余下部分"。
 
 </aside>
 
-But in our implementation, environments do act like the entire block is one
-scope, just a scope that changes over time. Closures do not like that. When a
-function is declared, it captures a reference to the current environment. The
-function *should* capture a frozen snapshot of the environment *as it existed at
-the moment the function was declared*. But instead, in the Java code, it has a
-reference to the actual mutable environment object. When a variable is later
-declared in the scope that environment corresponds to, the closure sees the new
-variable, even though the declaration does *not* precede the function.
+但在我们的实现中，环境**倒是**真的像是在说"整个块就是一个作用域"，只不过这个作用域会随时间而变化。闭包可不待见这一点。当一个函数被声明时，它会捕获对当前环境的一份引用。函数**应当**捕获的是**该函数被声明的那一刻**环境的一份冻结快照。但事实上，在 Java 代码中，它持有的乃是那个真实可变的环境对象的引用。当后续在该环境所对应的作用域中声明变量时，闭包便会看到那个新变量，即便那条声明**其实**并不先于该函数。
 
-### Persistent environments
+### 持久化的环境
 
-There is a style of programming that uses what are called **persistent data
-structures**. Unlike the squishy data structures you're familiar with in
-imperative programming, a persistent data structure can never be directly
-modified. Instead, any "modification" to an existing structure produces a <span
-name="copy">brand</span> new object that contains all of the original data and
-the new modification. The original is left unchanged.
+有一种编程风格所使用的是所谓的**持久化数据结构**。与你所熟悉的那种命令式编程中松松垮垮、随用随改的数据结构不同，持久化数据结构**永远不能**被直接修改。取而代之的是，对既有结构的任何"修改"都会产出一份<span name="copy">崭新的</span>对象，其中囊括了原有数据**以及**那项新的修改。原始的那份则原封不动。
 
 <aside name="copy">
 
-This sounds like it might waste tons of memory and time copying the structure
-for each operation. In practice, persistent data structures share most of their
-data between the different "copies".
+你或许会觉得这听起来像是会对内存与时间造成巨大浪费——每执行一次操作都要拷贝整个结构。实则不然，持久化数据结构会在不同的"拷贝"之间共享绝大部分数据。
 
 </aside>
 
-If we were to apply that technique to Environment, then every time you declared
-a variable it would return a *new* environment that contained all of the
-previously declared variables along with the one new name. Declaring a variable
-would do the implicit "split" where you have an environment before the variable
-is declared and one after:
+倘若我们把这项技术应用到 Environment 之中，那么每次你声明一个变量时，它都会返回一份**新的**环境，其中既包含此前声明的所有变量，又囊括那个新名字。声明一个变量便会完成那种隐式的"分割"，从而拥有一份"该变量声明之前"的环境与一份"之后"的环境：
 
-<img src="image/resolving-and-binding/split.png" alt="Separate environments before and after the variable is declared." />
+<img src="image/resolving-and-binding/split.png" alt="该变量声明之前与之后的两份相互独立的环境。" />
 
-A closure retains a reference to the Environment instance in play when the
-function was declared. Since any later declarations in that block would produce
-new Environment objects, the closure wouldn't see the new variables and our bug
-would be fixed.
+闭包保留着一个对**函数被声明之时**那份 Environment 实例的引用。由于此后在该块中的任何声明都会产出全新的 Environment 对象，闭包便无从看到那些新的变量，我们这道 bug 也就随之烟消云散。
 
-This is a legit way to solve the problem, and it's the classic way to implement
-environments in Scheme interpreters. We could do that for Lox, but it would mean
-going back and changing a pile of existing code.
+这是一种切实可行的解决之道，也是 Scheme 解释器中实现环境的经典手法。我们本可以为 Lox 这么做，但那意味着要回头去修改一大堆既有代码。
 
-I won't drag you through that. We'll keep the way we represent environments the
-same. Instead of making the data more statically structured, we'll bake the
-static resolution into the access *operation* itself.
+我不打算那样折腾你。我们将保持表示环境的方式不变。取而代之，我们不去让数据本身变得更具静态结构，而是把静态解析的工作烘焙进**访问** **操作**本身。
 
-## Semantic Analysis
+## 语义分析
 
-Our interpreter **resolves** a variable -- tracks down which declaration it
-refers to -- each and every time the variable expression is evaluated. If that
-variable is swaddled inside a loop that runs a thousand times, that variable
-gets re-resolved a thousand times.
+我们的解释器每一次求值一个变量表达式时，都要**解析**那个变量——追踪它究竟指向哪一条声明。倘若那个变量被裹挟在一个跑上一千遍的循环之中，那么这个变量便会被反复解析一千遍。
 
-We know static scope means that a variable usage always resolves to the same
-declaration, which can be determined just by looking at the text. Given that,
-why are we doing it dynamically every time? Doing so doesn't just open the hole
-that leads to our annoying bug, it's also needlessly slow.
+我们知道，静态作用域意味着变量的用法始终解析到同一条声明，这只需通过查阅文本即可确定。既然如此，我们又为何要在每一次求值时都**动态地**去解析它呢？这样做不仅打开了我们那道恼人的 bug 之门，而且还毫无必要地拖累性能。
 
-A better solution is to resolve each variable use *once*. Write a chunk of code
-that inspects the user's program, finds every variable mentioned, and figures
-out which declaration each refers to. This process is an example of a **semantic
-analysis**. Where a parser tells only if a program is grammatically correct (a
-*syntactic* analysis), semantic analysis goes farther and starts to figure out
-what pieces of the program actually mean. In this case, our analysis will
-resolve variable bindings. We'll know not just that an expression *is* a
-variable, but *which* variable it is.
+更优的方案是**对每一种变量用法只解析一次**。写一段代码去审视用户的程序，找出每一个被提及的变量，并弄清它究竟指向哪一条声明。这一过程便是**语义分析**的一个实例。当一个语法分析器只能判定一段程序在语法上是否正确（一种**句法**分析）之时，语义分析则更进一步，开始去琢磨程序的各个部分**究竟**意味着什么。在本例中，我们的分析将负责解析变量的绑定。我们不仅会知道一个表达式**是**一个变量，还会知道它**是**哪一个变量。
 
-There are a lot of ways we could store the binding between a variable and its
-declaration. When we get to the C interpreter for Lox, we'll have a *much* more
-efficient way of storing and accessing local variables. But for jlox, I want to
-minimize the collateral damage we inflict on our existing codebase. I'd hate to
-throw out a bunch of mostly fine code.
+我们可以借助许多不同的手段来存储变量与其声明之间的绑定。到了 C 语言版的 Lox 解释器时，我们会有一种**远为**高效的方式来存储与访问局部变量。但就 jlox 而言，我希望把对既有代码库的"附带伤害"降到最低。我不想丢掉一大堆还算不错的代码。
 
-Instead, we'll store the resolution in a way that makes the most out of our
-existing Environment class. Recall how the accesses of `a` are interpreted in
-the problematic example.
+取而代之，我们以一种最能借力于既有 Environment 类的方式来存储解析结果。回想一下在那道反例中，`a` 是如何被解释的。
 
-<img src="image/resolving-and-binding/environment-3.png" alt="An empty environment for showA()'s body linking to the previous two. 'a' is resolved in the global environment." />
+<img src="image/resolving-and-binding/environment-3.png" alt="为 showA() 的函数体所创建的一份空环境，链接着前面两份环境。'a' 在全局环境中被解析。" />
 
-In the first (correct) evaluation, we look at three environments in the chain
-before finding the global declaration of `a`. Then, when the inner `a` is later
-declared in a block scope, it shadows the global one.
+在第一次（正确的）求值中，我们查看了三份环境，才在全局声明中找到了 `a`。随后，当内层的 `a` 在块作用域中被声明时，它便遮蔽了全局的那一个。
 
-<img src="image/resolving-and-binding/environment-5.png" alt="An empty environment for showA()'s body linking to the previous two. 'a' is resolved in the block environment." />
+<img src="image/resolving-and-binding/environment-5.png" alt="为 showA() 的函数体再次创建的一份空环境，链接着前面两份环境。'a' 在块环境中被解析。" />
 
-The next lookup walks the chain, finds `a` in the *second* environment and
-stops there. Each environment corresponds to a single lexical scope where
-variables are declared. If we could ensure a variable lookup always walked the
-*same* number of links in the environment chain, that would ensure that it
-found the same variable in the same scope every time.
+下一次查找则沿着环境链前行，在**第二份**环境中找到 `a` 并就此止步。每一份环境都对应着一个单一的词法作用域——变量在其中被声明。倘若我们能够确保一次变量查找**总是**沿着环境链上的同一段距离——走过相同数量的环境——便能确保它每一次都找到同一作用域中的同一变量。
 
-To "resolve" a variable usage, we only need to calculate how many "hops" away
-the declared variable will be in the environment chain. The interesting question
-is *when* to do this calculation -- or, put differently, where in our
-interpreter's implementation do we stuff the code for it?
+要"解析"一处变量用法，我们**只需要**计算该被声明的变量在环境链上会出现在多少"跳"之后。真正有趣的问题是**何时**去进行这一计算——亦即，我们应当把它安插在解释器实现中的哪一处？
 
-Since we're calculating a static property based on the structure of the source
-code, the obvious answer is in the parser. That is the traditional home, and is
-where we'll put it later in clox. It would work here too, but I want an excuse to
-show you another technique. We'll write our resolver as a separate pass.
+既然我们是在根据源代码的结构来计算一项静态属性，那么显而易见的答案便是放在语法分析器中。这是传统的归宿，也是我们日后在 clox 中安放它的位置。在此处也未尝不可，但我想借机向你展示另一种技术。我们将把解析器写为独立的一趟 pass。
 
-### A variable resolution pass
+### 一趟变量解析 pass
 
-After the parser produces the syntax tree, but before the interpreter starts
-executing it, we'll do a single walk over the tree to resolve all of the
-variables it contains. Additional passes between parsing and execution are
-common. If Lox had static types, we could slide a type checker in there.
-Optimizations are often implemented in separate passes like this too. Basically,
-any work that doesn't rely on state that's only available at runtime can be done
-in this way.
+在语法分析器产出语法树之后、解释器开始执行它之前，我们将对整棵树进行一次遍历，以解析它所包含的全部变量。在解析与执行之间安排额外的 pass 是很常见的做法。若 Lox 拥有静态类型，我本可以在那里塞入一个类型检查器。优化操作也常常以这样的独立 pass 来实现。基本上，任何**不依赖**那些只有运行时才有的状态的工作，都可以以这种方式完成。
 
-Our variable resolution pass works like a sort of mini-interpreter. It walks the
-tree, visiting each node, but a static analysis is different from a dynamic
-execution:
+我们的变量解析 pass 有点像一座迷你解释器。它遍历这棵树，访问每一个节点，但静态分析与动态执行有所不同：
 
-*   **There are no side effects.** When the static analysis visits a print
-    statement, it doesn't actually print anything. Calls to native functions or
-    other operations that reach out to the outside world are stubbed out and
-    have no effect.
+*   **不存在副作用。**当静态分析访问一条 print 语句时，它并不会真的打印任何东西。对原生函数的调用，以及其它任何会触及外部世界的操作，都被打了桩，并不会产生任何效果。
 
-*   **There is no control flow.** Loops are visited only <span
-    name="fix">once</span>. Both branches are visited in `if` statements. Logic
-    operators are not short-circuited.
+*   **不存在控制流。**循环仅被访问<span name="fix">一次</span>。`if` 语句的两个分支都会被同时访问。逻辑运算符也不会发生短路。
 
 <aside name="fix">
 
-Variable resolution touches each node once, so its performance is *O(n)* where
-*n* is the number of syntax tree nodes. More sophisticated analyses may have
-greater complexity, but most are carefully designed to be linear or not far from
-it. It's an embarrassing faux pas if your compiler gets exponentially slower as
-the user's program grows.
+变量解析会触及每个节点一次，故其性能为 _O(n)**，其中**n_ 为语法树节点的个数。更复杂的分析或许会呈现更高的复杂度，但大多数都被精心设计为线性或近似线性的。若你的编译器随着用户程序的规模增长而变得指数级地慢，那可真是一桩令人脸红的事故。
 
 </aside>
 
-## A Resolver Class
+## Resolver 类
 
-Like everything in Java, our variable resolution pass is embodied in a class.
+正如 Java 中的一切那样，我们的变量解析 pass 也有一个类作为其化身。
 
 ^code resolver
 
-Since the resolver needs to visit every node in the syntax tree, it implements
-the visitor abstraction we already have in place. Only a few kinds of nodes are
-interesting when it comes to resolving variables:
+由于解析器需要访问语法树上的每一个节点，它实现了我们已然搭建好的访问者抽象。就变量解析而言，仅有寥寥几类节点值得关注：
 
-*   A block statement introduces a new scope for the statements it contains.
+*   块语句为它所包含的语句引入一个新的作用域。
 
-*   A function declaration introduces a new scope for its body and binds its
-    parameters in that scope.
+*   函数声明为它的函数体引入一个新的作用域，并在该作用域中绑定其参数。
 
-*   A variable declaration adds a new variable to the current scope.
+*   变量声明向当前作用域添加一条新的变量。
 
-*   Variable and assignment expressions need to have their variables resolved.
+*   变量表达式与赋值表达式需要解析它们所引用的变量。
 
-The rest of the nodes don't do anything special, but we still need to implement
-visit methods for them that traverse into their subtrees. Even though a `+`
-expression doesn't *itself* have any variables to resolve, either of its
-operands might.
+剩下的节点并不会做什么特别的事，但我们仍需要为它们实现 visit 方法，以便递归地进入其子树。尽管一个 `+` 表达式**本身**并没有任何需要解析的变量，它的两个操作数**未必**没有。
 
-### Resolving blocks
+### 解析块
 
-We start with blocks since they create the local scopes where all the magic
-happens.
+我们从块开始，因为它们正是魔法发生所在的那些局部作用域的缔造者。
 
 ^code visit-block-stmt
 
-This begins a new scope, traverses into the statements inside the block, and
-then discards the scope. The fun stuff lives in those helper methods. We start
-with the simple one.
+它开启一个新的作用域，遍历块内的语句，随后丢弃该作用域。真正有趣的内容藏在那两个辅助方法里。我们先从那个简单的方法开始。
 
 ^code resolve-statements
 
-This walks a list of statements and resolves each one. It in turn calls:
+该方法遍历一份语句列表，并对每一条进行解析。它进而调用：
 
 ^code resolve-stmt
 
-While we're at it, let's add another overload that we'll need later for
-resolving an expression.
+趁着还热乎，我们再添加一个重载版本，日后我们解析表达式时还会用到它。
 
 ^code resolve-expr
 
-These methods are similar to the `evaluate()` and `execute()` methods in
-Interpreter -- they turn around and apply the Visitor pattern to the given
-syntax tree node.
+这些方法与 Interpreter 中的 `evaluate()` 与 `execute()` 方法颇为相似——它们转过身来，将访问者模式应用于给定的语法树节点。
 
-The real interesting behavior is around scopes. A new block scope is created
-like so:
+真正有趣的行为围绕着作用域展开。一个新的块作用域是这样被创建的：
 
 ^code begin-scope
 
-Lexical scopes nest in both the interpreter and the resolver. They behave like a
-stack. The interpreter implements that stack using a linked list -- the chain of
-Environment objects. In the resolver, we use an actual Java Stack.
+词法作用域在解释器与解析器中都会嵌套。它们的行为犹如一座栈。解释器使用一条链表——即 Environment 对象的链接——来实现这座栈。而在解析器中，我们使用一座货真价实的 Java Stack。
 
 ^code scopes-field (1 before, 2 after)
 
-This field keeps track of the stack of scopes currently, uh, in scope. Each
-element in the stack is a Map representing a single block scope. Keys, as in
-Environment, are variable names. The values are Booleans, for a reason I'll
-explain soon.
+这个字段负责追踪当前"位于作用域之中"的那座作用域栈。栈中的每一个元素都是一张 Map，代表着某一个块作用域。其中的键——与 Environment 中一样——便是变量名。而值则是布尔值——个中缘由，我稍后揭晓。
 
-The scope stack is only used for local block scopes. Variables declared at the
-top level in the global scope are not tracked by the resolver since they are
-more dynamic in Lox. When resolving a variable, if we can't find it in the stack
-of local scopes, we assume it must be global.
+作用域栈仅用于局部块作用域。Lox 中在顶层声明的全局变量并不由解析器所追踪，因为它们在 Lox 中更为动态。当解析一个变量时，若无法在局部作用域栈中找到它，我们便假定它必定是全局的。
 
-Since scopes are stored in an explicit stack, exiting one is straightforward.
+既然作用域被存储在一座显式的栈中，退出一个作用域便直截了当。
 
 ^code end-scope
 
-Now we can push and pop a stack of empty scopes. Let's put some things in them.
+至此，我们便可以推入并弹出一座作用域栈了。下面，让我们往里塞些东西。
 
-### Resolving variable declarations
+### 解析变量声明
 
-Resolving a variable declaration adds a new entry to the current innermost
-scope's map. That seems simple, but there's a little dance we need to do.
+解析变量声明会将一条新的条目添加至当前最内层作用域的 Map 中。表面上看去直白得很，但其中还有一处微妙的舞步需要我们来跳。
 
 ^code visit-var-stmt
 
-We split binding into two steps, declaring then defining, in order to handle
-funny edge cases like this:
+我们将绑定拆分为两步——先声明，再定义——以便处理如下这般古怪的边角情形：
 
 ```lox
 var a = "outer";
@@ -490,363 +310,232 @@ var a = "outer";
 }
 ```
 
-What happens when the initializer for a local variable refers to a variable with
-the same name as the variable being declared? We have a few options:
+当一个局部变量的初始化器所引用的是一个与正在被声明的变量同名的变量时，会发生什么？我们有几种选择：
 
-1.  **Run the initializer, then put the new variable in scope.** Here, the new
-    local `a` would be initialized with "outer", the value of the *global* one.
-    In other words, the previous declaration would desugar to:
+1.  **先运行初始化器，再将新变量纳入作用域。**此处，新建的局部 `a` 将会以**全局** `a` 的值 "outer" 来初始化。换言之，前一条声明将被脱糖为：
 
     ```lox
-    var temp = a; // Run the initializer.
-    var a;        // Declare the variable.
-    a = temp;     // Initialize it.
+    var temp = a; // 运行初始化器。
+    var a;        // 声明该变量。
+    a = temp;     // 对其进行初始化。
     ```
 
-2.  **Put the new variable in scope, then run the initializer.** This means you
-    could observe a variable before it's initialized, so we would need to figure
-    out what value it would have then. Probably `nil`. That means the new local
-    `a` would be re-initialized to its own implicitly initialized value, `nil`.
-    Now the desugaring would look like:
+2.  **先将新变量纳入作用域，再运行初始化器。**这意味着你**可能**会在变量被初始化之前便观察到它的存在——因此我们需要琢磨那时它该取何值。很可能就是 `nil`。这意味着新建的局部 `a` 将会以它自己隐式初始化的那个值 `nil` 来重新初始化。现在脱糖后的样子便是：
 
     ```lox
-    var a; // Define the variable.
-    a = a; // Run the initializer.
+    var a; // 定义该变量。
+    a = a; // 运行初始化器。
     ```
 
-3.  **Make it an error to reference a variable in its initializer.** Have the
-    interpreter fail either at compile time or runtime if an initializer
-    mentions the variable being initialized.
+3.  **令在初始化器中引用**自身**这一行为成为错误。**让解释器在编译期或运行时宣告失败——若初始化器提到了正在被初始化的那个变量。
 
-Do either of those first two options look like something a user actually
-*wants*? Shadowing is rare and often an error, so initializing a shadowing
-variable based on the value of the shadowed one seems unlikely to be deliberate.
+上述前两种方案看起来像不像是用户**真正想要**的？遮蔽本就罕见，且往往是个错误，因此基于那个被遮蔽变量的值来初始化一个遮蔽变量，似乎不太可能是用户有意为之。
 
-The second option is even less useful. The new variable will *always* have the
-value `nil`. There is never any point in mentioning it by name. You could use an
-explicit `nil` instead.
+第二种方案更是用处寥寥。新变量**永远**只会取值 `nil`。以名字提及它毫无意义——你完全可以使用一个显式的 `nil` 替代。
 
-Since the first two options are likely to mask user errors, we'll take the
-third. Further, we'll make it a compile error instead of a runtime one. That
-way, the user is alerted to the problem before any code is run.
+既然前两种方案都很可能掩盖用户的错误，我们便采用第三种。此外，我们将其作为**编译期**错误，而非运行时错误。如此一来，用户在任何代码跑起来之前便能收到提醒。
 
-In order to do that, as we visit expressions, we need to know if we're inside
-the initializer for some variable. We do that by splitting binding into two
-steps. The first is **declaring** it.
+为此，当我们访问表达式时，我们需要知道自己是否身处某个变量的初始化器之中。我们通过把绑定拆分为两步来达到此目的。第一步是**声明**它。
 
 ^code declare
 
-Declaration adds the variable to the innermost scope so that it shadows any
-outer one and so that we know the variable exists. We mark it as "not ready yet"
-by binding its name to `false` in the scope map. The value associated with a key
-in the scope map represents whether or not we have finished resolving that
-variable's initializer.
+声明将该变量添加至最内层的作用域中，从而它能够遮蔽外层的同名变量，并且我们也能知晓该变量的存在。我们通过在作用域 Map 中将其名字绑定到 `false` 来将其标记为"尚未就绪"。作用域 Map 中一个键所关联的值，所表示的是我们是否已经完成了对该变量初始化器的解析。
 
-After declaring the variable, we resolve its initializer expression in that same
-scope where the new variable now exists but is unavailable. Once the initializer
-expression is done, the variable is ready for prime time. We do that by
-**defining** it.
+在声明了该变量之后，我们会在同一份作用域中——此时新变量已然存在但尚不可用——解析其初始化器表达式。一旦初始化器表达式求值完毕，该变量便准备就绪。我们通过**定义**来实现。
 
 ^code define
 
-We set the variable's value in the scope map to `true` to mark it as fully
-initialized and available for use. It's alive! 
+我们将作用域 Map 中该变量的值置为 `true`，以将其标记为已完全初始化并可供使用。它活过来了！
 
-### Resolving variable expressions
+### 解析变量表达式
 
-Variable declarations -- and function declarations, which we'll get to -- write
-to the scope maps. Those maps are read when we resolve variable expressions.
+变量声明——以及我们即将登场的函数声明——会向作用域 Map 中写入数据。而当我们解析变量表达式时，便会去读取这些 Map。
 
 ^code visit-variable-expr
 
-First, we check to see if the variable is being accessed inside its own
-initializer. This is where the values in the scope map come into play. If the
-variable exists in the current scope but its value is `false`, that means we
-have declared it but not yet defined it. We report that error.
+首先，我们检查一下变量是否正被用于其**自身**的初始化器内部。这便是作用域 Map 中的值派上用场之处。若该变量存在于当前作用域中，但其值为 `false`，则意味着我们仅声明了它，却尚未定义它。我们会报告该错误。
 
-After that check, we actually resolve the variable itself using this helper:
+在那项检查之后，我们便实际地去解析该变量本身，所用的是如下的辅助方法：
 
 ^code resolve-local
 
-This looks, for good reason, a lot like the code in Environment for evaluating a
-variable. We start at the innermost scope and work outwards, looking in each map
-for a matching name. If we find the variable, we resolve it, passing in the
-number of scopes between the current innermost scope and the scope where the
-variable was found. So, if the variable was found in the current scope, we
-pass in 0. If it's in the immediately enclosing scope, 1. You get the idea.
+这段代码看起来——理由十足——与 Environment 中用于求值一个变量的代码颇为相似。我们从最内层的作用域起步，层层向外，对每一张 Map 进行查找，寻找一个匹配的名字。若我们找到了该变量，便去解析它，并向其中传入从当前最内层作用域至发现该变量的作用域之间的层数。因此，若该变量是在当前作用域中发现的，我们便传入 0；若它是在紧邻的外层作用域中发现的，则传入 1。依此类推。
 
-If we walk through all of the block scopes and never find the variable, we leave
-it unresolved and assume it's global. We'll get to the implementation of that
-`resolve()` method a little later. For now, let's keep on cranking through the
-other syntax nodes.
+若我们遍历了所有块作用域，依然不曾找到该变量，我们便将其留作未解析，并假定它是全局的。`resolve()` 方法的实现我们稍后再讲。现在，让我们继续啃完其它语法节点。
 
-### Resolving assignment expressions
+### 解析赋值表达式
 
-The other expression that references a variable is assignment. Resolving one
-looks like this:
+另一类引用变量的表达式是赋值。解析赋值的代码长这样：
 
 ^code visit-assign-expr
 
-First, we resolve the expression for the assigned value in case it also contains
-references to other variables. Then we use our existing `resolveLocal()` method
-to resolve the variable that's being assigned to.
+首先，我们求解那个被赋值的表达式——以防它本身便含有对其它变量的引用。随后，我们便复用既有的 `resolveLocal()` 方法来解析那个被赋值的变量。
 
-### Resolving function declarations
+### 解析函数声明
 
-Finally, functions. Functions both bind names and introduce a scope. The name of
-the function itself is bound in the surrounding scope where the function is
-declared. When we step into the function's body, we also bind its parameters
-into that inner function scope.
+最后是函数。函数既会绑定名字，又会引入作用域。函数自身的名字是绑定在它被声明处所处的那份外层作用域之中。当我们踏入其函数体时，我们也会将其参数绑定到那个内层函数作用域中。
 
 ^code visit-function-stmt
 
-Similar to `visitVariableStmt()`, we declare and define the name of the function
-in the current scope. Unlike variables, though, we define the name eagerly,
-before resolving the function's body. This lets a function recursively refer to
-itself inside its own body.
+与 `visitVariableStmt()` 颇为相似，我们在当前作用域中声明并定义函数的名字。不过，与变量不同的是，我们**急切地**定义其名字——早于对函数体的解析。这一点允许一个函数在自己的函数体内递归地引用它自身。
 
-Then we resolve the function's body using this:
+随后，我们用如下方法去解析该函数体：
 
 ^code resolve-function
 
-It's a separate method since we will also use it for resolving Lox methods when
-we add classes later. It creates a new scope for the body and then binds
-variables for each of the function's parameters.
+它是一个独立的方法，因为我们在日后为 Lox 添加类时也会用它来解析方法。它为函数体创建一份新的作用域，并将每一个函数的参数各绑定为该作用域中的变量。
 
-Once that's ready, it resolves the function body in that scope. This is
-different from how the interpreter handles function declarations. At *runtime*,
-declaring a function doesn't do anything with the function's body. The body
-doesn't get touched until later when the function is called. In a *static*
-analysis, we immediately traverse into the body right then and there.
+一切就绪之后，它便在该作用域中解析函数体。这与解释器处理函数声明的方式有所不同。在**运行时**，声明一个函数并不会对函数体做任何事情。函数体直到函数被调用时才会被触及。而在**静态**分析中，我们则**立即**深入函数体，而不会等。
 
-### Resolving the other syntax tree nodes
+### 解析其它语法树节点
 
-That covers the interesting corners of the grammars. We handle every place where
-a variable is declared, read, or written, and every place where a scope is
-created or destroyed. Even though they aren't affected by variable resolution,
-we also need visit methods for all of the other syntax tree nodes in order to
-recurse into their subtrees. <span name="boring">Sorry</span> this bit is
-boring, but bear with me. We'll go kind of "top down" and start with statements.
+到此为止，我们已经覆盖了文法中那些有趣的角落。我们处理了每一处声明、读取或写入变量的位置，以及每一处作用域创建或销毁的位置。即便它们**本身**并不受变量解析的影响，我们也仍需要为剩下的所有语法树节点实现 visit 方法，以便递归地进入它们的子树。<span name="boring">抱歉</span>这一部分稍显枯燥，但请再忍一忍。我们大致按照"自顶向下"的顺序开始，先从语句入手。
 
 <aside name="boring">
 
-I did say the book would have every single line of code for these interpreters.
-I didn't say they'd all be exciting.
+我确实曾说过本书会为这两款解释器提供**每一行**代码。但我并没有说它们全都激动人心。
 
 </aside>
 
-An expression statement contains a single expression to traverse.
+一条表达式语句包含一个需要遍历的单一表达式。
 
 ^code visit-expression-stmt
 
-An if statement has an expression for its condition and one or two statements
-for the branches.
+一条 if 语句含有一个充当条件的表达式，以及一至两个作为分支的语句。
 
 ^code visit-if-stmt
 
-Here, we see how resolution is different from interpretation. When we resolve an
-`if` statement, there is no control flow. We resolve the condition and *both*
-branches. Where a dynamic execution steps only into the branch that *is* run, a
-static analysis is conservative -- it analyzes any branch that *could* be run.
-Since either one could be reached at runtime, we resolve both.
+此处，我们看到了解析与解释的不同之处。当我们解析一条 `if` 语句时，并不存在控制流。我们解析条件，并解析**两个**分支。动态执行只会踏入**被实际执行**的那个分支，而静态分析则保守得多——它会分析任何**可能**被执行的分支。由于任一分支都可能在运行时被触达，因此我们都将两者解析。
 
-Like expression statements, a `print` statement contains a single subexpression.
+正如表达式语句一样，`print` 语句包含一个单一的子表达式。
 
 ^code visit-print-stmt
 
-Same deal for return.
+return 语句亦同。
 
 ^code visit-return-stmt
 
-As in `if` statements, with a `while` statement, we resolve its condition and
-resolve the body exactly once.
+就像 `if` 语句那样，对于 `while` 语句，我们解析其条件并对函数体**恰好**解析一次。
 
 ^code visit-while-stmt
 
-That covers all the statements. On to expressions...
+至此，语句皆已覆盖。轮到表达式了……
 
-Our old friend the binary expression. We traverse into and resolve both
-operands.
+我们那位老朋友——二元表达式。我们遍历它，并对两个操作数都进行解析。
 
 ^code visit-binary-expr
 
-Calls are similar -- we walk the argument list and resolve them all. The thing
-being called is also an expression (usually a variable expression), so that gets
-resolved too.
+调用也类似——我们遍历实参列表，将它们悉数解析。被调用者本身也是一个表达式（通常是一个变量表达式），因此它也会被一并解析。
 
 ^code visit-call-expr
 
-Parentheses are easy.
+括号表达式简单得很。
 
 ^code visit-grouping-expr
 
-Literals are easiest of all.
+字面量表达式则是最简单的。
 
 ^code visit-literal-expr
 
-A literal expression doesn't mention any variables and doesn't contain any
-subexpressions so there is no work to do.
+字面量表达式既不提及任何变量，也不包含任何子表达式，因此**无事可做**。
 
-Since a static analysis does no control flow or short-circuiting, logical
-expressions are exactly the same as other binary operators.
+由于静态分析既无控制流、也无短路求值，逻辑表达式与其他二元运算符别无二致。
 
 ^code visit-logical-expr
 
-And, finally, the last node. We resolve its one operand.
+最后，还剩下一个节点。我们解析它那唯一一个操作数。
 
 ^code visit-unary-expr
 
-With all of these visit methods, the Java compiler should be satisfied that
-Resolver fully implements Stmt.Visitor and Expr.Visitor. Now is a good time to
-take a break, have a snack, maybe a little nap.
+有了所有这些 visit 方法，Java 编译器应当对 Resolver 完整地实现了 `Stmt.Visitor` 与 `Expr.Visitor` 这两套接口感到满意。现在是个稍事休息、吃点点心、甚至小憩片时的好时机。
 
-## Interpreting Resolved Variables
+## 解释已解析的变量
 
-Let's see what our resolver is good for. Each time it visits a variable, it
-tells the interpreter how many scopes there are between the current scope and
-the scope where the variable is defined. At runtime, this corresponds exactly to
-the number of *environments* between the current one and the enclosing one where
-the interpreter can find the variable's value. The resolver hands that number to
-the interpreter by calling this:
+让我们看看我们这位解析器究竟有何能耐。每一次它访问一个变量时，它都会告诉解释器：在当前作用域与该变量被定义的作用域之间，存在着多少层作用域。运行时，这恰好对应于环境链中——从当前环境到那个解释器能够找到该变量值的环境之间——所包含的**环境**个数。解析器通过调用如下方法，将那个数字交予解释器：
 
 ^code resolve
 
-We want to store the resolution information somewhere so we can use it when the
-variable or assignment expression is later executed, but where? One obvious
-place is right in the syntax tree node itself. That's a fine approach, and
-that's where many compilers store the results of analyses like this.
+我们希望将解析结果存储在某个地方，以便日后该变量或赋值表达式被执行时派上用场，但存储在何处呢？一个显然的位置，便是语法树节点自身。这是一种不错的做法，也是许多编译器用来存储这类分析结果的地方。
 
-We could do that, but it would require mucking around with our syntax tree
-generator. Instead, we'll take another common approach and store it off to the
-<span name="side">side</span> in a map that associates each syntax tree node
-with its resolved data.
+我们本可以那么做，但那需要我们去折腾语法树生成器。取而代之，我们采用另一种常见做法：将解析结果存在语法树**旁边**，于一张映射之中——那张映射将每个语法树节点与其解析数据关联起来。
 
 <aside name="side">
 
-I *think* I've heard this map called a "side table" since it's a tabular data
-structure that stores data separately from the objects it relates to. But
-whenever I try to Google for that term, I get pages about furniture.
+我**觉得**我曾听过将这张映射称为"侧表"（side table），因为它是一张与所关联对象分离存放的表格化数据结构。但每当我试图用 Google 搜索这个词时，得到的却尽是些家具页面。
 
 </aside>
 
-Interactive tools like IDEs often incrementally reparse and re-resolve parts of
-the user's program. It may be hard to find all of the bits of state that need
-recalculating when they're hiding in the foliage of the syntax tree. A benefit
-of storing this data outside of the nodes is that it makes it easy to *discard*
-it -- simply clear the map.
+诸如 IDE 这样的交互式工具通常会增量地重新解析并重新解析用户程序中的部分内容。当那些状态碎片被藏在语法树的枝叶之中时，要想找出哪些状态需要重算，便颇为困难。将这些数据存储于节点**之外**的一项好处在于，它使得**丢弃**这些数据变得轻而易举——只需清空那张映射。
 
 ^code locals-field (1 before, 2 after)
 
-You might think we'd need some sort of nested tree structure to avoid getting
-confused when there are multiple expressions that reference the same variable,
-but each expression node is its own Java object with its own unique identity. A
-single monolithic map doesn't have any trouble keeping them separated.
+你或许会以为我们需要某种嵌套的树状结构，以免在有多个表达式引用同一个变量时混淆——但每个表达式节点都是其自身的 Java 对象，拥有自己独一无二的标识。一张扁平的、统一的映射，自然不会在区分它们时遇到任何麻烦。
 
-As usual, using a collection requires us to import a couple of names.
+话说回来，使用集合又免不了要引入几个名字。
 
 ^code import-hash-map (1 before, 1 after)
 
-And:
+以及：
 
 ^code import-map (1 before, 2 after)
 
-### Accessing a resolved variable
+### 访问一个已解析的变量
 
-Our interpreter now has access to each variable's resolved location. Finally, we
-get to make use of that. We replace the visit method for variable expressions
-with this:
+我们的解释器如今得以访问每一个变量的解析位置。终于，我们到了可以好好利用这一信息的时候了。我们将变量表达式的 visit 方法替换为如下版本：
 
 ^code call-look-up-variable (1 before, 1 after)
 
-That delegates to:
+它将工作委托给：
 
 ^code look-up-variable
 
-There are a couple of things going on here. First, we look up the resolved
-distance in the map. Remember that we resolved only *local* variables. Globals
-are treated specially and don't end up in the map (hence the name `locals`). So,
-if we don't find a distance in the map, it must be global. In that case, we
-look it up, dynamically, directly in the global environment. That throws a
-runtime error if the variable isn't defined.
+这里有几件事同时在进行。首先，我们去那张映射中查找那个解析出来的距离。记住，我们仅解析了**局部**变量。全局变量会被特殊处理，并不会出现在那张映射之中（这也是为何它名为 `locals`）。因此，若我们未能在映射中找到某个距离，那么它必定是全局的。此时，我们便**动态地**直接在全局环境中查找它。若该变量未被定义，便会抛出一个运行时错误。
 
-If we *do* get a distance, we have a local variable, and we get to take
-advantage of the results of our static analysis. Instead of calling `get()`, we
-call this new method on Environment:
+倘若我们**确实**获得了一个距离，那么这就是一个局部变量，我们便得以利用我们静态分析的结果。我们不再调用 `get()`，而是改而调用 Environment 上这个新方法：
 
 ^code get-at
 
-The old `get()` method dynamically walks the chain of enclosing environments,
-scouring each one to see if the variable might be hiding in there somewhere. But
-now we know exactly which environment in the chain will have the variable. We
-reach it using this helper method:
+旧版的 `get()` 方法会动态地遍历外层环境的链接，逐一筛检每一份，看变量是否藏在某处。但如今，我们已然清楚地知道环境链中**哪一份**环境会拥有该变量。我们借助如下这个辅助方法抵达它：
 
 ^code ancestor
 
-This walks a fixed number of hops up the parent chain and returns the
-environment there. Once we have that, `getAt()` simply returns the value of the
-variable in that environment's map. It doesn't even have to check to see if the
-variable is there -- we know it will be because the resolver already found it
-before.
+该方法会沿着父链迈出固定步数，并返回身处该处的环境。一旦我们拿到了它，`getAt()` 便会简单地返回该环境对应 Map 中该变量的值。它甚至**无需**再去检查该变量**是否**存在——我们已然知晓它**一定**会在那里，因为解析器在更早之前便已找到了它。
 
 <aside name="coupled">
 
-The way the interpreter assumes the variable is in that map feels like flying
-blind. The interpreter code trusts that the resolver did its job and resolved
-the variable correctly. This implies a deep coupling between these two classes.
-In the resolver, each line of code that touches a scope must have its exact
-match in the interpreter for modifying an environment.
+解释器假设该变量**一定**就在那份 Map 之中，这种做法给人一种蒙眼飞行般的感觉。解释器的代码信任解析器已然尽职尽责、正确地解析了那处变量。这意味着这两个类之间存在着深深的耦合。在解析器中，每一行触及作用域的代码，都必须在解释器之中拥有一处**精确**对应的修改环境的代码。
 
-I felt that coupling firsthand because as I wrote the code for the book, I
-ran into a couple of subtle bugs where the resolver and interpreter code were
-slightly out of sync. Tracking those down was difficult. One tool to make that
-easier is to have the interpreter explicitly assert -- using Java's assert
-statements or some other validation tool -- the contract it expects the resolver
-to have already upheld.
+我在为本书编写代码的过程中，深切体会到了这种耦合——我曾撞上几处微妙的 bug，其根源在于解析器与解释器之间稍有那么一丝不同步。追踪这些 bug 实在是令人头疼。让这件事变得不那么痛苦的一个工具，是让解释器**显式地** ——通过 Java 的 assert 语句或其它某种校验工具——来断言它所期望解析器已经履行的契约。
 
 </aside>
 
-### Assigning to a resolved variable
+### 对一个已解析的变量赋值
 
-We can also use a variable by assigning to it. The changes to visiting an
-assignment expression are similar.
+我们也可以通过对一个变量进行赋值来使用它。对赋值表达式 visit 方法的修改与之类似。
 
 ^code resolved-assign (2 before, 1 after)
 
-Again, we look up the variable's scope distance. If not found, we assume it's
-global and handle it the same way as before. Otherwise, we call this new method:
+我们再一次去查找该变量的作用域距离。若未找到，我们便假定它是全局的，并以与之前相同的方式处理它。否则，我们便调用这个新方法：
 
 ^code assign-at
 
-As `getAt()` is to `get()`, `assignAt()` is to `assign()`. It walks a fixed
-number of environments, and then stuffs the new value in that map.
+正如 `getAt()` 之与 `get()`，`assignAt()` 之与 `assign()`。它会沿着外层环境走上一段固定的距离，然后将新值塞入该 Map 之中。
 
-Those are the only changes to Interpreter. This is why I chose a representation
-for our resolved data that was minimally invasive. All of the rest of the nodes
-continue working as they did before. Even the code for modifying environments is
-unchanged.
+以上便是对 Interpreter 类所做的全部改动。这便是我之所以选择一种对既有代码影响最小的方式来表示解析数据的原因。剩下所有节点依然照旧工作，就连那些修改环境的代码也原封未动。
 
-### Running the resolver
+### 运行解析器
 
-We do need to actually *run* the resolver, though. We insert the new pass after
-the parser does its magic.
+不过，我们终究是需要**实际运行**解析器的。我们在解析器完成它的工作之后，便插入这趟新的 pass。
 
 ^code create-resolver (3 before, 1 after)
 
-We don't run the resolver if there are any parse errors. If the code has a
-syntax error, it's never going to run, so there's little value in resolving it.
-If the syntax is clean, we tell the resolver to do its thing. The resolver has a
-reference to the interpreter and pokes the resolution data directly into it as
-it walks over variables. When the interpreter runs next, it has everything it
-needs.
+若是存在任何解析错误，我们便不会运行解析器。若代码存在语法错误，它**永远**都不会被运行，因此对之进行解析几乎毫无意义。若语法无误，我们便让解析器去大显身手。解析器持有一份对解释器的引用，并随着它遍历各变量，将解析数据直接塞入解释器之中。当解释器随后运行时，它便拥有了所需的一切。
 
-At least, that's true if the resolver *succeeds*. But what about errors during
-resolution?
+至少，在解析器**成功**时，情形确实如此。但若在解析过程中**出现**了错误呢？
 
-## Resolution Errors
+## 解析错误
 
-Since we are doing a semantic analysis pass, we have an opportunity to make
-Lox's semantics more precise, and to help users catch bugs early before running
-their code. Take a look at this bad boy:
+既然我们正在进行一趟语义分析 pass，我们便有了一个机会——使 Lox 的语义变得更加精确，并在代码运行之前帮助用户尽早地捕获 bug。请看看这段不讨喜的代码：
 
 ```lox
 fun bad() {
@@ -855,116 +544,77 @@ fun bad() {
 }
 ```
 
-We do allow declaring multiple variables with the same name in the *global*
-scope, but doing so in a local scope is probably a mistake. If they knew the
-variable already existed, they would have assigned to it instead of using `var`.
-And if they *didn't* know it existed, they probably didn't intend to overwrite
-the previous one.
+我们**确实**允许在**全局**作用域中以相同的名字声明多条变量，但在局部作用域中这么做却很可能是个 bug。倘若他们知道该变量已然存在，他们会选择赋值而非 `var`。而倘若他们**不知道**该变量的存在，他们大概也不打算去覆盖前一条。
 
-We can detect this mistake statically while resolving.
+我们可以在解析过程中静态地检测这一疏漏。
 
 ^code duplicate-variable (1 before, 1 after)
 
-When we declare a variable in a local scope, we already know the names of every
-variable previously declared in that same scope. If we see a collision, we
-report an error.
+当我们在局部作用域中声明一个变量时，我们已然知晓该作用域内此前声明的每一个变量名。若我们发现冲突，便报告一个错误。
 
-### Invalid return errors
+### 无效的 return 错误
 
-Here's another nasty little script:
+再来看看另一段讨人厌的小脚本：
 
 ```lox
 return "at top level";
 ```
 
-This executes a `return` statement, but it's not even inside a function at all.
-It's top-level code. I don't know what the user *thinks* is going to happen, but
-I don't think we want Lox to allow this.
+这执行了一条 `return` 语句，但它**根本**就不在任何函数之内。它是顶层代码。我不知道用户**以为**这会引发什么，但我并不希望 Lox 允许这种情况。
 
-We can extend the resolver to detect this statically. Much like we track scopes
-as we walk the tree, we can track whether or not the code we are currently
-visiting is inside a function declaration.
+我们可以将解析器延展至静态地检测这一情形。正如我们在遍历语法树时一路追踪作用域那般，我们也可以追踪**我们眼下正在访问的** **代码**究竟是否处于某条函数声明之中。
 
 ^code function-type-field (1 before, 2 after)
 
-Instead of a bare Boolean, we use this funny enum:
+我们没有使用一个裸的布尔值，而是用上了这个有些滑稽的枚举：
 
 ^code function-type
 
-It seems kind of dumb now, but we'll add a couple more cases to it later and
-then it will make more sense. When we resolve a function declaration, we pass
-that in.
+它眼下看起来有些傻，但日后我们还会为它添上几种情形，届时它的意义便会显现。当我们解析一个函数声明时，我们将该值传入。
 
 ^code pass-function-type (2 before, 1 after)
 
-Over in `resolveFunction()`, we take that parameter and store it in the field
-before resolving the body.
+在 `resolveFunction()` 这一边，我们接下那个参数，并在解析函数体之前将其存至字段之中。
 
 ^code set-current-function (1 after)
 
-We stash the previous value of the field in a local variable first. Remember,
-Lox has local functions, so you can nest function declarations arbitrarily
-deeply. We need to track not just that we're in a function, but *how many* we're
-in.
+我们先将这个字段的前一值存放于一个局部变量之中。记住，Lox 拥有局部函数，因此你可以将函数声明嵌套至任意深度。我们需要追踪的不只是"我们身处一个函数之中"，而是**我们身处** **几层**函数之中。
 
-We could use an explicit stack of FunctionType values for that, but instead
-we'll piggyback on the JVM. We store the previous value in a local on the Java
-stack. When we're done resolving the function body, we restore the field to that
-value.
+我们本可以为它专门使用一座显式的 FunctionType 值栈，但我们不如借力于 JVM 那座现成的栈。我们将前一值存放在 Java 栈上的一个局部变量之中。当我们解析完函数体之后，我们将该字段恢复为那个值。
 
 ^code restore-current-function (1 before, 1 after)
 
-Now that we can always tell whether or not we're inside a function declaration,
-we check that when resolving a `return` statement.
+既然我们如今随时都能知道是否身处某条函数声明之中，我们便在解析一条 `return` 语句时加以检查。
 
 ^code return-from-top (1 before, 1 after)
 
-Neat, right?
+利落吧？
 
-There's one more piece. Back in the main Lox class that stitches everything
-together, we are careful to not run the interpreter if any parse errors are
-encountered. That check runs *before* the resolver so that we don't try to
-resolve syntactically invalid code.
+还有一处善后。在那个将各部分串接起来的主 Lox 类中，我们小心翼翼地确保在遇到任何解析错误时不去运行解释器。这项检查**先于**解析器运行，以免让我们去尝试解析那些语法有误的代码。
 
-But we also need to skip the interpreter if there are resolution errors, so we
-add *another* check.
+但我们同样需要在存在解析错误时跳过解释器，因此我们再加**一道**检查。
 
 ^code resolution-error (1 before, 2 after)
 
-You could imagine doing lots of other analysis in here. For example, if we added
-`break` statements to Lox, we would probably want to ensure they are only used
-inside loops.
+你可以想象在这里进行更多其它分析。例如，若我们为 Lox 引入 `break` 语句，我们大概会希望确保它们仅被用于循环内部。
 
-We could go farther and report warnings for code that isn't necessarily *wrong*
-but probably isn't useful. For example, many IDEs will warn if you have
-unreachable code after a `return` statement, or a local variable whose value is
-never read. All of that would be pretty easy to add to our static visiting pass,
-or as <span name="separate">separate</span> passes.
+我们还可以更进一步，对那些**未必是错误**但**很可能没什么用**的代码发出警告。例如，许多 IDE 会在 `return` 语句之后出现不可达代码、或一个声明后却从未被使用的局部变量时发出警告。所有这一切，都很容易在我们的静态访问 pass 之中——或者作为<span name="separate">独立</span>的 pass——被一一添加。
 
 <aside name="separate">
 
-The choice of how many different analyses to lump into a single pass is
-difficult. Many small isolated passes, each with their own responsibility, are
-simpler to implement and maintain. However, there is a real runtime cost to
-traversing the syntax tree itself, so bundling multiple analyses into a single
-pass is usually faster.
+在一个 pass 之中究竟安排多少不同的分析，是一道难题。许多小的、彼此独立的 pass——各自承担一份职责——更易于实现与维护。然而，每多遍历一次语法树本身，便会招致一份实实在在的运行时开销，因此将多项分析捆绑进一趟 pass 通常会更快。
 
 </aside>
 
-But, for now, we'll stick with that limited amount of analysis. The important
-part is that we fixed that one weird annoying edge case bug, though it might be
-surprising that it took this much work to do it.
+不过，眼下我们还是坚持这一小规模的分析。重要的是，我们修复了那处既古怪又恼人的边角情形中的 bug，尽管为了修复它竟花了这么多功夫，着实令人意外。
 
 <div class="challenges">
 
-## Challenges
+## 挑战
 
-1.  Why is it safe to eagerly define the variable bound to a function's name
-    when other variables must wait until after they are initialized before they
-    can be used?
+1.  为什么当函数之名所绑定的变量可以急切地定义时，其它变量却必须等到初始化之后才能被使用？这是**安全**的。
 
-1.  How do other languages you know handle local variables that refer to the
-    same name in their initializer, like:
+1.  那些你所熟悉的语言是如何处理在其初始化器中引用了同名变量的局部变量的？比如：
 
     ```lox
     var a = "outer";
@@ -973,19 +623,10 @@ surprising that it took this much work to do it.
     }
     ```
 
-    Is it a runtime error? Compile error? Allowed? Do they treat global
-    variables differently? Do you agree with their choices? Justify your answer.
+    是运行时错误？编译期错误？还是被允许？它们对全局变量的处理是否有所不同？你认同它们的选择吗？请为你的答案给出理由。
 
-1.  Extend the resolver to report an error if a local variable is never used.
+1.  扩展解析器，使其在局部变量**从未被使用过**时报告一个错误。
 
-1.  Our resolver calculates *which* environment the variable is found in, but
-    it's still looked up by name in that map. A more efficient environment
-    representation would store local variables in an array and look them up by
-    index.
-
-    Extend the resolver to associate a unique index for each local variable
-    declared in a scope. When resolving a variable access, look up both the
-    scope the variable is in and its index and store that. In the interpreter,
-    use that to quickly access a variable by its index instead of using a map.
+1.  我们的解析器计算了变量**位于**哪一份环境之中，但我们仍然通过名字在 Map 中查找它。一个更高效的环境表示法会将局部变量存放在一个数组中，并通过索引来访问。请扩展解析器，以便为每个作用域中声明的每一个局部变量关联一个独一无二的索引。当解析一个变量访问时，请同时查找该变量**所在的作用域**与它的**索引**并将其存储下来。在解释器中，请借助该信息以索引方式快速访问一个变量，而非通过 Map。
 
 </div>
