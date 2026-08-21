@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>A Virtual Machine &middot; Crafting Interpreters</title>
+<title>虚拟机 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,28 +34,30 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">A Virtual Machine<small>15</small></a></h3>
+<h3><a href="#top">虚拟机<small>15</small></a></h3>
 
 <ul>
     <li><a href="#一台指令执行机"><small>15.1</small> 一台指令执行机</a></li>
     <li><a href="#一个值栈操控器"><small>15.2</small> 一个值栈操控器</a></li>
     <li><a href="#一个算术计算器"><small>15.3</small> 一个算术计算器</a></li>
-    <li><a href="#挑战"><small>15.4</small> 挑战</a></li>
-    <li><a href="#设计笔记：基于栈与基于寄存器的虚拟机"><small>15.5</small> 设计笔记：基于栈与基于寄存器的虚拟机</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>基于栈与基于寄存器的虚拟机</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="scanning-on-demand.html" title="Scanning on Demand" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="chunks-of-bytecode.html" title="字节码块" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="scanning-on-demand.html" title="按需词法分析" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="prev">←</a>
-<a href="scanning-on-demand.html" title="Scanning on Demand" class="next">→</a>
+<a href="chunks-of-bytecode.html" title="字节码块" class="prev">←</a>
+<a href="scanning-on-demand.html" title="按需词法分析" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -63,22 +65,24 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">A Virtual Machine<small>15</small></a></h3>
+<h3><a href="#top">虚拟机<small>15</small></a></h3>
 
 <ul>
     <li><a href="#一台指令执行机"><small>15.1</small> 一台指令执行机</a></li>
     <li><a href="#一个值栈操控器"><small>15.2</small> 一个值栈操控器</a></li>
     <li><a href="#一个算术计算器"><small>15.3</small> 一个算术计算器</a></li>
-    <li><a href="#挑战"><small>15.4</small> 挑战</a></li>
-    <li><a href="#设计笔记：基于栈与基于寄存器的虚拟机"><small>15.5</small> 设计笔记：基于栈与基于寄存器的虚拟机</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>基于栈与基于寄存器的虚拟机</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="scanning-on-demand.html" title="Scanning on Demand" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="chunks-of-bytecode.html" title="字节码块" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="scanning-on-demand.html" title="按需词法分析" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -86,7 +90,7 @@
 <article class="chapter">
 
   <div class="number">15</div>
-  <h1>A Virtual Machine</h1>
+  <h1>虚拟机</h1>
 
 <h1><a href="#虚拟机" id="虚拟机"><small>15&#8202;.&#8202;0</small>虚拟机</a></h1>
 <blockquote>
@@ -730,7 +734,7 @@ in <em>main</em>()</div>
 <p>在这段小小的示例 chunk 中，栈至多也就两格高，但当我们日后开始将 Lox 源码编译为字节码时，我们将拥有<strong>远为</strong>吃栈的 chunk。在此期间，不妨试着摆弄一下这段手工拼凑的 chunk，去计算不同的嵌套算术表达式，看看值是如何在指令与栈之间流动的。</p>
 <p>你不妨现在就把你想玩的都玩一遍。这是我们<strong>最后</strong>一段手工拼凑的 chunk。下一次我们再回顾字节码时，便是编写一款编译器来<strong>为我们</strong>生成它了。</p>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>15&#8202;.&#8202;4</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>对于下列表达式，你会生成怎样的字节码指令序列？</p>
@@ -759,7 +763,7 @@ in <em>main</em>()</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：基于栈与基于寄存器的虚拟机" id="设计笔记：基于栈与基于寄存器的虚拟机"><small>15&#8202;.&#8202;5</small>设计笔记：基于栈与基于寄存器的虚拟机</a></h2>
+<h2><a href="#design-note" id="design-note">设计笔记：基于栈与基于寄存器的虚拟机</a></h2>
 <p>在本书余下的部分里，我们将一丝不苟地围绕一套栈式字节码指令集来实现一款解释器。外面还有另一族字节码架构——<em>基于寄存器</em> 的。虽说名称吓人，但这些字节码指令并不像诸如 <span name="x64">x64</span> 那样的真实芯片中的寄存器那般难对付。在真实的硬件寄存器下，你通常整个程序仅有寥寥几个寄存器可用，因此你不得不花费大量精力去<strong>高效地使用它们</strong>，并来回搬运数据。</p>
 <aside name="x64">
 <p>基于寄存器的字节码与 SPARC 芯片所支持的<a href="https://en.wikipedia.org/wiki/Register_window"><strong>寄存器窗口</strong></a>有些接近。</p>
@@ -792,7 +796,7 @@ in <em>main</em>()</div>
 
 <footer>
 <a href="scanning-on-demand.html" class="next">
-  Next Chapter: &ldquo;Scanning on Demand&rdquo; &rarr;
+  下一章：&ldquo;按需词法分析&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'book.dart';
 import 'page.dart';
 import 'text.dart';
+import 'titles_zh.dart';
 
 /// Maintains the cache of loaded partials and allows rendering templates.
 class Mustache {
@@ -20,21 +21,25 @@ class Mustache {
 
   String render(Book book, Page page, String body, {String template}) {
     var part = page.part?.title;
+    var partDisplay = page.part != null
+        ? chineseDisplayTitle(page.part.title)
+        : null;
 
-    var up = "Table of Contents";
+    var upEnglish = "Table of Contents";
     if (part != null) {
-      up = part;
+      upEnglish = part;
     } else if (page.title == "Table of Contents") {
-      up = "Crafting Interpreters";
+      upEnglish = "Crafting Interpreters";
     }
+    var upDisplay = chineseDisplayTitle(upEnglish);
 
     var previousPage = book.adjacentPage(page, -1);
     var nextPage = book.adjacentPage(page, 1);
     String nextType;
     if (nextPage != null && nextPage.isChapter) {
-      nextType = "Chapter";
+      nextType = "章";
     } else if (nextPage != null && nextPage.isPart) {
-      nextType = "Part";
+      nextType = "部分";
     }
 
     List<Map<String, dynamic>> chapters;
@@ -51,8 +56,8 @@ class Mustache {
       "is_chapter": part != null,
       "is_part": part == null && page.title != null && !isFrontmatter,
       "is_frontmatter": isFrontmatter,
-      "title": page.title,
-      "part": part,
+      "title": page.displayTitle,
+      "part": partDisplay,
       "body": body,
       "sections": _makeSections(page),
       "chapters": chapters,
@@ -65,16 +70,16 @@ class Mustache {
       "number": page.numberString,
       // Previous page.
       "has_prev": previousPage != null,
-      "prev": previousPage?.title,
+      "prev": previousPage?.displayTitle,
       "prev_file": previousPage?.fileName,
       // Next page.
       "has_next": nextPage != null,
-      "next": nextPage?.title,
+      "next": nextPage?.displayTitle,
       "next_file": nextPage?.fileName,
       "next_type": nextType,
-      "has_up": up != null,
-      "up": up,
-      "up_file": up != null ? toFileName(up) : null,
+      "has_up": upEnglish != null,
+      "up": upDisplay,
+      "up_file": upEnglish != null ? toFileName(upEnglish) : null,
       // TODO: Only need this for contents page.
       "part_1": _makePartData(book, 0),
       "part_2": _makePartData(book, 1),
@@ -87,7 +92,7 @@ class Mustache {
   Map<String, dynamic> _makePartData(Book book, int partIndex) {
     var partPage = book.parts[partIndex];
     return <String, dynamic>{
-      "title": partPage.title,
+      "title": partPage.displayTitle,
       "number": partPage.numberString,
       "file": partPage.fileName,
       "chapters": _makeChapterList(partPage)
@@ -98,7 +103,7 @@ class Mustache {
     return [
       for (var chapter in part.chapters)
         <String, dynamic>{
-          "title": chapter.title,
+          "title": chapter.displayTitle,
           "number": chapter.numberString,
           "file": chapter.fileName,
           "design_note": chapter.designNote?.replaceAll("'", "&rsquo;"),

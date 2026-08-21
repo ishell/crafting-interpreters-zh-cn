@@ -193,9 +193,9 @@ class XmlRenderer implements NodeVisitor {
 
       case "h2":
         var text = element.textContent;
-        if (text == "Challenges") {
+        if (text == "Challenges" || text == "挑战") {
           _context = _Context("challenges");
-        } else if (text.contains("Design Note")) {
+        } else if (text.contains("Design Note") || text.contains("设计笔记")) {
           _context = _Context("design");
         }
         _push("heading");

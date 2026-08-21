@@ -16,6 +16,7 @@ String toFileName(String text) {
   // anchor names for the links, so handle that one specially so it doesn't
   // collide with the real "Challenges" section.
   if (text == "Challenges") return "challenges_";
+  if (text == "挑战") return "challenges_";
 
   return text.toLowerCase().replaceAll(" ", "-").replaceAll(_punctuation, "");
 }

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Closures &middot; Crafting Interpreters</title>
+<title>闭包 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,29 +34,31 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Closures<small>25</small></a></h3>
+<h3><a href="#top">闭包<small>25</small></a></h3>
 
 <ul>
     <li><a href="#闭包对象"><small>25.1</small> 闭包对象</a></li>
     <li><a href="#上值（upvalue）"><small>25.2</small> 上值（upvalue）</a></li>
     <li><a href="#上值对象"><small>25.3</small> 上值对象</a></li>
     <li><a href="#已关闭的上值"><small>25.4</small> 已关闭的上值</a></li>
-    <li><a href="#挑战"><small>25.5</small> 挑战</a></li>
-    <li><a href="#设计笔记：关闭循环变量"><small>25.6</small> 设计笔记：关闭循环变量</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>关闭循环变量</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="calls-and-functions.html" title="Calls and Functions" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="garbage-collection.html" title="Garbage Collection" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="calls-and-functions.html" title="调用与函数" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="garbage-collection.html" title="垃圾回收" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="calls-and-functions.html" title="Calls and Functions" class="prev">←</a>
-<a href="garbage-collection.html" title="Garbage Collection" class="next">→</a>
+<a href="calls-and-functions.html" title="调用与函数" class="prev">←</a>
+<a href="garbage-collection.html" title="垃圾回收" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -64,23 +66,25 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Closures<small>25</small></a></h3>
+<h3><a href="#top">闭包<small>25</small></a></h3>
 
 <ul>
     <li><a href="#闭包对象"><small>25.1</small> 闭包对象</a></li>
     <li><a href="#上值（upvalue）"><small>25.2</small> 上值（upvalue）</a></li>
     <li><a href="#上值对象"><small>25.3</small> 上值对象</a></li>
     <li><a href="#已关闭的上值"><small>25.4</small> 已关闭的上值</a></li>
-    <li><a href="#挑战"><small>25.5</small> 挑战</a></li>
-    <li><a href="#设计笔记：关闭循环变量"><small>25.6</small> 设计笔记：关闭循环变量</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>关闭循环变量</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="calls-and-functions.html" title="Calls and Functions" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="garbage-collection.html" title="Garbage Collection" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="calls-and-functions.html" title="调用与函数" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="garbage-collection.html" title="垃圾回收" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -88,7 +92,7 @@
 <article class="chapter">
 
   <div class="number">25</div>
-  <h1>Closures</h1>
+  <h1>闭包</h1>
 
 <h1><a href="#闭包" id="闭包"><small>25&#8202;.&#8202;0</small>闭包</a></h1><!--
 > As the man said, for every complex problem there's a simple solution, and it's
@@ -2282,7 +2286,7 @@ memory so that we can free some of those objects when they're no longer needed.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" id="挑战"><small>25&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#challenges" id="challenges">挑战</a></h2><!--
 1.  Wrapping every ObjFunction in an ObjClosure introduces a level of
     indirection that has a performance cost. That cost isn't necessary for
     functions that do not close over any variables, but it does let the runtime
@@ -2344,7 +2348,7 @@ memory so that we can free some of those objects when they're no longer needed.
 <div class="design-note"><!--
 -- Design Note: Closing Over the Loop Variable
 -->
-<h2><a href="#设计笔记：关闭循环变量" id="设计笔记：关闭循环变量"><small>25&#8202;.&#8202;6</small>设计笔记：关闭循环变量</a></h2><!--
+<h2><a href="#design-note" id="design-note">设计笔记：关闭循环变量</a></h2><!--
 Closures capture variables. When two closures capture the same variable, they
 share a reference to the same underlying storage location. This fact is visible
 when new values are assigned to the variable. Obviously, if two closures capture
@@ -2555,7 +2559,7 @@ think about it, though.
 
 <footer>
 <a href="garbage-collection.html" class="next">
-  Next Chapter: &ldquo;Garbage Collection&rdquo; &rarr;
+  下一章：&ldquo;垃圾回收&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

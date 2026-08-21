@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Scanning on Demand &middot; Crafting Interpreters</title>
+<title>按需词法分析 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,28 +34,30 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Scanning on Demand<small>16</small></a></h3>
+<h3><a href="#top">按需词法分析<small>16</small></a></h3>
 
 <ul>
     <li><a href="#启动解释器"><small>16.1</small> 启动解释器</a></li>
     <li><a href="#一次一个词法单元"><small>16.2</small> 一次一个词法单元</a></li>
     <li><a href="#lox-的词法文法"><small>16.3</small> Lox 的词法文法</a></li>
     <li><a href="#标识符与关键字"><small>16.4</small> 标识符与关键字</a></li>
-    <li><a href="#挑战"><small>16.5</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="a-virtual-machine.html" title="A Virtual Machine" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="compiling-expressions.html" title="Compiling Expressions" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="a-virtual-machine.html" title="虚拟机" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="compiling-expressions.html" title="编译表达式" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="a-virtual-machine.html" title="A Virtual Machine" class="prev">←</a>
-<a href="compiling-expressions.html" title="Compiling Expressions" class="next">→</a>
+<a href="a-virtual-machine.html" title="虚拟机" class="prev">←</a>
+<a href="compiling-expressions.html" title="编译表达式" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -63,22 +65,24 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Scanning on Demand<small>16</small></a></h3>
+<h3><a href="#top">按需词法分析<small>16</small></a></h3>
 
 <ul>
     <li><a href="#启动解释器"><small>16.1</small> 启动解释器</a></li>
     <li><a href="#一次一个词法单元"><small>16.2</small> 一次一个词法单元</a></li>
     <li><a href="#lox-的词法文法"><small>16.3</small> Lox 的词法文法</a></li>
     <li><a href="#标识符与关键字"><small>16.4</small> 标识符与关键字</a></li>
-    <li><a href="#挑战"><small>16.5</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="a-virtual-machine.html" title="A Virtual Machine" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="compiling-expressions.html" title="Compiling Expressions" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="a-virtual-machine.html" title="虚拟机" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="compiling-expressions.html" title="编译表达式" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -86,7 +90,7 @@
 <article class="chapter">
 
   <div class="number">16</div>
-  <h1>Scanning on Demand</h1>
+  <h1>按需词法分析</h1>
 
 <h1><a href="#按需词法分析" id="按需词法分析"><small>16&#8202;.&#8202;0</small>按需词法分析</a></h1>
 <blockquote>
@@ -918,7 +922,7 @@ in <em>identifierType</em>()</div>
 <p>我们偶尔会陷入一种思维陷阱，以为性能来自于复杂的数据结构、一层又一层的缓存，以及种种酷炫的优化。但很多时候，所需的<strong>不过</strong>是少做一点工作；而我常常发现，<strong>就</strong>写我能想到的最简代码，便足以达成此目标。</p>
 </aside>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>16&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>许多较新的语言都支持 <a href="https://en.wikipedia.org/wiki/String_interpolation"><strong>字符串内插</strong></a>。在字符串字面量内部，会有某种特殊的分隔符——最常见的是开头 <code>${</code> 与结尾 <code>}</code>。在那些分隔符之间，可以出现任意表达式。当字符串字面量被执行时，里头的表达式被求值，转换为字符串，再与周围的字符串字面量合并。</p>
@@ -953,7 +957,7 @@ in <em>identifierType</em>()</div>
 
 <footer>
 <a href="compiling-expressions.html" class="next">
-  Next Chapter: &ldquo;Compiling Expressions&rdquo; &rarr;
+  下一章：&ldquo;编译表达式&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

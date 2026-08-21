@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Chunks of Bytecode &middot; Crafting Interpreters</title>
+<title>字节码块 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,7 +34,7 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Chunks of Bytecode<small>14</small></a></h3>
+<h3><a href="#top">字节码块<small>14</small></a></h3>
 
 <ul>
     <li><a href="#字节码？"><small>14.1</small> 字节码？</a></li>
@@ -43,22 +43,24 @@
     <li><a href="#反汇编块"><small>14.4</small> 反汇编块</a></li>
     <li><a href="#常量"><small>14.5</small> 常量</a></li>
     <li><a href="#行信息"><small>14.6</small> 行信息</a></li>
-    <li><a href="#挑战"><small>14.7</small> 挑战</a></li>
-    <li><a href="#设计笔记：测试你的语言"><small>14.8</small> 设计笔记：测试你的语言</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>测试你的语言</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="a-virtual-machine.html" title="A Virtual Machine" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="a-virtual-machine.html" title="虚拟机" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine" class="prev">←</a>
-<a href="a-virtual-machine.html" title="A Virtual Machine" class="next">→</a>
+<a href="a-bytecode-virtual-machine.html" title="字节码虚拟机" class="prev">←</a>
+<a href="a-virtual-machine.html" title="虚拟机" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -66,7 +68,7 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Chunks of Bytecode<small>14</small></a></h3>
+<h3><a href="#top">字节码块<small>14</small></a></h3>
 
 <ul>
     <li><a href="#字节码？"><small>14.1</small> 字节码？</a></li>
@@ -75,16 +77,18 @@
     <li><a href="#反汇编块"><small>14.4</small> 反汇编块</a></li>
     <li><a href="#常量"><small>14.5</small> 常量</a></li>
     <li><a href="#行信息"><small>14.6</small> 行信息</a></li>
-    <li><a href="#挑战"><small>14.7</small> 挑战</a></li>
-    <li><a href="#设计笔记：测试你的语言"><small>14.8</small> 设计笔记：测试你的语言</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>测试你的语言</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="a-virtual-machine.html" title="A Virtual Machine" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="a-virtual-machine.html" title="虚拟机" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -92,7 +96,7 @@
 <article class="chapter">
 
   <div class="number">14</div>
-  <h1>Chunks of Bytecode</h1>
+  <h1>字节码块</h1>
 
 <h1><a href="#字节码块" id="字节码块"><small>14&#8202;.&#8202;0</small>字节码块</a></h1>
 <blockquote>
@@ -1020,7 +1024,7 @@ in <em>disassembleInstruction</em>()</div>
 <p>在剩余的章节中，我们将用更多种类的指令来充实这一切。但基本的结构已然就位，我们眼下已拥有了在运行时<strong>完全</strong>表示一段可执行代码所需的一切。还记得我们在 jlox 中定义的那一整个 AST 类家族吗？在 clox 中，我们已将其压缩为三份数组：代码字节、常量值、以及用于调试的行信息。</p>
 <p>这种压缩，正是我们新的解释器会比 jlox 更快的关键所在。你可以把字节码视作对 AST 的一种紧凑序列化——为解释器在执行过程中按顺序反序列化它所<strong>需要</strong>的方式进行了高度优化。在<a href="a-virtual-machine.html">下一章</a>中，我们便会看到虚拟机究竟是如何做到这一点的。</p>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>14&#8202;.&#8202;7</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>我们对行信息的编码在内存上浪费得离谱。给定同一指令序列往往对应同一源代码行，一种自然的解决思路便是对行号进行类似<a href="https://en.wikipedia.org/wiki/Run-length_encoding">游程编码</a>的方式。</p>
@@ -1045,7 +1049,7 @@ in <em>disassembleInstruction</em>()</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：测试你的语言" id="设计笔记：测试你的语言"><small>14&#8202;.&#8202;8</small>设计笔记：测试你的语言</a></h2>
+<h2><a href="#design-note" id="design-note">设计笔记：测试你的语言</a></h2>
 <p>我们快走到书本一半的位置了，可有一件事我们<strong>始终</strong>没谈，那就是<strong>测试</strong>你的语言实现。这<strong>并不</strong>意味着测试不重要。我<strong>再怎么</strong>强调拥有一套良好的、完备的测试套件对你的语言<strong>至关重要</strong>都不为过。</p>
 <p>我在写这本书的<strong>任何一个字</strong>之前，就为 Lox 写了一份<a href="https://github.com/munificent/craftinginterpreters/tree/master/test">测试套件</a>（欢迎你在自己的 Lox 实现上使用）。那些测试在我的实现中揪出了数不清的 bug。</p>
 <p>测试在所有软件中都很重要，但对于一门程序设计语言而言，它之所以尤为关键，至少有这么几条理由：</p>
@@ -1092,7 +1096,7 @@ in <em>disassembleInstruction</em>()</div>
 
 <footer>
 <a href="a-virtual-machine.html" class="next">
-  Next Chapter: &ldquo;A Virtual Machine&rdquo; &rarr;
+  下一章：&ldquo;虚拟机&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

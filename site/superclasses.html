@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Superclasses &middot; Crafting Interpreters</title>
+<title>超类 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,28 +34,30 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Superclasses<small>29</small></a></h3>
+<h3><a href="#top">超类<small>29</small></a></h3>
 
 <ul>
     <li><a href="#继承方法"><small>29.1</small> 继承方法</a></li>
     <li><a href="#存储超类"><small>29.2</small> 存储超类</a></li>
     <li><a href="#超类调用"><small>29.3</small> 超类调用</a></li>
     <li><a href="#完整的虚拟机"><small>29.4</small> 完整的虚拟机</a></li>
-    <li><a href="#挑战"><small>29.5</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="methods-and-initializers.html" title="Methods and Initializers" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="optimization.html" title="Optimization" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="methods-and-initializers.html" title="方法与初始化器" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="optimization.html" title="优化" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="methods-and-initializers.html" title="Methods and Initializers" class="prev">←</a>
-<a href="optimization.html" title="Optimization" class="next">→</a>
+<a href="methods-and-initializers.html" title="方法与初始化器" class="prev">←</a>
+<a href="optimization.html" title="优化" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -63,22 +65,24 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Superclasses<small>29</small></a></h3>
+<h3><a href="#top">超类<small>29</small></a></h3>
 
 <ul>
     <li><a href="#继承方法"><small>29.1</small> 继承方法</a></li>
     <li><a href="#存储超类"><small>29.2</small> 存储超类</a></li>
     <li><a href="#超类调用"><small>29.3</small> 超类调用</a></li>
     <li><a href="#完整的虚拟机"><small>29.4</small> 完整的虚拟机</a></li>
-    <li><a href="#挑战"><small>29.5</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="methods-and-initializers.html" title="Methods and Initializers" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="optimization.html" title="Optimization" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="methods-and-initializers.html" title="方法与初始化器" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="optimization.html" title="优化" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -86,7 +90,7 @@
 <article class="chapter">
 
   <div class="number">29</div>
-  <h1>Superclasses</h1>
+  <h1>超类</h1>
 
 <h1><a href="#超类" id="超类"><small>29&#8202;.&#8202;0</small>超类</a></h1><!--
 > You can choose your friends but you sho' can't choose your family, an' they're
@@ -1020,7 +1024,7 @@ squeeze even more perf out. If that sounds fun, [keep reading][opt]...
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" id="挑战"><small>29&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#challenges" id="challenges">挑战</a></h2><!--
 1.  A tenet of object-oriented programming is that a class should ensure new
     objects are in a valid state. In Lox, that means defining an initializer
     that populates the instance's fields. Inheritance complicates invariants
@@ -1163,7 +1167,7 @@ Place in a nice box.
 
 <footer>
 <a href="optimization.html" class="next">
-  Next Chapter: &ldquo;Optimization&rdquo; &rarr;
+  下一章：&ldquo;优化&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

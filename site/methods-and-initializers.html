@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Methods and Initializers &middot; Crafting Interpreters</title>
+<title>方法与初始化器 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,7 +34,7 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Methods and Initializers<small>28</small></a></h3>
+<h3><a href="#top">方法与初始化器<small>28</small></a></h3>
 
 <ul>
     <li><a href="#方法声明"><small>28.1</small> 方法声明</a></li>
@@ -42,22 +42,24 @@
     <li><a href="#this"><small>28.3</small> this</a></li>
     <li><a href="#实例初始化器"><small>28.4</small> 实例初始化器</a></li>
     <li><a href="#优化的调用"><small>28.5</small> 优化的调用</a></li>
-    <li><a href="#挑战"><small>28.6</small> 挑战</a></li>
-    <li><a href="#设计笔记：新鲜感预算"><small>28.7</small> 设计笔记：新鲜感预算</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>新鲜感预算</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="classes-and-instances.html" title="Classes and Instances" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="superclasses.html" title="Superclasses" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="classes-and-instances.html" title="类与实例" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="superclasses.html" title="超类" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="classes-and-instances.html" title="Classes and Instances" class="prev">←</a>
-<a href="superclasses.html" title="Superclasses" class="next">→</a>
+<a href="classes-and-instances.html" title="类与实例" class="prev">←</a>
+<a href="superclasses.html" title="超类" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -65,7 +67,7 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Methods and Initializers<small>28</small></a></h3>
+<h3><a href="#top">方法与初始化器<small>28</small></a></h3>
 
 <ul>
     <li><a href="#方法声明"><small>28.1</small> 方法声明</a></li>
@@ -73,16 +75,18 @@
     <li><a href="#this"><small>28.3</small> this</a></li>
     <li><a href="#实例初始化器"><small>28.4</small> 实例初始化器</a></li>
     <li><a href="#优化的调用"><small>28.5</small> 优化的调用</a></li>
-    <li><a href="#挑战"><small>28.6</small> 挑战</a></li>
-    <li><a href="#设计笔记：新鲜感预算"><small>28.7</small> 设计笔记：新鲜感预算</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>新鲜感预算</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="classes-and-instances.html" title="Classes and Instances" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="superclasses.html" title="Superclasses" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="classes-and-instances.html" title="类与实例" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="superclasses.html" title="超类" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -90,7 +94,7 @@
 <article class="chapter">
 
   <div class="number">28</div>
-  <h1>Methods and Initializers</h1>
+  <h1>方法与初始化器</h1>
 
 <h1><a href="#方法与初始化器" id="方法与初始化器"><small>28&#8202;.&#8202;0</small>方法与初始化器</a></h1><!--
 > When you are on the dancefloor, there is nothing to do but dance.
@@ -1874,7 +1878,7 @@ of an object-oriented programming language, and with respectable performance.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" id="挑战"><small>28&#8202;.&#8202;6</small>挑战</a></h2><!--
+<h2><a href="#challenges" id="challenges">挑战</a></h2><!--
 1.  The hash table lookup to find a class's `init()` method is constant time,
     but still fairly slow. Implement something faster. Write a benchmark and
     measure the performance difference.
@@ -1915,7 +1919,7 @@ of an object-oriented programming language, and with respectable performance.
 <div class="design-note"><!--
 -- Design Note: Novelty Budget
 -->
-<h2><a href="#设计笔记：新鲜感预算" id="设计笔记：新鲜感预算"><small>28&#8202;.&#8202;7</small>设计笔记：新鲜感预算</a></h2><!--
+<h2><a href="#design-note" id="design-note">设计笔记：新鲜感预算</a></h2><!--
 I still remember the first time I wrote a tiny BASIC program on a TRS-80 and
 made a computer do something it hadn't done before. It felt like a superpower.
 The first time I cobbled together just enough of a parser and interpreter to let
@@ -2062,7 +2066,7 @@ proportionally smaller (but likely more devoted) audience size, go for it.
 
 <footer>
 <a href="superclasses.html" class="next">
-  Next Chapter: &ldquo;Superclasses&rdquo; &rarr;
+  下一章：&ldquo;超类&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Types of Values &middot; Crafting Interpreters</title>
+<title>值的类型 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,28 +34,30 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Types of Values<small>18</small></a></h3>
+<h3><a href="#top">值的类型<small>18</small></a></h3>
 
 <ul>
     <li><a href="#标签联合"><small>18.1</small> 标签联合</a></li>
     <li><a href="#lox-值与-c-值"><small>18.2</small> Lox 值与 C 值</a></li>
     <li><a href="#动态类型数字"><small>18.3</small> 动态类型数字</a></li>
     <li><a href="#两种新类型"><small>18.4</small> 两种新类型</a></li>
-    <li><a href="#挑战"><small>18.5</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="compiling-expressions.html" title="Compiling Expressions" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="strings.html" title="Strings" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="compiling-expressions.html" title="编译表达式" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="strings.html" title="字符串" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="compiling-expressions.html" title="Compiling Expressions" class="prev">←</a>
-<a href="strings.html" title="Strings" class="next">→</a>
+<a href="compiling-expressions.html" title="编译表达式" class="prev">←</a>
+<a href="strings.html" title="字符串" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -63,22 +65,24 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Types of Values<small>18</small></a></h3>
+<h3><a href="#top">值的类型<small>18</small></a></h3>
 
 <ul>
     <li><a href="#标签联合"><small>18.1</small> 标签联合</a></li>
     <li><a href="#lox-值与-c-值"><small>18.2</small> Lox 值与 C 值</a></li>
     <li><a href="#动态类型数字"><small>18.3</small> 动态类型数字</a></li>
     <li><a href="#两种新类型"><small>18.4</small> 两种新类型</a></li>
-    <li><a href="#挑战"><small>18.5</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="compiling-expressions.html" title="Compiling Expressions" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="strings.html" title="Strings" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="compiling-expressions.html" title="编译表达式" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="strings.html" title="字符串" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -86,7 +90,7 @@
 <article class="chapter">
 
   <div class="number">18</div>
-  <h1>Types of Values</h1>
+  <h1>值的类型</h1>
 
 <h1><a href="#值的类型" id="值的类型"><small>18&#8202;.&#8202;0</small>值的类型</a></h1>
 <blockquote>
@@ -683,7 +687,7 @@ in <em>disassembleInstruction</em>()</div>
 </pre></div>
 <p>好吧， 我承认这或许不算最实用的表达式，<strong>但</strong>咱们确实在进步。我们还缺一种自己带字面量形式的内置类型：字符串。那些东西要复杂得多， 因为字符串的大小是可变的。这一微不足道的差别却牵引出如此宏大的影响， 以致于我们要为字符串专门 <a href="strings.html"> 再开一章 </a> 给它们单独叙述。</p>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>18&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>我们本可以进一步压缩二元运算符。还有哪些指令可以被删去， 而编译器如何应对那些 不再存在的指令？</p>
@@ -696,7 +700,7 @@ in <em>disassembleInstruction</em>()</div>
 
 <footer>
 <a href="strings.html" class="next">
-  Next Chapter: &ldquo;Strings&rdquo; &rarr;
+  下一章：&ldquo;字符串&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

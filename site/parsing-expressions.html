@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Parsing Expressions &middot; Crafting Interpreters</title>
+<title>解析表达式 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,29 +34,31 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Parsing Expressions<small>6</small></a></h3>
+<h3><a href="#top">解析表达式<small>6</small></a></h3>
 
 <ul>
     <li><a href="#歧义与解析游戏"><small>6.1</small> 歧义与解析游戏</a></li>
     <li><a href="#递归下降解析"><small>6.2</small> 递归下降解析</a></li>
     <li><a href="#语法错误"><small>6.3</small> 语法错误</a></li>
     <li><a href="#把语法分析器接入系统"><small>6.4</small> 把语法分析器接入系统</a></li>
-    <li><a href="#挑战"><small>6.5</small> 挑战</a></li>
-    <li><a href="#设计笔记：逻辑与历史"><small>6.6</small> 设计笔记：逻辑与历史</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>逻辑与历史</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="representing-code.html" title="Representing Code" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter">&uarr;&nbsp;Up</a>
-    <a href="evaluating-expressions.html" title="Evaluating Expressions" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="representing-code.html" title="表示代码" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器">&uarr;&nbsp;上层</a>
+    <a href="evaluating-expressions.html" title="求值表达式" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="representing-code.html" title="Representing Code" class="prev">←</a>
-<a href="evaluating-expressions.html" title="Evaluating Expressions" class="next">→</a>
+<a href="representing-code.html" title="表示代码" class="prev">←</a>
+<a href="evaluating-expressions.html" title="求值表达式" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -64,23 +66,25 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Parsing Expressions<small>6</small></a></h3>
+<h3><a href="#top">解析表达式<small>6</small></a></h3>
 
 <ul>
     <li><a href="#歧义与解析游戏"><small>6.1</small> 歧义与解析游戏</a></li>
     <li><a href="#递归下降解析"><small>6.2</small> 递归下降解析</a></li>
     <li><a href="#语法错误"><small>6.3</small> 语法错误</a></li>
     <li><a href="#把语法分析器接入系统"><small>6.4</small> 把语法分析器接入系统</a></li>
-    <li><a href="#挑战"><small>6.5</small> 挑战</a></li>
-    <li><a href="#设计笔记：逻辑与历史"><small>6.6</small> 设计笔记：逻辑与历史</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>逻辑与历史</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="representing-code.html" title="Representing Code" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter">&uarr;&nbsp;Up</a>
-    <a href="evaluating-expressions.html" title="Evaluating Expressions" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="representing-code.html" title="表示代码" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器">&uarr;&nbsp;上层</a>
+    <a href="evaluating-expressions.html" title="求值表达式" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -88,7 +92,7 @@
 <article class="chapter">
 
   <div class="number">6</div>
-  <h1>Parsing Expressions</h1>
+  <h1>解析表达式</h1>
 
 <h1><a href="#解析表达式" id="解析表达式"><small>6&#8202;.&#8202;0</small>解析表达式</a></h1>
 <blockquote>
@@ -711,7 +715,7 @@ replace 5 lines</div>
 </aside>
 <p>启动解释器，输入几条表达式试试。它处理优先级与结合性的方式是否如你所愿？区区不到 200 行代码，便能做到这般地步，实在不赖。</p>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>6&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>在 C 语言中，代码块是一种语句形式，它允许你将一连串语句塞进原本只期望出现一条语句的位置。<a href="https://en.wikipedia.org/wiki/Comma_operator">逗号运算符</a>则是表达式层面的一种类似语法。一连串以逗号分隔的表达式，可以出现在原本只期望出现单一表达式的地方（除了函数调用的参数列表内部）。在运行时，逗号运算符会对左侧操作数求值并丢弃其结果。然后，它会对右侧操作数求值，并将其结果返回。</p>
@@ -726,7 +730,7 @@ replace 5 lines</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：逻辑与历史" id="设计笔记：逻辑与历史"><small>6&#8202;.&#8202;6</small>设计笔记：逻辑与历史</a></h2>
+<h2><a href="#design-note" id="design-note">设计笔记：逻辑与历史</a></h2>
 <p>假设我们决定为 Lox 添上一对按位运算符 <code>&amp;</code> 与 <code>|</code>。那么，它们究竟应当被放在优先级层级的哪一档呢？C 语言——以及大多数沿袭 C 之路的语言——将它们放在 <code>==</code> 之下。这被广泛视为一个错误，因为这意味着那些常见的运算——譬如检测一个标志位——都不得不借助一对括号：</p>
 <div class="codehilite"><pre><span class="k">if</span> (<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span> == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 错。</span>
 <span class="k">if</span> ((<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span>) == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 对。</span>
@@ -744,7 +748,7 @@ replace 5 lines</div>
 
 <footer>
 <a href="evaluating-expressions.html" class="next">
-  Next Chapter: &ldquo;Evaluating Expressions&rdquo; &rarr;
+  下一章：&ldquo;求值表达式&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

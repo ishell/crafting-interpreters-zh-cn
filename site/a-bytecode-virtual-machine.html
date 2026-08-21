@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>A Bytecode Virtual Machine &middot; Crafting Interpreters</title>
+<title>字节码虚拟机 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,40 +34,41 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h2><small>III</small>A Bytecode Virtual Machine</h2>
+<h2><small>III</small>字节码虚拟机</h2>
 
 <ul>
-    <li><a href="chunks-of-bytecode.html"><small>14</small>Chunks of Bytecode</a></li>
-    <li><a href="a-virtual-machine.html"><small>15</small>A Virtual Machine</a></li>
-    <li><a href="scanning-on-demand.html"><small>16</small>Scanning on Demand</a></li>
-    <li><a href="compiling-expressions.html"><small>17</small>Compiling Expressions</a></li>
-    <li><a href="types-of-values.html"><small>18</small>Types of Values</a></li>
-    <li><a href="strings.html"><small>19</small>Strings</a></li>
-    <li><a href="hash-tables.html"><small>20</small>Hash Tables</a></li>
-    <li><a href="global-variables.html"><small>21</small>Global Variables</a></li>
-    <li><a href="local-variables.html"><small>22</small>Local Variables</a></li>
-    <li><a href="jumping-back-and-forth.html"><small>23</small>Jumping Back and Forth</a></li>
-    <li><a href="calls-and-functions.html"><small>24</small>Calls and Functions</a></li>
-    <li><a href="closures.html"><small>25</small>Closures</a></li>
-    <li><a href="garbage-collection.html"><small>26</small>Garbage Collection</a></li>
-    <li><a href="classes-and-instances.html"><small>27</small>Classes and Instances</a></li>
-    <li><a href="methods-and-initializers.html"><small>28</small>Methods and Initializers</a></li>
-    <li><a href="superclasses.html"><small>29</small>Superclasses</a></li>
-    <li><a href="optimization.html"><small>30</small>Optimization</a></li>
+    <li><a href="chunks-of-bytecode.html"><small>14</small>字节码块</a></li>
+    <li><a href="a-virtual-machine.html"><small>15</small>虚拟机</a></li>
+    <li><a href="scanning-on-demand.html"><small>16</small>按需词法分析</a></li>
+    <li><a href="compiling-expressions.html"><small>17</small>编译表达式</a></li>
+    <li><a href="types-of-values.html"><small>18</small>值的类型</a></li>
+    <li><a href="strings.html"><small>19</small>字符串</a></li>
+    <li><a href="hash-tables.html"><small>20</small>哈希表</a></li>
+    <li><a href="global-variables.html"><small>21</small>全局变量</a></li>
+    <li><a href="local-variables.html"><small>22</small>局部变量</a></li>
+    <li><a href="jumping-back-and-forth.html"><small>23</small>来回跳转</a></li>
+    <li><a href="calls-and-functions.html"><small>24</small>调用与函数</a></li>
+    <li><a href="closures.html"><small>25</small>闭包</a></li>
+    <li><a href="garbage-collection.html"><small>26</small>垃圾回收</a></li>
+    <li><a href="classes-and-instances.html"><small>27</small>类与实例</a></li>
+    <li><a href="methods-and-initializers.html"><small>28</small>方法与初始化器</a></li>
+    <li><a href="superclasses.html"><small>29</small>超类</a></li>
+    <li><a href="optimization.html"><small>30</small>优化</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="inheritance.html" title="Inheritance" class="left">&larr;&nbsp;Previous</a>
-    <a href="contents.html" title="Table of Contents">&uarr;&nbsp;Up</a>
-    <a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="inheritance.html" title="继承" class="left">&larr;&nbsp;上一页</a>
+    <a href="contents.html" title="目录">&uarr;&nbsp;上层</a>
+    <a href="chunks-of-bytecode.html" title="字节码块" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="inheritance.html" title="Inheritance" class="prev">←</a>
-<a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="next">→</a>
+<a href="inheritance.html" title="继承" class="prev">←</a>
+<a href="chunks-of-bytecode.html" title="字节码块" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -75,34 +76,35 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h2><small>III</small>A Bytecode Virtual Machine</h2>
+<h2><small>III</small>字节码虚拟机</h2>
 
 <ul>
-    <li><a href="chunks-of-bytecode.html"><small>14</small>Chunks of Bytecode</a></li>
-    <li><a href="a-virtual-machine.html"><small>15</small>A Virtual Machine</a></li>
-    <li><a href="scanning-on-demand.html"><small>16</small>Scanning on Demand</a></li>
-    <li><a href="compiling-expressions.html"><small>17</small>Compiling Expressions</a></li>
-    <li><a href="types-of-values.html"><small>18</small>Types of Values</a></li>
-    <li><a href="strings.html"><small>19</small>Strings</a></li>
-    <li><a href="hash-tables.html"><small>20</small>Hash Tables</a></li>
-    <li><a href="global-variables.html"><small>21</small>Global Variables</a></li>
-    <li><a href="local-variables.html"><small>22</small>Local Variables</a></li>
-    <li><a href="jumping-back-and-forth.html"><small>23</small>Jumping Back and Forth</a></li>
-    <li><a href="calls-and-functions.html"><small>24</small>Calls and Functions</a></li>
-    <li><a href="closures.html"><small>25</small>Closures</a></li>
-    <li><a href="garbage-collection.html"><small>26</small>Garbage Collection</a></li>
-    <li><a href="classes-and-instances.html"><small>27</small>Classes and Instances</a></li>
-    <li><a href="methods-and-initializers.html"><small>28</small>Methods and Initializers</a></li>
-    <li><a href="superclasses.html"><small>29</small>Superclasses</a></li>
-    <li><a href="optimization.html"><small>30</small>Optimization</a></li>
+    <li><a href="chunks-of-bytecode.html"><small>14</small>字节码块</a></li>
+    <li><a href="a-virtual-machine.html"><small>15</small>虚拟机</a></li>
+    <li><a href="scanning-on-demand.html"><small>16</small>按需词法分析</a></li>
+    <li><a href="compiling-expressions.html"><small>17</small>编译表达式</a></li>
+    <li><a href="types-of-values.html"><small>18</small>值的类型</a></li>
+    <li><a href="strings.html"><small>19</small>字符串</a></li>
+    <li><a href="hash-tables.html"><small>20</small>哈希表</a></li>
+    <li><a href="global-variables.html"><small>21</small>全局变量</a></li>
+    <li><a href="local-variables.html"><small>22</small>局部变量</a></li>
+    <li><a href="jumping-back-and-forth.html"><small>23</small>来回跳转</a></li>
+    <li><a href="calls-and-functions.html"><small>24</small>调用与函数</a></li>
+    <li><a href="closures.html"><small>25</small>闭包</a></li>
+    <li><a href="garbage-collection.html"><small>26</small>垃圾回收</a></li>
+    <li><a href="classes-and-instances.html"><small>27</small>类与实例</a></li>
+    <li><a href="methods-and-initializers.html"><small>28</small>方法与初始化器</a></li>
+    <li><a href="superclasses.html"><small>29</small>超类</a></li>
+    <li><a href="optimization.html"><small>30</small>优化</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="inheritance.html" title="Inheritance" class="left">&larr;&nbsp;Previous</a>
-    <a href="contents.html" title="Table of Contents">&uarr;&nbsp;Up</a>
-    <a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="inheritance.html" title="继承" class="left">&larr;&nbsp;上一页</a>
+    <a href="contents.html" title="目录">&uarr;&nbsp;上层</a>
+    <a href="chunks-of-bytecode.html" title="字节码块" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -110,7 +112,7 @@
 <article class="chapter">
 
   <div class="number">III</div>
-  <h1 class="part">A Bytecode Virtual Machine</h1>
+  <h1 class="part">字节码虚拟机</h1>
 
 <h1><a href="#字节码虚拟机" id="字节码虚拟机"><small>III&#8202;.&#8202;0</small>字节码虚拟机</a></h1><!--
 Our Java interpreter, jlox, taught us many of the fundamentals of programming
@@ -136,7 +138,7 @@ more than the C standard library...
 
 <footer>
 <a href="chunks-of-bytecode.html" class="next">
-  Next Chapter: &ldquo;Chunks of Bytecode&rdquo; &rarr;
+  下一章：&ldquo;字节码块&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

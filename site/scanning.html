@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Scanning &middot; Crafting Interpreters</title>
+<title>扫描 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,7 +34,7 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Scanning<small>4</small></a></h3>
+<h3><a href="#top">扫描<small>4</small></a></h3>
 
 <ul>
     <li><a href="#解释器框架"><small>4.1</small> 解释器框架</a></li>
@@ -44,22 +44,24 @@
     <li><a href="#识别词素"><small>4.5</small> 识别词素</a></li>
     <li><a href="#更长的词素"><small>4.6</small> 更长的词素</a></li>
     <li><a href="#保留字与标识符"><small>4.7</small> 保留字与标识符</a></li>
-    <li><a href="#挑战"><small>4.8</small> 挑战</a></li>
-    <li><a href="#设计笔记：隐式分号"><small>4.9</small> 设计笔记：隐式分号</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>隐式分号</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter">&uarr;&nbsp;Up</a>
-    <a href="representing-code.html" title="Representing Code" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器">&uarr;&nbsp;上层</a>
+    <a href="representing-code.html" title="表示代码" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter" class="prev">←</a>
-<a href="representing-code.html" title="Representing Code" class="next">→</a>
+<a href="a-tree-walk-interpreter.html" title="树遍历解释器" class="prev">←</a>
+<a href="representing-code.html" title="表示代码" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -67,7 +69,7 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Scanning<small>4</small></a></h3>
+<h3><a href="#top">扫描<small>4</small></a></h3>
 
 <ul>
     <li><a href="#解释器框架"><small>4.1</small> 解释器框架</a></li>
@@ -77,16 +79,18 @@
     <li><a href="#识别词素"><small>4.5</small> 识别词素</a></li>
     <li><a href="#更长的词素"><small>4.6</small> 更长的词素</a></li>
     <li><a href="#保留字与标识符"><small>4.7</small> 保留字与标识符</a></li>
-    <li><a href="#挑战"><small>4.8</small> 挑战</a></li>
-    <li><a href="#设计笔记：隐式分号"><small>4.9</small> 设计笔记：隐式分号</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>隐式分号</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter">&uarr;&nbsp;Up</a>
-    <a href="representing-code.html" title="Representing Code" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器">&uarr;&nbsp;上层</a>
+    <a href="representing-code.html" title="表示代码" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -94,7 +98,7 @@
 <article class="chapter">
 
   <div class="number">4</div>
-  <h1>Scanning</h1>
+  <h1>扫描</h1>
 
 <h1><a href="#扫描" id="扫描"><small>4&#8202;.&#8202;0</small>扫描</a></h1>
 <blockquote>
@@ -819,7 +823,7 @@ replace 1 line</div>
 <p>若是匹配，我们便使用该关键字对应的词法单元类型。否则，它便是一个普通的用户自定义标识符。</p>
 <p>至此，我们已然拥有了一款完整的扫描器，足以应付整个 Lox 的词法文法。启动 REPL，敲入一些合法与不合法的代码试试看。它是否如你所预期的那样产出了对应的词法单元？不妨自己构思一些刁钻的边界情形，看看它是否处理得当。</p>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>4&#8202;.&#8202;8</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>Python 与 Haskell 的词法文法并非<strong>正则</strong>。这意味着什么，为什么它们不是正则的？</p>
@@ -836,7 +840,7 @@ replace 1 line</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：隐式分号" id="设计笔记：隐式分号"><small>4&#8202;.&#8202;9</small>设计笔记：隐式分号</a></h2>
+<h2><a href="#design-note" id="design-note">设计笔记：隐式分号</a></h2>
 <p>如今的程序员在程序设计语言的选项上被宠坏了，对语法也变得挑剔起来。他们希望自己的语言看起来既清爽又现代。一处几乎被每一门新兴语言都刮除干净的语法寄生物（以及某些像 BASIC 这样古老到从未沾染的语言）是那个用作显式语句终结符的 <code>;</code>。</p>
 <p>取而代之的是，他们将换行符视作语句的终结符——在该这么做的地方。&ldquo;在该这么做的地方&ldquo;才是棘手之处。虽然<strong>大多数</strong>语句都独占一行，但有时你也需要将单个语句拆分到几行之中。这些夹杂其间的换行符不应被当作终结符来处理。</p>
 <p>大多数换行符应当被忽略的明显情形是易于识别的，但仍有一些棘手的家伙：</p>
@@ -926,7 +930,7 @@ replace 1 line</div>
 
 <footer>
 <a href="representing-code.html" class="next">
-  Next Chapter: &ldquo;Representing Code&rdquo; &rarr;
+  下一章：&ldquo;表示代码&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

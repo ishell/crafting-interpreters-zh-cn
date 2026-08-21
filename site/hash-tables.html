@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Hash Tables &middot; Crafting Interpreters</title>
+<title>哈希表 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,7 +34,7 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Hash Tables<small>20</small></a></h3>
+<h3><a href="#top">哈希表<small>20</small></a></h3>
 
 <ul>
     <li><a href="#一桶接一桶的数组"><small>20.1</small> 一桶接一桶的数组</a></li>
@@ -42,21 +42,23 @@
     <li><a href="#哈希函数"><small>20.3</small> 哈希函数</a></li>
     <li><a href="#构建哈希表"><small>20.4</small> 构建哈希表</a></li>
     <li><a href="#字符串驻留"><small>20.5</small> 字符串驻留</a></li>
-    <li><a href="#挑战"><small>20.6</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="strings.html" title="Strings" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="global-variables.html" title="Global Variables" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="strings.html" title="字符串" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="global-variables.html" title="全局变量" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="strings.html" title="Strings" class="prev">←</a>
-<a href="global-variables.html" title="Global Variables" class="next">→</a>
+<a href="strings.html" title="字符串" class="prev">←</a>
+<a href="global-variables.html" title="全局变量" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -64,7 +66,7 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Hash Tables<small>20</small></a></h3>
+<h3><a href="#top">哈希表<small>20</small></a></h3>
 
 <ul>
     <li><a href="#一桶接一桶的数组"><small>20.1</small> 一桶接一桶的数组</a></li>
@@ -72,15 +74,17 @@
     <li><a href="#哈希函数"><small>20.3</small> 哈希函数</a></li>
     <li><a href="#构建哈希表"><small>20.4</small> 构建哈希表</a></li>
     <li><a href="#字符串驻留"><small>20.5</small> 字符串驻留</a></li>
-    <li><a href="#挑战"><small>20.6</small> 挑战</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="strings.html" title="Strings" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="global-variables.html" title="Global Variables" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="strings.html" title="字符串" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="global-variables.html" title="全局变量" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -88,7 +92,7 @@
 <article class="chapter">
 
   <div class="number">20</div>
-  <h1>Hash Tables</h1>
+  <h1>哈希表</h1>
 
 <h1><a href="#哈希表" id="哈希表"><small>20&#8202;.&#8202;0</small>哈希表</a></h1>
 <blockquote>
@@ -836,7 +840,7 @@ replace 7 lines</div>
 <p>我们在创建字符串时付出了一点开销去驻留它们。但作为回报， 字符串上的相等运算在运行时快了许多。有了这一切， 我们便有了一张功能齐备的哈希表， 随时可以用来追踪变量、 实例或任何其他可能冒出来的键/值对。</p>
 <p>同时， 我们也加快了字符串相等的测试。这对于用户对字符串使用 <code>==</code> 很有帮助。但对一门类 Lox 这样的动态类型语言而言， 这一点更为重要：方法调用与实例字段的查找都是按名字在运行时进行的。如果测试字符串是否相等的速度很慢， 那就意味着按名字查找方法的速度也慢。而在一门面向对象的语言中， <em>若</em> 那很慢， 便* 是* 一切都* 慢。</p>
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>20&#8202;.&#8202;6</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>在 clox 中， 我们恰好只需要支持字符串类型的键， 于是我们构建的那张哈希表被硬编码为只接受这种键类型。若我们将哈希表作为一阶对象暴露给 Lox 用户， 那么支持不同类型的键便会很有用。</p>
@@ -857,7 +861,7 @@ replace 7 lines</div>
 
 <footer>
 <a href="global-variables.html" class="next">
-  Next Chapter: &ldquo;Global Variables&rdquo; &rarr;
+  下一章：&ldquo;全局变量&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

@@ -3,13 +3,17 @@ import 'package:path/path.dart' as p;
 import 'code_tag.dart';
 import 'page_parser.dart';
 import 'text.dart';
+import 'titles_zh.dart';
 
 /// One page (in the HTML sense) of the book.
 ///
 /// Each chapter, part introduction, and backmatter section is a page.
 class Page {
-  /// The title of this page.
+  /// The English title of this page (used for file names and code weaving).
   final String title;
+
+  /// Localized title shown in navigation and page chrome.
+  String get displayTitle => chineseDisplayTitle(title);
 
   /// The chapter or part number, like "12", "II", or "".
   final String numberString;
@@ -128,10 +132,11 @@ class Header {
   bool get isChallenges {
     // Check for a subheader because there is a "Challenges" *subheader* in
     // the Introduction.
-    return name == "Challenges" && level == 2;
+    return (name == "Challenges" || name == "挑战") && level == 2;
   }
 
-  bool get isDesignNote => name.startsWith("Design Note:");
+  bool get isDesignNote =>
+      name.startsWith("Design Note:") || name.startsWith("设计笔记：");
 
   String get anchor {
     if (isChallenges) return "challenges";

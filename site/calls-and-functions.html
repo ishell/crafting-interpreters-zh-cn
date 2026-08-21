@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Calls and Functions &middot; Crafting Interpreters</title>
+<title>调用与函数 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,7 +34,7 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Calls and Functions<small>24</small></a></h3>
+<h3><a href="#top">调用与函数<small>24</small></a></h3>
 
 <ul>
     <li><a href="#函数对象"><small>24.1</small> 函数对象</a></li>
@@ -44,23 +44,23 @@
     <li><a href="#函数调用"><small>24.5</small> 函数调用</a></li>
     <li><a href="#return-语句"><small>24.6</small> return 语句</a></li>
     <li><a href="#原生函数"><small>24.7</small> 原生函数</a></li>
-    <li><a href="#挑战"><small>24.9</small> 挑战</a></li>
     <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="jumping-back-and-forth.html" title="Jumping Back and Forth" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="closures.html" title="Closures" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="jumping-back-and-forth.html" title="来回跳转" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="closures.html" title="闭包" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="jumping-back-and-forth.html" title="Jumping Back and Forth" class="prev">←</a>
-<a href="closures.html" title="Closures" class="next">→</a>
+<a href="jumping-back-and-forth.html" title="来回跳转" class="prev">←</a>
+<a href="closures.html" title="闭包" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -68,7 +68,7 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Calls and Functions<small>24</small></a></h3>
+<h3><a href="#top">调用与函数<small>24</small></a></h3>
 
 <ul>
     <li><a href="#函数对象"><small>24.1</small> 函数对象</a></li>
@@ -78,17 +78,17 @@
     <li><a href="#函数调用"><small>24.5</small> 函数调用</a></li>
     <li><a href="#return-语句"><small>24.6</small> return 语句</a></li>
     <li><a href="#原生函数"><small>24.7</small> 原生函数</a></li>
-    <li><a href="#挑战"><small>24.9</small> 挑战</a></li>
     <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="jumping-back-and-forth.html" title="Jumping Back and Forth" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine">&uarr;&nbsp;Up</a>
-    <a href="closures.html" title="Closures" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="jumping-back-and-forth.html" title="来回跳转" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-bytecode-virtual-machine.html" title="字节码虚拟机">&uarr;&nbsp;上层</a>
+    <a href="closures.html" title="闭包" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -96,7 +96,7 @@
 <article class="chapter">
 
   <div class="number">24</div>
-  <h1>Calls and Functions</h1>
+  <h1>调用与函数</h1>
 
 <h1><a href="#调用与函数" id="调用与函数"><small>24&#8202;.&#8202;0</small>调用与函数</a></h1><!--
 > Any problem in computer science can be solved with another level of
@@ -2372,7 +2372,7 @@ optimizations we can do in our VM.
 <div class="challenges"><!--
 ## Challenges
 -->
-<h2><a href="#挑战" id="挑战"><small>24&#8202;.&#8202;9</small>挑战</a></h2><!--
+<h2><a href="#challenges" id="challenges">挑战</a></h2><!--
 1.  Reading and writing the `ip` field is one of the most frequent operations
     inside the bytecode loop. Right now, we access it through a pointer to the
     current CallFrame. That requires a pointer indirection which may force the
@@ -2431,7 +2431,7 @@ optimizations we can do in our VM.
 
 <footer>
 <a href="closures.html" class="next">
-  Next Chapter: &ldquo;Closures&rdquo; &rarr;
+  下一章：&ldquo;闭包&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

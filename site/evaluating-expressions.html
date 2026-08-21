@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
-<title>Evaluating Expressions &middot; Crafting Interpreters</title>
+<title>求值表达式 &middot; 解释器设计与实现</title>
 
 <!-- Tell mobile browsers we're optimized for them and they don't need to crop
      the viewport. -->
@@ -34,29 +34,31 @@
 <nav class="wide">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<h3><a href="#top">Evaluating Expressions<small>7</small></a></h3>
+<h3><a href="#top">求值表达式<small>7</small></a></h3>
 
 <ul>
     <li><a href="#表示值"><small>7.1</small> 表示值</a></li>
     <li><a href="#求值表达式"><small>7.2</small> 求值表达式</a></li>
     <li><a href="#运行时错误"><small>7.3</small> 运行时错误</a></li>
     <li><a href="#把解释器接入系统"><small>7.4</small> 把解释器接入系统</a></li>
-    <li><a href="#挑战"><small>7.5</small> 挑战</a></li>
-    <li><a href="#设计笔记：静态类型与动态类型"><small>7.6</small> 设计笔记：静态类型与动态类型</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>静态类型与动态类型</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="parsing-expressions.html" title="Parsing Expressions" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter">&uarr;&nbsp;Up</a>
-    <a href="statements-and-state.html" title="Statements and State" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="parsing-expressions.html" title="解析表达式" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器">&uarr;&nbsp;上层</a>
+    <a href="statements-and-state.html" title="语句与状态" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
 </nav>
 
 <nav class="narrow">
 <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
-<a href="parsing-expressions.html" title="Parsing Expressions" class="prev">←</a>
-<a href="statements-and-state.html" title="Statements and State" class="next">→</a>
+<a href="parsing-expressions.html" title="解析表达式" class="prev">←</a>
+<a href="statements-and-state.html" title="语句与状态" class="next">→</a>
 </nav>
 
 <div class="page">
@@ -64,23 +66,25 @@
 <nav class="floating">
   <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<h3><a href="#top">Evaluating Expressions<small>7</small></a></h3>
+<h3><a href="#top">求值表达式<small>7</small></a></h3>
 
 <ul>
     <li><a href="#表示值"><small>7.1</small> 表示值</a></li>
     <li><a href="#求值表达式"><small>7.2</small> 求值表达式</a></li>
     <li><a href="#运行时错误"><small>7.3</small> 运行时错误</a></li>
     <li><a href="#把解释器接入系统"><small>7.4</small> 把解释器接入系统</a></li>
-    <li><a href="#挑战"><small>7.5</small> 挑战</a></li>
-    <li><a href="#设计笔记：静态类型与动态类型"><small>7.6</small> 设计笔记：静态类型与动态类型</a></li>
+    <li class="divider"></li>
+    <li class="end-part"><a href="#challenges">挑战</a></li>
+    <li class="end-part"><a href="#design-note"><small>笔记</small>静态类型与动态类型</a></li>
 </ul>
 
 
 <div class="prev-next">
-    <a href="parsing-expressions.html" title="Parsing Expressions" class="left">&larr;&nbsp;Previous</a>
-    <a href="a-tree-walk-interpreter.html" title="A Tree-Walk Interpreter">&uarr;&nbsp;Up</a>
-    <a href="statements-and-state.html" title="Statements and State" class="right">Next&nbsp;&rarr;</a>
-</div>  </div>
+    <a href="parsing-expressions.html" title="解析表达式" class="left">&larr;&nbsp;上一页</a>
+    <a href="a-tree-walk-interpreter.html" title="树遍历解释器">&uarr;&nbsp;上层</a>
+    <a href="statements-and-state.html" title="语句与状态" class="right">下一页&nbsp;&rarr;</a>
+</div>
+  </div>
   <a id="expand-nav">≡</a>
 </nav>
 </div>
@@ -88,7 +92,7 @@
 <article class="chapter">
 
   <div class="number">7</div>
-  <h1>Evaluating Expressions</h1>
+  <h1>求值表达式</h1>
 
 <h1><a href="#求值表达式" id="求值表达式"><small>7&#8202;.&#8202;0</small>求值表达式</a></h1>
 <blockquote>
@@ -623,7 +627,7 @@ replace 1 line</div>
 <p>至此，我们已然拥有一条完整的语言流水线：扫描、解析，再加执行。恭喜你，你拥有了一台专属于你自己的算术计算器。</p>
 <p>正如你所见，这款解释器实在算得上骨瘦如柴。但 Interpreter 类以及我们今日所搭建的访问者模式，构成了后续章节将要填满各种有趣五脏六腑的一副骨架——变量、函数，等等。眼下，这款解释器尚不能做太多事情，但它已<strong>活过来了</strong>！</p><img src="image/evaluating-expressions/skeleton.png" alt="一具正在挥手问好的骷髅。" />
 <div class="challenges">
-<h2><a href="#挑战" id="挑战"><small>7&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#challenges" id="challenges">挑战</a></h2>
 <ol>
 <li>
 <p>允许在数字以外的类型上进行比较，可能会是一个有用的特性。运算符或许能够为字符串给出合理的解释。甚至是在混合类型之间进行比较——比如 <code>3 &lt; "pancake"</code>——也可能派上用场，使我们得以构建由异质类型组成的有序集合。当然，它也可能只是徒然招致 bug 与困惑。</p>
@@ -639,7 +643,7 @@ replace 1 line</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：静态类型与动态类型" id="设计笔记：静态类型与动态类型"><small>7&#8202;.&#8202;6</small>设计笔记：静态类型与动态类型</a></h2>
+<h2><a href="#design-note" id="design-note">设计笔记：静态类型与动态类型</a></h2>
 <p>某些语言——例如 Java——是静态类型的，这意味着类型错误会在编译期——任何代码运行之前——便被检测并报告出来。另一些语言——例如 Lox——则是动态类型的，它们会将类型错误的检查推迟到运行时——也就是在某个运算即将被执行的前一刻。我们往往将这种选择视作非此即彼、非黑即白，但事实上，在这两者之间还存在着一个连续的光谱。</p>
 <p>结果是，即便是大多数静态类型语言，也确实会在运行时做一些类型检查。其类型系统会在静态层面校验大部分类型规则，但会在所产生的代码中为某些运算插入运行时的检查。</p>
 <p>举例而言，在 Java 中，<em>静态的</em> 类型系统假设一次类型转换表达式总是能够安全地完成。一旦你对某个值作了类型转换，你便可以静态地将其视作目标类型而不会招致任何编译错误。然而向下转型显然是有可能失败的。静态检查器之所以能够假定类型转换必然成功、而不会违反语言所承诺的可靠性，唯一的原因便在于：该类型转换会在<strong>运行时</strong>接受校验，并在失败时抛出一个异常。</p>
@@ -655,7 +659,7 @@ replace 1 line</div>
 
 <footer>
 <a href="statements-and-state.html" class="next">
-  Next Chapter: &ldquo;Statements and State&rdquo; &rarr;
+  下一章：&ldquo;语句与状态&rdquo; &rarr;
 </a>
 Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>

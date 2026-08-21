@@ -51,7 +51,15 @@ PageFile parsePage(Page page) {
 
       if (header.isChallenges) hasChallenges = true;
       if (header.isDesignNote) {
-        designNote = header.name.substring("Design Note: ".length);
+        const englishPrefix = "Design Note: ";
+        const chinesePrefix = "设计笔记：";
+        if (header.name.startsWith(englishPrefix)) {
+          designNote = header.name.substring(englishPrefix.length);
+        } else if (header.name.startsWith(chinesePrefix)) {
+          designNote = header.name.substring(chinesePrefix.length);
+        } else {
+          designNote = header.name;
+        }
       }
 
       headers[line] = header;
