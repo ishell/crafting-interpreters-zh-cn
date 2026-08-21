@@ -124,7 +124,7 @@ class Subclass < NotAClass {} // ？！
 
 这条拍脑袋式的指引有一个更显赫的名字——[*Liskov 替换原则*][liskov]。Barbara Liskov 在面向对象编程的奠基时期的一次主旨演讲中提出了它。
 
-[liskov]: https://en.wikipedia.org/wiki/Liskov_substitution**principle
+[liskov]: https://en.wikipedia.org/wiki/Liskov_substitution_principle
 
 </aside>
 
@@ -326,7 +326,7 @@ C().test();
 
 首先，是我们一直铺垫到这一步的工作。我们通过在恰当的环境之中查找 "super"，来寻找外层类的父类。
 
-当我们访问一个方法时，我们还需要将 `this` 绑定到那个方法**被访问时所******针对**的对象之上。在诸如 `doughnut.cook` 这样的表达式中，那个对象便是我们求值 `doughnut` 所得到的结果。在一处 `super` 表达式（譬如 `super.cook`）中，那个当前对象隐式地便与**我们正在使用的**当前对象是**同**一位——换言之，便是 `this`。即便我们是在**父类**上查找**方法**，那个**实例**仍为 `this`。
+当我们访问一个方法时，我们还需要将 `this` 绑定到那个方法**被访问时**所**针对**的对象之上。在诸如 `doughnut.cook` 这样的表达式中，那个对象便是我们求值 `doughnut` 所得到的结果。在一处 `super` 表达式（譬如 `super.cook`）中，那个当前对象隐式地便与**我们正在使用的**当前对象是**同**一位——换言之，便是 `this`。即便我们是在**父类**上查找**方法**，那个**实例**仍为 `this`。
 
 然而，遗憾的是，在 `super` 表达式内部，我们并没有一个方便的节点可供解析器挂载通往 `this` 的步数。幸运的是，我们**的确**掌控着环境链的布局。`this` 所绑定的环境，恰好位于我们存储 "super" 之环境的**内侧**。
 

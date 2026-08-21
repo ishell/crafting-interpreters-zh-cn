@@ -205,7 +205,7 @@ print 1 + 2;
 
 ^code token-type (2 before, 2 after)
 
-除了在所有名字前加一个 `TOKEN**` 前缀外（C 语言的枚举名统统位于顶层命名空间），唯一的区别就是那个额外的 `TOKEN**ERROR` 类型。那是怎么回事？
+除了在所有名字前加一个 `TOKEN_` 前缀外（C 语言的枚举名统统位于顶层命名空间），唯一的区别就是那个额外的 `TOKEN_ERROR` 类型。那是怎么回事？
 
 扫描阶段能检测到的错误寥寥无几——未闭合的字符串、以及无法识别的字符。在 jlox 中，扫描器**自己**报告这些错误。在 clox 中，扫描器会为那个错误产出一条合成的"错误"token，并将其传递给编译器。如此一来，编译器便会得知发生了错误，并能在报告之前先启动错误恢复。
 
@@ -425,7 +425,7 @@ clox 这里的**主要**变化是一处**不存在**的东西。同样，它也�
 
 trie 是一种更为基础的数据结构——[**确定性有限状态自动机**][dfa]（**DFA**）——的特殊情形。你**或许**也听过它的另一些名字：**有限状态机**，或干脆叫**状态机**。状态机真是太酷了。它们在[游戏编程][state]乃至网络协议的实现中都颇有用武之地。
 
-[dfa]: https://en.wikipedia.org/wiki/Deterministic_finite**automaton
+[dfa]: https://en.wikipedia.org/wiki/Deterministic_finite_automaton
 [state]: http://gameprogrammingpatterns.com/state.html
 
 在一台 DFA 中，你拥有**一组**状态，以及状态**之间**的若干转移，构成一张图。在**任一**时刻，机器恰好"处于"某一状态。它通过沿转移行走来到达其它状态。当你将 DFA 用于词法分析时，每一次转移便是字符串中**被匹配的**一个字符。每一个状态都代表一组被允许的字符。
@@ -442,15 +442,15 @@ trie 是一种更为基础的数据结构——[**确定性有限状态自动机
 
 在巴科斯-诺尔范式问世之前，这是记述语言文法的主流方式之一。如今我们大多用文字，但一门**文本语言**的正式规范**竟然**倚赖于一张**图像**，这事儿总归有几分令人愉悦。
 
-[syntax diagram]: https://en.wikipedia.org/wiki/Syntax**diagram
+[syntax diagram]: https://en.wikipedia.org/wiki/Syntax_diagram
 
 </aside>
 
 我已经把十种数字节点合并了起来以使它更可读，但基本流程一样——你沿着路径前进，每当消费词素中一个相应的字符时便进入下一个节点。倘若我们真**那么**乐意，我们**可以**构造一台巨大的 DFA 来完成 Lox 的**全部**词法分析——一台单一的状态机，识别并吐出我们所需要的所有 token。
 
-然而，<span name="regex">手工</span>雕琢这样一台巨型 DFA 是件颇具挑战的事。这也是 [Lex][] 之所以被创造的原因。你只需喂给它一份**你的**词法法法的简单文本描述——一堆正则表达式——它便会自动为你生成一台 DFA，并伴生一大坨实现它的 C 代码。
+然而，<span name="regex">手工</span>雕琢这样一台巨型 DFA 是件颇具挑战的事。这也是 [Lex][] 之所以被创造的原因。你只需喂给它一份**你的**词法的简单文本描述——一堆正则表达式——它便会自动为你生成一台 DFA，并伴生一大坨实现它的 C 代码。
 
-[lex]: https://en.wikipedia.org/wiki/Lex**(software)
+[lex]: https://en.wikipedia.org/wiki/Lex_(software)
 
 <aside name="regex">
 
@@ -458,7 +458,7 @@ trie 是一种更为基础的数据结构——[**确定性有限状态自动机
 
 倘若你想学习把正则表达式转换为 DFA 的算法，[龙书][dragon]已然包揽。
 
-[dragon]: https://en.wikipedia.org/wiki/Compilers:**Principles,_Techniques,_and**Tools
+[dragon]: https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools
 
 </aside>
 
@@ -547,7 +547,7 @@ trie 是一种更为基础的数据结构——[**确定性有限状态自动机
 
 1.  许多语言——尤其是**在**演进**后**期的语言——定义了"上下文关键字"。这类标识符在**某些**语境中是关键字，但在**其它**语境中可以是普通的用户自定义标识符。
 
-    举例而言，`await` 在 C# 的 `async` 方法**内**是个关键字，但在其它方法中，你**可以**把 `await**当作自己的标识符。
+    举例而言，`await` 在 C# 的 `async` 方法**内**是个关键字，但在其它方法中，你**可以**把 `await` 当作自己的标识符。
 
     请列举几个其它语言中的上下文关键字，以及它们所对应的语境。上下文关键字的利弊各是什么？若你的语言前端**需要**上下文关键字，你会如何实现它们？
 

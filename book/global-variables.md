@@ -29,7 +29,7 @@ because we used the same implementation technique for all variables. We built a
 chain of environments, one for each scope, all the way up to the top. That was a
 simple, clean way to learn how to manage state.
 -->
-实际上，它支持的*仅仅*是**全局**变量。局部变量留到[下一章][]。在 jlox 里，我们把两者塞进同一章，因为对各类变量用的是同一套实现技巧：搭建一条环境链，每个作用域一层，一路延伸到顶层。那是学习如何管理状态的一种简洁干净的方式。
+实际上，它支持的*仅仅*是**全局**变量。局部变量留到[下一章][next chapter]。在 jlox 里，我们把两者塞进同一章，因为对各类变量用的是同一套实现技巧：搭建一条环境链，每个作用域一层，一路延伸到顶层。那是学习如何管理状态的一种简洁干净的方式。
 
 [next chapter]: local-variables.html
 

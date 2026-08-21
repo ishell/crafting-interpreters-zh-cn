@@ -438,7 +438,7 @@ var a = "too late!";
 
 一如我们在表达式求值代码中处理类型错误那般，我们通过抛出一个异常来报告运行时错误。该异常携带该变量的词法单元，从而我们能够告诉用户他们的代码到底是在哪里出了岔子。
 
-## 解释全局变量
+### 解释全局变量
 
 Interpreter 类得到一个新增的 Environment 类实例。
 
@@ -538,7 +538,7 @@ a = "value";
 
 在第二行，我们并**不**对 `a` 进行**求值**（那会返回字符串 "before"）。我们去弄明白 `a` 所指的是哪个变量，从而知晓应当将右侧表达式的值存放在何处。[经典的术语][l-value] 将这两种<span name="l-value">结构</span>分别称为**左值**（l-value）与**右值**（r-value）。迄今为止我们所见识过的所有产出值的表达式，皆为右值。一个左值则"求值"为一个可供赋值的存储位置。
 
-[l-value]: https://en.wikipedia.org/wiki/Value_(computer**science)#lrvalue
+[l-value]: https://en.wikipedia.org/wiki/Value_(computer_science)#lrvalue
 
 <aside name="l-value">
 
@@ -769,7 +769,7 @@ var global = "outside";
 
 这种数据结构有一个无趣的名字：**父指针树**（parent-pointer tree），但我更偏爱那个生动形象的**仙人掌栈**（cactus stack）。
 
-[parent pointer]: https://en.wikipedia.org/wiki/Parent**pointer_tree
+[parent pointer]: https://en.wikipedia.org/wiki/Parent_pointer_tree
 
 <img class="above" src="image/statements-and-state/cactus.png" alt="每一根分支都指向其父节点。根节点便是全局作用域。" />
 

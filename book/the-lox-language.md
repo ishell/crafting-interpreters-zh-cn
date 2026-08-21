@@ -81,7 +81,7 @@ wanted something elegant, we'd probably mimic Pascal or Smalltalk. If we wanted
 to go full Scandinavian-furniture-minimalism, we'd do a Scheme. Those all have
 their virtues.
 -->
-我毫不否认，<span name="c">C</span> 有着令人惊叹的语法设计。如果我们想要更加优雅的语法风格，Lox 可能偏向 Pascal 或者 Smalltalk ；如果我们想要极简主义的语法风格，Lox 可能更偏向 Scheme 。这些程序语言都有各自的可取之处。
+我可不会声称 <span name="c">C</span> 有着*了不起*的语法。如果我们想要更加优雅的语法风格，Lox 可能偏向 Pascal 或者 Smalltalk；如果我们想要极简主义的语法风格，Lox 可能更偏向 Scheme。这些程序语言都有各自的可取之处。
 
 <aside name="c">
 
@@ -145,7 +145,7 @@ Brendan Eich hacked the first JS interpreter into Netscape Navigator in *ten
 days* to make buttons animate on web pages. JavaScript has grown up since then,
 but it was once a cute little language.
 -->
-如今，JavaScript 已经统治了世界，被用以构建超大型应用程序，认为 JavaScript 只是一门“小型脚本语言”的认知已经不太合适了。但在 JavaScript 最初诞生的那会儿，布兰登·艾奇为了能让网页上的按钮动起来，仅花了*十天*时间就设计实现了第一支 JS 解释器，放进网景浏览器里。在那时，JS 的却称得上是一支小巧可爱的小脚本语言，但随着 Web 技术的发展，如今的 JavaScript 已经变得异常庞大了。
+如今，JavaScript 已经统治了世界，被用以构建超大型应用程序，认为 JavaScript 只是一门“小型脚本语言”的认知已经不太合适了。但在 JavaScript 最初诞生的那会儿，布兰登·艾奇为了能让网页上的按钮动起来，仅花了*十天*时间就设计实现了第一支 JS 解释器，放进网景浏览器里。在那时，JS 倒称得上是一支小巧可爱的小脚本语言，但随着 Web 技术的发展，如今的 JavaScript 已经变得异常庞大了。
 
 <!--
 Because Eich slapped JS together with roughly the same raw materials and time as
@@ -222,7 +222,7 @@ time, the limitations of ref counting become too troublesome. All of those
 languages eventually ended up adding a full tracing GC, or at least enough of
 one to clean up object cycles.
 -->
-目前主要有两类技术用以管理内存：**引用计数（Reference Counting）** 和 **垃圾回收（Tracing Garbage Collection、Garbage Collection、GC）**。引用计数在实现上更加简便，我想这也是为什么 Perl、PHP、Python 起初都使用引用计数管理内存的原因。但是随着语言的发展，引用计数的局限性越来越明显，所以到最后，这些程序语言都添加上了完整的垃圾回收器，用于在对象全流程生命周期里做好内存清理回收工作。
+目前主要有两类技术用以管理内存：**引用计数（Reference Counting）** 和 **垃圾回收（Tracing Garbage Collection、Garbage Collection、GC）**。引用计数在实现上更加简便，我想这也是为什么 Perl、PHP、Python 起初都使用引用计数管理内存的原因。但是随着语言的发展，引用计数的局限性越来越明显，所以到最后，这些程序语言都添加上了完整的垃圾回收器，至少也足以清理对象之间的循环引用。
 
 <aside name="gc">
 
@@ -232,7 +232,7 @@ opposing sides. Most ref counting systems end up doing some tracing to handle
 cycles, and the write barriers of a generational collector look a bit like
 retain calls if you squint.
 -->
-在具体实践中，引用计数和垃圾跟踪收集这两种技术更像是硬币的一体两面。大部分引用计数系统最终都会添加上一些追踪技术管理对象生命周期，而分代垃圾回收机制更像是一种最后的保留手段。
+在具体实践中，引用计数和追踪回收更像是连续光谱的两端，而非截然对立。多数引用计数系统最终都会做一些追踪来处理循环引用；而若你眯着眼看，分代回收器的写屏障，也有几分像 retain 调用。
 
 <!--
 For lots more on this, see "[A Unified Theory of Garbage Collection][gc]" (PDF).
@@ -331,7 +331,7 @@ data types. There are only a few:
     complexity hiding in that innocuous sequence of <span
     name="char">characters</span>.
     -->
-    当我们真正开始着手实现字符串类型时就会发现，在看似简单的<span name=char>字符序列</span>下，隐藏着许多复杂的实现细节。
+    当我们真正开始着手实现字符串类型时就会发现，在看似简单的<span name="char">字符序列</span>下，隐藏着许多复杂的实现细节。
 
     <aside name="char">
 
@@ -885,7 +885,7 @@ of downy hairs around semantics, so let's sharpen our words. From here on out:
 -->
 *   **实参**（argument）是调用函数时传入的实际值。因此函数*调用*有*实参*列表。有时人们也称它们为**实际参数**（actual parameter）。
 
-*   **形参**（parameter）是函数体内保存实参值的变量。因此函数*声明*有*形参*列表。也有人称它们为**形式参数**（formal parameters）或简称**形式参数**（formals）。
+*   **形参**（parameter）是函数体内保存实参值的变量。因此函数*声明*有*形参*列表。也有人称它们为**形式参数**（formal parameters），或简称 formals。
 
 <aside name="define">
 

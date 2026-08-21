@@ -18,10 +18,10 @@
 
 ## OOP 与类
 
-通往面向对象编程的道路大抵有三条：类、<span name="multimethods">[原型][prototypes]</span>、以及<span name="multimethods">多重分派[multimethods]</span>。类最先出现，也是最为流行的风格。伴随着 JavaScript 的崛起（以及在较小范围内的 [Lua][]），原型也变得比以往更广为人知。关于原型，我会在[稍后][later]再谈。就 Lox 而言，我们——咳咳——采取了经典路线。
+通往面向对象编程的道路大抵有三条：类、[原型][prototypes]、以及<span name="multimethods">[多重分派][multimethods]</span>。类最先出现，也是最为流行的风格。伴随着 JavaScript 的崛起（以及在较小范围内的 [Lua][]），原型也变得比以往更广为人知。关于原型，我会在[稍后][later]再谈。就 Lox 而言，我们——咳咳——采取了经典路线。
 
 [prototypes]: http://gameprogrammingpatterns.com/prototype.html
-[multimethods]: https://en.wikipedia.org/wiki/Multiple**dispatch
+[multimethods]: https://en.wikipedia.org/wiki/Multiple_dispatch
 [lua]: https://www.lua.org/pil/13.4.1.html
 [later]: #design-note
 
@@ -29,7 +29,7 @@
 
 多重分派大概是你最不熟悉的一种。我很乐意再多聊几句——我曾围绕它设计过[一门业余爱好语言][magpie]，那种体验**简直妙不可言** ——但本书的篇幅毕竟有限。若你意欲了解更多，不妨看看 [CLOS][]（Common Lisp 中的对象系统）、[Dylan][]、[Julia][]，或 [Raku][]。
 
-[clos]: https://en.wikipedia.org/wiki/Common**Lisp_Object**System
+[clos]: https://en.wikipedia.org/wiki/Common_Lisp_Object_System
 [magpie]: http://magpie-lang.org/
 [dylan]: https://opendylan.org/
 [julia]: https://julialang.org/
@@ -312,10 +312,10 @@ someObject.someProperty = value;
 
 ```ebnf
 assignment     → ( call "." )? IDENTIFIER "=" assignment
-               | logic**or ;
+               | logic_or ;
 ```
 
-与 getter 不同，setter 并不串联。然而，规则中对 `call` 的引用，允许在最后一个点号之前出现任意高优先级的表达式，其中包括任意数量的 _getter**，例如：
+与 getter 不同，setter 并不串联。然而，规则中对 `call` 的引用，允许在最后一个点号之前出现任意高优先级的表达式，其中包括任意数量的 *getter*，例如：
 
 <img src="image/classes/setter.png" alt="breakfast.omelette.filling.meat = ham" />
 
@@ -562,7 +562,7 @@ Bacon().eat(); // 打印 "Crunch crunch crunch!"。
 
 </aside>
 
-就 Lox 而言，由于我们大体上沿袭 Java 风格，因此我们也选用 "this"。在一个方法体内部，一个 `this` 表达式会求值为那个方法被调用时所**针对**的实例。或者，更准确地说——由于方法先是**被访问**，然后再被**调用**这两个步骤——它所指的将是那个方法**被访问时所******针对**的对象。
+就 Lox 而言，由于我们大体上沿袭 Java 风格，因此我们也选用 "this"。在一个方法体内部，一个 `this` 表达式会求值为那个方法被调用时所**针对**的实例。或者，更准确地说——由于方法先是**被访问**，然后再被**调用**这两个步骤——它所指的将是那个方法**被访问时**所**针对**的对象。
 
 这让我们的工作变得更为棘手。请看一眼：
 
@@ -671,7 +671,7 @@ callback();
 
 内容并不多。我们创建了一份新的环境，嵌于该方法原有的闭包之内。可以视为"闭包中的闭包"。当该方法被调用时，这将成为方法体环境的父环境。
 
-我们将 "this" 声明为该环境中的一个变量，并将其绑定到给定的实例——即那个方法**被访问时所******针对**的实例。**Voilà**，所返回的 `LoxFunction` 如今便随身携带着它自己那一小片持久化的天地，其中 "this" 已被绑定到那个对象。
+我们将 "this" 声明为该环境中的一个变量，并将其绑定到给定的实例——即那个方法**被访问时**所**针对**的实例。**Voilà**，所返回的 `LoxFunction` 如今便随身携带着它自己那一小片持久化的天地，其中 "this" 已被绑定到那个对象。
 
 剩下的任务便是解释那些 `this` 表达式。与解析器类似，这完全同于解释一个变量表达式。
 
@@ -742,7 +742,7 @@ fun notAMethod() {
 
 2.  随后，一段由用户提供的代码段被调用，对那份尚未成形的对象进行**初始化**。
 
-[placement new]: https://en.wikipedia.org/wiki/Placement**syntax
+[placement new]: https://en.wikipedia.org/wiki/Placement_syntax
 
 后者便是我们听到"构造器"一词时通常会想到的那个东西，但语言本身在我们抵达那一步之前往往已经替我们做好了铺垫。事实上，我们的 Lox 解释器在创建一份新的 `LoxInstance` 对象时便已经完成了这部分工作。
 
@@ -896,11 +896,11 @@ class Foo {
 
 在本章中，我们引入了两种新的运行时实体——`LoxClass` 与 `LoxInstance`。前者用于存放对象的行为，后者用于存放状态。倘若你能够直接在某一份 `LoxInstance` 上定义方法，会怎样？那样的话，我们便根本不需要 `LoxClass`。`LoxInstance` 自身便会是一份定义对象行为与状态的完整包。
 
-我们仍会希望有某种方式——不借助类——在多个实例之间复用行为。我们可以让一份 `LoxInstance` *直接* **委托**给另一份 `LoxInstance**`，以复用其后者的字段与方法，多少有一点像继承的味道。
+我们仍会希望有某种方式——不借助类——在多个实例之间复用行为。我们可以让一份 `LoxInstance` *直接* [*委托*][delegate]给另一份 `LoxInstance`，以复用其后者的字段与方法，多少有一点像继承的味道。
 
 用户便可以将其程序建模为一片由对象组成的星座，其中某些对象彼此委托，以反映它们之间的共性。那些被当作委托目标的对象，便是代表"规范的"或"原型的"对象，供其他对象去精炼。其结果是一个更为简单的运行时，仅有 `LoxInstance` 这一个内部构件。
 
-这种范式之所以被称作**原型**[prototypes]，便是因为此故。它由 David Ungar 与 Randall Smith 在一门名为 [Self][] 的语言中发明。他们通过从 Smalltalk 出发，沿着上述思路反复推演，问自己：究竟能砍到多简？
+这种范式之所以被称作**[原型][proto]**，便是因为此故。它由 David Ungar 与 Randall Smith 在一门名为 [Self][] 的语言中发明。他们通过从 Smalltalk 出发，沿着上述思路反复推演，问自己：究竟能砍到多简？
 
 原型曾长期停留在学术圈子的冷门处——的确有趣，也催生了不少研究，但并未对更广阔的程序设计世界有多大影响。直到 Brendan Eich 将原型硬塞进 JavaScript，而 JavaScript 又旋即席卷了整个世界。关于 JavaScript 中的原型，已有（海量）<span name="words">著作</span>面世。这究竟证明原型是天才还是令人困惑——抑或两者兼而有之——依然是一个悬而未决的问题。
 
@@ -926,7 +926,7 @@ class Foo {
 
 *   **复杂度**涵盖了语言本身的体量（包括其运行时、核心库、工具、生态系统等）。人们谈论一门语言规范有多少页、它拥有多少关键字。它衡量的是用户在一门语言中具备生产力之前，必须将自己的"湿件"装进多少东西。它是简洁的反义词。
 
-[proto]: https://en.wikipedia.org/wiki/Prototype-based**programming
+[proto]: https://en.wikipedia.org/wiki/Prototype-based_programming
 
 降低复杂度**确实**会提升威力。分母越小，结果便越大，因此我们对"简洁是好事"的直觉自有其道理。然而，在降低复杂度时，我们必须小心，不要因此牺牲广度或易用性，否则总体威力反而可能下降。倘若 Java 删去字符串，那么它会是一门**更**简洁的语言，但它在文本处理任务方面多半也会失灵，且用户搞定事情也不会那么顺手。
 

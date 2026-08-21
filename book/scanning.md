@@ -29,7 +29,7 @@ name="lexing">**扫描**</span>（scanning）。扫描器接受一串原始的�
 ["sysexits.h"][sysexits]
 头文件里定义的惯例。这已是我所能找到的、距离"标准"最近的东西了。
 
-[sysexits]: https://www.freebsd.org/cgi/man.cgi?query=sysexits&amp;apropos=0&amp;sektion=0&amp;manpath=FreeBSD+4.3-RELEASE&amp;format=html
+[sysexits]: https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropos=0&sektion=0&manpath=FreeBSD+4.3-RELEASE&format=html
 
 </aside>
 
@@ -194,12 +194,12 @@ var language = "lox";
 这个循环里需要窥视少数几个字符以判断它"匹配"的是哪一类词素的部分，听起来或许并不陌生。如果你熟悉正则表达式，你大概会琢磨：能否为每一类词素定义一条正则，然后让它们来匹配字符？比如，Lox 的标识符（变量名以及类似的东西）与 C 有着同样的规则。下列正则便可匹配一个标识符：
 
 ```text
-[a-zA-Z_][a-zA-Z**0-9]*
+[a-zA-Z_][a-zA-Z_0-9]*
 ```
 
-如果你确实想到了正则表达式，那你的直觉相当深刻。决定某门程序设计语言如何将字符归组为词素的那些规则，我们称之为它的<span name="theory">**词法文法**</span>。在 Lox 中，正如在大多数程序设计语言中一样，该文法的规则足够简单，以至于这门语言可以被归类为一种**正则语言**（regular language）。这里的"正则"与正则表达式中的"正则"含义相同。
+如果你确实想到了正则表达式，那你的直觉相当深刻。决定某门程序设计语言如何将字符归组为词素的那些规则，我们称之为它的<span name="theory">**词法文法**</span>。在 Lox 中，正如在大多数程序设计语言中一样，该文法的规则足够简单，以至于这门语言可以被归类为一种**[正则语言][regular language]**。这里的"正则"与正则表达式中的"正则"含义相同。
 
-[regular language]: https://en.wikipedia.org/wiki/Regular**language
+[regular language]: https://en.wikipedia.org/wiki/Regular_language
 
 <aside name="theory">
 
@@ -207,11 +207,11 @@ var language = "lox";
 
 [chomsky hierarchy]: https://en.wikipedia.org/wiki/Chomsky_hierarchy
 [dragon]: https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools
-[finite-state machines]: https://en.wikipedia.org/wiki/Finite-state**machine
+[finite-state machines]: https://en.wikipedia.org/wiki/Finite-state_machine
 
 </aside>
 
-你确实可以——如果你愿意的话——使用正则表达式来精确地识别 Lox 中所有不同种类的词素；其背后还蕴含着一大堆饶有趣味的理论，解释着为什么这是可行的，以及它的深层含义。像 [Lex][] 或 [Flex][] 这样的工具，正是为此而生——向它们投喂一把正则表达式，它们便会回馈给你一枚完整的扫描器<span name="lex">回来</span>。
+你确实可以——如果你愿意的话——使用正则表达式来精确地识别 Lox 中所有不同种类的词素；其背后还蕴含着一大堆饶有趣味的理论，解释着为什么这是可行的，以及它的深层含义。像 <span name="lex">[Lex][]</span> 或 [Flex][] 这样的工具，正是为此而生——向它们投喂一把正则表达式，它们便会回馈给你一枚完整的扫描器。
 
 <aside name="lex">
 
@@ -548,7 +548,7 @@ case 'o':
 
     这究竟是 `first - second`——一个中缀减法表达式，还是两个表达式语句——一个是 `first`，另一个是对 `second` 取负？
 
-在上述所有情形中，无论将换行符视作分隔符与否，都能生成合法的代码，但所得到的未必是用户真正想要的代码。纵观各种语言，用于判定"哪些换行符算作分隔符"的规则可谓形形色色、五花八门。以下略举两例：
+在上述所有情形中，无论将换行符视作分隔符与否，都能生成合法的代码，但所得到的未必是用户真正想要的代码。纵观各种语言，用于判定"哪些换行符算作分隔符"的规则可谓形形色色、五花八门。以下略举几例：
 
 *   [Lua][] 完全忽略换行符，但通过精心控制其文法，使得在大多数情况下语句之间根本不
     需要分隔符。例如以下写法是完全合法的：
@@ -594,7 +594,7 @@ case 'o':
 
 <aside name="lambda">
 
-这下你就明白了，为什么 Python 的 `lambda` 只能拥有一个表达式体的原因。
+这下你就明白了，Python 的 `lambda` 为什么只能拥有一个表达式体。
 
 </aside>
 
@@ -619,5 +619,5 @@ case 'o':
 [lua]: https://www.lua.org/pil/1.1.html
 [go]: https://golang.org/ref/spec#Semicolons
 [gofmt]: https://golang.org/cmd/gofmt/
-[python]: https://docs.python.org/3.5/reference/lexical**analysis.html#implicit-line-joining
+[python]: https://docs.python.org/3.5/reference/lexical_analysis.html#implicit-line-joining
 [asi]: https://www.ecma-international.org/ecma-262/5.1/#sec-7.9

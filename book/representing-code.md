@@ -23,9 +23,9 @@
 1 + 2 * 3 - 4
 ```
 
-由于你理解运算的先后顺序——也就是那条古老的"请原谅我亲爱的姑姑萨莉"——你便知道乘法要先于加减运算进行求值。将这种优先级可视化的方法之一，便是借助一棵树。叶节点是数字，内部节点则是运算符，每个内部节点都带有一根通往其每个操作数的枝条。
+由于你理解运算的先后顺序——也就是那条古老的"[请原谅我亲爱的姑姑萨莉][sally]"——你便知道乘法要先于加减运算进行求值。将这种优先级可视化的方法之一，便是借助一棵树。叶节点是数字，内部节点则是运算符，每个内部节点都带有一根通往其每个操作数的枝条。
 
-[sally]: https://en.wikipedia.org/wiki/Order_of**operations#Mnemonics
+[sally]: https://en.wikipedia.org/wiki/Order_of_operations#Mnemonics
 
 为了对一个算术节点求值，你需要先知道其各个子树的数值，因此你必须自底向上地工作——这是一次 *后序遍历*：
 
@@ -57,7 +57,7 @@ D. 最终的答案。
 
 那么，我们便需要更精确地界定这种"文法"究竟是什么。正如上一章中我们所见，词法文法背后有着一整套理论；句法文法的理论更是如此。在句法这一层，我们对理论的涉入会比扫描器那部分稍多一些——事实证明，它将贯穿解释器开发的许多环节。我们先从[乔姆斯基谱系][Chomsky hierarchy]往上攀升一级开始……
 
-[chomsky hierarchy]: https://en.wikipedia.org/wiki/Chomsky**hierarchy
+[chomsky hierarchy]: https://en.wikipedia.org/wiki/Chomsky_hierarchy
 
 ## 上下文无关文法
 
@@ -65,7 +65,7 @@ D. 最终的答案。
 
 我们需要一柄更重的锤子。这柄锤子便是**上下文无关文法**（**Context-Free Grammar**，简称**CFG**）。它是**[形式文法][formal grammars]**工具箱中仅次于正则文法的那柄更重的锤子。一种形式文法以一组它称之为"字母表"的原子元素作为起点，进而定义出该字母表上（通常是无穷多的）一组合法的"符号串"。每一段符号串都是字母表中"字母"的一个序列。
 
-[formal grammars]: https://en.wikipedia.org/wiki/Formal**grammar
+[formal grammars]: https://en.wikipedia.org/wiki/Formal_grammar
 
 我之所以在所有这些词上都打上了引号，是因为当我们从词法文法过渡到句法文法时，这些术语多少会变得有些令人困惑。在扫描器的文法中，字母表由一个个字符构成，而符号串则是合法的词素——大致相当于"单词"。在眼下我们讨论的句法文法中，我们所处的粒度已截然不同：此时，字母表中的每一个"字母"都是一个完整的词法单元，而一段"符号串"则是**词法单元**的一个序列——一整个表达式。
 
@@ -116,7 +116,7 @@ D. 最终的答案。
 
 将左部限制为一个单一符号，正是上下文无关文法的定义性特征。更为强大的形式化体系——譬如**[非受限文法][unrestricted grammars]**——则允许左部与右部同为符号序列。
 
-[unrestricted grammars]: https://en.wikipedia.org/wiki/Unrestricted**grammar
+[unrestricted grammars]: https://en.wikipedia.org/wiki/Unrestricted_grammar
 
 </aside>
 
@@ -130,7 +130,7 @@ D. 最终的答案。
 
 为了将这一切落到实处，我们需要一种<span name="turtles">方式</span>来写下这些产生式规则。早在几千年前，波你尼（Pāṇini）的《八章书》（*Ashtadhyayi*）便已将梵语文法加以系统化，自那时起，人们便一直在尝试将"文法"这件事梳理得清清楚楚。然而在接下来的漫长岁月里，文法记法几乎再无实质进展。直到 John Backus 及其同事需要一种记法来描述 ALGOL 58 之时，他们才发明了[**巴科斯-诺尔形式**][bnf]（**Backus-Naur form**，简称**BNF**）。自那以后，几乎每个人都在使用某种风味的 BNF，并按照自己的喜好加以调校。
 
-[bnf]: https://en.wikipedia.org/wiki/Backus%E2%80%93Naur**form
+[bnf]: https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form
 
 我也曾试图想出一种清爽的记法。每条规则都由一个名字、一个箭头（`→`）、一串符号，并以一个分号（`;`）收尾。终结符用引号引起来的字符串表示，非终结符则是小写的单词。
 
@@ -260,11 +260,11 @@ bread     → "toast" | "biscuits" | "English muffin" ;
 
 希望读起来还不算太糟。如果你对 grep 或文本编辑器中的[正则表达式][regex]早已驾轻就熟，那么这里出现的那些标点符号大多应能令你感到亲切。它们之间最主要的差别在于：此处的符号代表的是完整的词法单元，而非单个字符。
 
-[regex]: https://en.wikipedia.org/wiki/Regular**expression#Standards
+[regex]: https://en.wikipedia.org/wiki/Regular_expression#Standards
 
 在本书的余下章节中，我们都将沿用这一记法来精确地描述 Lox 的文法。当你投身于程序设计语言的设计工作时，你会发现：上下文无关文法（无论是采用这种记法、[EBNF][]，还是某种其它记法）能够帮助你将脑海中那些尚处于萌芽状态的、非形式化的语法设计想法结晶成形。它也是你与其它语言黑客就语法问题彼此交流时颇为趁手的媒介。
 
-[ebnf]: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur**form
+[ebnf]: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
 
 我们为 Lox 所定义的这些规则与产生式，同样也是我们接下来打算实现的、用以在内存中表示代码的那棵树形数据结构的指引。在我们真正动手之前，我们还需要一条关于 Lox 的文法——至少先有一条够用的，好让我们得以起步。
 
@@ -436,7 +436,7 @@ Java 能够表达那种无行为的类，但我并不觉得它特别擅长于此
 
 <aside name="longer">
 
-[附录 II][] 中收录了这段脚本在我们完成 jlox 的实现、定义完所有的语法树节点之后所生成的代码。
+[附录 II][appendix ii] 中收录了这段脚本在我们完成 jlox 的实现、定义完所有的语法树节点之后所生成的代码。
 
 [appendix ii]: appendix-ii.html
 
@@ -456,7 +456,7 @@ if (expr instanceof Expr.Binary) {
 } else // ...
 ```
 
-但所有这些串联起来的类型测试既慢又低效。那些名字按字母序排在靠后的表达式类型，由于需要经历更多次的 `if` 分支兜底，其执行时间反而更长。这可算不上什么优雅的解决方案。
+但所有这些串联起来的类型测试既慢又低效。那些名字按字母序排在靠后的表达式类型，由于要一路跌过更多的 `if` 分支才能命中正确类型，其执行时间反而更长。这可算不上什么优雅的解决方案。
 
 我们手头有一族类，而我们需要将一段行为与每一个类关联起来。在 Java 这类面向对象的语言中，最自然的解法便是将那些行为以方法的形式植入到类自身之中。我们本可以在 Expr 上添加一个抽象的 <span name="interpreter-pattern">`interpret()`</span> 方法，再由各个子类各自实现它来解释自身。
 
@@ -464,7 +464,7 @@ if (expr instanceof Expr.Binary) {
 
 这正是 Erich Gamma 等人所著的《设计模式：可复用面向对象软件的基础》中所称的["解释器模式"][interp]。
 
-[interp]: https://en.wikipedia.org/wiki/Interpreter**pattern
+[interp]: https://en.wikipedia.org/wiki/Interpreter_pattern
 
 </aside>
 
@@ -474,7 +474,7 @@ if (expr instanceof Expr.Binary) {
 
 若我们针对每一项这样的操作都向表达式类中添加实例方法，那便是把一干彼此并不相干的领域硬生生地揉到了一起。这有违[关注点分离][separation of concerns]原则，并终将致使代码难以维护。
 
-[separation of concerns]: https://en.wikipedia.org/wiki/Separation_of**concerns
+[separation of concerns]: https://en.wikipedia.org/wiki/Separation_of_concerns
 
 ### 表达式问题
 
@@ -580,7 +580,7 @@ ML 是"元语言"（metalanguage）的缩写，由 Robin Milner 与其同仁所�
 
 <aside name="context">
 
-另一种常见的打磨，是额外引入一个"上下文"参数——它先被传递给 visit 方法，再由后者原路回传给 `accept()`。这便允许操作携带额外的参数。本书中我们将要定义的访问者并不需要这一手，所以我将其略去。
+另一种常见的打磨，是额外引入一个"上下文"参数——它经由 `accept()` 传入，再转交给各个 visit 方法。这便允许操作携带额外的参数。本书中我们将要定义的访问者并不需要这一手，所以我将其略去。
 
 </aside>
 
@@ -698,6 +698,6 @@ ML 是"元语言"（metalanguage）的缩写，由 Robin Milner 与其同仁所�
 
     请为我们的语法树类定义一个访问者类：它接受一个表达式，将其转换为 RPN，并返回所得的字符串。
 
-[rpn]: https://en.wikipedia.org/wiki/Reverse**Polish_notation
+[rpn]: https://en.wikipedia.org/wiki/Reverse_Polish_notation
 
 </div>
