@@ -38,16 +38,15 @@
 <h3><a href="#top">Garbage Collection<small>26</small></a></h3>
 
 <ul>
-    <li><a href="#reachability"><small>26.1</small> Reachability</a></li>
-    <li><a href="#mark-sweep-garbage-collection"><small>26.2</small> Mark-Sweep Garbage Collection</a></li>
-    <li><a href="#marking-the-roots"><small>26.3</small> Marking the Roots</a></li>
-    <li><a href="#tracing-object-references"><small>26.4</small> Tracing Object References</a></li>
-    <li><a href="#sweeping-unused-objects"><small>26.5</small> Sweeping Unused Objects</a></li>
-    <li><a href="#when-to-collect"><small>26.6</small> When to Collect</a></li>
-    <li><a href="#garbage-collection-bugs"><small>26.7</small> Garbage Collection Bugs</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
-    <li class="end-part"><a href="#design-note"><small>note</small>Generational Collectors</a></li>
+    <li><a href="#可达性"><small>26.1</small> 可达性</a></li>
+    <li><a href="#标记-清扫垃圾回收"><small>26.2</small> 标记-清扫垃圾回收</a></li>
+    <li><a href="#标记根"><small>26.3</small> 标记根</a></li>
+    <li><a href="#追踪对象引用"><small>26.4</small> 追踪对象引用</a></li>
+    <li><a href="#清扫无用对象"><small>26.5</small> 清扫无用对象</a></li>
+    <li><a href="#何时收集"><small>26.6</small> 何时收集</a></li>
+    <li><a href="#垃圾回收的缺陷"><small>26.7</small> 垃圾回收的缺陷</a></li>
+    <li><a href="#挑战"><small>26.8</small> 挑战</a></li>
+    <li><a href="#设计笔记：分代收集器"><small>26.9</small> 设计笔记：分代收集器</a></li>
 </ul>
 
 
@@ -73,16 +72,15 @@
 <h3><a href="#top">Garbage Collection<small>26</small></a></h3>
 
 <ul>
-    <li><a href="#reachability"><small>26.1</small> Reachability</a></li>
-    <li><a href="#mark-sweep-garbage-collection"><small>26.2</small> Mark-Sweep Garbage Collection</a></li>
-    <li><a href="#marking-the-roots"><small>26.3</small> Marking the Roots</a></li>
-    <li><a href="#tracing-object-references"><small>26.4</small> Tracing Object References</a></li>
-    <li><a href="#sweeping-unused-objects"><small>26.5</small> Sweeping Unused Objects</a></li>
-    <li><a href="#when-to-collect"><small>26.6</small> When to Collect</a></li>
-    <li><a href="#garbage-collection-bugs"><small>26.7</small> Garbage Collection Bugs</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
-    <li class="end-part"><a href="#design-note"><small>note</small>Generational Collectors</a></li>
+    <li><a href="#可达性"><small>26.1</small> 可达性</a></li>
+    <li><a href="#标记-清扫垃圾回收"><small>26.2</small> 标记-清扫垃圾回收</a></li>
+    <li><a href="#标记根"><small>26.3</small> 标记根</a></li>
+    <li><a href="#追踪对象引用"><small>26.4</small> 追踪对象引用</a></li>
+    <li><a href="#清扫无用对象"><small>26.5</small> 清扫无用对象</a></li>
+    <li><a href="#何时收集"><small>26.6</small> 何时收集</a></li>
+    <li><a href="#垃圾回收的缺陷"><small>26.7</small> 垃圾回收的缺陷</a></li>
+    <li><a href="#挑战"><small>26.8</small> 挑战</a></li>
+    <li><a href="#设计笔记：分代收集器"><small>26.9</small> 设计笔记：分代收集器</a></li>
 </ul>
 
 
@@ -118,100 +116,141 @@
   <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
 </div>
 
+<h1><a href="#垃圾回收" name="垃圾回收"><small>26&#8202;.&#8202;0</small>垃圾回收</a></h1><!--
+> I wanna, I wanna,<br>
+> I wanna, I wanna,<br>
+> I wanna be trash.<br>
+>
+> <cite>The Whip, &ldquo;Trash&rdquo;</cite>
+-->
 <blockquote>
 <p>I wanna, I wanna,<br>
 I wanna, I wanna,<br>
 I wanna be trash.<br></p>
-<p><cite>The Whip, &ldquo;Trash&rdquo;</cite></p>
-</blockquote>
-<p>We say Lox is a &ldquo;high-level&rdquo; language because it frees programmers from worrying
-about details irrelevant to the problem they&rsquo;re solving. The user becomes an
+<p><cite>The Whip，&ldquo;Trash&rdquo;</cite></p>
+</blockquote><!--
+We say Lox is a "high-level" language because it frees programmers from worrying
+about details irrelevant to the problem they're solving. The user becomes an
 executive, giving the machine abstract goals and letting the lowly computer
-figure out how to get there.</p>
-<p>Dynamic memory allocation is a perfect candidate for automation. It&rsquo;s necessary
+figure out how to get there.
+-->
+<p>我们说 Lox 是一门“高级”语言，因为它让程序员不必操心那些与手头问题无关的细节。用户成了高管：把抽象目标交给机器，让卑微的计算机自己琢磨怎么到达。</p><!--
+Dynamic memory allocation is a perfect candidate for automation. It's necessary
 for a working program, tedious to do by hand, and yet still error-prone. The
 inevitable mistakes can be catastrophic, leading to crashes, memory corruption,
-or security violations. It&rsquo;s the kind of risky-yet-boring work that machines
-excel at over humans.</p>
-<p>This is why Lox is a <strong>managed language</strong>, which means that the language
-implementation manages memory allocation and freeing on the user&rsquo;s behalf. When
+or security violations. It's the kind of risky-yet-boring work that machines
+excel at over humans.
+-->
+<p>动态内存分配正是自动化的绝佳人选。它是程序能跑起来所必需的，手工做又枯燥，而且还容易出错。不可避免的失误可能是灾难性的——崩溃、内存损坏，或安全漏洞。这种既冒险又无聊的活，机器比人拿手得多。</p><!--
+This is why Lox is a **managed language**, which means that the language
+implementation manages memory allocation and freeing on the user's behalf. When
 a user performs an operation that requires some dynamic memory, the VM
 automatically allocates it. The programmer never worries about deallocating
 anything. The machine ensures any memory the program is using sticks around as
-long as needed.</p>
-<p>Lox provides the illusion that the computer has an infinite amount of memory.
+long as needed.
+-->
+<p>这就是为什么 Lox 是一门<strong>托管语言</strong>：语言实现替用户管理内存的分配与释放。用户执行需要动态内存的操作时，虚拟机自动分配。程序员从不操心释放任何东西。机器保证程序正在使用的内存会一直留着，直到不再需要。</p><!--
+Lox provides the illusion that the computer has an infinite amount of memory.
 Users can allocate and allocate and allocate and never once think about where
-all these bytes are coming from. Of course, computers do not yet <em>have</em> infinite
+all these bytes are coming from. Of course, computers do not yet *have* infinite
 memory. So the way managed languages maintain this illusion is by going behind
-the programmer&rsquo;s back and reclaiming memory that the program no longer needs.
-The component that does this is called a <strong>garbage <span
-name="recycle">collector</span></strong>.</p>
-<aside name="recycle">
-<p>Recycling would really be a better metaphor for this. The GC doesn&rsquo;t <em>throw
-away</em> the memory, it reclaims it to be reused for new data. But managed
+the programmer's back and reclaiming memory that the program no longer needs.
+The component that does this is called a **garbage <span
+name="recycle">collector</span>**.
+-->
+<p>Lox 提供了一种幻觉：计算机拥有无限内存。用户可以分配、分配、再分配，却从不想一想这些字节从哪儿来。当然，计算机还<em>没有</em>无限内存。托管语言维持这幻觉的办法，是背着程序员，把程序不再需要的内存收回来。干这活的组件，就叫<strong>垃圾<span name="recycle">回收器</span></strong>。</p>
+<aside name="recycle"><!--
+Recycling would really be a better metaphor for this. The GC doesn't *throw
+away* the memory, it reclaims it to be reused for new data. But managed
 languages are older than Earth Day, so the inventors went with the analogy they
-knew.</p><img src="image/garbage-collection/recycle.png" class="above" alt="A recycle bin full of bits." />
-</aside>
-<h2><a href="#reachability" name="reachability"><small>26&#8202;.&#8202;1</small>Reachability</a></h2>
-<p>This raises a surprisingly difficult question: how does a VM tell what memory is
-<em>not</em> needed? Memory is only needed if it is read in the future, but short of
+knew.
+-->
+<p>其实“回收利用”才是更好的隐喻。GC 并不是把内存<em>扔掉</em>，而是收回来给新数据再用。不过托管语言比地球日还古老，发明者只能用他们当时熟悉的那个比方。</p><img src="image/garbage-collection/recycle.png" class="above" alt="A recycle bin full of bits." />
+</aside><!--
+-- Reachability
+-->
+<h2><a href="#可达性" name="可达性"><small>26&#8202;.&#8202;1</small>可达性</a></h2><!--
+This raises a surprisingly difficult question: how does a VM tell what memory is
+*not* needed? Memory is only needed if it is read in the future, but short of
 having a time machine, how can an implementation tell what code the program
-<em>will</em> execute and which data it <em>will</em> use? Spoiler alert: VMs cannot travel
+*will* execute and which data it *will* use? Spoiler alert: VMs cannot travel
 into the future. Instead, the language makes a <span
 name="conservative">conservative</span> approximation: it considers a piece of
-memory to still be in use if it <em>could possibly</em> be read in the future.</p>
-<aside name="conservative">
-<p>I&rsquo;m using &ldquo;conservative&rdquo; in the general sense. There is such a thing as a
-&ldquo;conservative garbage collector&rdquo; which means something more specific. All
-garbage collectors are &ldquo;conservative&rdquo; in that they keep memory alive if it
-<em>could</em> be accessed, instead of having a Magic 8-Ball that lets them more
-precisely know what data <em>will</em> be accessed.</p>
-<p>A <strong>conservative GC</strong> is a special kind of collector that considers any piece of
+memory to still be in use if it *could possibly* be read in the future.
+-->
+<p>这就引出一个出人意料地难的问题：虚拟机怎么知道哪些内存<em>不</em>再需要？内存只有在将来会被读到时才需要；可若没有时光机，实现又怎能知道程序<em>将</em>执行哪些代码、<em>将</em>使用哪些数据？剧透：虚拟机不能穿越未来。于是语言做了一个<span name="conservative">保守</span>的近似：只要一块内存<em>有可能</em>在将来被读到，就认为它仍在使用。</p>
+<aside name="conservative"><!--
+I'm using "conservative" in the general sense. There is such a thing as a
+"conservative garbage collector" which means something more specific. All
+garbage collectors are "conservative" in that they keep memory alive if it
+*could* be accessed, instead of having a Magic 8-Ball that lets them more
+precisely know what data *will* be accessed.
+
+A **conservative GC** is a special kind of collector that considers any piece of
 memory to be a pointer if the value in there looks like it could be an address.
-This is in contrast to a <strong>precise GC</strong><span class="em">&mdash;</span>which is what we&rsquo;ll implement<span class="em">&mdash;</span>that
+This is in contrast to a **precise GC** -- which is what we'll implement -- that
 knows exactly which words in memory are pointers and which store other kinds of
-values like numbers or strings.</p>
-</aside>
-<p>That sounds <em>too</em> conservative. Couldn&rsquo;t <em>any</em> bit of memory potentially be
-read? Actually, no, at least not in a memory-safe language like Lox. Here&rsquo;s an
-example:</p>
+values like numbers or strings.
+-->
+<p>我说的“保守”是一般意义上的。另有一种叫“保守垃圾回收器”的东西，含义更具体。所有垃圾回收器在某种意义上都是“保守”的：只要内存<em>可能</em>被访问，就让它活着，而不是靠一只魔法八号球更精确地知道哪些数据<em>将会</em>被访问。</p>
+<p><strong>保守 GC</strong>是一类特殊收集器：只要某块内存里的值看起来可能是地址，就把它当成指针。这与<strong>精确 GC</strong>相对——我们要实现的正是后者——它确切知道内存里哪些字是指针，哪些存放的是数字或字符串之类的其他值。</p>
+</aside><!--
+That sounds *too* conservative. Couldn't *any* bit of memory potentially be
+read? Actually, no, at least not in a memory-safe language like Lox. Here's an
+example:
+-->
+<p>这听起来<em>太</em>保守了。难道<em>任何</em>一点内存不都可能被读到吗？其实不然，至少在像 Lox 这样的内存安全语言里不是。举个例子：</p>
 <div class="codehilite"><pre>
 <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;first value&quot;</span>;
 <span class="i">a</span> = <span class="s">&quot;updated&quot;</span>;
 <span class="c">// GC here.</span>
 <span class="k">print</span> <span class="i">a</span>;
-</pre></div>
-<p>Say we run the GC after the assignment has completed on the second line. The
-string &ldquo;first value&rdquo; is still sitting in memory, but there is no way for the
-user&rsquo;s program to ever get to it. Once <code>a</code> got reassigned, the program lost any
-reference to that string. We can safely free it. A value is <strong>reachable</strong> if
+</pre></div><!--
+Say we run the GC after the assignment has completed on the second line. The
+string "first value" is still sitting in memory, but there is no way for the
+user's program to ever get to it. Once `a` got reassigned, the program lost any
+reference to that string. We can safely free it. A value is **reachable** if
 there is some way for a user program to reference it, otherwise, like the string
-&ldquo;first value&rdquo; here, it is <strong>unreachable</strong>.</p>
-<p>Many values can be directly accessed by the VM. Take a look at:</p>
+"first value" here, it is **unreachable**.
+-->
+<p>假设我们在第二行赋值完成后跑 GC。字符串 <code>"first value"</code> 仍坐在内存里，但用户程序再也没法碰到它。一旦 <code>a</code> 被重新赋值，程序就失去了对该字符串的任何引用。我们可以安全地释放它。若用户程序有某种办法引用某个值，该值就是<strong>可达</strong>的；否则，就像这里的字符串 <code>"first value"</code>，它就是<strong>不可达</strong>的。</p><!--
+Many values can be directly accessed by the VM. Take a look at:
+-->
+<p>许多值可以被虚拟机直接访问。看看这个：</p>
 <div class="codehilite"><pre>
 <span class="k">var</span> <span class="i">global</span> = <span class="s">&quot;string&quot;</span>;
 {
   <span class="k">var</span> <span class="i">local</span> = <span class="s">&quot;another&quot;</span>;
   <span class="k">print</span> <span class="i">global</span> + <span class="i">local</span>;
 }
-</pre></div>
-<p>Pause the program right after the two strings have been concatenated but before
-the <code>print</code> statement has executed. The VM can reach <code>"string"</code> by looking
-through the global variable table and finding the entry for <code>global</code>. It can
-find <code>"another"</code> by walking the value stack and hitting the slot for the local
-variable <code>local</code>. It can even find the concatenated string <code>"stringanother"</code>
-since that temporary value is also sitting on the VM&rsquo;s stack at the point when
-we paused our program.</p>
-<p>All of these values are called <strong>roots</strong>. A root is any object that the VM can
+</pre></div><!--
+Pause the program right after the two strings have been concatenated but before
+the `print` statement has executed. The VM can reach `"string"` by looking
+through the global variable table and finding the entry for `global`. It can
+find `"another"` by walking the value stack and hitting the slot for the local
+variable `local`. It can even find the concatenated string `"stringanother"`
+since that temporary value is also sitting on the VM's stack at the point when
+we paused our program.
+-->
+<p>在两个字符串刚拼接完、<code>print</code> 语句尚未执行时暂停程序。虚拟机可以通过翻找全局变量表、定位 <code>global</code> 的条目，到达 <code>"string"</code>。它可以通过走值栈、碰到局部变量 <code>local</code> 的槽位，找到 <code>"another"</code>。它甚至能找到拼接结果 <code>"stringanother"</code>——因为我们暂停时，那个临时值也正坐在虚拟机的栈上。</p><!--
+All of these values are called **roots**. A root is any object that the VM can
 reach directly without going through a reference in some other object. Most
-roots are global variables or on the stack, but as we&rsquo;ll see, there are a couple
-of other places the VM stores references to objects that it can find.</p>
-<p>Other values can be found by going through a reference inside another value.
+roots are global variables or on the stack, but as we'll see, there are a couple
+of other places the VM stores references to objects that it can find.
+-->
+<p>所有这些值都叫<strong>根</strong>。根是虚拟机无需经由其他对象中的引用就能直接到达的任何对象。大多数根是全局变量或在栈上，但我们很快会看到，虚拟机还有几处存放对象引用、并能自己找到的地方。</p><!--
+Other values can be found by going through a reference inside another value.
 <span name="class">Fields</span> on instances of classes are the most obvious
-case, but we don&rsquo;t have those yet. Even without those, our VM still has indirect
-references. Consider:</p>
-<aside name="class">
-<p>We&rsquo;ll get there <a href="classes-and-instances.html">soon</a>, though!</p>
+case, but we don't have those yet. Even without those, our VM still has indirect
+references. Consider:
+-->
+<p>其他值可以通过另一个值内部的引用找到。类实例上的<span name="class">字段</span>是最显眼的例子，但我们还没有那些。即便没有它们，我们的虚拟机仍有间接引用。考虑：</p>
+<aside name="class"><!--
+We'll get there [soon][classes], though!
+
+[classes]: classes-and-instances.html
+-->
+<p>不过我们<a href="classes-and-instances.html">很快</a>就会到那儿！</p>
 </aside>
 <div class="codehilite"><pre>
 <span class="k">fun</span> <span class="i">makeClosure</span>() {
@@ -226,96 +265,144 @@ references. Consider:</p>
   <span class="c">// GC here.</span>
   <span class="i">closure</span>();
 }
-</pre></div>
-<p>Say we pause the program on the marked line and run the garbage collector. When
+</pre></div><!--
+Say we pause the program on the marked line and run the garbage collector. When
 the collector is done and the program resumes, it will call the closure, which
-will in turn print <code>"data"</code>. So the collector needs to <em>not</em> free that string.
-But here&rsquo;s what the stack looks like when we pause the program:</p><img src="image/garbage-collection/stack.png" alt="The stack, containing only the script and closure." />
-<p>The <code>"data"</code> string is nowhere on it. It has already been hoisted off the stack
+will in turn print `"data"`. So the collector needs to *not* free that string.
+But here's what the stack looks like when we pause the program:
+-->
+<p>假设我们在标注那一行暂停程序并运行垃圾回收器。收集器结束后程序恢复，它会调用闭包，闭包进而打印 <code>"data"</code>。所以收集器必须<em>不要</em>释放那个字符串。但暂停时栈长这样：</p><img src="image/garbage-collection/stack.png" alt="The stack, containing only the script and closure." /><!--
+The `"data"` string is nowhere on it. It has already been hoisted off the stack
 and moved into the closed upvalue that the closure uses. The closure itself is
 on the stack. But to get to the string, we need to trace through the closure and
-its upvalue array. Since it <em>is</em> possible for the user&rsquo;s program to do that, all
-of these indirectly accessible objects are also considered reachable.</p><img src="image/garbage-collection/reachable.png" class="wide" alt="All of the referenced objects from the closure, and the path to the 'data' string from the stack." />
-<p>This gives us an inductive definition of reachability:</p>
+its upvalue array. Since it *is* possible for the user's program to do that, all
+of these indirectly accessible objects are also considered reachable.
+-->
+<p><code>"data"</code> 字符串根本不在栈上。它已被抬离栈，移进了闭包所用的已关闭上值里。闭包本身在栈上。但要到达字符串，我们得穿过闭包及其上值数组去追踪。既然用户程序<em>能够</em>那样做，所有这些间接可访问的对象也被视为可达。</p><img src="image/garbage-collection/reachable.png" class="wide" alt="All of the referenced objects from the closure, and the path to the 'data' string from the stack." /><!--
+This gives us an inductive definition of reachability:
+
+*   All roots are reachable.
+
+*   Any object referred to from a reachable object is itself reachable.
+-->
+<p>这就给出了可达性的归纳定义：</p>
 <ul>
 <li>
-<p>All roots are reachable.</p>
+<p>所有根都是可达的。</p>
 </li>
 <li>
-<p>Any object referred to from a reachable object is itself reachable.</p>
+<p>从可达对象引用到的任何对象，本身也是可达的。</p>
 </li>
-</ul>
-<p>These are the values that are still &ldquo;live&rdquo; and need to stay in memory. Any value
-that <em>doesn&rsquo;t</em> meet this definition is fair game for the collector to reap.
+</ul><!--
+These are the values that are still "live" and need to stay in memory. Any value
+that *doesn't* meet this definition is fair game for the collector to reap.
 That recursive pair of rules hints at a recursive algorithm we can use to free
-up unneeded memory:</p>
+up unneeded memory:
+
+1.  Starting with the roots, traverse through object references to find the
+    full set of reachable objects.
+
+2.  Free all objects *not* in that set.
+-->
+<p>这些是仍然“活着”、需要留在内存里的值。任何<em>不</em>符合这定义的值，都是收集器可以收割的正当猎物。那对递归规则暗示了一个我们可用来释放无用内存的递归算法：</p>
 <ol>
 <li>
-<p>Starting with the roots, traverse through object references to find the
-full set of reachable objects.</p>
+<p>从根出发，沿着对象引用遍历，找出全部可达对象的集合。</p>
 </li>
 <li>
-<p>Free all objects <em>not</em> in that set.</p>
+<p>释放<em>不</em>在该集合中的所有对象。</p>
 </li>
-</ol>
-<p>Many <span name="handbook">different</span> garbage collection algorithms are in
+</ol><!--
+Many <span name="handbook">different</span> garbage collection algorithms are in
 use today, but they all roughly follow that same structure. Some may interleave
 the steps or mix them, but the two fundamental operations are there. They mostly
-differ in <em>how</em> they perform each step.</p>
-<aside name="handbook">
-<p>If you want to explore other GC algorithms,
-<a href="http://gchandbook.org/"><em>The Garbage Collection Handbook</em></a> (Jones, et al.) is the canonical
+differ in *how* they perform each step.
+-->
+<p>如今有许多<span name="handbook">不同的</span>垃圾回收算法在用，但它们大致都遵循同一结构。有的会交错或混合这些步骤，但两项基本操作都在。它们的差异主要在于<em>如何</em>执行每一步。</p>
+<aside name="handbook"><!--
+If you want to explore other GC algorithms,
+[*The Garbage Collection Handbook*][gc book] (Jones, et al.) is the canonical
 reference. For a large book on such a deep, narrow topic, it is quite enjoyable
-to read. Or perhaps I have a strange idea of fun.</p>
-</aside>
-<h2><a href="#mark-sweep-garbage-collection" name="mark-sweep-garbage-collection"><small>26&#8202;.&#8202;2</small>Mark-Sweep Garbage Collection</a></h2>
-<p>The first managed language was Lisp, the second &ldquo;high-level&rdquo; language to be
+to read. Or perhaps I have a strange idea of fun.
+
+[gc book]: http://gchandbook.org/
+-->
+<p>若想探索其他 GC 算法，<a href="http://gchandbook.org/"><em>The Garbage Collection Handbook</em></a>（Jones 等）是权威参考。这么深、这么窄的话题，一本大书却相当好读。或许是我对“好玩”的观念比较古怪。</p>
+</aside><!--
+-- Mark-Sweep Garbage Collection
+-->
+<h2><a href="#标记-清扫垃圾回收" name="标记-清扫垃圾回收"><small>26&#8202;.&#8202;2</small>标记-清扫垃圾回收</a></h2><!--
+The first managed language was Lisp, the second "high-level" language to be
 invented, right after Fortran. John McCarthy considered using manual memory
 management or reference counting, but <span
 name="procrastination">eventually</span> settled on (and coined) garbage
-collection<span class="em">&mdash;</span>once the program was out of memory, it would go back and find
-unused storage it could reclaim.</p>
-<aside name="procrastination">
-<p>In John McCarthy&rsquo;s &ldquo;History of Lisp&rdquo;, he notes: &ldquo;Once we decided on garbage
+collection -- once the program was out of memory, it would go back and find
+unused storage it could reclaim.
+-->
+<p>第一门托管语言是 Lisp——紧随 Fortran 之后发明的第二门“高级”语言。约翰·麦卡锡曾考虑过手动内存管理或引用计数，但<span name="procrastination">最终</span>选定了（并创造了）垃圾回收这个词——一旦程序内存不够，就回过头去找可以收回的未用存储。</p>
+<aside name="procrastination"><!--
+In John McCarthy's "History of Lisp", he notes: "Once we decided on garbage
 collection, its actual implementation could be postponed, because only toy
-examples were being done.&rdquo; Our choice to procrastinate adding the GC to clox
-follows in the footsteps of giants.</p>
-</aside>
-<p>He designed the very first, simplest garbage collection algorithm, called
-<strong>mark-and-sweep</strong> or just <strong>mark-sweep</strong>. Its description fits in three short
+examples were being done." Our choice to procrastinate adding the GC to clox
+follows in the footsteps of giants.
+-->
+<p>约翰·麦卡锡在《History of Lisp》里写道：“一旦我们决定用垃圾回收，实际实现就可以往后推，因为当时只在做玩具例子。”我们把给 clox 加 GC 这件事往后拖，也是追随巨人的脚步。</p>
+</aside><!--
+He designed the very first, simplest garbage collection algorithm, called
+**mark-and-sweep** or just **mark-sweep**. Its description fits in three short
 paragraphs in the initial paper on Lisp. Despite its age and simplicity, the
 same fundamental algorithm underlies many modern memory managers. Some corners
-of CS seem to be timeless.</p>
-<p>As the name implies, mark-sweep works in two phases:</p>
+of CS seem to be timeless.
+-->
+<p>他设计了最早、也最简单的垃圾回收算法，叫作<strong>标记并清扫</strong>（mark-and-sweep），或简称<strong>标记-清扫</strong>（mark-sweep）。在 Lisp 的最初论文里，其描述只占短短三段。尽管年代久远、简单朴素，同一基本算法仍是许多现代内存管理器的底子。计算机科学的某些角落，仿佛不受时间侵蚀。</p><!--
+As the name implies, mark-sweep works in two phases:
+
+*   **Marking:** We start with the roots and traverse or <span
+    name="trace">*trace*</span> through all of the objects those roots refer to.
+    This is a classic graph traversal of all of the reachable objects. Each time
+    we visit an object, we *mark* it in some way. (Implementations differ in how
+    they record the mark.)
+
+*   **Sweeping:** Once the mark phase completes, every reachable object
+    in the heap has been marked. That means any unmarked object is unreachable and
+    ripe for reclamation. We go through all the unmarked objects and free each
+    one.
+-->
+<p>顾名思义，标记-清扫分两个阶段：</p>
 <ul>
 <li>
-<p><strong>Marking:</strong> We start with the roots and traverse or <span
-name="trace"><em>trace</em></span> through all of the objects those roots refer to.
-This is a classic graph traversal of all of the reachable objects. Each time
-we visit an object, we <em>mark</em> it in some way. (Implementations differ in how
-they record the mark.)</p>
+<p><strong>标记：</strong> 我们从根出发，遍历或<span name="trace"><em>追踪</em></span>那些根所引用的全部对象。这是对所有可达对象的经典图遍历。每访问一个对象，就以某种方式<em>标记</em>它。（各实现对如何记录标记不尽相同。）</p>
 </li>
 <li>
-<p><strong>Sweeping:</strong> Once the mark phase completes, every reachable object
-in the heap has been marked. That means any unmarked object is unreachable and
-ripe for reclamation. We go through all the unmarked objects and free each
-one.</p>
+<p><strong>清扫：</strong> 标记阶段一结束，堆上每个可达对象都已被标记。这意味着任何未标记的对象都不可达，正适合收回。我们遍历所有未标记对象，把每一个都释放掉。</p>
 </li>
-</ul>
-<p>It looks something like this:</p><img src="image/garbage-collection/mark-sweep.png" class="wide" alt="Starting from a graph of objects, first the reachable ones are marked, the remaining are swept, and then only the reachable remain." />
-<aside name="trace">
-<p>A <strong>tracing garbage collector</strong> is any algorithm that traces through the graph
+</ul><!--
+It looks something like this:
+-->
+<p>看起来大致像这样：</p><img src="image/garbage-collection/mark-sweep.png" class="wide" alt="Starting from a graph of objects, first the reachable ones are marked, the remaining are swept, and then only the reachable remain." />
+<aside name="trace"><!--
+A **tracing garbage collector** is any algorithm that traces through the graph
 of object references. This is in contrast with reference counting, which has a
-different strategy for tracking the reachable objects.</p>
-</aside>
-<p>That&rsquo;s what we&rsquo;re gonna implement. Whenever we decide it&rsquo;s time to reclaim some
-bytes, we&rsquo;ll trace everything and mark all the reachable objects, free what
-didn&rsquo;t get marked, and then resume the user&rsquo;s program.</p>
-<h3><a href="#collecting-garbage" name="collecting-garbage"><small>26&#8202;.&#8202;2&#8202;.&#8202;1</small>Collecting garbage</a></h3>
-<p>This entire chapter is about implementing this one <span
-name="one">function</span>:</p>
-<aside name="one">
-<p>Of course, we&rsquo;ll end up adding a bunch of helper functions too.</p>
+different strategy for tracking the reachable objects.
+-->
+<p><strong>追踪式垃圾回收器</strong>是任何沿着对象引用图去追踪的算法。这与引用计数相对——后者用另一套策略跟踪可达对象。</p>
+</aside><!--
+That's what we're gonna implement. Whenever we decide it's time to reclaim some
+bytes, we'll trace everything and mark all the reachable objects, free what
+didn't get marked, and then resume the user's program.
+-->
+<p>这就是我们要去实现的。每当我们认定该收回一些字节时，就会追踪一切、标记全部可达对象，释放没被标上的，然后恢复用户程序。</p><!--
+-- Collecting garbage
+-->
+<h3><a href="#收集垃圾" name="收集垃圾"><small>26&#8202;.&#8202;2&#8202;.&#8202;1</small>收集垃圾</a></h3><!--
+This entire chapter is about implementing this one <span
+name="one">function</span>:
+-->
+<p>整整一章，都是为了实现这一个<span name="one">函数</span>：</p>
+<aside name="one"><!--
+Of course, we'll end up adding a bunch of helper functions too.
+-->
+<p>当然，我们最终也会加上一堆辅助函数。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
@@ -327,8 +414,10 @@ add after <em>reallocate</em>()</div>
 void freeObjects();
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
-
-<p>We&rsquo;ll work our way up to a full implementation starting with this empty shell:</p>
+<!--
+We'll work our way up to a full implementation starting with this empty shell:
+-->
+<p>我们从这具空壳起步，一步步走向完整实现：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>freeObject</em>()</div>
 <pre>
@@ -336,11 +425,13 @@ add after <em>freeObject</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>freeObject</em>()</div>
-
-<p>The first question you might ask is, When does this function get called? It
-turns out that&rsquo;s a subtle question that we&rsquo;ll spend some time on later in the
-chapter. For now we&rsquo;ll sidestep the issue and build ourselves a handy diagnostic
-tool in the process.</p>
+<!--
+The first question you might ask is, When does this function get called? It
+turns out that's a subtle question that we'll spend some time on later in the
+chapter. For now we'll sidestep the issue and build ourselves a handy diagnostic
+tool in the process.
+-->
+<p>你可能会先问：这函数什么时候被调用？事实证明那是个微妙的问题，本章后面会花些时间讨论。眼下我们先绕开它，顺带给自己造一个好用的诊断工具。</p>
 <div class="codehilite"><pre class="insert-before">
 #define DEBUG_TRACE_EXECUTION
 </pre><div class="source-file"><em>common.h</em></div>
@@ -352,12 +443,14 @@ tool in the process.</p>
 #define UINT8_COUNT (UINT8_MAX + 1)
 </pre></div>
 <div class="source-file-narrow"><em>common.h</em></div>
-
-<p>We&rsquo;ll add an optional &ldquo;stress test&rdquo; mode for the garbage collector. When this
+<!--
+We'll add an optional "stress test" mode for the garbage collector. When this
 flag is defined, the GC runs as often as it possibly can. This is, obviously,
-horrendous for performance. But it&rsquo;s great for flushing out memory management
-bugs that occur only when a GC is triggered at just the right moment. If <em>every</em>
-moment triggers a GC, you&rsquo;re likely to find those bugs.</p>
+horrendous for performance. But it's great for flushing out memory management
+bugs that occur only when a GC is triggered at just the right moment. If *every*
+moment triggers a GC, you're likely to find those bugs.
+-->
+<p>我们给垃圾回收器加一个可选的“压力测试”模式。定义了这个标志后，GC 会尽可能频繁地跑。这对性能显然糟透了。但它很擅长把那些只在“恰到好处”的时刻触发 GC 才会出现的内存管理缺陷冲出来。若<em>每一个</em>时刻都触发 GC，你就很可能找到那些虫子。</p>
 <div class="codehilite"><pre class="insert-before">
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -373,31 +466,43 @@ in <em>reallocate</em>()</div>
   if (newSize == 0) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
-
-<p>Whenever we call <code>reallocate()</code> to acquire more memory, we force a collection to
-run. The if check is because <code>reallocate()</code> is also called to free or shrink an
-allocation. We don&rsquo;t want to trigger a GC for that<span class="em">&mdash;</span>in particular because the
-GC itself will call <code>reallocate()</code> to free memory.</p>
-<p>Collecting right before <span name="demand">allocation</span> is the classic way
-to wire a GC into a VM. You&rsquo;re already calling into the memory manager, so it&rsquo;s
+<!--
+Whenever we call `reallocate()` to acquire more memory, we force a collection to
+run. The if check is because `reallocate()` is also called to free or shrink an
+allocation. We don't want to trigger a GC for that -- in particular because the
+GC itself will call `reallocate()` to free memory.
+-->
+<p>每当我们调用 <code>reallocate()</code> 去申请更多内存，就强制跑一次收集。那个 if 检查是因为 <code>reallocate()</code> 也会被用来释放或缩小一块分配。那种情况我们不想触发 GC——尤其因为 GC 自己也会调用 <code>reallocate()</code> 来释放内存。</p><!--
+Collecting right before <span name="demand">allocation</span> is the classic way
+to wire a GC into a VM. You're already calling into the memory manager, so it's
 an easy place to hook in the code. Also, allocation is the only time when you
-really <em>need</em> some freed up memory so that you can reuse it. If you <em>don&rsquo;t</em> use
+really *need* some freed up memory so that you can reuse it. If you *don't* use
 allocation to trigger a GC, you have to make sure every possible place in code
 where you can loop and allocate memory also has a way to trigger the collector.
 Otherwise, the VM can get into a starved state where it needs more memory but
-never collects any.</p>
-<aside name="demand">
-<p>More sophisticated collectors might run on a separate thread or be interleaved
-periodically during program execution<span class="em">&mdash;</span>often at function call boundaries or
-when a backward jump occurs.</p>
-</aside>
-<h3><a href="#debug-logging" name="debug-logging"><small>26&#8202;.&#8202;2&#8202;.&#8202;2</small>Debug logging</a></h3>
-<p>While we&rsquo;re on the subject of diagnostics, let&rsquo;s put some more in. A real
-challenge I&rsquo;ve found with garbage collectors is that they are opaque. We&rsquo;ve been
-running lots of Lox programs just fine without any GC <em>at all</em> so far. Once we
-add one, how do we tell if it&rsquo;s doing anything useful? Can we tell only if we
-write programs that plow through acres of memory? How do we debug that?</p>
-<p>An easy way to shine a light into the GC&rsquo;s inner workings is with some logging.</p>
+never collects any.
+-->
+<p>就在<span name="demand">分配</span>之前收集，是把 GC 接入虚拟机的经典做法。你反正已经在调用内存管理器，挂钩代码很方便。而且，分配是你真正<em>需要</em>一些已释放内存以便复用的唯一时刻。若<em>不</em>用分配来触发 GC，就必须确保代码里每一个可能循环并分配内存的地方，也都有办法触发收集器。否则虚拟机可能陷入饥渴状态：需要更多内存，却永远不去收集。</p>
+<aside name="demand"><!--
+More sophisticated collectors might run on a separate thread or be interleaved
+periodically during program execution -- often at function call boundaries or
+when a backward jump occurs.
+-->
+<p>更精巧的收集器可能在单独线程上跑，或在程序执行期间周期性交错——常常在函数调用边界，或发生向后跳转时。</p>
+</aside><!--
+-- Debug logging
+-->
+<h3><a href="#调试日志" name="调试日志"><small>26&#8202;.&#8202;2&#8202;.&#8202;2</small>调试日志</a></h3><!--
+While we're on the subject of diagnostics, let's put some more in. A real
+challenge I've found with garbage collectors is that they are opaque. We've been
+running lots of Lox programs just fine without any GC *at all* so far. Once we
+add one, how do we tell if it's doing anything useful? Can we tell only if we
+write programs that plow through acres of memory? How do we debug that?
+-->
+<p>既然说到诊断，再多塞一点吧。我发现垃圾回收器的一个真正挑战是：它们不透明。到目前为止，我们根本<em>没有</em>任何 GC，却已经顺畅地跑过许多 Lox 程序。一旦加上，我们怎么判断它是否在做有用的事？难道只有写出翻耕大片内存的程序才能看出来？那又该怎么调试？</p><!--
+An easy way to shine a light into the GC's inner workings is with some logging.
+-->
+<p>往 GC 内部运作里照进一点光的简便办法，就是日志。</p>
 <div class="codehilite"><pre class="insert-before">
 #define DEBUG_STRESS_GC
 </pre><div class="source-file"><em>common.h</em></div>
@@ -408,10 +513,14 @@ write programs that plow through acres of memory? How do we debug that?</p>
 #define UINT8_COUNT (UINT8_MAX + 1)
 </pre></div>
 <div class="source-file-narrow"><em>common.h</em></div>
-
-<p>When this is enabled, clox prints information to the console when it does
-something with dynamic memory.</p>
-<p>We need a couple of includes.</p>
+<!--
+When this is enabled, clox prints information to the console when it does
+something with dynamic memory.
+-->
+<p>启用后，clox 在对动态内存做什么事时，会往控制台打印信息。</p><!--
+We need a couple of includes.
+-->
+<p>我们需要几条 include。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;vm.h&quot;
 </pre><div class="source-file"><em>memory.c</em></div>
@@ -426,9 +535,11 @@ something with dynamic memory.</p>
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em></div>
-
-<p>We don&rsquo;t have a collector yet, but we can start putting in some of the logging
-now. We&rsquo;ll want to know when a collection run starts.</p>
+<!--
+We don't have a collector yet, but we can start putting in some of the logging
+now. We'll want to know when a collection run starts.
+-->
+<p>我们还没有收集器，但现在就可以先放进一些日志。我们想知道一次收集运行何时开始。</p>
 <div class="codehilite"><pre class="insert-before">
 void collectGarbage() {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -441,9 +552,11 @@ in <em>collectGarbage</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>Eventually we will log some other operations during the collection, so we&rsquo;ll
-also want to know when the show&rsquo;s over.</p>
+<!--
+Eventually we will log some other operations during the collection, so we'll
+also want to know when the show's over.
+-->
+<p>最终我们还会在收集过程中记录另一些操作，所以也想知道这场戏何时落幕。</p>
 <div class="codehilite"><pre class="insert-before">
   printf(&quot;-- gc begin\n&quot;);
 #endif
@@ -458,9 +571,11 @@ in <em>collectGarbage</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>We don&rsquo;t have any code for the collector yet, but we do have functions for
-allocating and freeing, so we can instrument those now.</p>
+<!--
+We don't have any code for the collector yet, but we do have functions for
+allocating and freeing, so we can instrument those now.
+-->
+<p>收集器的代码还没有，但分配与释放的函数已有，现在就可以给它们插桩。</p>
 <div class="codehilite"><pre class="insert-before">
   vm.objects = object;
 </pre><div class="source-file"><em>object.c</em><br>
@@ -475,8 +590,10 @@ in <em>allocateObject</em>()</div>
   return object;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateObject</em>()</div>
-
-<p>And at the end of an object&rsquo;s lifespan:</p>
+<!--
+And at the end of an object's lifespan:
+-->
+<p>以及在对象寿命结束时：</p>
 <div class="codehilite"><pre class="insert-before">
 static void freeObject(Obj* object) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -490,14 +607,20 @@ in <em>freeObject</em>()</div>
   switch (object-&gt;type) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
-
-<p>With these two flags, we should be able to see that we&rsquo;re making progress as we
-work through the rest of the chapter.</p>
-<h2><a href="#marking-the-roots" name="marking-the-roots"><small>26&#8202;.&#8202;3</small>Marking the Roots</a></h2>
-<p>Objects are scattered across the heap like stars in the inky night sky. A
+<!--
+With these two flags, we should be able to see that we're making progress as we
+work through the rest of the chapter.
+-->
+<p>有了这两个标志，在本章余下部分推进时，我们应该能看见自己在取得进展。</p><!--
+-- Marking the Roots
+-->
+<h2><a href="#标记根" name="标记根"><small>26&#8202;.&#8202;3</small>标记根</a></h2><!--
+Objects are scattered across the heap like stars in the inky night sky. A
 reference from one object to another forms a connection, and these
 constellations are the graph that the mark phase traverses. Marking begins at
-the roots.</p>
+the roots.
+-->
+<p>对象散落在堆上，像墨色夜空里的星星。从一个对象到另一个的引用形成连线，这些星座就是标记阶段要遍历的图。标记从根开始。</p>
 <div class="codehilite"><pre class="insert-before">
 #ifdef DEBUG_LOG_GC
   printf(&quot;-- gc begin\n&quot;);
@@ -512,9 +635,11 @@ in <em>collectGarbage</em>()</div>
 #ifdef DEBUG_LOG_GC
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>Most roots are local variables or temporaries sitting right in the VM&rsquo;s stack,
-so we start by walking that.</p>
+<!--
+Most roots are local variables or temporaries sitting right in the VM's stack,
+so we start by walking that.
+-->
+<p>大多数根是局部变量或就坐在虚拟机栈上的临时值，所以我们从走栈开始。</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>freeObject</em>()</div>
 <pre>
@@ -525,8 +650,10 @@ add after <em>freeObject</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>freeObject</em>()</div>
-
-<p>To mark a Lox value, we use this new function:</p>
+<!--
+To mark a Lox value, we use this new function:
+-->
+<p>要标记一个 Lox 值，我们用这个新函数：</p>
 <div class="codehilite"><pre class="insert-before">
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 </pre><div class="source-file"><em>memory.h</em><br>
@@ -537,8 +664,10 @@ add after <em>reallocate</em>()</div>
 void collectGarbage();
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
-
-<p>Its implementation is here:</p>
+<!--
+Its implementation is here:
+-->
+<p>实现在这边：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
 <pre>
@@ -547,11 +676,13 @@ add after <em>reallocate</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>reallocate</em>()</div>
-
-<p>Some Lox values<span class="em">&mdash;</span>numbers, Booleans, and <code>nil</code><span class="em">&mdash;</span>are stored directly inline in
-Value and require no heap allocation. The garbage collector doesn&rsquo;t need to
+<!--
+Some Lox values -- numbers, Booleans, and `nil` -- are stored directly inline in
+Value and require no heap allocation. The garbage collector doesn't need to
 worry about them at all, so the first thing we do is ensure that the value is an
-actual heap object. If so, the real work happens in this function:</p>
+actual heap object. If so, the real work happens in this function:
+-->
+<p>有些 Lox 值——数字、布尔值和 <code>nil</code>——直接内联存在 Value 里，不需要堆分配。垃圾回收器完全不必操心它们，所以我们先确保该值确实是一个堆对象。若是，真正的工作在这个函数里发生：</p>
 <div class="codehilite"><pre class="insert-before">
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 </pre><div class="source-file"><em>memory.h</em><br>
@@ -562,8 +693,10 @@ add after <em>reallocate</em>()</div>
 void markValue(Value value);
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
-
-<p>Which is defined here:</p>
+<!--
+Which is defined here:
+-->
+<p>定义在这边：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
 <pre>
@@ -573,13 +706,17 @@ add after <em>reallocate</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>reallocate</em>()</div>
-
-<p>The <code>NULL</code> check is unnecessary when called from <code>markValue()</code>. A Lox Value that
+<!--
+The `NULL` check is unnecessary when called from `markValue()`. A Lox Value that
 is some kind of Obj type will always have a valid pointer. But later we will
 call this function directly from other code, and in some of those places, the
-object being pointed to is optional.</p>
-<p>Assuming we do have a valid object, we mark it by setting a flag. That new field
-lives in the Obj header struct all objects share.</p>
+object being pointed to is optional.
+-->
+<p>从 <code>markValue()</code> 调用时，<code>NULL</code> 检查并非必要。某种 Obj 类型的 Lox Value 总会有有效指针。但稍后我们会从其他代码直接调用这函数，而在某些地方，所指对象是可选的。</p><!--
+Assuming we do have a valid object, we mark it by setting a flag. That new field
+lives in the Obj header struct all objects share.
+-->
+<p>假定我们确实有一个有效对象，就通过设置一个标志来标记它。这个新字段住在所有对象共享的 Obj 头结构体里。</p>
 <div class="codehilite"><pre class="insert-before">
   ObjType type;
 </pre><div class="source-file"><em>object.h</em><br>
@@ -590,9 +727,11 @@ in struct <em>Obj</em></div>
   struct Obj* next;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>Obj</em></div>
-
-<p>Every new object begins life unmarked because we haven&rsquo;t yet determined if it is
-reachable or not.</p>
+<!--
+Every new object begins life unmarked because we haven't yet determined if it is
+reachable or not.
+-->
+<p>每个新对象以未标记状态开始生命，因为我们尚未判定它是否可达。</p>
 <div class="codehilite"><pre class="insert-before">
   object-&gt;type = type;
 </pre><div class="source-file"><em>object.c</em><br>
@@ -604,8 +743,10 @@ in <em>allocateObject</em>()</div>
   object-&gt;next = vm.objects;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateObject</em>()</div>
-
-<p>Before we go any farther, let&rsquo;s add some logging to <code>markObject()</code>.</p>
+<!--
+Before we go any farther, let's add some logging to `markObject()`.
+-->
+<p>再往前走之前，先给 <code>markObject()</code> 加点日志。</p>
 <div class="codehilite"><pre class="insert-before">
 void markObject(Obj* object) {
   if (object == NULL) return;
@@ -622,10 +763,12 @@ in <em>markObject</em>()</div>
   object-&gt;isMarked = true;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
-
-<p>This way we can see what the mark phase is doing. Marking the stack takes care
+<!--
+This way we can see what the mark phase is doing. Marking the stack takes care
 of local variables and temporaries. The other main source of roots are the
-global variables.</p>
+global variables.
+-->
+<p>这样我们就能看见标记阶段在做什么。标记栈照顾了局部变量和临时值。根的另一主要来源是全局变量。</p>
 <div class="codehilite"><pre class="insert-before">
     markValue(*slot);
   }
@@ -638,9 +781,11 @@ in <em>markRoots</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
-
-<p>Those live in a hash table owned by the VM, so we&rsquo;ll declare another helper
-function for marking all of the objects in a table.</p>
+<!--
+Those live in a hash table owned by the VM, so we'll declare another helper
+function for marking all of the objects in a table.
+-->
+<p>它们住在虚拟机拥有的一张哈希表里，所以我们再声明一个辅助函数，用来标记表中的全部对象。</p>
 <div class="codehilite"><pre class="insert-before">
 ObjString* tableFindString(Table* table, const char* chars,
                            int length, uint32_t hash);
@@ -653,8 +798,10 @@ add after <em>tableFindString</em>()</div>
 #endif
 </pre></div>
 <div class="source-file-narrow"><em>table.h</em>, add after <em>tableFindString</em>()</div>
-
-<p>We implement that in the &ldquo;table&rdquo; module here:</p>
+<!--
+We implement that in the "table" module here:
+-->
+<p>我们在 “table” 模块里实现它：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableFindString</em>()</div>
 <pre>
@@ -667,19 +814,27 @@ add after <em>tableFindString</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, add after <em>tableFindString</em>()</div>
-
-<p>Pretty straightforward. We walk the entry array. For each one, we mark its
+<!--
+Pretty straightforward. We walk the entry array. For each one, we mark its
 value. We also mark the key strings for each entry since the GC manages those
-strings too.</p>
-<h3><a href="#less-obvious-roots" name="less-obvious-roots"><small>26&#8202;.&#8202;3&#8202;.&#8202;1</small>Less obvious roots</a></h3>
-<p>Those cover the roots that we typically think of<span class="em">&mdash;</span>the values that are
-obviously reachable because they&rsquo;re stored in variables the user&rsquo;s program can
+strings too.
+-->
+<p>相当直白。我们走遍条目数组。对每一项，标记其值。我们也标记每条条目的键字符串，因为 GC 也管理那些字符串。</p><!--
+-- Less obvious roots
+-->
+<h3><a href="#不那么显眼的根" name="不那么显眼的根"><small>26&#8202;.&#8202;3&#8202;.&#8202;1</small>不那么显眼的根</a></h3><!--
+Those cover the roots that we typically think of -- the values that are
+obviously reachable because they're stored in variables the user's program can
 see. But the VM has a few of its own hidey-holes where it squirrels away
-references to values that it directly accesses.</p>
-<p>Most function call state lives in the value stack, but the VM maintains a
+references to values that it directly accesses.
+-->
+<p>这些覆盖了我们通常会想到的根——那些因为存放在用户程序看得见的变量里而显然可达的值。但虚拟机还有几处自己的藏匿点，把直接访问的值引用囤在那儿。</p><!--
+Most function call state lives in the value stack, but the VM maintains a
 separate stack of CallFrames. Each CallFrame contains a pointer to the closure
 being called. The VM uses those pointers to access constants and upvalues, so
-those closures need to be kept around too.</p>
+those closures need to be kept around too.
+-->
+<p>大多数函数调用状态住在值栈上，但虚拟机另维护一摞 CallFrame。每个 CallFrame 含有一个指向正在被调用的闭包的指针。虚拟机用这些指针访问常量和上值，所以那些闭包也需要留着。</p>
 <div class="codehilite"><pre class="insert-before">
   }
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -694,9 +849,11 @@ in <em>markRoots</em>()</div>
   markTable(&amp;vm.globals);
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
-
-<p>Speaking of upvalues, the open upvalue list is another set of values that the
-VM can directly reach.</p>
+<!--
+Speaking of upvalues, the open upvalue list is another set of values that the
+VM can directly reach.
+-->
+<p>说到上值，打开上值列表是虚拟机可以直接到达的又一组值。</p>
 <div class="codehilite"><pre class="insert-before">
   for (int i = 0; i &lt; vm.frameCount; i++) {
     markObject((Obj*)vm.frames[i].closure);
@@ -715,14 +872,18 @@ in <em>markRoots</em>()</div>
   markTable(&amp;vm.globals);
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
-
-<p>Remember also that a collection can begin during <em>any</em> allocation. Those
-allocations don&rsquo;t just happen while the user&rsquo;s program is running. The compiler
+<!--
+Remember also that a collection can begin during *any* allocation. Those
+allocations don't just happen while the user's program is running. The compiler
 itself periodically grabs memory from the heap for literals and the constant
-table. If the GC runs while we&rsquo;re in the middle of compiling, then any values
-the compiler directly accesses need to be treated as roots too.</p>
-<p>To keep the compiler module cleanly separated from the rest of the VM, we&rsquo;ll do
-that in a separate function.</p>
+table. If the GC runs while we're in the middle of compiling, then any values
+the compiler directly accesses need to be treated as roots too.
+-->
+<p>还要记住，收集可以在<em>任何</em>一次分配时开始。那些分配不只发生在用户程序运行时。编译器自己也会周期性地从堆上抓内存，给字面量和常量表用。若 GC 在我们编译到一半时跑起来，那么编译器直接访问的任何值也需要当作根。</p><!--
+To keep the compiler module cleanly separated from the rest of the VM, we'll do
+that in a separate function.
+-->
+<p>为了让编译器模块与虚拟机其余部分干净地分离，我们把这事放在一个单独的函数里做。</p>
 <div class="codehilite"><pre class="insert-before">
   markTable(&amp;vm.globals);
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -733,8 +894,10 @@ in <em>markRoots</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
-
-<p>It&rsquo;s declared here:</p>
+<!--
+It's declared here:
+-->
+<p>声明在这边：</p>
 <div class="codehilite"><pre class="insert-before">
 ObjFunction* compile(const char* source);
 </pre><div class="source-file"><em>compiler.h</em><br>
@@ -746,8 +909,10 @@ add after <em>compile</em>()</div>
 #endif
 </pre></div>
 <div class="source-file-narrow"><em>compiler.h</em>, add after <em>compile</em>()</div>
-
-<p>Which means the &ldquo;memory&rdquo; module needs an include.</p>
+<!--
+Which means the "memory" module needs an include.
+-->
+<p>这意味着 “memory” 模块需要一条 include。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &lt;stdlib.h&gt;
 
@@ -758,8 +923,10 @@ add after <em>compile</em>()</div>
 #include &quot;memory.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em></div>
-
-<p>And the definition is over in the &ldquo;compiler&rdquo; module.</p>
+<!--
+And the definition is over in the "compiler" module.
+-->
+<p>而定义在 “compiler” 模块那边。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>compile</em>()</div>
 <pre>
@@ -772,12 +939,16 @@ add after <em>compile</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>compile</em>()</div>
-
-<p>Fortunately, the compiler doesn&rsquo;t have too many values that it hangs on to. The
+<!--
+Fortunately, the compiler doesn't have too many values that it hangs on to. The
 only object it uses is the ObjFunction it is compiling into. Since function
 declarations can nest, the compiler has a linked list of those and we walk the
-whole list.</p>
-<p>Since the &ldquo;compiler&rdquo; module is calling <code>markObject()</code>, it also needs an include.</p>
+whole list.
+-->
+<p>幸好，编译器攥着的值并不多。它用到的唯一对象，是正在编译进去的那个 ObjFunction。由于函数声明可以嵌套，编译器有一条这些对象的链表，我们走完整条链表。</p><!--
+Since the "compiler" module is calling `markObject()`, it also needs an include.
+-->
+<p>既然 “compiler” 模块在调用 <code>markObject()</code>，它也需要一条 include。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;compiler.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
@@ -787,119 +958,171 @@ whole list.</p>
 #include &quot;scanner.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
-
-<p>Those are all the roots. After running this, every object that the VM<span class="em">&mdash;</span>runtime
-and compiler<span class="em">&mdash;</span>can get to <em>without</em> going through some other object has its
-mark bit set.</p>
-<h2><a href="#tracing-object-references" name="tracing-object-references"><small>26&#8202;.&#8202;4</small>Tracing Object References</a></h2>
-<p>The next step in the marking process is tracing through the graph of references
-between objects to find the indirectly reachable values. We don&rsquo;t have instances
-with fields yet, so there aren&rsquo;t many objects that contain references, but we do
+<!--
+Those are all the roots. After running this, every object that the VM -- runtime
+and compiler -- can get to *without* going through some other object has its
+mark bit set.
+-->
+<p>这些就是全部的根。跑完之后，虚拟机——运行时与编译器——<em>无需</em>经由其他对象就能到达的每个对象，其标记位都已置上。</p><!--
+-- Tracing Object References
+-->
+<h2><a href="#追踪对象引用" name="追踪对象引用"><small>26&#8202;.&#8202;4</small>追踪对象引用</a></h2><!--
+The next step in the marking process is tracing through the graph of references
+between objects to find the indirectly reachable values. We don't have instances
+with fields yet, so there aren't many objects that contain references, but we do
 have <span name="some">some</span>. In particular, ObjClosure has the list of
 ObjUpvalues it closes over as well as a reference to the raw ObjFunction that it
 wraps. ObjFunction, in turn, has a constant table containing references to all
-of the literals created in the function&rsquo;s body. This is enough to build a fairly
-complex web of objects for our collector to crawl through.</p>
-<aside name="some">
-<p>I slotted this chapter into the book right here specifically <em>because</em> we now
+of the literals created in the function's body. This is enough to build a fairly
+complex web of objects for our collector to crawl through.
+-->
+<p>标记过程的下一步，是沿着对象之间的引用图去追踪，找出间接可达的值。我们还没有带字段的实例，所以含引用的对象不多，但确实有<span name="some">一些</span>。尤其是，ObjClosure 有它关闭的 ObjUpvalue 列表，以及对它所包装的裸 ObjFunction 的引用。ObjFunction 又有一张常量表，装着函数体里创建的全部字面量的引用。这足以织出一张相当复杂的对象网，供我们的收集器去爬。</p>
+<aside name="some"><!--
+I slotted this chapter into the book right here specifically *because* we now
 have closures which give us interesting objects for the garbage collector to
-process.</p>
-</aside>
-<p>Now it&rsquo;s time to implement that traversal. We can go breadth-first, depth-first,
-or in some other order. Since we just need to find the <em>set</em> of all reachable
-objects, the order we visit them <span name="dfs">mostly</span> doesn&rsquo;t matter.</p>
-<aside name="dfs">
-<p>I say &ldquo;mostly&rdquo; because some garbage collectors move objects in the order that
+process.
+-->
+<p>我把本章恰好插在书的这个位置，正是<em>因为</em>我们现在有了闭包，给垃圾回收器提供了有意思的对象去处理。</p>
+</aside><!--
+Now it's time to implement that traversal. We can go breadth-first, depth-first,
+or in some other order. Since we just need to find the *set* of all reachable
+objects, the order we visit them <span name="dfs">mostly</span> doesn't matter.
+-->
+<p>现在该实现那次遍历了。可以广度优先、深度优先，或别的顺序。既然我们只需要找出全部可达对象的<em>集合</em>，访问顺序<span name="dfs">大体上</span>无关紧要。</p>
+<aside name="dfs"><!--
+I say "mostly" because some garbage collectors move objects in the order that
 they are visited, so traversal order determines which objects end up adjacent in
 memory. That impacts performance because the CPU uses locality to determine
-which memory to preload into the caches.</p>
-<p>Even when traversal order does matter, it&rsquo;s not clear which order is <em>best</em>.
-It&rsquo;s very difficult to determine which order objects will be used in in the
-future, so it&rsquo;s hard for the GC to know which order will help performance.</p>
-</aside>
-<h3><a href="#the-tricolor-abstraction" name="the-tricolor-abstraction"><small>26&#8202;.&#8202;4&#8202;.&#8202;1</small>The tricolor abstraction</a></h3>
-<p>As the collector wanders through the graph of objects, we need to make sure it
-doesn&rsquo;t lose track of where it is or get stuck going in circles. This is
+which memory to preload into the caches.
+
+Even when traversal order does matter, it's not clear which order is *best*.
+It's very difficult to determine which order objects will be used in in the
+future, so it's hard for the GC to know which order will help performance.
+-->
+<p>我说“大体上”，是因为有些垃圾回收器会按访问顺序移动对象，于是遍历顺序决定了哪些对象最终在内存里相邻。这影响性能，因为 CPU 用局部性来决定把哪些内存预加载进缓存。</p>
+<p>即便遍历顺序确实重要，也不清楚哪种顺序<em>最好</em>。很难断定对象将来会按什么顺序被使用，所以 GC 也很难知道哪种顺序有助于性能。</p>
+</aside><!--
+-- The tricolor abstraction
+-->
+<h3><a href="#三色抽象" name="三色抽象"><small>26&#8202;.&#8202;4&#8202;.&#8202;1</small>三色抽象</a></h3><!--
+As the collector wanders through the graph of objects, we need to make sure it
+doesn't lose track of where it is or get stuck going in circles. This is
 particularly a concern for advanced implementations like incremental GCs that
-interleave marking with running pieces of the user&rsquo;s program. The collector
-needs to be able to pause and then pick up where it left off later.</p>
-<p>To help us soft-brained humans reason about this complex process, VM hackers
-came up with a metaphor called the <span name="color"></span><strong>tricolor
-abstraction</strong>. Each object has a conceptual &ldquo;color&rdquo; that tracks what state the
-object is in, and what work is left to do.</p>
-<aside name="color">
-<p>Advanced garbage collection algorithms often add other colors to the
-abstraction. I&rsquo;ve seen multiple shades of gray, and even purple in some designs.
+interleave marking with running pieces of the user's program. The collector
+needs to be able to pause and then pick up where it left off later.
+-->
+<p>收集器在对象图里游荡时，我们得确保它不会弄丢自己身在何处，或转圈转进死胡同。这对增量 GC 这类高级实现尤其要紧——它们把标记与运行用户程序的片段交错进行。收集器需要能够暂停，稍后再从停下的地方接着干。</p><!--
+To help us soft-brained humans reason about this complex process, VM hackers
+came up with a metaphor called the <span name="color"></span>**tricolor
+abstraction**. Each object has a conceptual "color" that tracks what state the
+object is in, and what work is left to do.
+-->
+<p>为了帮我们这些脑子柔软的人类理解这复杂过程，虚拟机黑客们想出了一个叫作<span name="color"></span><strong>三色抽象</strong>的隐喻。每个对象有一个概念上的“颜色”，跟踪对象处于何种状态，以及还剩什么工作要做。</p>
+<aside name="color"><!--
+Advanced garbage collection algorithms often add other colors to the
+abstraction. I've seen multiple shades of gray, and even purple in some designs.
 My puce-chartreuse-fuchsia-malachite collector paper was, alas, not accepted for
-publication.</p>
-</aside>
+publication.
+-->
+<p>高级垃圾回收算法常常往这抽象里再加别的颜色。我见过多种灰色调，有些设计里甚至有紫色。我那篇紫褐-黄绿-品红-孔雀石收集器的论文，唉，未被接受发表。</p>
+</aside><!--
+*   **White:** At
+    the beginning of a garbage collection, every object is white. This color
+    means we have not reached or processed the object at all.
+
+*   **Gray:** During
+    marking, when we first reach an object, we darken it gray. This color means
+    we know the object itself is reachable and should not be collected. But we
+    have not yet traced *through* it to see what *other* objects it references.
+    In graph algorithm terms, this is the *worklist* -- the set of objects we
+    know about but haven't processed yet.
+
+*   **Black:** When
+    we take a gray object and mark all of the objects it references, we then
+    turn the gray object black. This color means the mark phase is done
+    processing that object.
+-->
 <ul>
 <li>
-<p><strong><img src="image/garbage-collection/white.png" class="dot" /> White:</strong> At
-the beginning of a garbage collection, every object is white. This color
-means we have not reached or processed the object at all.</p>
+<p><strong><img src="image/garbage-collection/white.png" class="dot" /> 白：</strong> 在一次垃圾回收开始时，每个对象都是白色。这个颜色表示我们还完全没有到达或处理过该对象。</p>
 </li>
 <li>
-<p><strong><img src="image/garbage-collection/gray.png" class="dot" /> Gray:</strong> During
-marking, when we first reach an object, we darken it gray. This color means
-we know the object itself is reachable and should not be collected. But we
-have not yet traced <em>through</em> it to see what <em>other</em> objects it references.
-In graph algorithm terms, this is the <em>worklist</em><span class="em">&mdash;</span>the set of objects we
-know about but haven&rsquo;t processed yet.</p>
+<p><strong><img src="image/garbage-collection/gray.png" class="dot" /> 灰：</strong> 标记期间，我们第一次到达某个对象时，把它加深成灰色。这颜色表示我们知道该对象本身可达、不应被收集，但尚未<em>穿过</em>它去看它引用了哪些<em>其他</em>对象。用图算法的术语说，这就是<em>工作列表</em>——我们知道但尚未处理的对象集合。</p>
 </li>
 <li>
-<p><strong><img src="image/garbage-collection/black.png" class="dot" /> Black:</strong> When
-we take a gray object and mark all of the objects it references, we then
-turn the gray object black. This color means the mark phase is done
-processing that object.</p>
+<p><strong><img src="image/garbage-collection/black.png" class="dot" /> 黑：</strong> 当我们取出一个灰色对象、并标记它所引用的全部对象后，就把这个灰色对象变成黑色。这颜色表示标记阶段已处理完该对象。</p>
 </li>
-</ul>
-<p>In terms of that abstraction, the marking process now looks like this:</p>
+</ul><!--
+In terms of that abstraction, the marking process now looks like this:
+
+1.  Start off with all objects white.
+
+2.  Find all the roots and mark them gray.
+
+3.  Repeat as long as there are still gray objects:
+
+    1.  Pick a gray object. Turn any white objects that the object mentions to
+        gray.
+
+    2.  Mark the original gray object black.
+-->
+<p>用那套抽象来说，标记过程现在看起来像这样：</p>
 <ol>
 <li>
-<p>Start off with all objects white.</p>
+<p>开始时全部对象为白。</p>
 </li>
 <li>
-<p>Find all the roots and mark them gray.</p>
+<p>找出所有根，把它们标成灰。</p>
 </li>
 <li>
-<p>Repeat as long as there are still gray objects:</p>
+<p>只要还有灰色对象，就重复：</p>
 <ol>
 <li>
-<p>Pick a gray object. Turn any white objects that the object mentions to
-gray.</p>
+<p>挑一个灰色对象。把它提到的任何白色对象变成灰。</p>
 </li>
 <li>
-<p>Mark the original gray object black.</p>
+<p>把原来的灰色对象标成黑。</p>
 </li>
 </ol>
 </li>
-</ol>
-<p>I find it helps to visualize this. You have a web of objects with references
+</ol><!--
+I find it helps to visualize this. You have a web of objects with references
 between them. Initially, they are all little white dots. Off to the side are
 some incoming edges from the VM that point to the roots. Those roots turn gray.
-Then each gray object&rsquo;s siblings turn gray while the object itself turns black.
+Then each gray object's siblings turn gray while the object itself turns black.
 The full effect is a gray wavefront that passes through the graph, leaving a
 field of reachable black objects behind it. Unreachable objects are not touched
-by the wavefront and stay white.</p><img src="image/garbage-collection/tricolor-trace.png" class="wide" alt="A gray wavefront working through a graph of nodes." />
-<p>At the <span name="invariant">end</span>, you&rsquo;re left with a sea of reached,
+by the wavefront and stay white.
+-->
+<p>我觉得把它可视化会有帮助。你有一张对象网，对象之间有引用。起初它们都是小白点。一旁有几条从虚拟机指向根的入边。那些根变成灰色。然后每个灰色对象的“兄弟姐妹”变灰，对象自身变黑。整体效果是一道灰色波前穿过图，身后留下一片可达的黑色对象。不可达对象未被波前触及，仍保持白色。</p><img src="image/garbage-collection/tricolor-trace.png" class="wide" alt="A gray wavefront working through a graph of nodes." /><!--
+At the <span name="invariant">end</span>, you're left with a sea of reached,
 black objects sprinkled with islands of white objects that can be swept up and
-freed. Once the unreachable objects are freed, the remaining objects<span class="em">&mdash;</span>all
-black<span class="em">&mdash;</span>are reset to white for the next garbage collection cycle.</p>
-<aside name="invariant">
-<p>Note that at every step of this process no black node ever points to a white
-node. This property is called the <strong>tricolor invariant</strong>. The traversal process
-maintains this invariant to ensure that no reachable object is ever collected.</p>
-</aside>
-<h3><a href="#a-worklist-for-gray-objects" name="a-worklist-for-gray-objects"><small>26&#8202;.&#8202;4&#8202;.&#8202;2</small>A worklist for gray objects</a></h3>
-<p>In our implementation we have already marked the roots. They&rsquo;re all gray. The
-next step is to start picking them and traversing their references. But we don&rsquo;t
-have any easy way to find them. We set a field on the object, but that&rsquo;s it. We
-don&rsquo;t want to have to traverse the entire object list looking for objects with
-that field set.</p>
-<p>Instead, we&rsquo;ll create a separate worklist to keep track of all of the gray
-objects. When an object turns gray, in addition to setting the mark field we&rsquo;ll
-also add it to the worklist.</p>
+freed. Once the unreachable objects are freed, the remaining objects -- all
+black -- are reset to white for the next garbage collection cycle.
+-->
+<p>到<span name="invariant">最后</span>，你得到一片已被到达的黑色对象之海，点缀着可被清扫并释放的白色对象小岛。不可达对象一旦释放，剩下的对象——全是黑的——会被重置为白，以备下一轮垃圾回收。</p>
+<aside name="invariant"><!--
+Note that at every step of this process no black node ever points to a white
+node. This property is called the **tricolor invariant**. The traversal process
+maintains this invariant to ensure that no reachable object is ever collected.
+-->
+<p>注意：在这过程的每一步，都没有黑色节点指向白色节点。这性质叫作<strong>三色不变式</strong>。遍历过程维持该不变式，以确保可达对象永远不会被收集。</p>
+</aside><!--
+-- A worklist for gray objects
+-->
+<h3><a href="#灰色对象的工作列表" name="灰色对象的工作列表"><small>26&#8202;.&#8202;4&#8202;.&#8202;2</small>灰色对象的工作列表</a></h3><!--
+In our implementation we have already marked the roots. They're all gray. The
+next step is to start picking them and traversing their references. But we don't
+have any easy way to find them. We set a field on the object, but that's it. We
+don't want to have to traverse the entire object list looking for objects with
+that field set.
+-->
+<p>在我们的实现里，根已经标好了。它们全是灰的。下一步是开始挑出它们并遍历其引用。但我们没有简便办法找到它们。我们在对象上设了一个字段，仅此而已。我们不想为了找字段已置位的对象，去遍历整张对象链表。</p><!--
+Instead, we'll create a separate worklist to keep track of all of the gray
+objects. When an object turns gray, in addition to setting the mark field we'll
+also add it to the worklist.
+-->
+<p>取而代之，我们建一个单独的工作列表来跟踪全部灰色对象。对象变灰时，除了设置标记字段，还把它加进工作列表。</p>
 <div class="codehilite"><pre class="insert-before">
   object-&gt;isMarked = true;
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -917,16 +1140,20 @@ in <em>markObject</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
-
-<p>We could use any kind of data structure that lets us put items in and take them
-out easily. I picked a stack because that&rsquo;s the simplest to implement with a
-dynamic array in C. It works mostly like other dynamic arrays we&rsquo;ve built in
-Lox, <em>except</em>, note that it calls the <em>system</em> <code>realloc()</code> function and not our
-own <code>reallocate()</code> wrapper. The memory for the gray stack itself is <em>not</em>
-managed by the garbage collector. We don&rsquo;t want growing the gray stack during a
+<!--
+We could use any kind of data structure that lets us put items in and take them
+out easily. I picked a stack because that's the simplest to implement with a
+dynamic array in C. It works mostly like other dynamic arrays we've built in
+Lox, *except*, note that it calls the *system* `realloc()` function and not our
+own `reallocate()` wrapper. The memory for the gray stack itself is *not*
+managed by the garbage collector. We don't want growing the gray stack during a
 GC to cause the GC to recursively start a new GC. That could tear a hole in the
-space-time continuum.</p>
-<p>We&rsquo;ll manage its memory ourselves, explicitly. The VM owns the gray stack.</p>
+space-time continuum.
+-->
+<p>任何能方便放入、取出元素的数据结构都行。我选了栈，因为用 C 里的动态数组实现起来最简单。它大体像我们在 Lox 里建过的其他动态数组，<em>不过</em>请注意：它调用的是<em>系统</em>的 <code>realloc()</code>，而不是我们自己的 <code>reallocate()</code> 包装。灰色栈本身的内存<em>不</em>由垃圾回收器管理。我们可不希望在 GC 期间扩张灰色栈，导致 GC 递归地再开一轮 GC。那可能会在时空连续体上撕开一个洞。</p><!--
+We'll manage its memory ourselves, explicitly. The VM owns the gray stack.
+-->
+<p>我们自己、显式地管理它的内存。灰色栈归虚拟机所有。</p>
 <div class="codehilite"><pre class="insert-before">
   Obj* objects;
 </pre><div class="source-file"><em>vm.h</em><br>
@@ -939,8 +1166,10 @@ in struct <em>VM</em></div>
 } VM;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
-
-<p>It starts out empty.</p>
+<!--
+It starts out empty.
+-->
+<p>它开始时为空。</p>
 <div class="codehilite"><pre class="insert-before">
   vm.objects = NULL;
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -955,8 +1184,10 @@ in <em>initVM</em>()</div>
   initTable(&amp;vm.globals);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
-
-<p>And we need to free it when the VM shuts down.</p>
+<!--
+And we need to free it when the VM shuts down.
+-->
+<p>虚拟机关闭时，我们也需要释放它。</p>
 <div class="codehilite"><pre class="insert-before">
     object = next;
   }
@@ -969,18 +1200,22 @@ in <em>freeObjects</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObjects</em>()</div>
-
-<p><span name="robust">We</span> take full responsibility for this array. That
-includes allocation failure. If we can&rsquo;t create or grow the gray stack, then we
-can&rsquo;t finish the garbage collection. This is bad news for the VM, but
+<!--
+<span name="robust">We</span> take full responsibility for this array. That
+includes allocation failure. If we can't create or grow the gray stack, then we
+can't finish the garbage collection. This is bad news for the VM, but
 fortunately rare since the gray stack tends to be pretty small. It would be nice
 to do something more graceful, but to keep the code in this book simple, we just
-abort.</p>
-<aside name="robust">
-<p>To be more robust, we can allocate a &ldquo;rainy day fund&rdquo; block of memory when we
+abort.
+-->
+<p><span name="robust">我们</span>对这数组负全责。这包括分配失败。若无法创建或扩张灰色栈，就无法完成垃圾回收。对虚拟机来说这是坏消息，但幸好罕见——灰色栈往往相当小。若能更优雅地处理当然更好，但为了让本书代码保持简单，我们直接中止。</p>
+<aside name="robust"><!--
+To be more robust, we can allocate a "rainy day fund" block of memory when we
 start the VM. If the gray stack allocation fails, we free the rainy day block
 and try again. That may give us enough wiggle room on the heap to create the
-gray stack, finish the GC, and free up more memory.</p>
+gray stack, finish the GC, and free up more memory.
+-->
+<p>要更稳健，可以在启动虚拟机时分配一块“雨天基金”内存。若灰色栈分配失败，就释放那块雨天基金再试。那或许能在堆上挤出足够回旋余地，好创建灰色栈、完成 GC，并腾出更多内存。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
     vm.grayStack = (Obj**)realloc(vm.grayStack,
@@ -994,11 +1229,15 @@ in <em>markObject</em>()</div>
   }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
-
-<h3><a href="#processing-gray-objects" name="processing-gray-objects"><small>26&#8202;.&#8202;4&#8202;.&#8202;3</small>Processing gray objects</a></h3>
-<p>OK, now when we&rsquo;re done marking the roots, we have both set a bunch of fields
-and filled our work list with objects to chew through. It&rsquo;s time for the next
-phase.</p>
+<!--
+-- Processing gray objects
+-->
+<h3><a href="#处理灰色对象" name="处理灰色对象"><small>26&#8202;.&#8202;4&#8202;.&#8202;3</small>处理灰色对象</a></h3><!--
+OK, now when we're done marking the roots, we have both set a bunch of fields
+and filled our work list with objects to chew through. It's time for the next
+phase.
+-->
+<p>好，标记完根之后，我们既置了一批字段，又把工作列表填满了待啃的对象。该进入下一阶段了。</p>
 <div class="codehilite"><pre class="insert-before">
   markRoots();
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1010,8 +1249,10 @@ in <em>collectGarbage</em>()</div>
 #ifdef DEBUG_LOG_GC
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>Here&rsquo;s the implementation:</p>
+<!--
+Here's the implementation:
+-->
+<p>实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>markRoots</em>()</div>
 <pre>
@@ -1023,14 +1264,18 @@ add after <em>markRoots</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>markRoots</em>()</div>
-
-<p>It&rsquo;s as close to that textual algorithm as you can get. Until the stack empties,
+<!--
+It's as close to that textual algorithm as you can get. Until the stack empties,
 we keep pulling out gray objects, traversing their references, and then marking
-them black. Traversing an object&rsquo;s references may turn up new white objects that
+them black. Traversing an object's references may turn up new white objects that
 get marked gray and added to the stack. So this function swings back and forth
 between turning white objects gray and gray objects black, gradually advancing
-the entire wavefront forward.</p>
-<p>Here&rsquo;s where we traverse a single object&rsquo;s references:</p>
+the entire wavefront forward.
+-->
+<p>这已经尽可能贴近那段文字算法了。直到栈空为止，我们不断抽出灰色对象、遍历其引用，再把它们标成黑。遍历一个对象的引用可能翻出新的白色对象，它们被标成灰并加入栈。于是这函数在把白变灰、把灰变黑之间来回摆动，渐渐把整道波前向前推进。</p><!--
+Here's where we traverse a single object's references:
+-->
+<p>遍历单个对象的引用，在这里：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>markValue</em>()</div>
 <pre>
@@ -1043,25 +1288,35 @@ add after <em>markValue</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>markValue</em>()</div>
-
-<p>Each object <span name="leaf">kind</span> has different fields that might
+<!--
+Each object <span name="leaf">kind</span> has different fields that might
 reference other objects, so we need a specific blob of code for each type. We
-start with the easy ones<span class="em">&mdash;</span>strings and native function objects contain no
-outgoing references so there is nothing to traverse.</p>
-<aside name="leaf">
-<p>An easy optimization we could do in <code>markObject()</code> is to skip adding strings and
-native functions to the gray stack at all since we know they don&rsquo;t need to be
-processed. Instead, they could darken from white straight to black.</p>
-</aside>
-<p>Note that we don&rsquo;t set any state in the traversed object itself. There is no
-direct encoding of &ldquo;black&rdquo; in the object&rsquo;s state. A black object is any object
-whose <code>isMarked</code> field is <span name="field">set</span> and that is no longer in
-the gray stack.</p>
-<aside name="field">
-<p>You may rightly wonder why we have the <code>isMarked</code> field at all. All in good
-time, friend.</p>
-</aside>
-<p>Now let&rsquo;s start adding in the other object types. The simplest is upvalues.</p>
+start with the easy ones -- strings and native function objects contain no
+outgoing references so there is nothing to traverse.
+-->
+<p>每种对象<span name="leaf">种类</span>有可能引用其他对象的字段各不相同，所以每一种类型都需要一段专门代码。我们从简单的开始——字符串与原生函数对象不含向外引用，没什么可遍历的。</p>
+<aside name="leaf"><!--
+An easy optimization we could do in `markObject()` is to skip adding strings and
+native functions to the gray stack at all since we know they don't need to be
+processed. Instead, they could darken from white straight to black.
+-->
+<p>在 <code>markObject()</code> 里可以做的一个轻松优化是：干脆不把字符串和原生函数加进灰色栈，因为我们知道它们不必处理。它们可以直接从白加深到黑。</p>
+</aside><!--
+Note that we don't set any state in the traversed object itself. There is no
+direct encoding of "black" in the object's state. A black object is any object
+whose `isMarked` field is <span name="field">set</span> and that is no longer in
+the gray stack.
+-->
+<p>注意，我们并不在被遍历的对象本身设置任何状态。对象状态里没有“黑”的直接编码。黑色对象就是 <code>isMarked</code> 字段已<span name="field">置位</span>、且已不在灰色栈里的任何对象。</p>
+<aside name="field"><!--
+You may rightly wonder why we have the `isMarked` field at all. All in good
+time, friend.
+-->
+<p>你大可正当地疑惑：我们究竟为什么要有 <code>isMarked</code> 字段。且听下回分解，朋友。</p>
+</aside><!--
+Now let's start adding in the other object types. The simplest is upvalues.
+-->
+<p>现在开始加入其他对象类型。最简单的是上值。</p>
 <div class="codehilite"><pre class="insert-before">
 static void blackenObject(Obj* object) {
   switch (object-&gt;type) {
@@ -1075,11 +1330,15 @@ in <em>blackenObject</em>()</div>
     case OBJ_NATIVE:
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
-
-<p>When an upvalue is closed, it contains a reference to the closed-over value.
+<!--
+When an upvalue is closed, it contains a reference to the closed-over value.
 Since the value is no longer on the stack, we need to make sure we trace the
-reference to it from the upvalue.</p>
-<p>Next are functions.</p>
+reference to it from the upvalue.
+-->
+<p>上值关闭后，它含有对所关闭值的引用。既然该值已不在栈上，我们需要确保从上值追踪到对它的引用。</p><!--
+Next are functions.
+-->
+<p>接下来是函数。</p>
 <div class="codehilite"><pre class="insert-before">
   switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1095,10 +1354,12 @@ in <em>blackenObject</em>()</div>
     case OBJ_UPVALUE:
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
-
-<p>Each function has a reference to an ObjString containing the function&rsquo;s name.
+<!--
+Each function has a reference to an ObjString containing the function's name.
 More importantly, the function has a constant table packed full of references to
-other objects. We trace all of those using this helper:</p>
+other objects. We trace all of those using this helper:
+-->
+<p>每个函数都有一个指向含函数名的 ObjString 的引用。更重要的是，函数有一张塞满对其他对象引用的常量表。我们用这个辅助函数追踪它们全部：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>markValue</em>()</div>
 <pre>
@@ -1109,9 +1370,11 @@ add after <em>markValue</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>markValue</em>()</div>
-
-<p>The last object type we have now<span class="em">&mdash;</span>we&rsquo;ll add more in later chapters<span class="em">&mdash;</span>is
-closures.</p>
+<!--
+The last object type we have now -- we'll add more in later chapters -- is
+closures.
+-->
+<p>我们现在有的最后一种对象类型——后面章节还会再加——是闭包。</p>
 <div class="codehilite"><pre class="insert-before">
   switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1129,11 +1392,15 @@ in <em>blackenObject</em>()</div>
     case OBJ_FUNCTION: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
-
-<p>Each closure has a reference to the bare function it wraps, as well as an array
-of pointers to the upvalues it captures. We trace all of those.</p>
-<p>That&rsquo;s the basic mechanism for processing a gray object, but there are two loose
-ends to tie up. First, some logging.</p>
+<!--
+Each closure has a reference to the bare function it wraps, as well as an array
+of pointers to the upvalues it captures. We trace all of those.
+-->
+<p>每个闭包都有一个指向它所包装的裸函数的引用，以及一组指向它所捕获的上值的指针数组。我们追踪它们全部。</p><!--
+That's the basic mechanism for processing a gray object, but there are two loose
+ends to tie up. First, some logging.
+-->
+<p>这就是处理灰色对象的基本机制，但还有两处松线要收。首先，一些日志。</p>
 <div class="codehilite"><pre class="insert-before">
 static void blackenObject(Obj* object) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1149,14 +1416,18 @@ in <em>blackenObject</em>()</div>
   switch (object-&gt;type) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
-
-<p>This way, we can watch the tracing percolate through the object graph. Speaking
-of which, note that I said <em>graph</em>. References between objects are directed, but
-that doesn&rsquo;t mean they&rsquo;re <em>acyclic!</em> It&rsquo;s entirely possible to have cycles of
-objects. When that happens, we need to ensure our collector doesn&rsquo;t get stuck in
+<!--
+This way, we can watch the tracing percolate through the object graph. Speaking
+of which, note that I said *graph*. References between objects are directed, but
+that doesn't mean they're *acyclic!* It's entirely possible to have cycles of
+objects. When that happens, we need to ensure our collector doesn't get stuck in
 an infinite loop as it continually re-adds the same series of objects to the
-gray stack.</p>
-<p>The fix is easy.</p>
+gray stack.
+-->
+<p>这样，我们就能看着追踪在对象图里渗开。说到这个，注意我说的是<em>图</em>。对象之间的引用是有向的，但这并不意味着它们<em>无环</em>！完全可能存在对象环。一旦发生，我们得确保收集器不会在不断把同一串对象重新加进灰色栈时，陷进无限循环。</p><!--
+The fix is easy.
+-->
+<p>修法很简单。</p>
 <div class="codehilite"><pre class="insert-before">
   if (object == NULL) return;
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1168,17 +1439,23 @@ in <em>markObject</em>()</div>
 #ifdef DEBUG_LOG_GC
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
-
-<p>If the object is already marked, we don&rsquo;t mark it again and thus don&rsquo;t add it to
+<!--
+If the object is already marked, we don't mark it again and thus don't add it to
 the gray stack. This ensures that an already-gray object is not redundantly
 added and that a black object is not inadvertently turned back to gray. In other
-words, it keeps the wavefront moving forward through only the white objects.</p>
-<h2><a href="#sweeping-unused-objects" name="sweeping-unused-objects"><small>26&#8202;.&#8202;5</small>Sweeping Unused Objects</a></h2>
-<p>When the loop in <code>traceReferences()</code> exits, we have processed all the objects we
+words, it keeps the wavefront moving forward through only the white objects.
+-->
+<p>若对象已被标记，我们就不再标它，因而也不会把它加进灰色栈。这确保已是灰色的对象不会被冗余加入，黑色对象也不会被不小心变回灰色。换句话说，它让波前只穿过白色对象向前推进。</p><!--
+-- Sweeping Unused Objects
+-->
+<h2><a href="#清扫无用对象" name="清扫无用对象"><small>26&#8202;.&#8202;5</small>清扫无用对象</a></h2><!--
+When the loop in `traceReferences()` exits, we have processed all the objects we
 could get our hands on. The gray stack is empty, and every object in the heap is
 either black or white. The black objects are reachable, and we want to hang on to
 them. Anything still white never got touched by the trace and is thus garbage.
-All that&rsquo;s left is to reclaim them.</p>
+All that's left is to reclaim them.
+-->
+<p><code>traceReferences()</code> 里的循环退出时，我们已处理完能下手的全部对象。灰色栈空了，堆上每个对象非黑即白。黑色对象可达，我们要留着它们。仍是白色的东西从未被追踪触及，因而是垃圾。剩下的事就是收回它们。</p>
 <div class="codehilite"><pre class="insert-before">
   traceReferences();
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1190,8 +1467,10 @@ in <em>collectGarbage</em>()</div>
 #ifdef DEBUG_LOG_GC
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>All of the logic lives in one function.</p>
+<!--
+All of the logic lives in one function.
+-->
+<p>全部逻辑住在一个函数里。</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>traceReferences</em>()</div>
 <pre>
@@ -1217,18 +1496,25 @@ add after <em>traceReferences</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>traceReferences</em>()</div>
-
-<p>I know that&rsquo;s kind of a lot of code and pointer shenanigans, but there isn&rsquo;t
-much to it once you work through it. The outer <code>while</code> loop walks the linked
+<!--
+I know that's kind of a lot of code and pointer shenanigans, but there isn't
+much to it once you work through it. The outer `while` loop walks the linked
 list of every object in the heap, checking their mark bits. If an object is
 marked (black), we leave it alone and continue past it. If it is unmarked
-(white), we unlink it from the list and free it using the <code>freeObject()</code>
-function we already wrote.</p><img src="image/garbage-collection/unlink.png" alt="A recycle bin full of bits." />
-<p>Most of the other code in here deals with the fact that removing a node from a
+(white), we unlink it from the list and free it using the `freeObject()`
+function we already wrote.
+-->
+<p>我知道这看起来像一大坨代码和指针把戏，但你走通一遍就会发现里面没多少东西。外层 <code>while</code> 循环走遍堆上每个对象的链表，检查它们的标记位。若对象已标记（黑），我们就放过它继续往前。若未标记（白），就把它从链表上拆下，用我们已经写好的 <code>freeObject()</code> 释放。</p><img src="image/garbage-collection/unlink.png" alt="A recycle bin full of bits." /><!--
+Most of the other code in here deals with the fact that removing a node from a
 singly linked list is cumbersome. We have to continuously remember the previous
 node so we can unlink its next pointer, and we have to handle the edge case
-where we are freeing the first node. But, otherwise, it&rsquo;s pretty simple<span class="em">&mdash;</span>delete every node in a linked list that doesn&rsquo;t have a bit set in it.</p>
-<p>There&rsquo;s one little addition:</p>
+where we are freeing the first node. But, otherwise, it's pretty simple --
+delete every node in a linked list that doesn't have a bit set in it.
+-->
+<p>这里其余代码大多在对付一件事：从单链表删节点很麻烦。我们必须持续记住前一个节点，才能改它的 next 指针拆链，还得处理正在释放第一个节点的边界情况。除此之外，其实很简单——删掉链表里每一位都未置上的每个节点。</p><!--
+There's one little addition:
+-->
+<p>还有一处小小的补充：</p>
 <div class="codehilite"><pre class="insert-before">
     if (object-&gt;isMarked) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1239,48 +1525,69 @@ in <em>sweep</em>()</div>
       previous = object;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>sweep</em>()</div>
-
-<p>After <code>sweep()</code> completes, the only remaining objects are the live black ones
-with their mark bits set. That&rsquo;s correct, but when the <em>next</em> collection cycle
+<!--
+After `sweep()` completes, the only remaining objects are the live black ones
+with their mark bits set. That's correct, but when the *next* collection cycle
 starts, we need every object to be white. So whenever we reach a black object,
-we go ahead and clear the bit now in anticipation of the next run.</p>
-<h3><a href="#weak-references-and-the-string-pool" name="weak-references-and-the-string-pool"><small>26&#8202;.&#8202;5&#8202;.&#8202;1</small>Weak references and the string pool</a></h3>
-<p>We are almost done collecting. There is one remaining corner of the VM that has
+we go ahead and clear the bit now in anticipation of the next run.
+-->
+<p><code>sweep()</code> 完成后，剩下的只是标记位已置上的活着的黑色对象。这是对的，但当<em>下一</em>轮收集开始时，我们需要每个对象都是白的。所以每当遇到黑色对象，我们现在就清掉该位，为下一轮做准备。</p><!--
+-- Weak references and the string pool
+-->
+<h3><a href="#弱引用与字符串池" name="弱引用与字符串池"><small>26&#8202;.&#8202;5&#8202;.&#8202;1</small>弱引用与字符串池</a></h3><!--
+We are almost done collecting. There is one remaining corner of the VM that has
 some unusual requirements around memory. Recall that when we added strings to
 clox we made the VM intern them all. That means the VM has a hash table
 containing a pointer to every single string in the heap. The VM uses this to
-de-duplicate strings.</p>
-<p>During the mark phase, we deliberately did <em>not</em> treat the VM&rsquo;s string table as
-a source of roots. If we had, no <span name="intern">string</span> would <em>ever</em>
+de-duplicate strings.
+-->
+<p>收集差不多完成了。虚拟机还剩一个角落，对内存有些不寻常的要求。还记得给 clox 加字符串时，我们让虚拟机把它们全部驻留。这意味着虚拟机有一张哈希表，装着指向堆上每一个字符串的指针。虚拟机用它来给字符串去重。</p><!--
+During the mark phase, we deliberately did *not* treat the VM's string table as
+a source of roots. If we had, no <span name="intern">string</span> would *ever*
 be collected. The string table would grow and grow and never yield a single byte
-of memory back to the operating system. That would be bad.</p>
-<aside name="intern">
-<p>This can be a real problem. Java does not intern <em>all</em> strings, but it does
-intern string <em>literals</em>. It also provides an API to add strings to the string
+of memory back to the operating system. That would be bad.
+-->
+<p>在标记阶段，我们故意<em>没有</em>把虚拟机的字符串表当作根的来源。若那样做，就<em>永远</em>不会有任何<span name="intern">字符串</span>被收集。字符串表会越长越大，永远不把哪怕一个字节还给操作系统。那就糟了。</p>
+<aside name="intern"><!--
+This can be a real problem. Java does not intern *all* strings, but it does
+intern string *literals*. It also provides an API to add strings to the string
 table. For many years, the capacity of that table was fixed, and strings added
-to it could never be removed. If users weren&rsquo;t careful about their use of
-<code>String.intern()</code>, they could run out of memory and crash.</p>
-<p>Ruby had a similar problem for years where symbols<span class="em">&mdash;</span>interned string-like
-values<span class="em">&mdash;</span>were not garbage collected. Both eventually enabled the GC to collect
-these strings.</p>
-</aside>
-<p>At the same time, if we <em>do</em> let the GC free strings, then the VM&rsquo;s string table
-will be left with dangling pointers to freed memory. That would be even worse.</p>
-<p>The string table is special and we need special support for it. In particular,
+to it could never be removed. If users weren't careful about their use of
+`String.intern()`, they could run out of memory and crash.
+
+Ruby had a similar problem for years where symbols -- interned string-like
+values -- were not garbage collected. Both eventually enabled the GC to collect
+these strings.
+-->
+<p>这可以是真实问题。Java 并不驻留<em>所有</em>字符串，但它驻留字符串<em>字面量</em>。它还提供 API 把字符串加进字符串表。许多年里，那张表容量固定，加进去的字符串永远无法移除。用户若对 <code>String.intern()</code> 不够小心，就会耗尽内存并崩溃。</p>
+<p>Ruby 多年也有类似问题：符号——驻留的类字符串值——不被垃圾回收。两者最终都让 GC 能够收集这些字符串。</p>
+</aside><!--
+At the same time, if we *do* let the GC free strings, then the VM's string table
+will be left with dangling pointers to freed memory. That would be even worse.
+-->
+<p>与此同时，若我们<em>确实</em>让 GC 释放字符串，虚拟机的字符串表就会留下指向已释放内存的悬空指针。那就更糟。</p><!--
+The string table is special and we need special support for it. In particular,
 it needs a special kind of reference. The table should be able to refer to a
 string, but that link should not be considered a root when determining
 reachability. That implies that the referenced object can be freed. When that
 happens, the dangling reference must be fixed too, sort of like a magic,
 self-clearing pointer. This particular set of semantics comes up frequently
-enough that it has a name: a <a href="https://en.wikipedia.org/wiki/Weak_reference"><strong>weak reference</strong></a>.</p>
-<p>We have already implicitly implemented half of the string table&rsquo;s unique
-behavior by virtue of the fact that we <em>don&rsquo;t</em> traverse it during marking. That
-means it doesn&rsquo;t force strings to be reachable. The remaining piece is clearing
-out any dangling pointers for strings that are freed.</p>
-<p>To remove references to unreachable strings, we need to know which strings <em>are</em>
-unreachable. We don&rsquo;t know that until after the mark phase has completed. But we
-can&rsquo;t wait until after the sweep phase is done because by then the objects<span class="em">&mdash;</span>and their mark bits<span class="em">&mdash;</span>are no longer around to check. So the right time is
-exactly between the marking and sweeping phases.</p>
+enough that it has a name: a [**weak reference**][weak].
+-->
+<p>字符串表很特殊，我们需要对它的特殊支持。具体来说，它需要一种特殊的引用。表应当能引用字符串，但在判定可达性时，那条链接不应被视为根。这意味着被引用的对象可以被释放。一旦发生，悬空引用也必须修好——有点像一根会魔法般自我清空的指针。这套语义出现得够频繁，以至于有了名字：<a href="https://en.wikipedia.org/wiki/Weak_reference"><strong>弱引用</strong></a>。</p><!--
+We have already implicitly implemented half of the string table's unique
+behavior by virtue of the fact that we *don't* traverse it during marking. That
+means it doesn't force strings to be reachable. The remaining piece is clearing
+out any dangling pointers for strings that are freed.
+-->
+<p>凭借标记时<em>不</em>遍历它这一事实，我们已经隐式实现了字符串表独特行为的一半。这意味着它不会强迫字符串可达。剩下的一半，是清掉已释放字符串留下的任何悬空指针。</p><!--
+To remove references to unreachable strings, we need to know which strings *are*
+unreachable. We don't know that until after the mark phase has completed. But we
+can't wait until after the sweep phase is done because by then the objects --
+and their mark bits -- are no longer around to check. So the right time is
+exactly between the marking and sweeping phases.
+-->
+<p>要移除对不可达字符串的引用，我们需要知道哪些字符串<em>是</em>不可达的。这要到标记阶段完成后才知道。但又不能等到清扫阶段结束——那时对象及其标记位都已不在，无从检查。所以正确时机，恰好在标记与清扫两阶段之间。</p>
 <div class="codehilite"><pre class="insert-before">
   traceReferences();
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1291,9 +1598,11 @@ in <em>collectGarbage</em>()</div>
   sweep();
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>The logic for removing the about-to-be-deleted strings exists in a new function
-in the &ldquo;table&rdquo; module.</p>
+<!--
+The logic for removing the about-to-be-deleted strings exists in a new function
+in the "table" module.
+-->
+<p>移除即将被删除的字符串的逻辑，在 “table” 模块的一个新函数里。</p>
 <div class="codehilite"><pre class="insert-before">
 ObjString* tableFindString(Table* table, const char* chars,
                            int length, uint32_t hash);
@@ -1307,8 +1616,10 @@ void markTable(Table* table);
 
 </pre></div>
 <div class="source-file-narrow"><em>table.h</em>, add after <em>tableFindString</em>()</div>
-
-<p>The implementation is here:</p>
+<!--
+The implementation is here:
+-->
+<p>实现在这边：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableFindString</em>()</div>
 <pre>
@@ -1322,166 +1633,233 @@ add after <em>tableFindString</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, add after <em>tableFindString</em>()</div>
-
-<p>We walk every entry in the table. The string intern table uses only the key of
-each entry<span class="em">&mdash;</span>it&rsquo;s basically a hash <em>set</em> not a hash <em>map</em>. If the key string
-object&rsquo;s mark bit is not set, then it is a white object that is moments from
+<!--
+We walk every entry in the table. The string intern table uses only the key of
+each entry -- it's basically a hash *set* not a hash *map*. If the key string
+object's mark bit is not set, then it is a white object that is moments from
 being swept away. We delete it from the hash table first and thus ensure we
-won&rsquo;t see any dangling pointers.</p>
-<h2><a href="#when-to-collect" name="when-to-collect"><small>26&#8202;.&#8202;6</small>When to Collect</a></h2>
-<p>We have a fully functioning mark-sweep garbage collector now. When the stress
+won't see any dangling pointers.
+-->
+<p>我们走遍表中每一条目。字符串驻留表只用每条条目的键——它基本上是哈希<em>集合</em>而非哈希<em>映射</em>。若键字符串对象的标记位未置上，那它就是即将被清扫走的白色对象。我们先从哈希表删掉它，从而确保不会看到任何悬空指针。</p><!--
+-- When to Collect
+-->
+<h2><a href="#何时收集" name="何时收集"><small>26&#8202;.&#8202;6</small>何时收集</a></h2><!--
+We have a fully functioning mark-sweep garbage collector now. When the stress
 testing flag is enabled, it gets called all the time, and with the logging
 enabled too, we can watch it do its thing and see that it is indeed reclaiming
-memory. But, when the stress testing flag is off, it never runs at all. It&rsquo;s
+memory. But, when the stress testing flag is off, it never runs at all. It's
 time to decide when the collector should be invoked during normal program
-execution.</p>
-<p>As far as I can tell, this question is poorly answered by the literature. When
+execution.
+-->
+<p>我们现在有了一个功能完备的标记-清扫垃圾回收器。压力测试标志启用时，它会被不停调用；再打开日志，我们就能看着它干活，确认它确实在收回内存。可压力测试关掉时，它根本从不跑。该决定在正常程序执行中何时调用收集器了。</p><!--
+As far as I can tell, this question is poorly answered by the literature. When
 garbage collectors were first invented, computers had a tiny, fixed amount of
 memory. Many of the early GC papers assumed that you set aside a few thousand
-words of memory<span class="em">&mdash;</span>in other words, most of it<span class="em">&mdash;</span>and invoked the collector
-whenever you ran out. Simple.</p>
-<p>Modern machines have gigs of physical RAM, hidden behind the operating system&rsquo;s
+words of memory -- in other words, most of it -- and invoked the collector
+whenever you ran out. Simple.
+-->
+<p>就我所见，文献对这问题答得不怎么样。垃圾回收器刚发明时，计算机只有一点点固定内存。许多早期 GC 论文假定你留出几千个字的内存——换句话说，几乎全部——一旦用完就调用收集器。简单。</p><!--
+Modern machines have gigs of physical RAM, hidden behind the operating system's
 even larger virtual memory abstraction, which is shared among a slew of other
 programs all fighting for their chunk of memory. The operating system will let
 your program request as much as it wants and then page in and out from the disc
-when physical memory gets full. You never really &ldquo;run out&rdquo; of memory, you just
-get slower and slower.</p>
-<h3><a href="#latency-and-throughput" name="latency-and-throughput"><small>26&#8202;.&#8202;6&#8202;.&#8202;1</small>Latency and throughput</a></h3>
-<p>It no longer makes sense to wait until you &ldquo;have to&rdquo;, to run the GC, so we need
-a more subtle timing strategy. To reason about this more precisely, it&rsquo;s time to
-introduce two fundamental numbers used when measuring a memory manager&rsquo;s
-performance: <em>throughput</em> and <em>latency</em>.</p>
-<p>Every managed language pays a performance price compared to explicit,
+when physical memory gets full. You never really "run out" of memory, you just
+get slower and slower.
+-->
+<p>现代机器有好几吉字节的物理 RAM，藏在操作系统更大的虚拟内存抽象后面，又与一大堆争夺各自那块内存的其他程序共享。操作系统会让你的程序要多少就申请多少，物理内存满了再从磁盘换入换出。你其实从不真正“用完”内存，只是越来越慢。</p><!--
+-- Latency and throughput
+-->
+<h3><a href="#延迟与吞吐量" name="延迟与吞吐量"><small>26&#8202;.&#8202;6&#8202;.&#8202;1</small>延迟与吞吐量</a></h3><!--
+It no longer makes sense to wait until you "have to", to run the GC, so we need
+a more subtle timing strategy. To reason about this more precisely, it's time to
+introduce two fundamental numbers used when measuring a memory manager's
+performance: *throughput* and *latency*.
+-->
+<p>再等到“不得不”才跑 GC，已不再合理，所以我们需要更微妙的时机策略。为了更精确地讨论，该引入衡量内存管理器性能时用的两个基本数字了：<em>吞吐量</em>与<em>延迟</em>。</p><!--
+Every managed language pays a performance price compared to explicit,
 user-authored deallocation. The time spent actually freeing memory is the same,
-but the GC spends cycles figuring out <em>which</em> memory to free. That is time <em>not</em>
-spent running the user&rsquo;s code and doing useful work. In our implementation,
-that&rsquo;s the entirety of the mark phase. The goal of a sophisticated garbage
-collector is to minimize that overhead.</p>
-<p>There are two key metrics we can use to understand that cost better:</p>
+but the GC spends cycles figuring out *which* memory to free. That is time *not*
+spent running the user's code and doing useful work. In our implementation,
+that's the entirety of the mark phase. The goal of a sophisticated garbage
+collector is to minimize that overhead.
+-->
+<p>与显式的、由用户编写的释放相比，每门托管语言都要付出性能代价。真正释放内存花的时间一样，但 GC 要花周期去弄清释放<em>哪些</em>内存。那是<em>没有</em>花在跑用户代码、做有用工作上的时间。在我们的实现里，那就是整个标记阶段。精巧垃圾回收器的目标，是把这开销压到最小。</p><!--
+There are two key metrics we can use to understand that cost better:
+
+*   **Throughput** is the total fraction of time spent running user code versus
+    doing garbage collection work. Say you run a clox program for ten seconds
+    and it spends a second of that inside `collectGarbage()`. That means the
+    throughput is 90% -- it spent 90% of the time running the program and 10%
+    on GC overhead.
+
+    Throughput is the most fundamental measure because it tracks the total cost
+    of collection overhead. All else being equal, you want to maximize
+    throughput. Up until this chapter, clox had no GC at all and thus <span
+    name="hundred">100%</span> throughput. That's pretty hard to beat. Of
+    course, it came at the slight expense of potentially running out of memory
+    and crashing if the user's program ran long enough. You can look at the goal
+    of a GC as fixing that "glitch" while sacrificing as little throughput as
+    possible.
+-->
+<p>有两个关键指标能帮我们更好理解这代价：</p>
 <ul>
 <li>
-<p><strong>Throughput</strong> is the total fraction of time spent running user code versus
-doing garbage collection work. Say you run a clox program for ten seconds
-and it spends a second of that inside <code>collectGarbage()</code>. That means the
-throughput is 90%<span class="em">&mdash;</span>it spent 90% of the time running the program and 10%
-on GC overhead.</p>
-<p>Throughput is the most fundamental measure because it tracks the total cost
-of collection overhead. All else being equal, you want to maximize
-throughput. Up until this chapter, clox had no GC at all and thus <span
-name="hundred">100%</span> throughput. That&rsquo;s pretty hard to beat. Of
-course, it came at the slight expense of potentially running out of memory
-and crashing if the user&rsquo;s program ran long enough. You can look at the goal
-of a GC as fixing that &ldquo;glitch&rdquo; while sacrificing as little throughput as
-possible.</p>
+<p><strong>吞吐量</strong>是花在跑用户代码与做垃圾回收工作上的时间总占比。假设你跑一个 clox 程序十秒，其中一秒在 <code>collectGarbage()</code> 里。那意味着吞吐量是 90%——90% 的时间在跑程序，10% 是 GC 开销。</p>
+<p>吞吐量是最根本的度量，因为它跟踪收集开销的总成本。其他条件相同，你想最大化吞吐量。直到本章之前，clox 根本没有 GC，因而有<span name="hundred">100%</span>的吞吐量。这很难超越。当然，代价是：用户程序若跑得够久，可能耗尽内存并崩溃。你可以把 GC 的目标看成：修好那个“小毛病”，同时尽可能少牺牲吞吐量。</p>
 </li>
 </ul>
-<aside name="hundred">
-<p>Well, not <em>exactly</em> 100%. It did still put the allocated objects into a linked
-list, so there was some tiny overhead for setting those pointers.</p>
-</aside>
+<aside name="hundred"><!--
+Well, not *exactly* 100%. It did still put the allocated objects into a linked
+list, so there was some tiny overhead for setting those pointers.
+-->
+<p>嗯，并不<em>精确</em>是 100%。它仍会把已分配对象放进链表，所以设置那些指针有一点点开销。</p>
+</aside><!--
+*   **Latency** is the longest *continuous* chunk of time where the user's
+    program is completely paused while garbage collection happens. It's a
+    measure of how "chunky" the collector is. Latency is an entirely different
+    metric than throughput.
+
+    Consider two runs of a clox program that both take ten seconds. In the first
+    run, the GC kicks in once and spends a solid second in `collectGarbage()` in
+    one massive collection. In the second run, the GC gets invoked five times,
+    each for a fifth of a second. The *total* amount of time spent collecting is
+    still a second, so the throughput is 90% in both cases. But in the second
+    run, the latency is only 1/5th of a second, five times less than in the
+    first.
+-->
 <ul>
 <li>
-<p><strong>Latency</strong> is the longest <em>continuous</em> chunk of time where the user&rsquo;s
-program is completely paused while garbage collection happens. It&rsquo;s a
-measure of how &ldquo;chunky&rdquo; the collector is. Latency is an entirely different
-metric than throughput.</p>
-<p>Consider two runs of a clox program that both take ten seconds. In the first
-run, the GC kicks in once and spends a solid second in <code>collectGarbage()</code> in
-one massive collection. In the second run, the GC gets invoked five times,
-each for a fifth of a second. The <em>total</em> amount of time spent collecting is
-still a second, so the throughput is 90% in both cases. But in the second
-run, the latency is only 1/5th of a second, five times less than in the
-first.</p>
+<p><strong>延迟</strong>是用户程序因垃圾回收而完全暂停的最长<em>连续</em>时间块。它衡量收集器有多“成块”。延迟与吞吐量是完全不同的度量。</p>
+<p>考虑两次都跑十秒的 clox 程序。第一次，GC 只介入一次，在一次大规模收集里在 <code>collectGarbage()</code> 里整整花上一秒。第二次，GC 被调用五次，每次五分之一秒。花在收集上的<em>总</em>时间仍是一秒，所以两种情况下吞吐量都是 90%。但第二次运行里，延迟只有五分之一秒，比第一次少五倍。</p>
 </li>
 </ul>
 <p><span name="latency"></span></p><img src="image/garbage-collection/latency-throughput.png" alt="A bar representing execution time with slices for running user code and running the GC. The largest GC slice is latency. The size of all of the user code slices is throughput." />
-<aside name="latency">
-<p>The bar represents the execution of a program, divided into time spent running
+<aside name="latency"><!--
+The bar represents the execution of a program, divided into time spent running
 user code and time spent in the GC. The size of the largest single slice of time
 running the GC is the latency. The size of all of the user code slices added up
-is the throughput.</p>
-</aside>
-<p>If you like analogies, imagine your program is a bakery selling fresh-baked
+is the throughput.
+-->
+<p>这条柱表示程序的执行，分成跑用户代码的时间与花在 GC 里的时间。单次跑 GC 的最大时间片大小就是延迟。所有用户代码时间片加起来的大小就是吞吐量。</p>
+</aside><!--
+If you like analogies, imagine your program is a bakery selling fresh-baked
 bread to customers. Throughput is the total number of warm, crusty baguettes you
 can serve to customers in a single day. Latency is how long the unluckiest
-customer has to wait in line before they get served.</p>
-<p><span name="dishwasher">Running</span> the garbage collector is like shutting
+customer has to wait in line before they get served.
+-->
+<p>若你喜欢类比，想象你的程序是一家卖新鲜出炉面包给顾客的面包店。吞吐量是你一天能端给顾客的温热脆皮法棍总数。延迟是最倒霉的那位顾客要排队等到被服务多久。</p><!--
+<span name="dishwasher">Running</span> the garbage collector is like shutting
 down the bakery temporarily to go through all of the dishes, sort out the dirty
-from the clean, and then wash the used ones. In our analogy, we don&rsquo;t have
+from the clean, and then wash the used ones. In our analogy, we don't have
 dedicated dishwashers, so while this is going on, no baking is happening. The
-baker is washing up.</p>
-<aside name="dishwasher">
-<p>If each person represents a thread, then an obvious optimization is to have
-separate threads running garbage collection, giving you a <strong>concurrent garbage
-collector</strong>. In other words, hire some dishwashers to clean while others bake.
-This is how very sophisticated GCs work because it does let the bakers<span class="em">&mdash;</span>the worker threads<span class="em">&mdash;</span>keep running user code with little interruption.</p>
-<p>However, coordination is required. You don&rsquo;t want a dishwasher grabbing a bowl
-out of a baker&rsquo;s hands! This coordination adds overhead and a lot of complexity.
-Concurrent collectors are fast, but challenging to implement correctly.</p><img src="image/garbage-collection/baguette.png" class="above" alt="Un baguette." />
-</aside>
-<p>Selling fewer loaves of bread a day is bad, and making any particular customer
+baker is washing up.
+-->
+<p><span name="dishwasher">跑</span>垃圾回收器，就像暂时关掉面包店，把碗碟过一遍、把脏的和干净的分开，再洗用过的那些。在我们的类比里，没有专职洗碗工，所以这期间没有烘焙在进行。面包师在洗碗。</p>
+<aside name="dishwasher"><!--
+If each person represents a thread, then an obvious optimization is to have
+separate threads running garbage collection, giving you a **concurrent garbage
+collector**. In other words, hire some dishwashers to clean while others bake.
+This is how very sophisticated GCs work because it does let the bakers
+-- the worker threads -- keep running user code with little interruption.
+
+However, coordination is required. You don't want a dishwasher grabbing a bowl
+out of a baker's hands! This coordination adds overhead and a lot of complexity.
+Concurrent collectors are fast, but challenging to implement correctly.
+-->
+<p>若每个人代表一个线程，一个显眼的优化就是让单独的线程跑垃圾回收，于是你得到<strong>并发垃圾回收器</strong>。换句话说，雇一些洗碗工在别人烘焙时清洗。非常精巧的 GC 就是这么工作的，因为它确实让面包师——工作线程——能几乎不被打断地继续跑用户代码。</p>
+<p>不过需要协调。你可不想洗碗工从面包师手里抢碗！这协调增加开销和大量复杂性。并发收集器很快，但要正确实现很有挑战。</p><img src="image/garbage-collection/baguette.png" class="above" alt="Un baguette." />
+</aside><!--
+Selling fewer loaves of bread a day is bad, and making any particular customer
 sit and wait while you clean all the dishes is too. The goal is to maximize
 throughput and minimize latency, but there is no free lunch, even inside a
 bakery. Garbage collectors make different trade-offs between how much throughput
-they sacrifice and latency they tolerate.</p>
-<p>Being able to make these trade-offs is useful because different user programs
+they sacrifice and latency they tolerate.
+-->
+<p>一天少卖几条面包不好，让某一位顾客干坐着等你洗完全部碗碟也不好。目标是最大化吞吐量、最小化延迟，但天下没有免费的午餐，面包店里也不例外。垃圾回收器在牺牲多少吞吐量与容忍多少延迟之间，做出不同取舍。</p><!--
+Being able to make these trade-offs is useful because different user programs
 have different needs. An overnight batch job that is generating a report from a
 terabyte of data just needs to get as much work done as fast as possible.
-Throughput is queen. Meanwhile, an app running on a user&rsquo;s smartphone needs to
+Throughput is queen. Meanwhile, an app running on a user's smartphone needs to
 always respond immediately to user input so that dragging on the screen feels
-<span name="butter">buttery</span> smooth. The app can&rsquo;t freeze for a few
-seconds while the GC mucks around in the heap.</p>
-<aside name="butter">
-<p>Clearly the baking analogy is going to my head.</p>
-</aside>
-<p>As a garbage collector author, you control some of the trade-off between
+<span name="butter">buttery</span> smooth. The app can't freeze for a few
+seconds while the GC mucks around in the heap.
+-->
+<p>能做这些取舍很有用，因为不同用户程序需求不同。一个从一太字节数据生成报告的通宵批处理作业，只需要尽快做完尽可能多的活。吞吐量为王。与此同时，跑在用户智能手机上的应用需要始终立刻响应用户输入，好让屏幕上的拖动感觉<span name="butter">丝般</span>顺滑。应用不能在 GC 在堆里折腾时卡上几秒。</p>
+<aside name="butter"><!--
+Clearly the baking analogy is going to my head.
+-->
+<p>显然烘焙类比已经冲昏我的头了。</p>
+</aside><!--
+As a garbage collector author, you control some of the trade-off between
 throughput and latency by your choice of collection algorithm. But even within a
-single algorithm, we have a lot of control over <em>how frequently</em> the collector
-runs.</p>
-<p>Our collector is a <span name="incremental"><strong>stop-the-world GC</strong></span> which
-means the user&rsquo;s program is paused until the entire garbage collection process
+single algorithm, we have a lot of control over *how frequently* the collector
+runs.
+-->
+<p>作为垃圾回收器作者，你通过对收集算法的选择，控制吞吐量与延迟之间的部分取舍。但即便在同一种算法内，我们对收集器<em>运行频率</em>也有很大控制权。</p><!--
+Our collector is a <span name="incremental">**stop-the-world GC**</span> which
+means the user's program is paused until the entire garbage collection process
 has completed. If we wait a long time before we run the collector, then a large
 number of dead objects will accumulate. That leads to a very long pause while
 the collector runs, and thus high latency. So, clearly, we want to run the
-collector really frequently.</p>
-<aside name="incremental">
-<p>In contrast, an <strong>incremental garbage collector</strong> can do a little collection,
-then run some user code, then collect a little more, and so on.</p>
-</aside>
-<p>But every time the collector runs, it spends some time visiting live objects.
-That doesn&rsquo;t really <em>do</em> anything useful (aside from ensuring that they don&rsquo;t
+collector really frequently.
+-->
+<p>我们的收集器是<span name="incremental"><strong>停世界（stop-the-world）GC</strong></span>，意思是用户程序会暂停，直到整个垃圾回收过程完成。若我们等很久才跑收集器，就会堆积大量死对象。那会导致收集器运行时一次很长的停顿，因而延迟很高。所以，显然我们想非常频繁地跑收集器。</p>
+<aside name="incremental"><!--
+In contrast, an **incremental garbage collector** can do a little collection,
+then run some user code, then collect a little more, and so on.
+-->
+<p>相比之下，<strong>增量垃圾回收器</strong>可以先收集一点点，再跑一些用户代码，再多收集一点，如此反复。</p>
+</aside><!--
+But every time the collector runs, it spends some time visiting live objects.
+That doesn't really *do* anything useful (aside from ensuring that they don't
 incorrectly get deleted). Time visiting live objects is time not freeing memory
-and also time not running user code. If you run the GC <em>really</em> frequently, then
-the user&rsquo;s program doesn&rsquo;t have enough time to even generate new garbage for the
+and also time not running user code. If you run the GC *really* frequently, then
+the user's program doesn't have enough time to even generate new garbage for the
 VM to collect. The VM will spend all of its time obsessively revisiting the same
 set of live objects over and over, and throughput will suffer. So, clearly, we
-want to run the collector really <em>in</em>frequently.</p>
-<p>In fact, we want something in the middle, and the frequency of when the
+want to run the collector really *in*frequently.
+-->
+<p>但每次收集器运行，都会花些时间访问活对象。那其实并没有<em>做</em>什么有用的事（除了确保它们不会被错误删除）。访问活对象的时间，既不是在释放内存，也不是在跑用户代码。若你<em>非常</em>频繁地跑 GC，用户程序甚至没有足够时间产生新垃圾给虚拟机收集。虚拟机会把全部时间花在执着地一遍遍重访同一批活对象上，吞吐量就会受损。所以，显然我们想非常<em>不</em>频繁地跑收集器。</p><!--
+In fact, we want something in the middle, and the frequency of when the
 collector runs is one of our main knobs for tuning the trade-off between latency
-and throughput.</p>
-<h3><a href="#self-adjusting-heap" name="self-adjusting-heap"><small>26&#8202;.&#8202;6&#8202;.&#8202;2</small>Self-adjusting heap</a></h3>
-<p>We want our GC to run frequently enough to minimize latency but infrequently
+and throughput.
+-->
+<p>事实上，我们想要中间某处；收集器运行的频率，是我们调节延迟与吞吐量取舍的主要旋钮之一。</p><!--
+-- Self-adjusting heap
+-->
+<h3><a href="#自适应堆" name="自适应堆"><small>26&#8202;.&#8202;6&#8202;.&#8202;2</small>自适应堆</a></h3><!--
+We want our GC to run frequently enough to minimize latency but infrequently
 enough to maintain decent throughput. But how do we find the balance between
-these when we have no idea how much memory the user&rsquo;s program needs and how
+these when we have no idea how much memory the user's program needs and how
 often it allocates? We could pawn the problem onto the user and force them to
 pick by exposing GC tuning parameters. Many VMs do this. But if we, the GC
-authors, don&rsquo;t know how to tune it well, odds are good most users won&rsquo;t either.
-They deserve a reasonable default behavior.</p>
-<p>I&rsquo;ll be honest with you, this is not my area of expertise. I&rsquo;ve talked to a
-number of professional GC hackers<span class="em">&mdash;</span>this is something you can build an entire
-career on<span class="em">&mdash;</span>and read a lot of the literature, and all of the answers I got
-were<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span>vague. The strategy I ended up picking is common, pretty simple, and (I
-hope!) good enough for most uses.</p>
-<p>The idea is that the collector frequency automatically adjusts based on the live
+authors, don't know how to tune it well, odds are good most users won't either.
+They deserve a reasonable default behavior.
+-->
+<p>我们希望 GC 跑得够勤以最小化延迟，又够疏以维持像样的吞吐量。但当我们根本不知道用户程序需要多少内存、多频繁分配时，如何找到平衡？可以把问题甩给用户，暴露 GC 调参让他们自己选。许多虚拟机这么做。可若我们这些 GC 作者自己都不知道怎么调好，多半用户也不会。他们配得上合理的默认行为。</p><!--
+I'll be honest with you, this is not my area of expertise. I've talked to a
+number of professional GC hackers -- this is something you can build an entire
+career on -- and read a lot of the literature, and all of the answers I got
+were... vague. The strategy I ended up picking is common, pretty simple, and (I
+hope!) good enough for most uses.
+-->
+<p>跟你说实话，这不是我的专长领域。我和不少职业 GC 黑客聊过——这是可以当作整个职业生涯来做的事——也读了大量文献，得到的答案全是……含糊的。我最终选的策略很常见、相当简单，而且（我希望！）对大多数用途够用。</p><!--
+The idea is that the collector frequency automatically adjusts based on the live
 size of the heap. We track the total number of bytes of managed memory that the
 VM has allocated. When it goes above some threshold, we trigger a GC. After
-that, we note how many bytes of memory remain<span class="em">&mdash;</span>how many were <em>not</em> freed. Then
-we adjust the threshold to some value larger than that.</p>
-<p>The result is that as the amount of live memory increases, we collect less
+that, we note how many bytes of memory remain -- how many were *not* freed. Then
+we adjust the threshold to some value larger than that.
+-->
+<p>想法是：收集器频率根据堆的存活大小自动调节。我们跟踪虚拟机已分配的托管内存总字节数。超过某个阈值时，触发一次 GC。之后，我们记下还剩多少字节内存——有多少<em>没有</em>被释放。然后把阈值调到比那更大的某个值。</p><!--
+The result is that as the amount of live memory increases, we collect less
 frequently in order to avoid sacrificing throughput by re-traversing the growing
 pile of live objects. As the amount of live memory goes down, we collect more
-frequently so that we don&rsquo;t lose too much latency by waiting too long.</p>
-<p>The implementation requires two new bookkeeping fields in the VM.</p>
+frequently so that we don't lose too much latency by waiting too long.
+-->
+<p>结果是：存活内存变多时，我们收集得更少，以免为重访不断增长的活对象堆而牺牲吞吐量。存活内存变少时，我们收集得更勤，以免等太久而在延迟上输太多。</p><!--
+The implementation requires two new bookkeeping fields in the VM.
+-->
+<p>实现需要在虚拟机里加两个新的簿记字段。</p>
 <div class="codehilite"><pre class="insert-before">
   ObjUpvalue* openUpvalues;
 </pre><div class="source-file"><em>vm.h</em><br>
@@ -1494,10 +1872,12 @@ in struct <em>VM</em></div>
   Obj* objects;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
-
-<p>The first is a running total of the number of bytes of managed memory the VM has
+<!--
+The first is a running total of the number of bytes of managed memory the VM has
 allocated. The second is the threshold that triggers the next collection. We
-initialize them when the VM starts up.</p>
+initialize them when the VM starts up.
+-->
+<p>第一个是虚拟机已分配的托管内存字节数的累计总和。第二个是触发下一次收集的阈值。虚拟机启动时初始化它们。</p>
 <div class="codehilite"><pre class="insert-before">
   vm.objects = NULL;
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -1510,19 +1890,26 @@ in <em>initVM</em>()</div>
   vm.grayCount = 0;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
-
-<p>The starting threshold here is <span name="lab">arbitrary</span>. It&rsquo;s similar
+<!--
+The starting threshold here is <span name="lab">arbitrary</span>. It's similar
 to the initial capacity we picked for our various dynamic arrays. The goal is to
-not trigger the first few GCs <em>too</em> quickly but also to not wait too long. If we
+not trigger the first few GCs *too* quickly but also to not wait too long. If we
 had some real-world Lox programs, we could profile those to tune this. But since
-all we have are toy programs, I just picked a number.</p>
-<aside name="lab">
-<p>A challenge with learning garbage collectors is that it&rsquo;s <em>very</em> hard to
-discover the best practices in an isolated lab environment. You don&rsquo;t see how a
+all we have are toy programs, I just picked a number.
+-->
+<p>这里的起始阈值是<span name="lab">随意</span>的。类似我们为各种动态数组选的初始容量。目标是不要<em>太</em>快触发最初几次 GC，也不要等太久。若有一些真实世界的 Lox 程序，我们可以对它们做剖析来调这个。可既然我们只有玩具程序，我就随便挑了个数字。</p>
+<aside name="lab"><!--
+A challenge with learning garbage collectors is that it's *very* hard to
+discover the best practices in an isolated lab environment. You don't see how a
 collector actually performs unless you run it on the kind of large, messy
-real-world programs it is actually intended for. It&rsquo;s like tuning a rally car<span class="em">&mdash;</span>you need to take it out on the course.</p>
-</aside>
-<p>Every time we allocate or free some memory, we adjust the counter by that delta.</p>
+real-world programs it is actually intended for. It's like tuning a rally car
+-- you need to take it out on the course.
+-->
+<p>学习垃圾回收器的一个挑战是：在孤立的实验室环境里<em>非常</em>难发现最佳实践。除非你在它真正面向的那种又大又乱的真实程序上跑，否则看不出收集器实际表现如何。就像调一辆拉力赛车——你得把它开上赛道。</p>
+</aside><!--
+Every time we allocate or free some memory, we adjust the counter by that delta.
+-->
+<p>每次分配或释放一些内存，我们按那个增量调整计数器。</p>
 <div class="codehilite"><pre class="insert-before">
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1533,8 +1920,10 @@ in <em>reallocate</em>()</div>
   if (newSize &gt; oldSize) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
-
-<p>When the total crosses the limit, we run the collector.</p>
+<!--
+When the total crosses the limit, we run the collector.
+-->
+<p>总和越过限度时，我们跑收集器。</p>
 <div class="codehilite"><pre class="insert-before">
     collectGarbage();
 #endif
@@ -1549,12 +1938,14 @@ in <em>reallocate</em>()</div>
   }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
-
-<p>Now, finally, our garbage collector actually does something when the user runs a
+<!--
+Now, finally, our garbage collector actually does something when the user runs a
 program without our hidden diagnostic flag enabled. The sweep phase frees
-objects by calling <code>reallocate()</code>, which lowers the value of <code>bytesAllocated</code>,
+objects by calling `reallocate()`, which lowers the value of `bytesAllocated`,
 so after the collection completes, we know how many live bytes remain. We adjust
-the threshold of the next GC based on that.</p>
+the threshold of the next GC based on that.
+-->
+<p>现在，终于，用户在未启用我们隐藏诊断标志的情况下跑程序时，垃圾回收器也真会做事了。清扫阶段通过调用 <code>reallocate()</code> 释放对象，这会降低 <code>bytesAllocated</code> 的值，所以收集完成后，我们知道还剩多少存活字节。我们据此调整下一次 GC 的阈值。</p>
 <div class="codehilite"><pre class="insert-before">
   sweep();
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1567,11 +1958,13 @@ in <em>collectGarbage</em>()</div>
 #ifdef DEBUG_LOG_GC
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>The threshold is a multiple of the heap size. This way, as the amount of memory
+<!--
+The threshold is a multiple of the heap size. This way, as the amount of memory
 the program uses grows, the threshold moves farther out to limit the total time
 spent re-traversing the larger live set. Like other numbers in this chapter, the
-scaling factor is basically arbitrary.</p>
+scaling factor is basically arbitrary.
+-->
+<p>阈值是堆大小的一个倍数。这样，程序使用的内存变多时，阈值会往外推，以限制重访更大存活集合所花的总时间。像本章其他数字一样，这个缩放因子基本上是随意的。</p>
 <div class="codehilite"><pre class="insert-before">
 #endif
 </pre><div class="source-file"><em>memory.c</em></div>
@@ -1583,10 +1976,12 @@ scaling factor is basically arbitrary.</p>
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em></div>
-
-<p>You&rsquo;d want to tune this in your implementation once you had some real programs
+<!--
+You'd want to tune this in your implementation once you had some real programs
 to benchmark it on. Right now, we can at least log some of the statistics that
-we have. We capture the heap size before the collection.</p>
+we have. We capture the heap size before the collection.
+-->
+<p>一旦有一些真实程序可做基准测试，你就会想在自己的实现里调这个。眼下，我们至少可以记录手头已有的一些统计。收集前捕获堆大小。</p>
 <div class="codehilite"><pre class="insert-before">
   printf(&quot;-- gc begin\n&quot;);
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1597,8 +1992,10 @@ in <em>collectGarbage</em>()</div>
 #endif
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>And then print the results at the end.</p>
+<!--
+And then print the results at the end.
+-->
+<p>然后在结束时打印结果。</p>
 <div class="codehilite"><pre class="insert-before">
   printf(&quot;-- gc end\n&quot;);
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -1611,69 +2008,103 @@ in <em>collectGarbage</em>()</div>
 #endif
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
-
-<p>This way we can see how much the garbage collector accomplished while it ran.</p>
-<h2><a href="#garbage-collection-bugs" name="garbage-collection-bugs"><small>26&#8202;.&#8202;7</small>Garbage Collection Bugs</a></h2>
-<p>In theory, we are all done now. We have a GC. It kicks in periodically, collects
+<!--
+This way we can see how much the garbage collector accomplished while it ran.
+-->
+<p>这样我们就能看见垃圾回收器在运行时完成了多少。</p><!--
+-- Garbage Collection Bugs
+-->
+<h2><a href="#垃圾回收的缺陷" name="垃圾回收的缺陷"><small>26&#8202;.&#8202;7</small>垃圾回收的缺陷</a></h2><!--
+In theory, we are all done now. We have a GC. It kicks in periodically, collects
 what it can, and leaves the rest. If this were a typical textbook, we would wipe
 the dust from our hands and bask in the soft glow of the flawless marble edifice
-we have created.</p>
-<p>But I aim to teach you not just the theory of programming languages but the
+we have created.
+-->
+<p>理论上，我们现在全做完了。我们有了 GC。它周期性地介入，能收的收，其余留下。若这是一本典型教科书，我们会拍拍手掌上的灰，沐浴在我们造出的无瑕大理石大厦的柔光里。</p><!--
+But I aim to teach you not just the theory of programming languages but the
 sometimes painful reality. I am going to roll over a rotten log and show you the
 nasty bugs that live under it, and garbage collector bugs really are some of the
-grossest invertebrates out there.</p>
-<p>The collector&rsquo;s job is to free dead objects and preserve live ones. Mistakes are
-easy to make in both directions. If the VM fails to free objects that aren&rsquo;t
-needed, it slowly leaks memory. If it frees an object that is in use, the user&rsquo;s
-program can access invalid memory. These failures often don&rsquo;t immediately cause
-a crash, which makes it hard for us to trace backward in time to find the bug.</p>
-<p>This is made harder by the fact that we don&rsquo;t know when the collector will run.
+grossest invertebrates out there.
+-->
+<p>但我不仅想教你编程语言的理论，还有有时很痛苦的现实。我要翻开一根烂木头，给你看底下住着的恶心虫子——而垃圾回收器的缺陷，确实是外面最恶心的无脊椎动物之一。</p><!--
+The collector's job is to free dead objects and preserve live ones. Mistakes are
+easy to make in both directions. If the VM fails to free objects that aren't
+needed, it slowly leaks memory. If it frees an object that is in use, the user's
+program can access invalid memory. These failures often don't immediately cause
+a crash, which makes it hard for us to trace backward in time to find the bug.
+-->
+<p>收集器的工作是释放死对象、保住活对象。两个方向都容易出错。若虚拟机未能释放不需要的对象，就会慢慢泄漏内存。若释放了正在使用的对象，用户程序就可能访问无效内存。这些失败往往不会立刻导致崩溃，使我们很难沿时间回溯找到缺陷。</p><!--
+This is made harder by the fact that we don't know when the collector will run.
 Any call that eventually allocates some memory is a place in the VM where a
-collection could happen. It&rsquo;s like musical chairs. At any point, the GC might
+collection could happen. It's like musical chairs. At any point, the GC might
 stop the music. Every single heap-allocated object that we want to keep needs to
-find a chair quickly<span class="em">&mdash;</span>get marked as a root or stored as a reference in some
-other object<span class="em">&mdash;</span>before the sweep phase comes to kick it out of the game.</p>
-<p>How is it possible for the VM to use an object later<span class="em">&mdash;</span>one that the GC itself
-doesn&rsquo;t see? How can the VM find it? The most common answer is through a pointer
-stored in some local variable on the C stack. The GC walks the <em>VM&rsquo;s</em> value and
-CallFrame stacks, but the C stack is <span name="c">hidden</span> to it.</p>
-<aside name="c">
-<p>Our GC can&rsquo;t find addresses in the C stack, but many can. Conservative garbage
+find a chair quickly -- get marked as a root or stored as a reference in some
+other object -- before the sweep phase comes to kick it out of the game.
+-->
+<p>更难的是，我们不知道收集器何时会跑。任何最终会分配一些内存的调用，都是虚拟机里可能发生收集的地方。就像抢椅子游戏。任何时刻，GC 都可能停下音乐。我们想保住的每一个堆分配对象，都得赶快找到一把椅子——被标成根，或作为引用存进某个其他对象——赶在清扫阶段来把它踢出游戏之前。</p><!--
+How is it possible for the VM to use an object later -- one that the GC itself
+doesn't see? How can the VM find it? The most common answer is through a pointer
+stored in some local variable on the C stack. The GC walks the *VM's* value and
+CallFrame stacks, but the C stack is <span name="c">hidden</span> to it.
+-->
+<p>虚拟机怎么可能稍后使用一个对象——而 GC 自己看不见它？虚拟机怎么找到它？最常见的答案是：通过存在 C 栈某个局部变量里的指针。GC 走的是<em>虚拟机的</em>值栈与 CallFrame 栈，但 C 栈对它是<span name="c">隐藏</span>的。</p>
+<aside name="c"><!--
+Our GC can't find addresses in the C stack, but many can. Conservative garbage
 collectors look all through memory, including the native stack. The most
-well-known of this variety is the <a href="https://en.wikipedia.org/wiki/Boehm_garbage_collector"><strong>Boehm–Demers–Weiser garbage
-collector</strong></a>, usually just called the &ldquo;Boehm collector&rdquo;. (The shortest
-path to fame in CS is a last name that&rsquo;s alphabetically early so that it shows
-up first in sorted lists of names.)</p>
-<p>Many precise GCs walk the C stack too. Even those have to be careful about
-pointers to live objects that exist only in <em>CPU registers</em>.</p>
-</aside>
-<p>In previous chapters, we wrote seemingly pointless code that pushed an object
-onto the VM&rsquo;s value stack, did a little work, and then popped it right back off.
-Most times, I said this was for the GC&rsquo;s benefit. Now you see why. The code
+well-known of this variety is the [**Boehm–Demers–Weiser garbage
+collector**][boehm], usually just called the "Boehm collector". (The shortest
+path to fame in CS is a last name that's alphabetically early so that it shows
+up first in sorted lists of names.)
+
+[boehm]: https://en.wikipedia.org/wiki/Boehm_garbage_collector
+
+Many precise GCs walk the C stack too. Even those have to be careful about
+pointers to live objects that exist only in *CPU registers*.
+-->
+<p>我们的 GC 找不到 C 栈里的地址，但许多能。保守垃圾回收器会搜遍内存，包括原生栈。这类里最出名的是 <a href="https://en.wikipedia.org/wiki/Boehm_garbage_collector"><strong>Boehm–Demers–Weiser 垃圾回收器</strong></a>，通常简称 “Boehm 收集器”。（在 CS 里成名的最短路径，是姓氏按字母排得很靠前，好在排序名单里最先出现。）</p>
+<p>许多精确 GC 也会走 C 栈。即便那些，也得小心只存在于<em>CPU 寄存器</em>里、指向活对象的指针。</p>
+</aside><!--
+In previous chapters, we wrote seemingly pointless code that pushed an object
+onto the VM's value stack, did a little work, and then popped it right back off.
+Most times, I said this was for the GC's benefit. Now you see why. The code
 between pushing and popping potentially allocates memory and thus can trigger a
 GC. We had to make sure the object was on the value stack so that the
-collector&rsquo;s mark phase would find it and keep it alive.</p>
-<p>I wrote the entire clox implementation before splitting it into chapters and
+collector's mark phase would find it and keep it alive.
+-->
+<p>在前面几章，我们写过看似无意义的代码：把对象压进虚拟机的值栈，做一点活，再立刻弹掉。多数时候我说这是为了 GC 好。现在你明白为什么了。压与弹之间的代码可能分配内存，因而可能触发 GC。我们必须确保对象在值栈上，好让收集器的标记阶段找到它并让它活着。</p><!--
+I wrote the entire clox implementation before splitting it into chapters and
 writing the prose, so I had plenty of time to find all of these corners and
 flush out most of these bugs. The stress testing code we put in at the beginning
-of this chapter and a pretty good test suite were very helpful.</p>
-<p>But I fixed only <em>most</em> of them. I left a couple in because I want to give you a
-hint of what it&rsquo;s like to encounter these bugs in the wild. If you enable the
+of this chapter and a pretty good test suite were very helpful.
+-->
+<p>我在把实现拆成章节、写散文之前，就写完了整个 clox 实现，所以有充足时间找到所有这些角落，冲掉其中大多数缺陷。本章开头放进的压力测试代码，以及一套相当不错的测试套件，都很有帮助。</p><!--
+But I fixed only *most* of them. I left a couple in because I want to give you a
+hint of what it's like to encounter these bugs in the wild. If you enable the
 stress test flag and run some toy Lox programs, you can probably stumble onto a
-few. Give it a try and <em>see if you can fix any yourself</em>.</p>
-<h3><a href="#adding-to-the-constant-table" name="adding-to-the-constant-table"><small>26&#8202;.&#8202;7&#8202;.&#8202;1</small>Adding to the constant table</a></h3>
-<p>You are very likely to hit the first bug. The constant table each chunk owns is
-a dynamic array. When the compiler adds a new constant to the current function&rsquo;s
+few. Give it a try and *see if you can fix any yourself*.
+-->
+<p>但我只修了<em>大多数</em>。我留了几个，因为想让你尝尝在野外撞上这些虫子是什么滋味。若启用压力测试标志并跑一些玩具 Lox 程序，你大概能绊到几个。试试看，<em>看你自己能不能修好几个</em>。</p><!--
+-- Adding to the constant table
+-->
+<h3><a href="#加入常量表" name="加入常量表"><small>26&#8202;.&#8202;7&#8202;.&#8202;1</small>加入常量表</a></h3><!--
+You are very likely to hit the first bug. The constant table each chunk owns is
+a dynamic array. When the compiler adds a new constant to the current function's
 table, that array may need to grow. The constant itself may also be some
-heap-allocated object like a string or a nested function.</p>
-<p>The new object being added to the constant table is passed to <code>addConstant()</code>.
+heap-allocated object like a string or a nested function.
+-->
+<p>你很可能会撞上第一个缺陷。每个 chunk 拥有的常量表是动态数组。编译器往当前函数的表里加新常量时，数组可能需要扩张。常量本身也可能是堆分配对象，比如字符串或嵌套函数。</p><!--
+The new object being added to the constant table is passed to `addConstant()`.
 At that moment, the object can be found only in the parameter to that function
 on the C stack. That function appends the object to the constant table. If the
-table doesn&rsquo;t have enough capacity and needs to grow, it calls <code>reallocate()</code>.
+table doesn't have enough capacity and needs to grow, it calls `reallocate()`.
 That in turn triggers a GC, which fails to mark the new constant object and
-thus sweeps it right before we have a chance to add it to the table. Crash.</p>
-<p>The fix, as you&rsquo;ve seen in other places, is to push the constant onto the stack
-temporarily.</p>
+thus sweeps it right before we have a chance to add it to the table. Crash.
+-->
+<p>正被加进常量表的新对象传给 <code>addConstant()</code>。那一刻，对象只能在 C 栈上该函数的参数里找到。该函数把对象追加到常量表。若表容量不够需要扩张，它调用 <code>reallocate()</code>。那进而触发 GC，GC 未能标记新常量对象，于是在我们有机会把它加进表之前就把它清扫掉了。崩溃。</p><!--
+The fix, as you've seen in other places, is to push the constant onto the stack
+temporarily.
+-->
+<p>修法，如你在别处见过的，是暂时把常量压进栈。</p>
 <div class="codehilite"><pre class="insert-before">
 int addConstant(Chunk* chunk, Value value) {
 </pre><div class="source-file"><em>chunk.c</em><br>
@@ -1684,8 +2115,10 @@ in <em>addConstant</em>()</div>
   writeValueArray(&amp;chunk-&gt;constants, value);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>addConstant</em>()</div>
-
-<p>Once the constant table contains the object, we pop it off the stack.</p>
+<!--
+Once the constant table contains the object, we pop it off the stack.
+-->
+<p>常量表一旦含有该对象，我们就把它从栈上弹出。</p>
 <div class="codehilite"><pre class="insert-before">
   writeValueArray(&amp;chunk-&gt;constants, value);
 </pre><div class="source-file"><em>chunk.c</em><br>
@@ -1696,10 +2129,12 @@ in <em>addConstant</em>()</div>
   return chunk-&gt;constants.count - 1;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>addConstant</em>()</div>
-
-<p>When the GC is marking roots, it walks the chain of compilers and marks each of
+<!--
+When the GC is marking roots, it walks the chain of compilers and marks each of
 their functions, so the new constant is reachable now. We do need an include
-to call into the VM from the &ldquo;chunk&rdquo; module.</p>
+to call into the VM from the "chunk" module.
+-->
+<p>GC 标记根时，会走编译器链并标记各自的函数，于是新常量现在可达了。我们还需要一条 include，好从 “chunk” 模块调用进虚拟机。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;memory.h&quot;
 </pre><div class="source-file"><em>chunk.c</em></div>
@@ -1710,13 +2145,17 @@ to call into the VM from the &ldquo;chunk&rdquo; module.</p>
 void initChunk(Chunk* chunk) {
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em></div>
-
-<h3><a href="#interning-strings" name="interning-strings"><small>26&#8202;.&#8202;7&#8202;.&#8202;2</small>Interning strings</a></h3>
-<p>Here&rsquo;s another similar one. All strings are interned in clox, so whenever we
+<!--
+-- Interning strings
+-->
+<h3><a href="#驻留字符串" name="驻留字符串"><small>26&#8202;.&#8202;7&#8202;.&#8202;2</small>驻留字符串</a></h3><!--
+Here's another similar one. All strings are interned in clox, so whenever we
 create a new string, we also add it to the intern table. You can see where this
-is going. Since the string is brand new, it isn&rsquo;t reachable anywhere. And
+is going. Since the string is brand new, it isn't reachable anywhere. And
 resizing the string pool can trigger a collection. Again, we go ahead and stash
-the string on the stack first.</p>
+the string on the stack first.
+-->
+<p>再来一个类似的。clox 里所有字符串都驻留，所以每当创建新字符串，我们也把它加进驻留表。你看得出这会往哪儿走。字符串崭新，哪儿都不可达。而调整字符串池大小可能触发收集。同样，我们先把字符串囤在栈上。</p>
 <div class="codehilite"><pre class="insert-before">
   string-&gt;chars = chars;
   string-&gt;hash = hash;
@@ -1729,8 +2168,10 @@ in <em>allocateString</em>()</div>
   tableSet(&amp;vm.strings, string, NIL_VAL);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateString</em>()</div>
-
-<p>And then pop it back off once it&rsquo;s safely nestled in the table.</p>
+<!--
+And then pop it back off once it's safely nestled in the table.
+-->
+<p>等它安全窝进表里，再弹回去。</p>
 <div class="codehilite"><pre class="insert-before">
   tableSet(&amp;vm.strings, string, NIL_VAL);
 </pre><div class="source-file"><em>object.c</em><br>
@@ -1743,20 +2184,28 @@ in <em>allocateString</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateString</em>()</div>
-
-<p>This ensures the string is safe while the table is being resized. Once it
-survives that, <code>allocateString()</code> will return it to some caller which can then
+<!--
+This ensures the string is safe while the table is being resized. Once it
+survives that, `allocateString()` will return it to some caller which can then
 take responsibility for ensuring the string is still reachable before the next
-heap allocation occurs.</p>
-<h3><a href="#concatenating-strings" name="concatenating-strings"><small>26&#8202;.&#8202;7&#8202;.&#8202;3</small>Concatenating strings</a></h3>
-<p>One last example: Over in the interpreter, the <code>OP_ADD</code> instruction can be used
+heap allocation occurs.
+-->
+<p>这确保在表被调整大小时字符串是安全的。一旦它熬过那一关，<code>allocateString()</code> 会把它返回给某个调用者，后者再负责在下一次堆分配发生之前，确保字符串仍然可达。</p><!--
+-- Concatenating strings
+-->
+<h3><a href="#拼接字符串" name="拼接字符串"><small>26&#8202;.&#8202;7&#8202;.&#8202;3</small>拼接字符串</a></h3><!--
+One last example: Over in the interpreter, the `OP_ADD` instruction can be used
 to concatenate two strings. As it does with numbers, it pops the two operands
 from the stack, computes the result, and pushes that new value back onto the
-stack. For numbers that&rsquo;s perfectly safe.</p>
-<p>But concatenating two strings requires allocating a new character array on the
-heap, which can in turn trigger a GC. Since we&rsquo;ve already popped the operand
+stack. For numbers that's perfectly safe.
+-->
+<p>最后一个例子：在解释器里，<code>OP_ADD</code> 指令可以用来拼接两个字符串。和数字一样，它从栈上弹出两个操作数，算出结果，再把新值压回栈。对数字来说这完全安全。</p><!--
+But concatenating two strings requires allocating a new character array on the
+heap, which can in turn trigger a GC. Since we've already popped the operand
 strings by that point, they can potentially be missed by the mark phase and get
-swept away. Instead of popping them off the stack eagerly, we peek them.</p>
+swept away. Instead of popping them off the stack eagerly, we peek them.
+-->
+<p>但拼接两个字符串需要在堆上分配新的字符数组，那进而可能触发 GC。那时我们已经弹出了操作数字符串，它们可能被标记阶段漏掉并被清扫走。与其急着把它们弹出栈，我们改为窥视它们。</p>
 <div class="codehilite"><pre class="insert-before">
 static void concatenate() {
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -1770,10 +2219,12 @@ replace 2 lines</div>
   int length = a-&gt;length + b-&gt;length;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>concatenate</em>(), replace 2 lines</div>
-
-<p>That way, they are still hanging out on the stack when we create the result
-string. Once that&rsquo;s done, we can safely pop them off and replace them with the
-result.</p>
+<!--
+That way, they are still hanging out on the stack when we create the result
+string. Once that's done, we can safely pop them off and replace them with the
+result.
+-->
+<p>这样，我们创建结果字符串时，它们仍待在栈上。做完之后，我们就可以安全地把它们弹出，换成结果。</p>
 <div class="codehilite"><pre class="insert-before">
   ObjString* result = takeString(chars, length);
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -1785,78 +2236,106 @@ in <em>concatenate</em>()</div>
   push(OBJ_VAL(result));
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>concatenate</em>()</div>
-
-<p>Those were all pretty easy, especially because I <em>showed</em> you where the fix was.
-In practice, <em>finding</em> them is the hard part. All you see is an object that
-<em>should</em> be there but isn&rsquo;t. It&rsquo;s not like other bugs where you&rsquo;re looking for
-the code that <em>causes</em> some problem. You&rsquo;re looking for the <em>absence</em> of code
-which fails to <em>prevent</em> a problem, and that&rsquo;s a much harder search.</p>
-<p>But, for now at least, you can rest easy. As far as I know, we&rsquo;ve found all of
+<!--
+Those were all pretty easy, especially because I *showed* you where the fix was.
+In practice, *finding* them is the hard part. All you see is an object that
+*should* be there but isn't. It's not like other bugs where you're looking for
+the code that *causes* some problem. You're looking for the *absence* of code
+which fails to *prevent* a problem, and that's a much harder search.
+-->
+<p>这些都相当容易，尤其因为我<em>指给</em>你看了修在哪儿。实践中，<em>找到</em>它们才是难的。你看见的只是一个<em>本该</em>在那儿却不在的对象。这不像其他缺陷那样，你在找<em>导致</em>问题的代码。你在找<em>缺失</em>的、未能<em>防止</em>问题的代码，而这搜索难得多。</p><!--
+But, for now at least, you can rest easy. As far as I know, we've found all of
 the collection bugs in clox, and now we have a working, robust, self-tuning,
-mark-sweep garbage collector.</p>
-<div class="challenges">
-<h2><a href="#challenges" name="challenges">Challenges</a></h2>
+mark-sweep garbage collector.
+-->
+<p>不过，至少眼下，你可以放心了。就我所知，我们已经找到了 clox 里全部的收集缺陷，现在有了一个能工作、稳健、自适应的标记-清扫垃圾回收器。</p>
+<div class="challenges"><!--
+-- Challenges
+-->
+<h2><a href="#挑战" name="挑战"><small>26&#8202;.&#8202;8</small>挑战</a></h2><!--
+1.  The Obj header struct at the top of each object now has three fields:
+    `type`, `isMarked`, and `next`. How much memory do those take up (on your
+    machine)? Can you come up with something more compact? Is there a runtime
+    cost to doing so?
+
+1.  When the sweep phase traverses a live object, it clears the `isMarked`
+    field to prepare it for the next collection cycle. Can you come up with a
+    more efficient approach?
+
+1.  Mark-sweep is only one of a variety of garbage collection algorithms out
+    there. Explore those by replacing or augmenting the current collector with
+    another one. Good candidates to consider are reference counting, Cheney's
+    algorithm, or the Lisp 2 mark-compact algorithm.
+-->
 <ol>
 <li>
-<p>The Obj header struct at the top of each object now has three fields:
-<code>type</code>, <code>isMarked</code>, and <code>next</code>. How much memory do those take up (on your
-machine)? Can you come up with something more compact? Is there a runtime
-cost to doing so?</p>
+<p>每个对象顶部的 Obj 头结构体现在有三个字段：<code>type</code>、<code>isMarked</code> 和 <code>next</code>。它们占多少内存（在你的机器上）？你能想出更紧凑的办法吗？那样做有运行时代价吗？</p>
 </li>
 <li>
-<p>When the sweep phase traverses a live object, it clears the <code>isMarked</code>
-field to prepare it for the next collection cycle. Can you come up with a
-more efficient approach?</p>
+<p>清扫阶段遍历活对象时，会清掉 <code>isMarked</code> 字段，为下一轮收集做准备。你能想出更高效的办法吗？</p>
 </li>
 <li>
-<p>Mark-sweep is only one of a variety of garbage collection algorithms out
-there. Explore those by replacing or augmenting the current collector with
-another one. Good candidates to consider are reference counting, Cheney&rsquo;s
-algorithm, or the Lisp 2 mark-compact algorithm.</p>
+<p>标记-清扫只是众多垃圾回收算法之一。试着替换或增强当前收集器，探索其他算法。值得考虑的候选有：引用计数、Cheney 算法，或 Lisp 2 标记-压缩算法。</p>
 </li>
 </ol>
 </div>
-<div class="design-note">
-<h2><a href="#design-note" name="design-note">Design Note: Generational Collectors</a></h2>
-<p>A collector loses throughput if it spends a long time re-visiting objects that
+<div class="design-note"><!--
+-- Design Note: Generational Collectors
+-->
+<h2><a href="#设计笔记：分代收集器" name="设计笔记：分代收集器"><small>26&#8202;.&#8202;9</small>设计笔记：分代收集器</a></h2><!--
+A collector loses throughput if it spends a long time re-visiting objects that
 are still alive. But it can increase latency if it avoids collecting and
 accumulates a large pile of garbage to wade through. If only there were some way
-to tell which objects were likely to be long-lived and which weren&rsquo;t. Then the
+to tell which objects were likely to be long-lived and which weren't. Then the
 GC could avoid revisiting the long-lived ones as often and clean up the
-ephemeral ones more frequently.</p>
-<p>It turns out there kind of is. Many years ago, GC researchers gathered metrics
+ephemeral ones more frequently.
+-->
+<p>若收集器长时间反复访问仍然活着的对象，就会损失吞吐量。但若它回避收集、堆积出一大堆垃圾再去蹚过，又会增加延迟。要是有办法分辨哪些对象可能长寿、哪些不会就好了。那样 GC 就可以少去重访长寿对象，更频繁地清理短命的那些。</p><!--
+It turns out there kind of is. Many years ago, GC researchers gathered metrics
 on the lifetime of objects in real-world running programs. They tracked every
 object when it was allocated, and eventually when it was no longer needed, and
-then graphed out how long objects tended to live.</p>
-<p>They discovered something they called the <strong>generational hypothesis</strong>, or the
-much less tactful term <strong>infant mortality</strong>. Their observation was that most
+then graphed out how long objects tended to live.
+-->
+<p>事实证明，某种程度上有。许多年前，GC 研究者收集了真实运行程序里对象寿命的度量。他们在每个对象分配时跟踪它，最终在不再需要时再记一笔，然后画出对象往往活多久的图。</p><!--
+They discovered something they called the **generational hypothesis**, or the
+much less tactful term **infant mortality**. Their observation was that most
 objects are very short-lived but once they survive beyond a certain age, they
-tend to stick around quite a long time. The longer an object <em>has</em> lived, the
-longer it likely will <em>continue</em> to live. This observation is powerful because
+tend to stick around quite a long time. The longer an object *has* lived, the
+longer it likely will *continue* to live. This observation is powerful because
 it gave them a handle on how to partition objects into groups that benefit from
-frequent collections and those that don&rsquo;t.</p>
-<p>They designed a technique called <strong>generational garbage collection</strong>. It works
+frequent collections and those that don't.
+-->
+<p>他们发现了所谓的<strong>分代假说</strong>，或更不客气的说法：<strong>婴儿死亡率</strong>。他们的观察是：大多数对象非常短命，但一旦活过某个年龄，往往就会再待相当久。对象<em>已经</em>活得越久，就越可能<em>继续</em>活下去。这观察很有力，因为它给了他们一个把手：如何把对象分成受益于频繁收集的，与不需要那么勤的两组。</p><!--
+They designed a technique called **generational garbage collection**. It works
 like this: Every time a new object is allocated, it goes into a special,
-relatively small region of the heap called the &ldquo;nursery&rdquo;. Since objects tend to
+relatively small region of the heap called the "nursery". Since objects tend to
 die young, the garbage collector is invoked <span
-name="nursery">frequently</span> over the objects just in this region.</p>
-<aside name="nursery">
-<p>Nurseries are also usually managed using a copying collector which is faster at
-allocating and freeing objects than a mark-sweep collector.</p>
-</aside>
-<p>Each time the GC runs over the nursery is called a &ldquo;generation&rdquo;. Any objects
+name="nursery">frequently</span> over the objects just in this region.
+-->
+<p>他们设计了一种叫作<strong>分代垃圾回收</strong>的技术。工作方式是这样：每次分配新对象，它进入堆上一个特殊、相对较小的区域，叫作“托儿所”（nursery）。由于对象往往夭折，垃圾回收器会<span name="nursery">频繁</span>地只对这片区域里的对象调用。</p>
+<aside name="nursery"><!--
+Nurseries are also usually managed using a copying collector which is faster at
+allocating and freeing objects than a mark-sweep collector.
+-->
+<p>托儿所通常也用复制式收集器管理，它在分配与释放对象上比标记-清扫收集器更快。</p>
+</aside><!--
+Each time the GC runs over the nursery is called a "generation". Any objects
 that are no longer needed get freed. Those that survive are now considered one
 generation older, and the GC tracks this for each object. If an object survives
-a certain number of generations<span class="em">&mdash;</span>often just a single collection<span class="em">&mdash;</span>it gets
-<em>tenured</em>. At this point, it is copied out of the nursery into a much larger
+a certain number of generations -- often just a single collection -- it gets
+*tenured*. At this point, it is copied out of the nursery into a much larger
 heap region for long-lived objects. The garbage collector runs over that region
 too, but much less frequently since odds are good that most of those objects
-will still be alive.</p>
-<p>Generational collectors are a beautiful marriage of empirical data<span class="em">&mdash;</span>the
-observation that object lifetimes are <em>not</em> evenly distributed<span class="em">&mdash;</span>and clever
-algorithm design that takes advantage of that fact. They&rsquo;re also conceptually
+will still be alive.
+-->
+<p>GC 每对托儿所跑一轮，叫作一代。不再需要的对象被释放。活下来的现在被视为年长一代，GC 为每个对象跟踪这一点。若对象活过一定代数——常常只是单次收集——它就进入<em>终身代</em>（tenured）。此时它被复制出托儿所，进入大得多的、给长寿对象用的堆区域。垃圾回收器也会跑那片区域，但频率低得多，因为那些对象多半仍活着。</p><!--
+Generational collectors are a beautiful marriage of empirical data -- the
+observation that object lifetimes are *not* evenly distributed -- and clever
+algorithm design that takes advantage of that fact. They're also conceptually
 quite simple. You can think of one as just two separately tuned GCs and a pretty
-simple policy for moving objects from one to the other.</p>
+simple policy for moving objects from one to the other.
+-->
+<p>分代收集器是经验数据——对象寿命<em>并非</em>均匀分布这一观察——与利用该事实的巧妙算法设计的美妙联姻。概念上也相当简单。你可以把它想成两个分别调好的 GC，外加一套把对象从一处搬到另一处的相当简单的策略。</p>
 </div>
 
 <footer>

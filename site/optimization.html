@@ -38,12 +38,11 @@
 <h3><a href="#top">Optimization<small>30</small></a></h3>
 
 <ul>
-    <li><a href="#measuring-performance"><small>30.1</small> Measuring Performance</a></li>
-    <li><a href="#faster-hash-table-probing"><small>30.2</small> Faster Hash Table Probing</a></li>
-    <li><a href="#nan-boxing"><small>30.3</small> NaN Boxing</a></li>
-    <li><a href="#where-to-next"><small>30.4</small> Where to Next</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
+    <li><a href="#测量性能"><small>30.1</small> 测量性能</a></li>
+    <li><a href="#更快的哈希表探测"><small>30.2</small> 更快的哈希表探测</a></li>
+    <li><a href="#nan-装箱"><small>30.3</small> NaN 装箱</a></li>
+    <li><a href="#下一步去哪里"><small>30.4</small> 下一步去哪里</a></li>
+    <li><a href="#挑战"><small>30.5</small> 挑战</a></li>
 </ul>
 
 
@@ -69,12 +68,11 @@
 <h3><a href="#top">Optimization<small>30</small></a></h3>
 
 <ul>
-    <li><a href="#measuring-performance"><small>30.1</small> Measuring Performance</a></li>
-    <li><a href="#faster-hash-table-probing"><small>30.2</small> Faster Hash Table Probing</a></li>
-    <li><a href="#nan-boxing"><small>30.3</small> NaN Boxing</a></li>
-    <li><a href="#where-to-next"><small>30.4</small> Where to Next</a></li>
-    <li class="divider"></li>
-    <li class="end-part"><a href="#challenges">Challenges</a></li>
+    <li><a href="#测量性能"><small>30.1</small> 测量性能</a></li>
+    <li><a href="#更快的哈希表探测"><small>30.2</small> 更快的哈希表探测</a></li>
+    <li><a href="#nan-装箱"><small>30.3</small> NaN 装箱</a></li>
+    <li><a href="#下一步去哪里"><small>30.4</small> 下一步去哪里</a></li>
+    <li><a href="#挑战"><small>30.5</small> 挑战</a></li>
 </ul>
 
 
@@ -110,142 +108,208 @@
   <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
 </div>
 
+<h1><a href="#优化" name="优化"><small>30&#8202;.&#8202;0</small>优化</a></h1><!--
+> The evening's the best part of the day. You've done your day's work. Now you
+> can put your feet up and enjoy it.
+>
+> <cite>Kazuo Ishiguro, <em>The Remains of the Day</em></cite>
+-->
 <blockquote>
-<p>The evening&rsquo;s the best part of the day. You&rsquo;ve done your day&rsquo;s work. Now you
-can put your feet up and enjoy it.</p>
-<p><cite>Kazuo Ishiguro, <em>The Remains of the Day</em></cite></p>
-</blockquote>
-<p>If I still lived in New Orleans, I&rsquo;d call this chapter a <em>lagniappe</em>, a little
-something extra given for free to a customer. You&rsquo;ve got a whole book and a
+<p>傍晚是一天里最好的时光。白天的活干完了。现在可以搁起脚来好好享受。</p>
+<p><cite>石黑一雄，<em>《长日将尽》</em></cite></p>
+</blockquote><!--
+If I still lived in New Orleans, I'd call this chapter a *lagniappe*, a little
+something extra given for free to a customer. You've got a whole book and a
 complete virtual machine already, but I want you to have some more fun hacking
-on clox. This time, we&rsquo;re going for pure performance. We&rsquo;ll apply two very
-different optimizations to our virtual machine.  In the process, you&rsquo;ll get a
-feel for measuring and improving the performance of a language implementation<span class="em">&mdash;</span>or any program, really.</p>
-<h2><a href="#measuring-performance" name="measuring-performance"><small>30&#8202;.&#8202;1</small>Measuring Performance</a></h2>
-<p><strong>Optimization</strong> means taking a working application and improving its
+on clox. This time, we're going for pure performance. We'll apply two very
+different optimizations to our virtual machine.  In the process, you'll get a
+feel for measuring and improving the performance of a language implementation --
+or any program, really.
+-->
+<p>若我还住在新奥尔良，我会把这一章叫做 <em>lagniappe</em>（新奥尔良的“额外赠品”）——送给顾客的一点免费小礼物。你已经拥有一整本书、一台完整的虚拟机，可我还想让你在 clox 上多玩一会儿。这一次，我们冲着纯粹的性能去。我们会给虚拟机施加两种截然不同的优化。过程中，你会摸到测量并改进一门语言实现——其实是任何程序——性能的那种手感。</p><!--
+-- Measuring Performance
+-->
+<h2><a href="#测量性能" name="测量性能"><small>30&#8202;.&#8202;1</small>测量性能</a></h2><!--
+**Optimization** means taking a working application and improving its
 performance. An optimized program does the same thing, it just takes less
 resources to do so. The resource we usually think of when optimizing is runtime
 speed, but it can also be important to reduce memory usage, startup time,
 persistent storage size, or network bandwidth. All physical resources have some
-cost<span class="em">&mdash;</span>even if the cost is mostly in wasted human time<span class="em">&mdash;</span>so optimization work
-often pays off.</p>
-<p>There was a time in the early days of computing that a skilled programmer could
+cost -- even if the cost is mostly in wasted human time -- so optimization work
+often pays off.
+-->
+<p><strong>优化</strong>意味着拿一个已经能工作的应用，改进它的性能。优化后的程序做的事一样，只是耗费更少资源。我们通常想到的资源是运行速度，但降低内存占用、启动时间、持久存储体积或网络带宽同样重要。一切物理资源都有代价——即便代价多半是浪费的人时——所以优化工作往往划得来。</p><!--
+There was a time in the early days of computing that a skilled programmer could
 hold the entire hardware architecture and compiler pipeline in their head and
-understand a program&rsquo;s performance just by thinking real hard. Those days are
+understand a program's performance just by thinking real hard. Those days are
 long gone, separated from the present by microcode, cache lines, branch
 prediction, deep compiler pipelines, and mammoth instruction sets. We like to
-pretend C is a &ldquo;low-level&rdquo; language, but the stack of technology between
-<code>printf("Hello, world!");</code> and a greeting appearing on screen is now miles tall.</p>
-<p>Optimization today is an empirical science. Our program is a border collie
-sprinting through the hardware&rsquo;s obstacle course. If we want her to reach the
-end faster, we can&rsquo;t just sit and ruminate on canine physiology until
-enlightenment strikes. Instead, we need to <em>observe</em> her performance, see where
-she stumbles, and then find faster paths for her to take.</p>
-<p>Much like agility training is particular to one dog and one obstacle course, we
-can&rsquo;t assume that our virtual machine optimizations will make <em>all</em> Lox programs
-run faster on <em>all</em> hardware. Different Lox programs stress different areas of
-the VM, and different architectures have their own strengths and weaknesses.</p>
-<h3><a href="#benchmarks" name="benchmarks"><small>30&#8202;.&#8202;1&#8202;.&#8202;1</small>Benchmarks</a></h3>
-<p>When we add new functionality, we validate correctness by writing tests<span class="em">&mdash;</span>Lox
-programs that use a feature and validate the VM&rsquo;s behavior. Tests pin down
-semantics and ensure we don&rsquo;t break existing features when we add new ones. We
-have similar needs when it comes to performance:</p>
+pretend C is a "low-level" language, but the stack of technology between
+`printf("Hello, world!");` and a greeting appearing on screen is now miles tall.
+-->
+<p>计算早期有那么一段时光：熟练的程序员能把整台硬件架构与编译器流水线装进脑子里，光靠使劲想就能理解程序的性能。那些日子早已远去，中间隔着微码、缓存行、分支预测、深邃的编译器流水线，以及庞大的指令集。我们喜欢假装 C 是“低级”语言，可从 <code>printf("Hello, world!");</code> 到屏幕上出现问候，技术栈如今已高得吓人。</p><!--
+Optimization today is an empirical science. Our program is a border collie
+sprinting through the hardware's obstacle course. If we want her to reach the
+end faster, we can't just sit and ruminate on canine physiology until
+enlightenment strikes. Instead, we need to *observe* her performance, see where
+she stumbles, and then find faster paths for her to take.
+-->
+<p>今天的优化是一门实证科学。我们的程序是一只边境牧羊犬，在硬件的障碍赛道上飞奔。若想让她更快到达终点，不能干坐着琢磨犬类生理学直到顿悟降临。相反，我们需要<em>观察</em>她的表现，看她在何处绊脚，再为她找到更快的路径。</p><!--
+Much like agility training is particular to one dog and one obstacle course, we
+can't assume that our virtual machine optimizations will make *all* Lox programs
+run faster on *all* hardware. Different Lox programs stress different areas of
+the VM, and different architectures have their own strengths and weaknesses.
+-->
+<p>正如敏捷训练针对的是某一只狗、某一条障碍赛道，我们也不能假定虚拟机优化会让<em>所有</em> Lox 程序在<em>所有</em>硬件上都更快。不同的 Lox 程序压迫虚拟机的不同区域，不同架构也各有长短。</p><!--
+-- Benchmarks
+-->
+<h3><a href="#基准测试" name="基准测试"><small>30&#8202;.&#8202;1&#8202;.&#8202;1</small>基准测试</a></h3><!--
+When we add new functionality, we validate correctness by writing tests -- Lox
+programs that use a feature and validate the VM's behavior. Tests pin down
+semantics and ensure we don't break existing features when we add new ones. We
+have similar needs when it comes to performance:
+-->
+<p>添加新功能时，我们靠写测试来验证正确性——那些使用某项特性并校验虚拟机行为的 Lox 程序。测试钉死语义，确保加新功能时不弄坏已有特性。谈到性能，我们也有类似需求：</p><!--
+1.  How do we validate that an optimization *does* improve performance, and by
+    how much?
+
+2.  How do we ensure that other unrelated changes don't *regress* performance?
+-->
 <ol>
 <li>
-<p>How do we validate that an optimization <em>does</em> improve performance, and by
-how much?</p>
+<p>如何验证一项优化<em>确实</em>改进了性能，以及改进了多少？</p>
 </li>
 <li>
-<p>How do we ensure that other unrelated changes don&rsquo;t <em>regress</em> performance?</p>
+<p>如何确保其他无关改动不会让性能<em>回退</em>？</p>
 </li>
-</ol>
-<p>The Lox programs we write to accomplish those goals are <strong>benchmarks</strong>. These
+</ol><!--
+The Lox programs we write to accomplish those goals are **benchmarks**. These
 are carefully crafted programs that stress some part of the language
-implementation. They measure not <em>what</em> the program does, but how <span
-name="much"><em>long</em></span> it takes to do it.</p>
-<aside name="much">
-<p>Most benchmarks measure running time. But, of course, you&rsquo;ll eventually find
+implementation. They measure not *what* the program does, but how <span
+name="much">*long*</span> it takes to do it.
+-->
+<p>为实现这些目标而写的 Lox 程序，就是<strong>基准测试</strong>。它们是精心打造的程序，专门压迫语言实现的某一部分。它们衡量的不是程序做了<em>什么</em>，而是做这件事花了多<span
+name="much"><em>久</em></span>。</p>
+<aside name="much"><!--
+Most benchmarks measure running time. But, of course, you'll eventually find
 yourself needing to write benchmarks that measure memory allocation, how much
-time is spent in the garbage collector, startup time, etc.</p>
-</aside>
-<p>By measuring the performance of a benchmark before and after a change, you can
+time is spent in the garbage collector, startup time, etc.
+-->
+<p>多数基准测试衡量运行时间。但当然，你最终也会需要写衡量内存分配、垃圾回收器耗时、启动时间等等的基准。</p>
+</aside><!--
+By measuring the performance of a benchmark before and after a change, you can
 see what your change does. When you land an optimization, all of the tests
 should behave exactly the same as they did before, but hopefully the benchmarks
-run faster.</p>
-<p>Once you have an entire <span name="js"><em>suite</em></span> of benchmarks, you can
-measure not just <em>that</em> an optimization changes performance, but on which
-<em>kinds</em> of code. Often you&rsquo;ll find that some benchmarks get faster while others
+run faster.
+-->
+<p>在改动前后测量同一基准的性能，就能看见改动带来了什么。落地一项优化时，所有测试的行为应与之前完全一致，但愿基准跑得更快。</p><!--
+Once you have an entire <span name="js">*suite*</span> of benchmarks, you can
+measure not just *that* an optimization changes performance, but on which
+*kinds* of code. Often you'll find that some benchmarks get faster while others
 get slower. Then you have to make hard decisions about what kinds of code your
-language implementation optimizes for.</p>
-<p>The suite of benchmarks you choose to write is a key part of that decision. In
+language implementation optimizes for.
+-->
+<p>一旦你有一整套<span name="js"><em>基准套件</em></span>，就能衡量的不只是优化<em>是否</em>改变了性能，还有它作用于<em>哪类</em>代码。你常会发现有些基准变快、有些变慢。于是你得做出艰难决定：你的语言实现要为哪类代码优化。</p><!--
+The suite of benchmarks you choose to write is a key part of that decision. In
 the same way that your tests encode your choices around what correct behavior
 looks like, your benchmarks are the embodiment of your priorities when it comes
 to performance. They will guide which optimizations you implement, so choose
-your benchmarks carefully, and don&rsquo;t forget to periodically reflect on whether
-they are helping you reach your larger goals.</p>
-<aside name="js">
-<p>In the early proliferation of JavaScript VMs, the first widely used benchmark
+your benchmarks carefully, and don't forget to periodically reflect on whether
+they are helping you reach your larger goals.
+-->
+<p>你选择编写的那套基准，是这一决策的关键部分。正如测试编码了你对“正确行为”的选择，基准则是你在性能优先级上的化身。它们会引导你实现哪些优化，所以要谨慎挑选基准，也别忘了定期反思：它们是否在帮你抵达更大的目标。</p>
+<aside name="js"><!--
+In the early proliferation of JavaScript VMs, the first widely used benchmark
 suite was SunSpider from WebKit. During the browser wars, marketing folks used
 SunSpider results to claim their browser was fastest. That highly incentivized
-VM hackers to optimize to those benchmarks.</p>
-<p>Unfortunately, SunSpider programs often didn&rsquo;t match real-world JavaScript. They
-were mostly microbenchmarks<span class="em">&mdash;</span>tiny toy programs that completed quickly. Those
+VM hackers to optimize to those benchmarks.
+-->
+<p>JavaScript 虚拟机早期井喷时，首个广泛使用的基准套件是 WebKit 的 SunSpider。浏览器大战期间，市场人员拿 SunSpider 成绩宣称自家浏览器最快。这强烈激励虚拟机黑客去为那些基准做优化。</p><!--
+Unfortunately, SunSpider programs often didn't match real-world JavaScript. They
+were mostly microbenchmarks -- tiny toy programs that completed quickly. Those
 benchmarks penalize complex just-in-time compilers that start off slower but get
-<em>much</em> faster once the JIT has had enough time to optimize and re-compile hot
+*much* faster once the JIT has had enough time to optimize and re-compile hot
 code paths. This put VM hackers in the unfortunate position of having to choose
 between making the SunSpider numbers get better, or actually optimizing the
-kinds of programs real users ran.</p>
-<p>Google&rsquo;s V8 team responded by sharing their Octane benchmark suite, which was
+kinds of programs real users ran.
+-->
+<p>不幸的是，SunSpider 程序往往与真实世界的 JavaScript 对不上。它们多半是微基准——很快跑完的小玩具程序。那些基准会惩罚复杂的即时编译器：起步较慢，但一旦 JIT 有足够时间优化并重编译热路径，就会变得<em>快得多</em>。这让虚拟机黑客陷入尴尬：要么把 SunSpider 数字刷好看，要么真正优化真实用户跑的那类程序。</p><!--
+Google's V8 team responded by sharing their Octane benchmark suite, which was
 closer to real-world code at the time. Years later, as JavaScript use patterns
 continued to evolve, even Octane outlived its usefulness. Expect that your
-benchmarks will evolve as your language&rsquo;s ecosystem does.</p>
-<p>Remember, the ultimate goal is to make <em>user programs</em> faster, and benchmarks
-are only a proxy for that.</p>
-</aside>
-<p>Benchmarking is a subtle art. Like tests, you need to balance not overfitting to
+benchmarks will evolve as your language's ecosystem does.
+-->
+<p>Google 的 V8 团队以分享 Octane 基准套件作为回应，它当时更接近真实世界代码。多年后，随着 JavaScript 使用模式继续演变，连 Octane 也过了有用期。可以预期，你的基准会随语言生态一同演进。</p><!--
+Remember, the ultimate goal is to make *user programs* faster, and benchmarks
+are only a proxy for that.
+-->
+<p>记住，终极目标是让<em>用户程序</em>更快，基准只是它的代理。</p>
+</aside><!--
+Benchmarking is a subtle art. Like tests, you need to balance not overfitting to
 your implementation while ensuring that the benchmark does actually tickle the
 code paths that you care about. When you measure performance, you need to
 compensate for variance caused by CPU throttling, caching, and other weird
-hardware and operating system quirks. I won&rsquo;t give you a whole sermon here,
-but treat benchmarking as its own skill that improves with practice.</p>
-<h3><a href="#profiling" name="profiling"><small>30&#8202;.&#8202;1&#8202;.&#8202;2</small>Profiling</a></h3>
-<p>OK, so you&rsquo;ve got a few benchmarks now. You want to make them go faster. Now
-what? First of all, let&rsquo;s assume you&rsquo;ve done all the obvious, easy work. You are
-using the right algorithms and data structures<span class="em">&mdash;</span>or, at least, you aren&rsquo;t using
-ones that are aggressively wrong. I don&rsquo;t consider using a hash table instead of
-a linear search through a huge unsorted array &ldquo;optimization&rdquo; so much as &ldquo;good
-software engineering&rdquo;.</p>
-<p>Since the hardware is too complex to reason about our program&rsquo;s performance from
-first principles, we have to go out into the field. That means <em>profiling</em>. A
-<strong>profiler</strong>, if you&rsquo;ve never used one, is a tool that runs your <span
+hardware and operating system quirks. I won't give you a whole sermon here,
+but treat benchmarking as its own skill that improves with practice.
+-->
+<p>基准测试是一门微妙的艺术。像测试一样，你既要避免对实现过拟合，又要确保基准确实触碰到你关心的代码路径。测量性能时，你需要补偿 CPU 降频、缓存，以及其他古怪的硬件与操作系统怪癖带来的方差。我不会在此布道一整篇，但请把基准测试当作一门随练习而精进的独立技能。</p><!--
+-- Profiling
+-->
+<h3><a href="#性能分析" name="性能分析"><small>30&#8202;.&#8202;1&#8202;.&#8202;2</small>性能分析</a></h3><!--
+OK, so you've got a few benchmarks now. You want to make them go faster. Now
+what? First of all, let's assume you've done all the obvious, easy work. You are
+using the right algorithms and data structures -- or, at least, you aren't using
+ones that are aggressively wrong. I don't consider using a hash table instead of
+a linear search through a huge unsorted array "optimization" so much as "good
+software engineering".
+-->
+<p>好，现在你有了几个基准。你想让它们更快。然后呢？首先，假定你已做完所有显而易见的轻松活。你用的是合适的算法与数据结构——或者至少，没用那些明显错得离谱的。把哈希表换成对巨大无序数组的线性搜索，在我看来不算“优化”，更像是“合格的软件工程”。</p><!--
+Since the hardware is too complex to reason about our program's performance from
+first principles, we have to go out into the field. That means *profiling*. A
+**profiler**, if you've never used one, is a tool that runs your <span
 name="program">program</span> and tracks hardware resource use as the code
 executes. Simple ones show you how much time was spent in each function in your
 program. Sophisticated ones log data cache misses, instruction cache misses,
-branch mispredictions, memory allocations, and all sorts of other metrics.</p>
-<aside name="program">
-<p>&ldquo;Your program&rdquo; here means the Lox VM itself running some <em>other</em> Lox program. We
-are trying to optimize clox, not the user&rsquo;s Lox script. Of course, the choice of
+branch mispredictions, memory allocations, and all sorts of other metrics.
+-->
+<p>硬件太复杂，无法从第一性原理推断程序性能，我们只好下田实地考察。那就是<em>性能分析</em>。<strong>性能分析器</strong>（profiler），若你从未用过，是一种运行你的<span
+name="program">程序</span>并在代码执行时追踪硬件资源使用的工具。简单的会告诉你程序里每个函数花了多少时间。精致的会记录数据缓存未命中、指令缓存未命中、分支误预测、内存分配，以及各种其他指标。</p>
+<aside name="program"><!--
+"Your program" here means the Lox VM itself running some *other* Lox program. We
+are trying to optimize clox, not the user's Lox script. Of course, the choice of
 which Lox program to load into our VM will highly affect which parts of clox get
-stressed, which is why benchmarks are so important.</p>
-<p>A profiler <em>won&rsquo;t</em> show us how much time is spent in each <em>Lox</em> function in the
-script being run. We&rsquo;d have to write our own &ldquo;Lox profiler&rdquo; to do that, which is
-slightly out of scope for this book.</p>
-</aside>
-<p>There are many profilers out there for various operating systems and languages.
-On whatever platform you program, it&rsquo;s worth getting familiar with a decent
-profiler. You don&rsquo;t need to be a master. I have learned things within minutes of
-throwing a program at a profiler that would have taken me <em>days</em> to discover on
-my own through trial and error. Profilers are wonderful, magical tools.</p>
-<h2><a href="#faster-hash-table-probing" name="faster-hash-table-probing"><small>30&#8202;.&#8202;2</small>Faster Hash Table Probing</a></h2>
-<p>Enough pontificating, let&rsquo;s get some performance charts going up and to the
-right. The first optimization we&rsquo;ll do, it turns out, is about the <em>tiniest</em>
-possible change we could make to our VM.</p>
-<p>When I first got the bytecode virtual machine that clox is descended from
+stressed, which is why benchmarks are so important.
+-->
+<p>这里的“你的程序”指的是 Lox 虚拟机本身在跑某个<em>别的</em> Lox 程序。我们要优化的是 clox，不是用户的 Lox 脚本。当然，往虚拟机里装哪段 Lox 程序，会强烈影响 clox 的哪些部分被压住——这正是基准如此重要的原因。</p><!--
+A profiler *won't* show us how much time is spent in each *Lox* function in the
+script being run. We'd have to write our own "Lox profiler" to do that, which is
+slightly out of scope for this book.
+-->
+<p>性能分析器<em>不会</em>告诉我们被跑的脚本里每个<em>Lox</em> 函数花了多少时间。那得自己写一个“Lox 性能分析器”，略超出本书范围。</p>
+</aside><!--
+There are many profilers out there for various operating systems and languages.
+On whatever platform you program, it's worth getting familiar with a decent
+profiler. You don't need to be a master. I have learned things within minutes of
+throwing a program at a profiler that would have taken me *days* to discover on
+my own through trial and error. Profilers are wonderful, magical tools.
+-->
+<p>各种操作系统与语言都有许多性能分析器。无论你在哪块平台上编程，值得熟悉一款像样的分析器。不必成为大师。我把程序扔给分析器几分钟就学到的东西，自己试错可能要花上<em>几天</em>。性能分析器是美妙而神奇的工具。</p><!--
+-- Faster Hash Table Probing
+-->
+<h2><a href="#更快的哈希表探测" name="更快的哈希表探测"><small>30&#8202;.&#8202;2</small>更快的哈希表探测</a></h2><!--
+Enough pontificating, let's get some performance charts going up and to the
+right. The first optimization we'll do, it turns out, is about the *tiniest*
+possible change we could make to our VM.
+-->
+<p>说教够了，让性能曲线往右上爬吧。我们要做的第一项优化，结果竟是对虚拟机能做的<em>最微小</em>改动之一。</p><!--
+When I first got the bytecode virtual machine that clox is descended from
 working, I did what any self-respecting VM hacker would do. I cobbled together a
 couple of benchmarks, fired up a profiler, and ran those scripts through my
 interpreter. In a dynamically typed language like Lox, a large fraction of user
 code is field accesses and method calls, so one of my benchmarks looked
-something like this:</p>
+something like this:
+-->
+<p>当我第一次让 clox 的祖先——那台字节码虚拟机——跑起来时，我做了任何有自尊心的虚拟机黑客都会做的事。拼凑几个基准，拉起性能分析器，把那些脚本扔进解释器。在像 Lox 这样的动态类型语言里，用户代码很大一块是字段访问与方法调用，所以我的一个基准大致长这样：</p>
 <div class="codehilite"><pre>
 <span class="k">class</span> <span class="t">Zoo</span> {
   <span class="i">init</span>() {
@@ -279,55 +343,76 @@ something like this:</p>
 <span class="k">print</span> <span class="i">clock</span>() - <span class="i">start</span>;
 <span class="k">print</span> <span class="i">sum</span>;
 </pre></div>
-<aside name="sum" class="bottom">
-<p>Another thing this benchmark is careful to do is <em>use</em> the result of the code it
+<aside name="sum" class="bottom"><!--
+Another thing this benchmark is careful to do is *use* the result of the code it
 executes. By calculating a rolling sum and printing the result, we ensure the VM
-<em>must</em> execute all that Lox code. This is an important habit. Unlike our simple
+*must* execute all that Lox code. This is an important habit. Unlike our simple
 Lox VM, many compilers do aggressive dead code elimination and are smart enough
-to discard a computation whose result is never used.</p>
-<p>Many a programming language hacker has been impressed by the blazing performance
-of a VM on some benchmark, only to realize that it&rsquo;s because the compiler
-optimized the entire benchmark program away to nothing.</p>
-</aside>
-<p>If you&rsquo;ve never seen a benchmark before, this might seem ludicrous. <em>What</em> is
-going on here? The program itself doesn&rsquo;t intend to <span name="sum">do</span>
+to discard a computation whose result is never used.
+-->
+<p>这个基准还小心翼翼地<em>使用</em>了所执行代码的结果。通过累计滚动求和并打印结果，我们确保虚拟机<em>必须</em>执行那些 Lox 代码。这是个重要习惯。与我们简单的 Lox 虚拟机不同，许多编译器会做激进的死代码消除，聪明到足以丢掉结果从未被用到的计算。</p><!--
+Many a programming language hacker has been impressed by the blazing performance
+of a VM on some benchmark, only to realize that it's because the compiler
+optimized the entire benchmark program away to nothing.
+-->
+<p>不少程序设计语言黑客曾为某台虚拟机在基准上的狂暴性能而惊叹，随后才意识到：那是因为编译器把整个基准程序优化成了空。</p>
+</aside><!--
+If you've never seen a benchmark before, this might seem ludicrous. *What* is
+going on here? The program itself doesn't intend to <span name="sum">do</span>
 anything useful. What it does do is call a bunch of methods and access a bunch
-of fields since those are the parts of the language we&rsquo;re interested in. Fields
+of fields since those are the parts of the language we're interested in. Fields
 and methods live in hash tables, so it takes care to populate at least a <span
-name="more"><em>few</em></span> interesting keys in those tables. That is all wrapped
+name="more">*few*</span> interesting keys in those tables. That is all wrapped
 in a big loop to ensure our profiler has enough execution time to dig in and see
-where the cycles are going.</p>
-<aside name="more">
-<p>If you really want to benchmark hash table performance, you should use many
-tables of different sizes. The six keys we add to each table here aren&rsquo;t even
-enough to get over our hash table&rsquo;s eight-element minimum threshold. But I
-didn&rsquo;t want to throw an enormous benchmark script at you. Feel free to add more
-critters and treats if you like.</p>
-</aside>
-<p>Before I tell you what my profiler showed me, spend a minute taking a few
-guesses. Where in clox&rsquo;s codebase do you think the VM spent most of its time? Is
-there any code we&rsquo;ve written in previous chapters that you suspect is
-particularly slow?</p>
-<p>Here&rsquo;s what I found: Naturally, the function with the greatest inclusive time is
-<code>run()</code>. (<strong>Inclusive time</strong> means the total time spent in some function and all
-other functions it calls<span class="em">&mdash;</span>the total time between when you enter the function
-and when it returns.) Since <code>run()</code> is the main bytecode execution loop, it
-drives everything.</p>
-<p>Inside <code>run()</code>, there are small chunks of time sprinkled in various cases in the
-bytecode switch for common instructions like <code>OP_POP</code>, <code>OP_RETURN</code>, and
-<code>OP_ADD</code>. The big heavy instructions are <code>OP_GET_GLOBAL</code> with 17% of the
-execution time, <code>OP_GET_PROPERTY</code> at 12%, and <code>OP_INVOKE</code> which takes a whopping
-42% of the total running time.</p>
-<p>So we&rsquo;ve got three hotspots to optimize? Actually, no. Because it turns out
+where the cycles are going.
+-->
+<p>若你从未见过基准，这或许显得荒唐。<em>究竟</em>在干什么？程序本身并不打算<span name="sum">做</span>任何有用的事。它实际做的是调用一堆方法、访问一堆字段——因为那正是我们关心的语言部分。字段与方法住在哈希表里，所以它至少往那些表里塞了<span
+name="more"><em>几个</em></span>有趣的键。这一切包在一个大循环里，好让性能分析器有足够执行时间钻进去，看周期花在哪儿。</p>
+<aside name="more"><!--
+If you really want to benchmark hash table performance, you should use many
+tables of different sizes. The six keys we add to each table here aren't even
+enough to get over our hash table's eight-element minimum threshold. But I
+didn't want to throw an enormous benchmark script at you. Feel free to add more
+critters and treats if you like.
+-->
+<p>若你真想基准测试哈希表性能，应当使用许多不同大小的表。我们这里往每张表加的六个键，甚至还没超过哈希表八元素的最小门槛。但我不想朝你扔一份庞大的基准脚本。喜欢的话，尽管加更多小动物和零食。</p>
+</aside><!--
+Before I tell you what my profiler showed me, spend a minute taking a few
+guesses. Where in clox's codebase do you think the VM spent most of its time? Is
+there any code we've written in previous chapters that you suspect is
+particularly slow?
+-->
+<p>在告诉你我的分析器显示了什么之前，花一分钟猜猜。你觉得虚拟机在 clox 代码库里把大部分时间花在哪儿？先前章节写过的代码里，有没有你怀疑特别慢的？</p><!--
+Here's what I found: Naturally, the function with the greatest inclusive time is
+`run()`. (**Inclusive time** means the total time spent in some function and all
+other functions it calls -- the total time between when you enter the function
+and when it returns.) Since `run()` is the main bytecode execution loop, it
+drives everything.
+-->
+<p>我发现的是：自然地，包容时间最大的函数是 <code>run()</code>。（<strong>包容时间</strong>指花在某个函数及其调用的所有其他函数上的总时间——从进入该函数到返回之间的全部时间。）既然 <code>run()</code> 是主字节码执行循环，它驱动一切。</p><!--
+Inside `run()`, there are small chunks of time sprinkled in various cases in the
+bytecode switch for common instructions like `OP_POP`, `OP_RETURN`, and
+`OP_ADD`. The big heavy instructions are `OP_GET_GLOBAL` with 17% of the
+execution time, `OP_GET_PROPERTY` at 12%, and `OP_INVOKE` which takes a whopping
+42% of the total running time.
+-->
+<p>在 <code>run()</code> 内部，字节码 switch 里常见指令如 <code>OP_POP</code>、<code>OP_RETURN</code>、<code>OP_ADD</code> 的各个 case 上洒着小块时间。真正沉重的指令是：<code>OP_GET_GLOBAL</code> 占执行时间的 17%，<code>OP_GET_PROPERTY</code> 占 12%，而 <code>OP_INVOKE</code> 独占总运行时间的 42%，惊人。</p><!--
+So we've got three hotspots to optimize? Actually, no. Because it turns out
 those three instructions spend almost all of their time inside calls to the same
-function: <code>tableGet()</code>. That function claims a whole 72% of the execution time
+function: `tableGet()`. That function claims a whole 72% of the execution time
 (again, inclusive). Now, in a dynamically typed language, we expect to spend a
-fair bit of time looking stuff up in hash tables<span class="em">&mdash;</span>it&rsquo;s sort of the price of
-dynamism. But, still, <em>wow.</em></p>
-<h3><a href="#slow-key-wrapping" name="slow-key-wrapping"><small>30&#8202;.&#8202;2&#8202;.&#8202;1</small>Slow key wrapping</a></h3>
-<p>If you take a look at <code>tableGet()</code>, you&rsquo;ll see it&rsquo;s mostly a wrapper around a
-call to <code>findEntry()</code> where the actual hash table lookup happens. To refresh
-your memory, here it is in full:</p>
+fair bit of time looking stuff up in hash tables -- it's sort of the price of
+dynamism. But, still, *wow.*
+-->
+<p>那么我们有三个热点要优化？其实没有。因为原来这三条指令几乎把全部时间都花在对同一个函数的调用上：<code>tableGet()</code>。该函数独占了整整 72% 的执行时间（同样是包容时间）。在动态类型语言里，我们本来就预期会花不少时间在哈希表里查找——那多少是动态性的代价。可即便如此，<em>哇</em>。</p><!--
+-- Slow key wrapping
+-->
+<h3><a href="#缓慢的键回绕" name="缓慢的键回绕"><small>30&#8202;.&#8202;2&#8202;.&#8202;1</small>缓慢的键回绕</a></h3><!--
+If you take a look at `tableGet()`, you'll see it's mostly a wrapper around a
+call to `findEntry()` where the actual hash table lookup happens. To refresh
+your memory, here it is in full:
+-->
+<p>若你看看 <code>tableGet()</code>，会发现它多半只是包了一层对 <code>findEntry()</code> 的调用——真正的哈希表查找发生在那里。温习一下，完整如下：</p>
 <div class="codehilite"><pre>
 <span class="k">static</span> <span class="t">Entry</span>* <span class="i">findEntry</span>(<span class="t">Entry</span>* <span class="i">entries</span>, <span class="t">int</span> <span class="i">capacity</span>,
                         <span class="t">ObjString</span>* <span class="i">key</span>) {
@@ -352,49 +437,69 @@ your memory, here it is in full:</p>
     <span class="i">index</span> = (<span class="i">index</span> + <span class="n">1</span>) % <span class="i">capacity</span>;
   }
 }
-</pre></div>
-<p>When running that previous benchmark<span class="em">&mdash;</span>on my machine, at least<span class="em">&mdash;</span>the VM spends
-70% of the total execution time on <em>one line</em> in this function. Any guesses as
-to which one? No? It&rsquo;s this:</p>
+</pre></div><!--
+When running that previous benchmark -- on my machine, at least -- the VM spends
+70% of the total execution time on *one line* in this function. Any guesses as
+to which one? No? It's this:
+-->
+<p>跑先前那个基准时——至少在我的机器上——虚拟机把总执行时间的 70% 花在这个函数的<em>一行</em>上。猜猜是哪一行？猜不到？就是这行：</p>
 <div class="codehilite"><pre>
   <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> % <span class="i">capacity</span>;
-</pre></div>
-<p>That pointer dereference isn&rsquo;t the problem. It&rsquo;s the little <code>%</code>. It turns out
-the modulo operator is <em>really</em> slow. Much slower than other <span
-name="division">arithmetic</span> operators. Can we do something better?</p>
-<aside name="division">
-<p>Pipelining makes it hard to talk about the performance of an individual CPU
+</pre></div><!--
+That pointer dereference isn't the problem. It's the little `%`. It turns out
+the modulo operator is *really* slow. Much slower than other <span
+name="division">arithmetic</span> operators. Can we do something better?
+-->
+<p>指针解引用不是问题。问题是那个小小的 <code>%</code>。取模运算符原来<em>真的</em>很慢。比其他<span
+name="division">算术</span>运算符慢得多。我们能做得更好吗？</p>
+<aside name="division"><!--
+Pipelining makes it hard to talk about the performance of an individual CPU
 instruction, but to give you a feel for things, division and modulo are about
-30-50 <em>times</em> slower than addition and subtraction on x86.</p>
-</aside>
-<p>In the general case, it&rsquo;s really hard to re-implement a fundamental arithmetic
-operator in user code in a way that&rsquo;s faster than what the CPU itself can do.
-After all, our C code ultimately compiles down to the CPU&rsquo;s own arithmetic
+30-50 *times* slower than addition and subtraction on x86.
+-->
+<p>流水线让人很难谈论单条 CPU 指令的性能，但给你一个感觉：在 x86 上，除法与取模大约比加减慢 30–50 <em>倍</em>。</p>
+</aside><!--
+In the general case, it's really hard to re-implement a fundamental arithmetic
+operator in user code in a way that's faster than what the CPU itself can do.
+After all, our C code ultimately compiles down to the CPU's own arithmetic
 operations. If there were tricks we could use to go faster, the chip would
-already be using them.</p>
-<p>However, we can take advantage of the fact that we know more about our problem
-than the CPU does. We use modulo here to take a key string&rsquo;s hash code and
-wrap it to fit within the bounds of the table&rsquo;s entry array. That array starts
-out at eight elements and grows by a factor of two each time. We know<span class="em">&mdash;</span>and the
-CPU and C compiler do not<span class="em">&mdash;</span>that our table&rsquo;s size is always a power of two.</p>
-<p>Because we&rsquo;re clever bit twiddlers, we know a faster way to calculate the
-remainder of a number modulo a power of two: <strong>bit masking</strong>. Let&rsquo;s say we want
+already be using them.
+-->
+<p>一般情形下，在用户代码里重新实现一个基本算术运算符，并做得比 CPU 自己更快，真的很难。毕竟我们的 C 代码最终会编译成 CPU 自己的算术运算。若有能更快的技巧，芯片早就在用了。</p><!--
+However, we can take advantage of the fact that we know more about our problem
+than the CPU does. We use modulo here to take a key string's hash code and
+wrap it to fit within the bounds of the table's entry array. That array starts
+out at eight elements and grows by a factor of two each time. We know -- and the
+CPU and C compiler do not -- that our table's size is always a power of two.
+-->
+<p>不过，我们可以利用这一点：我们对问题的了解比 CPU 更多。这里用取模，是把键字符串的哈希码回绕到表项数组的边界内。该数组从八个元素起步，每次按二倍增长。我们知道——而 CPU 与 C 编译器不知道——我们的表大小始终是二的幂。</p><!--
+Because we're clever bit twiddlers, we know a faster way to calculate the
+remainder of a number modulo a power of two: **bit masking**. Let's say we want
 to calculate 229 modulo 64. The answer is 37, which is not particularly apparent
-in decimal, but is clearer when you view those numbers in binary:</p><img src="image/optimization/mask.png" alt="The bit patterns resulting from 229 % 64 = 37 and 229 & 63 = 37." />
-<p>On the left side of the illustration, notice how the result (37) is simply the
+in decimal, but is clearer when you view those numbers in binary:
+-->
+<p>因为我们是聪明的位操作手，我们知道更快的办法来算一个数对二的幂取模的余数：<strong>位掩码</strong>。比方说我们要算 229 对 64 取模。答案是 37，十进制里不太显眼，但用二进制看那些数就清楚了：</p><img src="image/optimization/mask.png" alt="The bit patterns resulting from 229 % 64 = 37 and 229 & 63 = 37." /><!--
+On the left side of the illustration, notice how the result (37) is simply the
 dividend (229) with the highest two bits shaved off? Those two highest bits are
-the bits at or to the left of the divisor&rsquo;s single 1 bit.</p>
-<p>On the right side, we get the same result by taking 229 and bitwise <span
+the bits at or to the left of the divisor's single 1 bit.
+-->
+<p>插图左侧，注意结果（37）不过是被除数（229）剃掉最高两位？那两位最高位，正是除数那个单独的 1 位及其左侧的位。</p><!--
+On the right side, we get the same result by taking 229 and bitwise <span
 class="small-caps">AND</span>-ing it with 63, which is one less than our
 original power of two divisor. Subtracting one from a power of two gives you a
 series of 1 bits. That is exactly the mask we need in order to strip out those
-two leftmost bits.</p>
-<p>In other words, you can calculate a number modulo any power of two by simply
-<span class="small-caps">AND</span>-ing it with that power of two minus one. I&rsquo;m
-not enough of a mathematician to <em>prove</em> to you that this works, but if you
+two leftmost bits.
+-->
+<p>右侧，我们把 229 与 63 做按位 <span
+class="small-caps">AND</span>，得到同样结果；63 比原来的二的幂除数少一。二的幂减一得到一串 1 位。那正是剥掉那两个最左位所需的掩码。</p><!--
+In other words, you can calculate a number modulo any power of two by simply
+<span class="small-caps">AND</span>-ing it with that power of two minus one. I'm
+not enough of a mathematician to *prove* to you that this works, but if you
 think it through, it should make sense. We can replace that slow modulo operator
 with a very fast decrement and bitwise <span class="small-caps">AND</span>. We
-simply change the offending line of code to this:</p>
+simply change the offending line of code to this:
+-->
+<p>换言之，你可以对任意二的幂取模，只需与该二的幂减一做 <span class="small-caps">AND</span>。我还不够数学家到能<em>证明</em>给你看这为什么成立，但你想通了就会觉得合理。我们可以用非常快的减一与按位 <span class="small-caps">AND</span> 替换那缓慢的取模。只需把那行惹事的代码改成这样：</p>
 <div class="codehilite"><pre class="insert-before">
 static Entry* findEntry(Entry* entries, int capacity,
                         ObjString* key) {
@@ -407,16 +512,22 @@ replace 1 line</div>
   Entry* tombstone = NULL;
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>findEntry</em>(), replace 1 line</div>
-
-<p>CPUs love bitwise operators, so it&rsquo;s hard to <span name="sub">improve</span> on that. </p>
-<aside name="sub">
-<p>Another potential improvement is to eliminate the decrement by storing the bit
-mask directly instead of the capacity. In my tests, that didn&rsquo;t make a
+<!--
+CPUs love bitwise operators, so it's hard to <span name="sub">improve</span> on that. 
+-->
+<p>CPU 热爱按位运算符，所以很难再<span name="sub">改进</span>什么。</p>
+<aside name="sub"><!--
+Another potential improvement is to eliminate the decrement by storing the bit
+mask directly instead of the capacity. In my tests, that didn't make a
 difference. Instruction pipelining makes some operations essentially free if the
-CPU is bottlenecked elsewhere.</p>
-</aside>
-<p>Our linear probing search may need to wrap around the end of the array, so there
-is another modulo in <code>findEntry()</code> to update.</p>
+CPU is bottlenecked elsewhere.
+-->
+<p>另一个潜在改进是直接存位掩码而非容量，从而省掉减一。在我的测试里，这没什么差别。若 CPU 瓶颈在别处，指令流水线会让某些操作本质上免费。</p>
+</aside><!--
+Our linear probing search may need to wrap around the end of the array, so there
+is another modulo in `findEntry()` to update.
+-->
+<p>我们的线性探测搜索可能需要从数组末尾回绕，所以 <code>findEntry()</code> 里还有另一处取模要更新。</p>
 <div class="codehilite"><pre class="insert-before">
       // We found the key.
       return entry;
@@ -431,13 +542,17 @@ replace 1 line</div>
   }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>findEntry</em>(), replace 1 line</div>
-
-<p>This line didn&rsquo;t show up in the profiler since most searches don&rsquo;t wrap.</p>
-<p>The <code>findEntry()</code> function has a sister function, <code>tableFindString()</code> that does
+<!--
+This line didn't show up in the profiler since most searches don't wrap.
+-->
+<p>这行没出现在分析器里，因为多数搜索不会回绕。</p><!--
+The `findEntry()` function has a sister function, `tableFindString()` that does
 a hash table lookup for interning strings. We may as well apply the same
 optimizations there too. This function is called only when interning strings,
-which wasn&rsquo;t heavily stressed by our benchmark. But a Lox program that created
-lots of strings might noticeably benefit from this change.</p>
+which wasn't heavily stressed by our benchmark. But a Lox program that created
+lots of strings might noticeably benefit from this change.
+-->
+<p><code>findEntry()</code> 有个姊妹函数 <code>tableFindString()</code>，为字符串驻留做哈希表查找。不妨也在那里施加同样的优化。该函数只在驻留字符串时调用，我们的基准并未重压它。但若某段 Lox 程序创建大量字符串，可能会明显受益于这一改动。</p>
 <div class="codehilite"><pre class="insert-before">
   if (table-&gt;count == 0) return NULL;
 
@@ -451,8 +566,10 @@ replace 1 line</div>
     Entry* entry = &amp;table-&gt;entries[index];
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>tableFindString</em>(), replace 1 line</div>
-
-<p>And also when the linear probing wraps around.</p>
+<!--
+And also when the linear probing wraps around.
+-->
+<p>线性探测回绕时也一样。</p>
 <div class="codehilite"><pre class="insert-before">
       return entry-&gt;key;
     }
@@ -466,194 +583,278 @@ replace 1 line</div>
   }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>tableFindString</em>(), replace 1 line</div>
-
-<p>Let&rsquo;s see if our fixes were worth it. I tweaked that zoological benchmark to
+<!--
+Let's see if our fixes were worth it. I tweaked that zoological benchmark to
 count how many <span name="batch">batches</span> of 10,000 calls it can run in
 ten seconds. More batches equals faster performance. On my machine using the
 unoptimized code, the benchmark gets through 3,192 batches. After this
-optimization, that jumps to 6,249.</p><img src="image/optimization/hash-chart.png" alt="Bar chart comparing the performance before and after the optimization." />
-<p>That&rsquo;s almost exactly twice as much work in the same amount of time. We made the
+optimization, that jumps to 6,249.
+-->
+<p>看看我们的修复是否值得。我改了那个动物园基准，统计十秒内能跑多少个一万次调用的<span name="batch">批次</span>。批次越多，性能越快。在我机器上，未优化代码跑通 3,192 个批次。优化之后，跳到 6,249。</p><img src="image/optimization/hash-chart.png" alt="Bar chart comparing the performance before and after the optimization." /><!--
+That's almost exactly twice as much work in the same amount of time. We made the
 VM twice as fast (usual caveat: on this benchmark). That is a massive win when
 it comes to optimization. Usually you feel good if you can claw a few percentage
 points here or there. Since methods, fields, and global variables are so
 prevalent in Lox programs, this tiny optimization improves performance across
-the board. Almost every Lox program benefits.</p>
-<aside name="batch">
-<p>Our original benchmark fixed the amount of <em>work</em> and then measured the <em>time</em>.
+the board. Almost every Lox program benefits.
+-->
+<p>同样时间内几乎正好干了两倍的活。我们让虚拟机快了一倍（照例免责：在此基准上）。这在优化领域是巨大胜利。通常能抠出几个百分点就很开心了。既然方法、字段与全局变量在 Lox 程序里如此普遍，这点微小优化会全面提升性能。几乎每个 Lox 程序都受益。</p>
+<aside name="batch"><!--
+Our original benchmark fixed the amount of *work* and then measured the *time*.
 Changing the script to count how many batches of calls it can do in ten seconds
 fixes the time and measures the work. For performance comparisons, I like the
-latter measure because the reported number represents <em>speed</em>. You can directly
+latter measure because the reported number represents *speed*. You can directly
 compare the numbers before and after an optimization. When measuring execution
 time, you have to do a little arithmetic to get to a good relative measure of
-performance.</p>
-</aside>
-<p>Now, the point of this section is <em>not</em> that the modulo operator is profoundly
+performance.
+-->
+<p>原先的基准固定<em>工作量</em>再测量<em>时间</em>。改成统计十秒内能完成多少批调用，则固定时间、测量工作量。做性能比较时，我更喜欢后者，因为报告的数字代表<em>速度</em>。你可以在优化前后直接比较数字。测量执行时间时，得做一点算术才能得到好的相对性能度量。</p>
+</aside><!--
+Now, the point of this section is *not* that the modulo operator is profoundly
 evil and you should stamp it out of every program you ever write. Nor is it that
-micro-optimization is a vital engineering skill. It&rsquo;s rare that a performance
-problem has such a narrow, effective solution. We got lucky.</p>
-<p>The point is that we didn&rsquo;t <em>know</em> that the modulo operator was a performance
-drain until our profiler told us so. If we had wandered around our VM&rsquo;s codebase
-blindly guessing at hotspots, we likely wouldn&rsquo;t have noticed it. What I want
+micro-optimization is a vital engineering skill. It's rare that a performance
+problem has such a narrow, effective solution. We got lucky.
+-->
+<p>本节的要点<em>不是</em>取模运算符极度邪恶、你该从写过的每个程序里把它铲除。也不是说微优化是关键工程技能。很少有性能问题能有如此狭窄而有效的解药。我们走运了。</p><!--
+The point is that we didn't *know* that the modulo operator was a performance
+drain until our profiler told us so. If we had wandered around our VM's codebase
+blindly guessing at hotspots, we likely wouldn't have noticed it. What I want
 you to take away from this is how important it is to have a profiler in your
-toolbox.</p>
-<p>To reinforce that point, let&rsquo;s go ahead and run the original benchmark in our
-now-optimized VM and see what the profiler shows us. On my machine, <code>tableGet()</code>
-is still a fairly large chunk of execution time. That&rsquo;s to be expected for a
+toolbox.
+-->
+<p>要点是：在分析器告诉我们之前，我们并不<em>知道</em>取模是性能漏洞。若我们在虚拟机代码库里盲目猜测热点，多半注意不到。我希望你带走的是：工具箱里有一款性能分析器有多重要。</p><!--
+To reinforce that point, let's go ahead and run the original benchmark in our
+now-optimized VM and see what the profiler shows us. On my machine, `tableGet()`
+is still a fairly large chunk of execution time. That's to be expected for a
 dynamically typed language. But it has dropped from 72% of the total execution
-time down to 35%. That&rsquo;s much more in line with what we&rsquo;d like to see and shows
-that our optimization didn&rsquo;t just make the program faster, but made it faster
-<em>in the way we expected</em>. Profilers are as useful for verifying solutions as
-they are for discovering problems.</p>
-<h2><a href="#nan-boxing" name="nan-boxing"><small>30&#8202;.&#8202;3</small>NaN Boxing</a></h2>
-<p>This next optimization has a very different feel. Thankfully, despite the odd
-name, it does not involve punching your grandmother. It&rsquo;s different, but not,
-like, <em>that</em> different. With our previous optimization, the profiler told us
+time down to 35%. That's much more in line with what we'd like to see and shows
+that our optimization didn't just make the program faster, but made it faster
+*in the way we expected*. Profilers are as useful for verifying solutions as
+they are for discovering problems.
+-->
+<p>为强化这一点，让我们在现已优化的虚拟机上再跑原先的基准，看看分析器怎么说。在我机器上，<code>tableGet()</code> 仍占相当大一块执行时间。对动态类型语言来说这在意料之中。但它已从总执行时间的 72% 降到 35%。这更符合我们想看到的，也说明优化不只是让程序更快，而是按我们<em>预期的方式</em>更快。性能分析器验证方案与发现问题一样有用。</p><!--
+-- NaN Boxing
+-->
+<h2><a href="#nan-装箱" name="nan-装箱"><small>30&#8202;.&#8202;3</small>NaN 装箱</a></h2><!--
+This next optimization has a very different feel. Thankfully, despite the odd
+name, it does not involve punching your grandmother. It's different, but not,
+like, *that* different. With our previous optimization, the profiler told us
 where the problem was, and we merely had to use some ingenuity to come up with a
-solution.</p>
-<p>This optimization is more subtle, and its performance effects more scattered
-across the virtual machine. The profiler won&rsquo;t help us come up with this.
+solution.
+-->
+<p>下一项优化手感截然不同。幸好，尽管名字古怪，它并不涉及殴打你的祖母。它不同，但并不是<em>那种</em>不同。上一项优化里，分析器告诉我们问题在哪儿，我们只需一点巧思想出方案。</p><!--
+This optimization is more subtle, and its performance effects more scattered
+across the virtual machine. The profiler won't help us come up with this.
 Instead, it was invented by <span name="someone">someone</span> thinking deeply
-about the lowest levels of machine architecture.</p>
-<aside name="someone">
-<p>I&rsquo;m not sure who first came up with this trick. The earliest source I can find
-is David Gudeman&rsquo;s 1993 paper &ldquo;Representing Type Information in Dynamically
-Typed Languages&rdquo;. Everyone else cites that. But Gudeman himself says the paper
-isn&rsquo;t novel work, but instead &ldquo;gathers together a body of folklore&rdquo;.</p>
-<p>Maybe the inventor has been lost to the mists of time, or maybe it&rsquo;s been
+about the lowest levels of machine architecture.
+-->
+<p>这项优化更微妙，性能影响也更散落在虚拟机各处。分析器帮不了我们想出它。相反，它是由<span name="someone">某人</span>深入思考机器架构最底层而发明的。</p>
+<aside name="someone"><!--
+I'm not sure who first came up with this trick. The earliest source I can find
+is David Gudeman's 1993 paper "Representing Type Information in Dynamically
+Typed Languages". Everyone else cites that. But Gudeman himself says the paper
+isn't novel work, but instead "gathers together a body of folklore".
+-->
+<p>我不确定是谁最先想出这招。我能找到的最早来源是 David Gudeman 1993 年的论文 “Representing Type Information in Dynamically Typed Languages”。别人都引用它。但 Gudeman 自己说，论文并非原创工作，而是“汇集了一堆民间传说”。</p><!--
+Maybe the inventor has been lost to the mists of time, or maybe it's been
 reinvented a number of times. Anyone who ruminates on IEEE 754 long enough
 probably starts thinking about trying to stuff something useful into all those
-unused NaN bits.</p>
-</aside>
-<p>Like the heading says, this optimization is called <strong>NaN boxing</strong> or sometimes
-<strong>NaN tagging</strong>. Personally I like the latter name because &ldquo;boxing&rdquo; tends to imply
+unused NaN bits.
+-->
+<p>或许发明者已湮没在时间迷雾里，或许它被多次重新发明。凡是对 IEEE 754 沉思够久的人，大概都会开始想：能不能往那些未用的 NaN 位里塞点有用的东西。</p>
+</aside><!--
+Like the heading says, this optimization is called **NaN boxing** or sometimes
+**NaN tagging**. Personally I like the latter name because "boxing" tends to imply
 some kind of heap-allocated representation, but the former seems to be the more
-widely used term. This technique changes how we represent values in the VM.</p>
-<p>On a 64-bit machine, our Value type takes up 16 bytes. The struct has two
+widely used term. This technique changes how we represent values in the VM.
+-->
+<p>如标题所言，这项优化叫做 <strong>NaN 装箱</strong>（NaN boxing），有时也叫 <strong>NaN 标记</strong>（NaN tagging）。我个人更喜欢后者，因为“装箱”往往暗示某种堆分配表示，但前者似乎用得更广。这项技术改变我们在虚拟机里表示值的方式。</p><!--
+On a 64-bit machine, our Value type takes up 16 bytes. The struct has two
 fields, a type tag and a union for the payload. The largest fields in the union
 are an Obj pointer and a double, which are both 8 bytes. To keep the union field
-aligned to an 8-byte boundary, the compiler adds padding after the tag too:</p><img src="image/optimization/union.png" alt="Byte layout of the 16-byte tagged union Value." />
-<p>That&rsquo;s pretty big. If we could cut that down, then the VM could pack more values
+aligned to an 8-byte boundary, the compiler adds padding after the tag too:
+-->
+<p>在 64 位机器上，我们的 Value 类型占 16 字节。结构体有两个字段：类型标签，以及载荷的联合。联合里最大的字段是 Obj 指针与 double，都是 8 字节。为让联合字段对齐到 8 字节边界，编译器在标签后也加了填充：</p><img src="image/optimization/union.png" alt="Byte layout of the 16-byte tagged union Value." /><!--
+That's pretty big. If we could cut that down, then the VM could pack more values
 into the same amount of memory. Most computers have plenty of RAM these days, so
-the direct memory savings aren&rsquo;t a huge deal. But a smaller representation means
+the direct memory savings aren't a huge deal. But a smaller representation means
 more Values fit in a cache line. That means fewer cache misses, which affects
-<em>speed</em>.</p>
-<p>If Values need to be aligned to their largest payload size, and a Lox number or
+*speed*.
+-->
+<p>这相当大。若能砍小，虚拟机就能在同样多内存里塞进更多值。如今多数计算机有足够 RAM，直接省内存不是大事。但更小的表示意味着更多 Value 能塞进一条缓存行。那意味着更少的缓存未命中，从而影响<em>速度</em>。</p><!--
+If Values need to be aligned to their largest payload size, and a Lox number or
 Obj pointer needs a full 8 bytes, how can we get any smaller? In a dynamically
 typed language like Lox, each value needs to carry not just its payload, but
-enough additional information to determine the value&rsquo;s type at runtime. If a Lox
+enough additional information to determine the value's type at runtime. If a Lox
 number is already using the full 8 bytes, where could we squirrel away a couple
-of extra bits to tell the runtime &ldquo;this is a number&rdquo;?</p>
-<p>This is one of the perennial problems for dynamic language hackers. It
-particularly bugs them because statically typed languages don&rsquo;t generally have
+of extra bits to tell the runtime "this is a number"?
+-->
+<p>若 Value 必须按最大载荷尺寸对齐，而 Lox 数字或 Obj 指针需要完整 8 字节，我们怎能再小？在像 Lox 这样的动态类型语言里，每个值不仅要带载荷，还要带足够额外信息以便运行时判定类型。若 Lox 数字已用满 8 字节，我们还能往哪儿藏几位额外比特，告诉运行时“这是个数字”？</p><!--
+This is one of the perennial problems for dynamic language hackers. It
+particularly bugs them because statically typed languages don't generally have
 this problem. The type of each value is known at compile time, so no extra
 memory is needed at runtime to track it. When your C compiler compiles a 32-bit
-int, the resulting variable gets <em>exactly</em> 32 bits of storage.</p>
-<p>Dynamic language folks hate losing ground to the static camp, so they&rsquo;ve come up
+int, the resulting variable gets *exactly* 32 bits of storage.
+-->
+<p>这是动态语言黑客的永恒难题之一。尤其让他们烦的是，静态类型语言通常没有这个问题。每个值的类型在编译期已知，运行时无需额外内存来追踪。当你的 C 编译器编译一个 32 位 int 时，得到的变量正好得到<em>恰好</em> 32 位存储。</p><!--
+Dynamic language folks hate losing ground to the static camp, so they've come up
 with a number of very clever ways to pack type information and a payload into a
-small number of bits. NaN boxing is one of those. It&rsquo;s a particularly good fit
+small number of bits. NaN boxing is one of those. It's a particularly good fit
 for languages like JavaScript and Lua, where all numbers are double-precision
-floating point. Lox is in that same boat.</p>
-<h3><a href="#what-is-(and-is-not)-a-number" name="what-is-(and-is-not)-a-number"><small>30&#8202;.&#8202;3&#8202;.&#8202;1</small>What is (and is not) a number?</a></h3>
-<p>Before we start optimizing, we need to really understand how our friend the CPU
+floating point. Lox is in that same boat.
+-->
+<p>动态语言一派讨厌输给静态阵营，于是想出许多极巧妙的办法，把类型信息与载荷塞进少量比特。NaN 装箱就是其中之一。它对 JavaScript、Lua 这类所有数字都是双精度浮点的语言尤其合适。Lox 也在同一条船上。</p><!--
+-- What is (and is not) a number?
+-->
+<h3><a href="#什么是（以及不是）数字？" name="什么是（以及不是）数字？"><small>30&#8202;.&#8202;3&#8202;.&#8202;1</small>什么是（以及不是）数字？</a></h3><!--
+Before we start optimizing, we need to really understand how our friend the CPU
 represents floating-point numbers. Almost all machines today use the same
-scheme, encoded in the venerable scroll <a href="https://en.wikipedia.org/wiki/IEEE_754">IEEE 754</a>, known to mortals as the
-&ldquo;IEEE Standard for Floating-Point Arithmetic&rdquo;.</p>
-<p>In the eyes of your computer, a <span name="hyphen">64-bit</span>,
-double-precision, IEEE floating-point number looks like this:</p>
-<aside name="hyphen">
-<p>That&rsquo;s a lot of hyphens for one sentence.</p>
-</aside><img src="image/optimization/double.png" alt="Bit representation of an IEEE 754 double." />
+scheme, encoded in the venerable scroll [IEEE 754][754], known to mortals as the
+"IEEE Standard for Floating-Point Arithmetic".
+-->
+<p>开始优化之前，我们需要真正理解朋友 CPU 如何表示浮点数。如今几乎所有机器都用同一套方案，编码在那卷古老卷轴 <a href="https://en.wikipedia.org/wiki/IEEE_754">IEEE 754</a> 里，凡人以“IEEE 浮点算术标准”知之。</p><!--
+In the eyes of your computer, a <span name="hyphen">64-bit</span>,
+double-precision, IEEE floating-point number looks like this:
+-->
+<p>在你的计算机眼里，一个<span name="hyphen">64 位</span>、双精度的 IEEE 浮点数长这样：</p>
+<aside name="hyphen"><!--
+That's a lot of hyphens for one sentence.
+-->
+<p>一句里连字符可真多。</p>
+</aside><img src="image/optimization/double.png" alt="Bit representation of an IEEE 754 double." /><!--
+*   Starting from the right, the first 52 bits are the **fraction**,
+    **mantissa**, or **significand** bits. They represent the significant digits
+    of the number, as a binary integer.
+
+*   Next to that are 11 **exponent** bits. These tell you how far the mantissa
+    is shifted away from the decimal (well, binary) point.
+
+*   The highest bit is the <span name="sign">**sign bit**</span>, which
+    indicates whether the number is positive or negative.
+-->
 <ul>
 <li>
-<p>Starting from the right, the first 52 bits are the <strong>fraction</strong>,
-<strong>mantissa</strong>, or <strong>significand</strong> bits. They represent the significant digits
-of the number, as a binary integer.</p>
+<p>从右起，前 52 位是<strong>小数</strong>（fraction）、<strong>尾数</strong>（mantissa）或<strong>有效数</strong>（significand）位。它们以二进制整数表示该数的有效数字。</p>
 </li>
 <li>
-<p>Next to that are 11 <strong>exponent</strong> bits. These tell you how far the mantissa
-is shifted away from the decimal (well, binary) point.</p>
+<p>旁边是 11 位<strong>指数</strong>（exponent）。它们告诉你尾数相对十进制（嗯，二进制）小数点偏移多远。</p>
 </li>
 <li>
-<p>The highest bit is the <span name="sign"><strong>sign bit</strong></span>, which
-indicates whether the number is positive or negative.</p>
+<p>最高位是<span name="sign"><strong>符号位</strong></span>，表明该数是正是负。</p>
 </li>
-</ul>
-<p>I know that&rsquo;s a little vague, but this chapter isn&rsquo;t a deep dive on
+</ul><!--
+I know that's a little vague, but this chapter isn't a deep dive on
 floating point representation. If you want to know how the exponent and mantissa
 play together, there are already better explanations out there than I could
-write.</p>
-<aside name="sign">
-<p>Since the sign bit is always present, even if the number is zero, that implies
-that &ldquo;positive zero&rdquo; and &ldquo;negative zero&rdquo; have different bit representations, and
-indeed, IEEE 754 does distinguish those.</p>
-</aside>
-<p>The important part for our purposes is that the spec carves out a special case
+write.
+-->
+<p>我知道这有点含糊，但本章不是浮点表示的深潜。若想知道指数与尾数如何配合，外面已有比我写得更好的解释。</p>
+<aside name="sign"><!--
+Since the sign bit is always present, even if the number is zero, that implies
+that "positive zero" and "negative zero" have different bit representations, and
+indeed, IEEE 754 does distinguish those.
+-->
+<p>既然符号位始终存在，即便数字是零，也意味着“正零”与“负零”有不同的位表示；的确，IEEE 754 区分它们。</p>
+</aside><!--
+The important part for our purposes is that the spec carves out a special case
 exponent. When all of the exponent bits are set, then instead of just
 representing a really big number, the value has a different meaning. These
-values are &ldquo;Not a Number&rdquo; (hence, <strong>NaN</strong>) values. They represent concepts like
-infinity or the result of division by zero.</p>
-<p><em>Any</em> double whose exponent bits are all set is a NaN, regardless of the
-mantissa bits. That means there&rsquo;s lots and lots of <em>different</em> NaN bit patterns.
+values are "Not a Number" (hence, **NaN**) values. They represent concepts like
+infinity or the result of division by zero.
+-->
+<p>对我们而言，重要的是规范为指数划出了一种特殊情形。当所有指数位都置位时，值不再只是表示一个特别大的数，而是有不同含义。这些值是“非数字”（故称 <strong>NaN</strong>）。它们表示无穷，或除以零的结果之类概念。</p><!--
+*Any* double whose exponent bits are all set is a NaN, regardless of the
+mantissa bits. That means there's lots and lots of *different* NaN bit patterns.
 IEEE 754 divides those into two categories. Values where the highest mantissa
-bit is 0 are called <strong>signalling NaNs</strong>, and the others are <strong>quiet NaNs</strong>.
+bit is 0 are called **signalling NaNs**, and the others are **quiet NaNs**.
 Signalling NaNs are intended to be the result of erroneous computations, like
 division by zero. A chip <span name="abort">may</span> detect when one of these
 values is produced and abort a program completely. They may self-destruct if you
-try to read one.</p>
-<aside name="abort">
-<p>I don&rsquo;t know if any CPUs actually <em>do</em> trap signalling NaNs and abort. The spec
-just says they <em>could</em>.</p>
-</aside>
-<p>Quiet NaNs are supposed to be safer to use. They don&rsquo;t represent useful numeric
-values, but they should at least not set your hand on fire if you touch them.</p>
-<p>Every double with all of its exponent bits set and its highest mantissa bit set
-is a quiet NaN. That leaves 52 bits unaccounted for. We&rsquo;ll avoid one of those so
-that we don&rsquo;t step on Intel&rsquo;s &ldquo;QNaN Floating-Point Indefinite&rdquo; value, leaving us
-51 bits. Those remaining bits can be anything. We&rsquo;re talking
-2,251,799,813,685,248 unique quiet NaN bit patterns.</p><img src="image/optimization/nan.png" alt="The bits in a double that make it a quiet NaN." />
-<p>This means a 64-bit double has enough room to store all of the various different
-numeric floating-point values and <em>also</em> has room for another 51 bits of data
-that we can use however we want. That&rsquo;s plenty of room to set aside a couple of
-bit patterns to represent Lox&rsquo;s <code>nil</code>, <code>true</code>, and <code>false</code> values. But what
-about Obj pointers? Don&rsquo;t pointers need a full 64 bits too?</p>
-<p>Fortunately, we have another trick up our other sleeve. Yes, technically
+try to read one.
+-->
+<p><em>任何</em>指数位全置位的 double 都是 NaN，与尾数位无关。这意味着有许许多多<em>不同的</em> NaN 位模式。IEEE 754 把它们分成两类。最高尾数位为 0 的叫<strong>信令 NaN</strong>（signalling NaN），其余叫<strong>安静 NaN</strong>（quiet NaN）。信令 NaN 本意是错误计算的结果，比如除以零。芯片<span name="abort">可能</span>在产生这类值时检测到并彻底中止程序。你若试图读一个，它们还可能自爆。</p>
+<aside name="abort"><!--
+I don't know if any CPUs actually *do* trap signalling NaNs and abort. The spec
+just says they *could*.
+-->
+<p>我不知道是否有 CPU 真的<em>会</em>捕获信令 NaN 并中止。规范只是说它们<em>可以</em>。</p>
+</aside><!--
+Quiet NaNs are supposed to be safer to use. They don't represent useful numeric
+values, but they should at least not set your hand on fire if you touch them.
+-->
+<p>安静 NaN 理应更安全。它们不表示有用的数值，但至少不该一碰就让你的手着火。</p><!--
+Every double with all of its exponent bits set and its highest mantissa bit set
+is a quiet NaN. That leaves 52 bits unaccounted for. We'll avoid one of those so
+that we don't step on Intel's "QNaN Floating-Point Indefinite" value, leaving us
+51 bits. Those remaining bits can be anything. We're talking
+2,251,799,813,685,248 unique quiet NaN bit patterns.
+-->
+<p>每个指数位全置位且最高尾数位也置位的 double 都是安静 NaN。还剩 52 位未交代。我们会避开其中一位，以免踩到 Intel 的 “QNaN Floating-Point Indefinite” 值，于是剩下 51 位。那些剩余位可以是任意内容。我们说的是 2,251,799,813,685,248 种独特的安静 NaN 位模式。</p><img src="image/optimization/nan.png" alt="The bits in a double that make it a quiet NaN." /><!--
+This means a 64-bit double has enough room to store all of the various different
+numeric floating-point values and *also* has room for another 51 bits of data
+that we can use however we want. That's plenty of room to set aside a couple of
+bit patterns to represent Lox's `nil`, `true`, and `false` values. But what
+about Obj pointers? Don't pointers need a full 64 bits too?
+-->
+<p>这意味着一个 64 位 double 有足够空间存放各种不同的浮点数值，<em>还</em>有另外 51 位数据空间可随意使用。足够留出几种位模式来表示 Lox 的 <code>nil</code>、<code>true</code> 与 <code>false</code>。可 Obj 指针呢？指针不也需要完整 64 位吗？</p><!--
+Fortunately, we have another trick up our other sleeve. Yes, technically
 pointers on a 64-bit architecture are 64 bits. But, no architecture I know of
 actually uses that entire address space. Instead, most widely used chips today
 only ever use the low <span name="48">48</span> bits. The remaining 16 bits are
-either unspecified or always zero.</p>
-<aside name="48">
-<p>48 bits is enough to address 262,144 gigabytes of memory. Modern operating
-systems also give each process its own address space, so that should be plenty.</p>
-</aside>
-<p>If we&rsquo;ve got 51 bits, we can stuff a 48-bit pointer in there with three bits to
+either unspecified or always zero.
+-->
+<p>幸好，另一只袖子里还有一招。是的，技术上 64 位架构上的指针是 64 位。但我所知的架构都没有真用满整个地址空间。相反，当今多数广泛使用的芯片只使用低 <span name="48">48</span> 位。其余 16 位要么未指定，要么始终为零。</p>
+<aside name="48"><!--
+48 bits is enough to address 262,144 gigabytes of memory. Modern operating
+systems also give each process its own address space, so that should be plenty.
+-->
+<p>48 位足以寻址 262,144 GB 内存。现代操作系统还给每个进程独立地址空间，应该绰绰有余。</p>
+</aside><!--
+If we've got 51 bits, we can stuff a 48-bit pointer in there with three bits to
 spare. Those three bits are just enough to store tiny type tags to distinguish
-between <code>nil</code>, Booleans, and Obj pointers.</p>
-<p>That&rsquo;s NaN boxing. Within a single 64-bit double, you can store all of the
+between `nil`, Booleans, and Obj pointers.
+-->
+<p>若有 51 位，就能塞进一个 48 位指针，还剩三位。那三位刚好够存微型类型标签，以区分 <code>nil</code>、布尔与 Obj 指针。</p><!--
+That's NaN boxing. Within a single 64-bit double, you can store all of the
 different floating-point numeric values, a pointer, or any of a couple of other
 special sentinel values. Half the memory usage of our current Value struct,
-while retaining all of the fidelity.</p>
-<p>What&rsquo;s particularly nice about this representation is that there is no need to
-<em>convert</em> a numeric double value into a &ldquo;boxed&rdquo; form. Lox numbers <em>are</em> just
-normal, 64-bit doubles. We still need to <em>check</em> their type before we use them,
-since Lox is dynamically typed, but we don&rsquo;t need to do any bit shifting or
-pointer indirection to go from &ldquo;value&rdquo; to &ldquo;number&rdquo;.</p>
-<p>For the other value types, there is a conversion step, of course. But,
+while retaining all of the fidelity.
+-->
+<p>这就是 NaN 装箱。在单个 64 位 double 里，你可以存放所有不同的浮点数值、一个指针，或若干其他特殊哨兵值。内存占用是当前 Value 结构体的一半，保真度却全部保留。</p><!--
+What's particularly nice about this representation is that there is no need to
+*convert* a numeric double value into a "boxed" form. Lox numbers *are* just
+normal, 64-bit doubles. We still need to *check* their type before we use them,
+since Lox is dynamically typed, but we don't need to do any bit shifting or
+pointer indirection to go from "value" to "number".
+-->
+<p>这种表示特别好的一点是：无需把数值 double <em>转换</em>成“装箱”形式。Lox 数字<em>就是</em>普通的 64 位 double。我们使用前仍需<em>检查</em>类型，因为 Lox 是动态类型的，但从“值”到“数字”不必做任何位移或指针间接。</p><!--
+For the other value types, there is a conversion step, of course. But,
 fortunately, our VM hides all of the mechanism to go from values to raw types
 behind a handful of macros. Rewrite those to implement NaN boxing, and the rest
-of the VM should just work.</p>
-<h3><a href="#conditional-support" name="conditional-support"><small>30&#8202;.&#8202;3&#8202;.&#8202;2</small>Conditional support</a></h3>
-<p>I know the details of this new representation aren&rsquo;t clear in your head yet.
-Don&rsquo;t worry, they will crystallize as we work through the implementation. Before
-we get to that, we&rsquo;re going to put some compile-time scaffolding in place.</p>
-<p>For our previous optimization, we rewrote the previous slow code and called it
+of the VM should just work.
+-->
+<p>对其余值类型，当然有转换步骤。但幸好，虚拟机把从值到原始类型的全部机制藏在少数宏后面。重写那些宏以实现 NaN 装箱，虚拟机其余部分应当就能直接工作。</p><!--
+-- Conditional support
+-->
+<h3><a href="#条件支持" name="条件支持"><small>30&#8202;.&#8202;3&#8202;.&#8202;2</small>条件支持</a></h3><!--
+I know the details of this new representation aren't clear in your head yet.
+Don't worry, they will crystallize as we work through the implementation. Before
+we get to that, we're going to put some compile-time scaffolding in place.
+-->
+<p>我知道这种新表示的细节在你脑子里还不清晰。别担心，随着我们推进实现，它们会结晶成形。在那之前，先搭一些编译期脚手架。</p><!--
+For our previous optimization, we rewrote the previous slow code and called it
 done. This one is a little different. NaN boxing relies on some very low-level
 details of how a chip represents floating-point numbers and pointers. It
-<em>probably</em> works on most CPUs you&rsquo;re likely to encounter, but you can never be
-totally sure.</p>
-<p>It would suck if our VM completely lost support for an architecture just because
-of its value representation. To avoid that, we&rsquo;ll maintain support for <em>both</em>
+*probably* works on most CPUs you're likely to encounter, but you can never be
+totally sure.
+-->
+<p>上一项优化里，我们重写了慢代码就完事。这一项略有不同。NaN 装箱依赖芯片如何表示浮点数与指针的一些非常底层的细节。它<em>大概</em>在你可能遇到的多数 CPU 上都能工作，但你永远无法完全确定。</p><!--
+It would suck if our VM completely lost support for an architecture just because
+of its value representation. To avoid that, we'll maintain support for *both*
 the old tagged union implementation of Value and the new NaN-boxed form. We
-select which representation we want at compile time using this flag:</p>
+select which representation we want at compile time using this flag:
+-->
+<p>若虚拟机只因值表示就彻底失去对某架构的支持，那就糟了。为避免如此，我们会同时维持对<em>两种</em>表示的支持：旧的带标签联合 Value，以及新的 NaN 装箱形式。编译期用这个标志选择想要的表示：</p>
 <div class="codehilite"><pre class="insert-before">
 #include &lt;stdint.h&gt;
 
@@ -664,14 +865,18 @@ select which representation we want at compile time using this flag:</p>
 #define DEBUG_PRINT_CODE
 </pre></div>
 <div class="source-file-narrow"><em>common.h</em></div>
-
-<p>If that&rsquo;s defined, the VM uses the new form. Otherwise, it reverts to the old
+<!--
+If that's defined, the VM uses the new form. Otherwise, it reverts to the old
 style. The few pieces of code that care about the details of the value
-representation<span class="em">&mdash;</span>mainly the handful of macros for wrapping and unwrapping
-Values<span class="em">&mdash;</span>vary based on whether this flag is set. The rest of the VM can
-continue along its merry way.</p>
-<p>Most of the work happens in the &ldquo;value&rdquo; module where we add a section for the
-new type.</p>
+representation -- mainly the handful of macros for wrapping and unwrapping
+Values -- vary based on whether this flag is set. The rest of the VM can
+continue along its merry way.
+-->
+<p>若定义了它，虚拟机用新形式；否则回退到旧风格。少数关心值表示细节的代码——主要是包装与解包 Value 的那几个宏——会随该标志是否设置而变化。虚拟机其余部分可以继续自得其乐。</p><!--
+Most of the work happens in the "value" module where we add a section for the
+new type.
+-->
+<p>大部分工作发生在 “value” 模块，我们为新类型加一节。</p>
 <div class="codehilite"><pre class="insert-before">
 typedef struct ObjString ObjString;
 
@@ -687,14 +892,18 @@ typedef struct ObjString ObjString;
 typedef enum {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>When NaN boxing is enabled, the actual type of a Value is a flat, unsigned
+<!--
+When NaN boxing is enabled, the actual type of a Value is a flat, unsigned
 64-bit integer. We could use double instead, which would make the macros for
 dealing with Lox numbers a little simpler. But all of the other macros need to
 do bitwise operations and uint64_t is a much friendlier type for that. Outside
-of this module, the rest of the VM doesn&rsquo;t really care one way or the other.</p>
-<p>Before we start re-implementing those macros, we close the <code>#else</code> branch of the
-<code>#ifdef</code> at the end of the definitions for the old representation.</p>
+of this module, the rest of the VM doesn't really care one way or the other.
+-->
+<p>启用 NaN 装箱时，Value 的实际类型是一个扁平的无符号 64 位整数。我们本可用 double，那样处理 Lox 数字的宏会简单一点。但其余所有宏都需要做按位运算，uint64_t 对此友好得多。在此模块之外，虚拟机其余部分其实并不在乎用哪种。</p><!--
+Before we start re-implementing those macros, we close the `#else` branch of the
+`#ifdef` at the end of the definitions for the old representation.
+-->
+<p>开始重实现那些宏之前，我们在旧表示定义的末尾关闭 <code>#ifdef</code> 的 <code>#else</code> 分支。</p>
 <div class="codehilite"><pre class="insert-before">
 #define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
 </pre><div class="source-file"><em>value.h</em></div>
@@ -706,40 +915,57 @@ of this module, the rest of the VM doesn&rsquo;t really care one way or the othe
 typedef struct {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>Our remaining task is simply to fill in that first <code>#ifdef</code> section with new
-implementations of all the stuff already in the <code>#else</code> side. We&rsquo;ll work through
-it one value type at a time, from easiest to hardest.</p>
-<h3><a href="#numbers" name="numbers"><small>30&#8202;.&#8202;3&#8202;.&#8202;3</small>Numbers</a></h3>
-<p>We&rsquo;ll start with numbers since they have the most direct representation under
-NaN boxing. To &ldquo;convert&rdquo; a C double to a NaN-boxed clox Value, we don&rsquo;t need to
-touch a single bit<span class="em">&mdash;</span>the representation is exactly the same. But we do need to
+<!--
+Our remaining task is simply to fill in that first `#ifdef` section with new
+implementations of all the stuff already in the `#else` side. We'll work through
+it one value type at a time, from easiest to hardest.
+-->
+<p>剩下的任务只是用新实现对那个 <code>#ifdef</code> 第一节填满 <code>#else</code> 侧已有的全部东西。我们会按值类型逐个推进，从最易到最难。</p><!--
+-- Numbers
+-->
+<h3><a href="#数字" name="数字"><small>30&#8202;.&#8202;3&#8202;.&#8202;3</small>数字</a></h3><!--
+We'll start with numbers since they have the most direct representation under
+NaN boxing. To "convert" a C double to a NaN-boxed clox Value, we don't need to
+touch a single bit -- the representation is exactly the same. But we do need to
 convince our C compiler of that fact, which we made harder by defining Value to
-be uint64_t.</p>
-<p>We need to get the compiler to take a set of bits that it thinks are a double
-and use those same bits as a uint64_t, or vice versa. This is called <strong>type
-punning</strong>. C and C++ programmers have been doing this since the days of bell
+be uint64_t.
+-->
+<p>我们从数字开始，因为在 NaN 装箱下它们的表示最直接。把 C 的 double “转换”成 NaN 装箱的 clox Value，我们不必动任何一个比特——表示完全一样。但我们得说服 C 编译器接受这一事实；而把 Value 定义成 uint64_t，让这件事更难了。</p><!--
+We need to get the compiler to take a set of bits that it thinks are a double
+and use those same bits as a uint64_t, or vice versa. This is called **type
+punning**. C and C++ programmers have been doing this since the days of bell
 bottoms and 8-tracks, but the language specifications have <span
 name="hesitate">hesitated</span> to say which of the many ways to do this is
-officially sanctioned.</p>
-<aside name="hesitate" class="bottom">
-<p>Spec authors don&rsquo;t like type punning because it makes optimization harder. A key
-optimization technique is reordering instructions to fill the CPU&rsquo;s execution
-pipelines. A compiler can reorder code only when doing so doesn&rsquo;t have a
-user-visible effect, obviously.</p>
-<p>Pointers make that harder. If two pointers point to the same value, then a write
+officially sanctioned.
+-->
+<p>我们需要让编译器把一组它以为是 double 的比特，当作 uint64_t 来用，或反过来。这叫做<strong>类型双关</strong>（type punning）。C 与 C++ 程序员从喇叭裤与八轨磁带的年代就在这么干，但语言规范一直<span
+name="hesitate">犹豫</span>不肯说众多做法里哪一种获官方认可。</p>
+<aside name="hesitate" class="bottom"><!--
+Spec authors don't like type punning because it makes optimization harder. A key
+optimization technique is reordering instructions to fill the CPU's execution
+pipelines. A compiler can reorder code only when doing so doesn't have a
+user-visible effect, obviously.
+-->
+<p>规范作者不喜欢类型双关，因为它让优化更难。一项关键优化技术是重排指令以填满 CPU 执行流水线。显然，编译器只有在重排没有用户可见效果时才能这么做。</p><!--
+Pointers make that harder. If two pointers point to the same value, then a write
 through one and a read through the other cannot be reordered. But what about two
-pointers of <em>different</em> types? If those could point to the same object, then
-basically <em>any</em> two pointers could be aliases to the same value. That
-drastically limits the amount of code the compiler is free to rearrange.</p>
-<p>To avoid that, compilers want to assume <strong>strict aliasing</strong><span class="em">&mdash;</span>pointers of
+pointers of *different* types? If those could point to the same object, then
+basically *any* two pointers could be aliases to the same value. That
+drastically limits the amount of code the compiler is free to rearrange.
+-->
+<p>指针让事情更难。若两个指针指向同一值，则通过一个写入、通过另一个读取不能重排。可若是<em>不同</em>类型的两个指针呢？若它们可以指向同一对象，那么基本上<em>任意</em>两个指针都可能是同一值的别名。这大幅限制了编译器可自由重排的代码量。</p><!--
+To avoid that, compilers want to assume **strict aliasing** -- pointers of
 incompatible types cannot point to the same value. Type punning, by nature,
-breaks that assumption.</p>
-</aside>
-<p>I know one way to convert a <code>double</code> to <code>Value</code> and back that I believe is
-supported by both the C and C++ specs. Unfortunately, it doesn&rsquo;t fit in a single
+breaks that assumption.
+-->
+<p>为避免如此，编译器想假定<strong>严格别名</strong>（strict aliasing）——不兼容类型的指针不能指向同一值。类型双关本质上打破了该假定。</p>
+</aside><!--
+I know one way to convert a `double` to `Value` and back that I believe is
+supported by both the C and C++ specs. Unfortunately, it doesn't fit in a single
 expression, so the conversion macros have to call out to helper functions.
-Here&rsquo;s the first macro:</p>
+Here's the first macro:
+-->
+<p>我知道一种把 <code>double</code> 转成 <code>Value</code> 再转回来的办法，我相信 C 与 C++ 规范都支持。不幸的是，它放不进单个表达式，所以转换宏得调用辅助函数。第一个宏如下：</p>
 <div class="codehilite"><pre class="insert-before">
 typedef uint64_t Value;
 </pre><div class="source-file"><em>value.h</em></div>
@@ -751,8 +977,10 @@ typedef uint64_t Value;
 #else
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>That macro passes the double here:</p>
+<!--
+That macro passes the double here:
+-->
+<p>该宏把 double 传到这里：</p>
 <div class="codehilite"><pre class="insert-before">
 #define NUMBER_VAL(num) numToValue(num)
 </pre><div class="source-file"><em>value.h</em></div>
@@ -768,15 +996,19 @@ typedef uint64_t Value;
 #else
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>I know, weird, right? The way to treat a series of bytes as having a different
-type without changing their value at all is <code>memcpy()</code>? This looks horrendously
+<!--
+I know, weird, right? The way to treat a series of bytes as having a different
+type without changing their value at all is `memcpy()`? This looks horrendously
 slow: Create a local variable. Pass its address to the operating system through
 a syscall to copy a few bytes. Then return the result, which is the exact same
-bytes as the input. Thankfully, because this <em>is</em> the supported idiom for type
-punning, most compilers recognize the pattern and optimize away the <code>memcpy()</code>
-entirely.</p>
-<p>&ldquo;Unwrapping&rdquo; a Lox number is the mirror image.</p>
+bytes as the input. Thankfully, because this *is* the supported idiom for type
+punning, most compilers recognize the pattern and optimize away the `memcpy()`
+entirely.
+-->
+<p>我知道，怪对吧？把一串字节当成不同类型、却完全不改变其值的办法，居然是 <code>memcpy()</code>？这看起来慢得可怕：创建局部变量；通过系统调用把地址交给操作系统去复制几个字节；再返回结果——而结果与输入字节完全相同。幸好，因为这<em>就是</em>类型双关的受支持惯用法，多数编译器能认出这一模式并彻底优化掉 <code>memcpy()</code>。</p><!--
+"Unwrapping" a Lox number is the mirror image.
+-->
+<p>“解包”一个 Lox 数字是镜像操作。</p>
 <div class="codehilite"><pre class="insert-before">
 typedef uint64_t Value;
 </pre><div class="source-file"><em>value.h</em></div>
@@ -788,8 +1020,10 @@ typedef uint64_t Value;
 #define NUMBER_VAL(num) numToValue(num)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>That macro calls this function:</p>
+<!--
+That macro calls this function:
+-->
+<p>该宏调用这个函数：</p>
 <div class="codehilite"><pre class="insert-before">
 #define NUMBER_VAL(num) numToValue(num)
 </pre><div class="source-file"><em>value.h</em></div>
@@ -805,14 +1039,18 @@ typedef uint64_t Value;
 static inline Value numToValue(double num) {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>It works exactly the same except we swap the types. Again, the compiler will
+<!--
+It works exactly the same except we swap the types. Again, the compiler will
 eliminate all of it. Even though those calls to
-<code>memcpy()</code> will disappear, we still need to show the compiler <em>which</em> <code>memcpy()</code>
-we&rsquo;re calling so we also need an <span name="union">include</span>.</p>
-<aside name="union" class="bottom">
-<p>If you find yourself with a compiler that does not optimize the <code>memcpy()</code> away,
-try this instead:</p>
+`memcpy()` will disappear, we still need to show the compiler *which* `memcpy()`
+we're calling so we also need an <span name="union">include</span>.
+-->
+<p>它完全一样，只是交换了类型。同样，编译器会全部消掉。即便那些 <code>memcpy()</code> 调用会消失，我们仍需让编译器知道我们调用的是<em>哪一个</em> <code>memcpy()</code>，所以还需要一个<span name="union">头文件包含</span>。</p>
+<aside name="union" class="bottom"><!--
+If you find yourself with a compiler that does not optimize the `memcpy()` away,
+try this instead:
+-->
+<p>若你碰到不会优化掉 <code>memcpy()</code> 的编译器，试试这个：</p>
 <div class="codehilite"><pre>
 <span class="t">double</span> <span class="i">valueToNum</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="k">union</span> {
@@ -835,11 +1073,13 @@ try this instead:</p>
 #include &quot;common.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>That was a lot of code to ultimately do nothing but silence the C type checker.
-Doing a runtime type <em>test</em> on a Lox number is a little more interesting. If all
-we have are exactly the bits for a double, how do we tell that it <em>is</em> a double?
-It&rsquo;s time to get bit twiddling.</p>
+<!--
+That was a lot of code to ultimately do nothing but silence the C type checker.
+Doing a runtime type *test* on a Lox number is a little more interesting. If all
+we have are exactly the bits for a double, how do we tell that it *is* a double?
+It's time to get bit twiddling.
+-->
+<p>为了最终只是让 C 类型检查器闭嘴，这可写了不少代码。对 Lox 数字做运行时类型<em>测试</em>更有趣一点。若我们手里恰好是 double 的那些比特，怎么判断它<em>是</em> double？是时候玩位操作了。</p>
 <div class="codehilite"><pre class="insert-before">
 typedef uint64_t Value;
 </pre><div class="source-file"><em>value.h</em></div>
@@ -851,24 +1091,32 @@ typedef uint64_t Value;
 #define AS_NUMBER(value)    valueToNum(value)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>We know that every Value that is <em>not</em> a number will use a special quiet NaN
+<!--
+We know that every Value that is *not* a number will use a special quiet NaN
 representation. And we presume we have correctly avoided any of the meaningful
 NaN representations that may actually be produced by doing arithmetic on
-numbers.</p>
-<p>If the double has all of its NaN bits set, and the quiet NaN bit set, and one
+numbers.
+-->
+<p>我们知道每个<em>不是</em>数字的 Value 都会使用特殊的安静 NaN 表示。我们也假定自己正确避开了那些对数字做算术时可能真正产生的有意义的 NaN 表示。</p><!--
+If the double has all of its NaN bits set, and the quiet NaN bit set, and one
 more for good measure, we can be <span name="certain">pretty certain</span> it
 is one of the bit patterns we ourselves have set aside for other types. To check
-that, we mask out all of the bits except for our set of quiet NaN bits. If <em>all</em>
+that, we mask out all of the bits except for our set of quiet NaN bits. If *all*
 of those bits are set, it must be a NaN-boxed value of some other Lox type.
-Otherwise, it is actually a number.</p>
-<aside name="certain">
-<p>Pretty certain, but not strictly guaranteed. As far as I know, there is nothing
+Otherwise, it is actually a number.
+-->
+<p>若 double 的全部 NaN 位都置位、安静 NaN 位也置位，再多一位以防万一，我们就能<span name="certain">相当确信</span>它是我们为自己其他类型预留的位模式之一。要检查这一点，我们掩掉安静 NaN 位集合以外的所有位。若<em>所有</em>那些位都置位，它必定是某种其他 Lox 类型的 NaN 装箱值。否则，它其实是个数字。</p>
+<aside name="certain"><!--
+Pretty certain, but not strictly guaranteed. As far as I know, there is nothing
 preventing a CPU from producing a NaN value as the result of some operation
 whose bit representation collides with ones we have claimed. But in my tests
-across a number of architectures, I haven&rsquo;t seen it happen.</p>
-</aside>
-<p>The set of quiet NaN bits are declared like this:</p>
+across a number of architectures, I haven't seen it happen.
+-->
+<p>相当确信，但并非严格保证。据我所知，没有什么能阻止 CPU 在某次运算中产生一个位表示与我们声称的模式相撞的 NaN。但在我跨若干架构的测试里，尚未见过。</p>
+</aside><!--
+The set of quiet NaN bits are declared like this:
+-->
+<p>安静 NaN 位集合声明如下：</p>
 <div class="codehilite"><pre class="insert-before">
 #ifdef NAN_BOXING
 </pre><div class="source-file"><em>value.h</em></div>
@@ -880,20 +1128,30 @@ across a number of architectures, I haven&rsquo;t seen it happen.</p>
 typedef uint64_t Value;
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>It would be nice if C supported binary literals. But if you do the conversion,
-you&rsquo;ll see that value is the same as this:</p><img src="image/optimization/qnan.png" alt="The quiet NaN bits." />
-<p>This is exactly all of the exponent bits, plus the quiet NaN bit, plus one extra
-to dodge that Intel value.</p>
-<h3><a href="#nil-true-and-false" name="nil-true-and-false"><small>30&#8202;.&#8202;3&#8202;.&#8202;4</small>Nil, true, and false</a></h3>
-<p>The next type to handle is <code>nil</code>. That&rsquo;s pretty simple since there&rsquo;s only one
-<code>nil</code> value and thus we need only a single bit pattern to represent it. There
-are two other singleton values, the two Booleans, <code>true</code> and <code>false</code>. This calls
-for three total unique bit patterns.</p>
-<p>Two bits give us four different combinations, which is plenty. We claim the two
-lowest bits of our unused mantissa space as a &ldquo;type tag&rdquo; to determine which of
-these three singleton values we&rsquo;re looking at. The three type tags are defined
-like so:</p>
+<!--
+It would be nice if C supported binary literals. But if you do the conversion,
+you'll see that value is the same as this:
+-->
+<p>若 C 支持二进制字面量就好了。但若你做转换，会看到该值与这个相同：</p><img src="image/optimization/qnan.png" alt="The quiet NaN bits." /><!--
+This is exactly all of the exponent bits, plus the quiet NaN bit, plus one extra
+to dodge that Intel value.
+-->
+<p>这恰好是全部指数位，加上安静 NaN 位，再加上一位额外的，好躲开那个 Intel 值。</p><!--
+-- Nil, true, and false
+-->
+<h3><a href="#nil、true-与-false" name="nil、true-与-false"><small>30&#8202;.&#8202;3&#8202;.&#8202;4</small>nil、true 与 false</a></h3><!--
+The next type to handle is `nil`. That's pretty simple since there's only one
+`nil` value and thus we need only a single bit pattern to represent it. There
+are two other singleton values, the two Booleans, `true` and `false`. This calls
+for three total unique bit patterns.
+-->
+<p>下一个要处理的类型是 <code>nil</code>。这很简单，因为只有一个 <code>nil</code> 值，因而只需一种位模式来表示它。还有两个单例值：两个布尔 <code>true</code> 与 <code>false</code>。一共需要三种独特位模式。</p><!--
+Two bits give us four different combinations, which is plenty. We claim the two
+lowest bits of our unused mantissa space as a "type tag" to determine which of
+these three singleton values we're looking at. The three type tags are defined
+like so:
+-->
+<p>两位给出四种不同组合，足够了。我们把未用尾数空间的最低两位声明为“类型标签”，以判定看到的是这三个单例中的哪一个。三个类型标签定义如下：</p>
 <div class="codehilite"><pre class="insert-before">
 #define QNAN     ((uint64_t)0x7ffc000000000000)
 </pre><div class="source-file"><em>value.h</em></div>
@@ -907,10 +1165,14 @@ like so:</p>
 typedef uint64_t Value;
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>Our representation of <code>nil</code> is thus all of the bits required to define our
-quiet NaN representation along with the <code>nil</code> type tag bits:</p><img src="image/optimization/nil.png" alt="The bit representation of the nil value." />
-<p>In code, we check the bits like so:</p>
+<!--
+Our representation of `nil` is thus all of the bits required to define our
+quiet NaN representation along with the `nil` type tag bits:
+-->
+<p>因此，我们对 <code>nil</code> 的表示是定义安静 NaN 表示所需的全部位，再加上 <code>nil</code> 类型标签位：</p><img src="image/optimization/nil.png" alt="The bit representation of the nil value." /><!--
+In code, we check the bits like so:
+-->
+<p>在代码里，我们这样检查这些位：</p>
 <div class="codehilite"><pre class="insert-before">
 #define AS_NUMBER(value)    valueToNum(value)
 
@@ -921,13 +1183,17 @@ quiet NaN representation along with the <code>nil</code> type tag bits:</p><img 
 #define NUMBER_VAL(num) numToValue(num)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>We simply bitwise <span class="small-caps">OR</span> the quiet NaN bits and the
+<!--
+We simply bitwise <span class="small-caps">OR</span> the quiet NaN bits and the
 type tag, and then do a little cast dance to teach the C compiler what we want
-those bits to mean.</p>
-<p>Since <code>nil</code> has only a single bit representation, we can use equality on
-uint64_t to see if a Value is <code>nil</code>.</p>
-<p><span name="equal"></span></p>
+those bits to mean.
+-->
+<p>我们只需对安静 NaN 位与类型标签做按位 <span class="small-caps">OR</span>，再跳一小段强制转换的舞，好教 C 编译器这些位想表示什么。</p><!--
+Since `nil` has only a single bit representation, we can use <span
+name="equal">equality</span> on uint64_t to see if a Value is `nil`.
+-->
+<p>既然 <code>nil</code> 只有一种位表示，我们可以对 uint64_t 用<span
+name="equal">相等</span>比较来看一个 Value 是否为 <code>nil</code>。</p>
 <div class="codehilite"><pre class="insert-before">
 typedef uint64_t Value;
 
@@ -938,8 +1204,10 @@ typedef uint64_t Value;
 #define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>You can guess how we define the <code>true</code> and <code>false</code> values.</p>
+<!--
+You can guess how we define the `true` and `false` values.
+-->
+<p>你可以猜到我们如何定义 <code>true</code> 与 <code>false</code> 值。</p>
 <div class="codehilite"><pre class="insert-before">
 #define AS_NUMBER(value)    valueToNum(value)
 
@@ -951,10 +1219,14 @@ typedef uint64_t Value;
 #define NIL_VAL         ((Value)(uint64_t)(QNAN | TAG_NIL))
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>The bits look like this:</p><img src="image/optimization/bools.png" alt="The bit representation of the true and false values." />
-<p>To convert a C bool into a Lox Boolean, we rely on these two singleton values
-and the good old conditional operator.</p>
+<!--
+The bits look like this:
+-->
+<p>那些位长这样：</p><img src="image/optimization/bools.png" alt="The bit representation of the true and false values." /><!--
+To convert a C bool into a Lox Boolean, we rely on these two singleton values
+and the good old conditional operator.
+-->
+<p>把 C 的 bool 转成 Lox 布尔，我们依赖这两个单例值，以及好用的条件运算符。</p>
 <div class="codehilite"><pre class="insert-before">
 #define AS_NUMBER(value)    valueToNum(value)
 
@@ -965,10 +1237,12 @@ and the good old conditional operator.</p>
 #define FALSE_VAL       ((Value)(uint64_t)(QNAN | TAG_FALSE))
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>There&rsquo;s probably a cleverer bitwise way to do this, but my hunch is that the
+<!--
+There's probably a cleverer bitwise way to do this, but my hunch is that the
 compiler can figure one out faster than I can. Going the other direction is
-simpler.</p>
+simpler.
+-->
+<p>大概有更巧妙的按位做法，但我直觉是编译器能比我更快想出来。反过来方向更简单。</p>
 <div class="codehilite"><pre class="insert-before">
 #define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
 
@@ -979,11 +1253,13 @@ simpler.</p>
 #define AS_NUMBER(value)    valueToNum(value)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>Since we know there are exactly two Boolean bit representations in Lox<span class="em">&mdash;</span>unlike
-in C where any non-zero value can be considered &ldquo;true&rdquo;<span class="em">&mdash;</span>if it ain&rsquo;t <code>true</code>, it
-must be <code>false</code>. This macro does assume you call it only on a Value that you
-know <em>is</em> a Lox Boolean. To check that, there&rsquo;s one more macro.</p>
+<!--
+Since we know there are exactly two Boolean bit representations in Lox -- unlike
+in C where any non-zero value can be considered "true" -- if it ain't `true`, it
+must be `false`. This macro does assume you call it only on a Value that you
+know *is* a Lox Boolean. To check that, there's one more macro.
+-->
+<p>既然我们知道 Lox 里恰好有两种布尔位表示——不像 C 里任何非零值都可视为“真”——若它不是 <code>true</code>，就必定是 <code>false</code>。该宏假定你只对已知<em>是</em> Lox 布尔的 Value 调用它。要检查这一点，还有一个宏。</p>
 <div class="codehilite"><pre class="insert-before">
 typedef uint64_t Value;
 
@@ -994,56 +1270,85 @@ typedef uint64_t Value;
 #define IS_NIL(value)       ((value) == NIL_VAL)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>That looks a little strange. A more obvious macro would look like this:</p>
+<!--
+That looks a little strange. A more obvious macro would look like this:
+-->
+<p>这看起来有点怪。更显而易见的宏会像这样：</p>
 <div class="codehilite"><pre>
 <span class="a">#define IS_BOOL(v) ((v) == TRUE_VAL || (v) == FALSE_VAL)</span>
-</pre></div>
-<p>Unfortunately, that&rsquo;s not safe. The expansion mentions <code>v</code> twice, which means if
+</pre></div><!--
+Unfortunately, that's not safe. The expansion mentions `v` twice, which means if
 that expression has any side effects, they will be executed twice. We could have
-the macro call out to a separate function, but, ugh, what a chore.</p>
-<p>Instead, we bitwise <span class="small-caps">OR</span> a 1 onto the value to
+the macro call out to a separate function, but, ugh, what a chore.
+-->
+<p>不幸的是，这不安全。展开提到 <code>v</code> 两次，意味着若该表达式有任何副作用，它们会被执行两次。我们可以让宏去调一个单独函数，可，呃，多麻烦。</p><!--
+Instead, we bitwise <span class="small-caps">OR</span> a 1 onto the value to
 merge the only two valid Boolean bit patterns. That leaves three potential
-states the value can be in:</p>
+states the value can be in:
+-->
+<p>取而代之，我们对值按位 <span class="small-caps">OR</span> 上 1，合并仅有的两种合法布尔位模式。于是值可能处于三种状态：</p><!--
+1. It was `FALSE_VAL` and has now been converted to `TRUE_VAL`.
+
+2. It was `TRUE_VAL` and the `| 1` did nothing and it's still `TRUE_VAL`.
+
+3. It's some other, non-Boolean value.
+-->
 <ol>
 <li>
-<p>It was <code>FALSE_VAL</code> and has now been converted to <code>TRUE_VAL</code>.</p>
+<p>它曾是 <code>FALSE_VAL</code>，现已变成 <code>TRUE_VAL</code>。</p>
 </li>
 <li>
-<p>It was <code>TRUE_VAL</code> and the <code>| 1</code> did nothing and it&rsquo;s still <code>TRUE_VAL</code>.</p>
+<p>它曾是 <code>TRUE_VAL</code>，<code>| 1</code> 什么也没做，仍是 <code>TRUE_VAL</code>。</p>
 </li>
 <li>
-<p>It&rsquo;s some other, non-Boolean value.</p>
+<p>它是某个其他的、非布尔值。</p>
 </li>
-</ol>
-<p>At that point, we can simply compare the result to <code>TRUE_VAL</code> to see if we&rsquo;re
-in the first two states or the third.</p>
-<h3><a href="#objects" name="objects"><small>30&#8202;.&#8202;3&#8202;.&#8202;5</small>Objects</a></h3>
-<p>The last value type is the hardest. Unlike the singleton values, there are
+</ol><!--
+At that point, we can simply compare the result to `TRUE_VAL` to see if we're
+in the first two states or the third.
+-->
+<p>此时，我们只需把结果与 <code>TRUE_VAL</code> 比较，看我们处于前两种状态还是第三种。</p><!--
+-- Objects
+-->
+<h3><a href="#对象" name="对象"><small>30&#8202;.&#8202;3&#8202;.&#8202;5</small>对象</a></h3><!--
+The last value type is the hardest. Unlike the singleton values, there are
 billions of different pointer values we need to box inside a NaN. This means we
-need both some kind of tag to indicate that these particular NaNs <em>are</em> Obj
-pointers, and room for the addresses themselves.</p>
-<p>The tag bits we used for the singleton values are in the region where I decided
-to store the pointer itself, so we can&rsquo;t easily use a different <span
+need both some kind of tag to indicate that these particular NaNs *are* Obj
+pointers, and room for the addresses themselves.
+-->
+<p>最后一个值类型最难。与单例值不同，我们需要把数十亿种不同的指针值装箱进 NaN。这意味着我们既需要某种标签标明这些特别的 NaN <em>是</em> Obj 指针，也需要给地址本身留空间。</p><!--
+The tag bits we used for the singleton values are in the region where I decided
+to store the pointer itself, so we can't easily use a different <span
 name="ptr">bit</span> there to indicate that the value is an object reference.
-However, there is another bit we aren&rsquo;t using. Since all our NaN values are not
-numbers<span class="em">&mdash;</span>it&rsquo;s right there in the name<span class="em">&mdash;</span>the sign bit isn&rsquo;t used for anything.
-We&rsquo;ll go ahead and use that as the type tag for objects. If one of our quiet
-NaNs has its sign bit set, then it&rsquo;s an Obj pointer. Otherwise, it must be one
-of the previous singleton values.</p>
-<aside name="ptr">
-<p>We actually <em>could</em> use the lowest bits to store the type tag even when the
-value is an Obj pointer. That&rsquo;s because Obj pointers are always aligned to an
+However, there is another bit we aren't using. Since all our NaN values are not
+numbers -- it's right there in the name -- the sign bit isn't used for anything.
+We'll go ahead and use that as the type tag for objects. If one of our quiet
+NaNs has its sign bit set, then it's an Obj pointer. Otherwise, it must be one
+of the previous singleton values.
+-->
+<p>单例值用的标签位，落在我决定存放指针本身的区域，所以我们没法轻易在那里用另一个<span
+name="ptr">比特</span>标明该值是对象引用。不过，还有一位我们没用。既然我们所有的 NaN 值都不是数字——名字里就写着——符号位派不上用场。我们就用它当对象的类型标签。若某个安静 NaN 的符号位置位，那它就是 Obj 指针；否则，必定是先前那些单例之一。</p>
+<aside name="ptr"><!--
+We actually *could* use the lowest bits to store the type tag even when the
+value is an Obj pointer. That's because Obj pointers are always aligned to an
 8-byte boundary since Obj contains a 64-bit field. That, in turn, implies that
 the three lowest bits of an Obj pointer will always be zero. We could store
 whatever we wanted in there and just mask it off before dereferencing the
-pointer.</p>
-<p>This is another value representation optimization called <strong>pointer tagging</strong>.</p>
-</aside>
-<p>If the sign bit is set, then the remaining low bits store the pointer to the
-Obj:</p><img src="image/optimization/obj.png" alt="Bit representation of an Obj* stored in a Value." />
-<p>To convert a raw Obj pointer to a Value, we take the pointer and set all of the
-quiet NaN bits and the sign bit.</p>
+pointer.
+-->
+<p>其实我们<em>可以</em>在值是 Obj 指针时，仍用最低几位存类型标签。因为 Obj 含有 64 位字段，Obj 指针始终对齐到 8 字节边界。这进而意味着 Obj 指针的最低三位始终为零。我们可以在那里存任意内容，解引用前再掩掉即可。</p><!--
+This is another value representation optimization called **pointer tagging**.
+-->
+<p>这是另一种值表示优化，叫做<strong>指针标记</strong>（pointer tagging）。</p>
+</aside><!--
+If the sign bit is set, then the remaining low bits store the pointer to the
+Obj:
+-->
+<p>若符号位置位，则其余低位存放指向 Obj 的指针：</p><img src="image/optimization/obj.png" alt="Bit representation of an Obj* stored in a Value." /><!--
+To convert a raw Obj pointer to a Value, we take the pointer and set all of the
+quiet NaN bits and the sign bit.
+-->
+<p>把原始 Obj 指针转成 Value，我们取该指针，置上全部安静 NaN 位与符号位。</p>
 <div class="codehilite"><pre class="insert-before">
 #define NUMBER_VAL(num) numToValue(num)
 </pre><div class="source-file"><em>value.h</em></div>
@@ -1055,22 +1360,30 @@ quiet NaN bits and the sign bit.</p>
 static inline double valueToNum(Value value) {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>The pointer itself is a full 64 bits, and in <span name="safe">principle</span>,
+<!--
+The pointer itself is a full 64 bits, and in <span name="safe">principle</span>,
 it could thus overlap with some of those quiet NaN and sign bits. But in
-practice, at least on the architectures I&rsquo;ve tested, everything above the 48th
-bit in a pointer is always zero. There&rsquo;s a lot of casting going on here, which
-I&rsquo;ve found is necessary to satisfy some of the pickiest C compilers, but the
-end result is just jamming some bits together.</p>
-<aside name="safe">
-<p>I try to follow the letter of the law when it comes to the code in this book, so
+practice, at least on the architectures I've tested, everything above the 48th
+bit in a pointer is always zero. There's a lot of casting going on here, which
+I've found is necessary to satisfy some of the pickiest C compilers, but the
+end result is just jamming some bits together.
+-->
+<p>指针本身是完整 64 位，<span name="safe">原则上</span>可能与那些安静 NaN 位和符号位重叠。但实践中，至少在我测试过的架构上，指针第 48 位以上始终为零。这里有大量强制转换，我发现这对满足某些最挑剔的 C 编译器是必要的，但最终结果只是把一些比特塞到一起。</p>
+<aside name="safe"><!--
+I try to follow the letter of the law when it comes to the code in this book, so
 this paragraph is dubious. There comes a point when optimizing where you push
-the boundary of not just what the <em>spec says</em> you can do, but what a real
-compiler and chip let you get away with.</p>
-<p>There are risks when stepping outside of the spec, but there are rewards in that
-lawless territory too. It&rsquo;s up to you to decide if the gains are worth it.</p>
-</aside>
-<p>We define the sign bit like so:</p>
+the boundary of not just what the *spec says* you can do, but what a real
+compiler and chip let you get away with.
+-->
+<p>谈到本书里的代码，我尽量字面遵守法律，所以这一段有点可疑。优化到某个地步，你推的不只是<em>规范说</em>你能做什么的边界，还有真实编译器与芯片让你侥幸过关的边界。</p><!--
+There are risks when stepping outside of the spec, but there are rewards in that
+lawless territory too. It's up to you to decide if the gains are worth it.
+-->
+<p>踏出规范有风险，但那片无法之地也有回报。收益是否值得，由你决定。</p>
+</aside><!--
+We define the sign bit like so:
+-->
+<p>我们这样定义符号位：</p>
 <div class="codehilite"><pre class="insert-before">
 #ifdef NAN_BOXING
 
@@ -1082,8 +1395,10 @@ lawless territory too. It&rsquo;s up to you to decide if the gains are worth it.
 
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>To get the Obj pointer back out, we simply mask off all of those extra bits.</p>
+<!--
+To get the Obj pointer back out, we simply mask off all of those extra bits.
+-->
+<p>要取出 Obj 指针，只需掩掉所有那些额外位。</p>
 <div class="codehilite"><pre class="insert-before">
 #define AS_NUMBER(value)    valueToNum(value)
 </pre><div class="source-file"><em>value.h</em></div>
@@ -1095,12 +1410,16 @@ lawless territory too. It&rsquo;s up to you to decide if the gains are worth it.
 #define BOOL_VAL(b)     ((b) ? TRUE_VAL : FALSE_VAL)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>The tilde (<code>~</code>), if you haven&rsquo;t done enough bit manipulation to encounter it
+<!--
+The tilde (`~`), if you haven't done enough bit manipulation to encounter it
 before, is bitwise <span class="small-caps">NOT</span>. It toggles all ones and
 zeroes in its operand. By masking the value with the bitwise negation of the
-quiet NaN and sign bits, we <em>clear</em> those bits and let the pointer bits remain.</p>
-<p>One last macro:</p>
+quiet NaN and sign bits, we *clear* those bits and let the pointer bits remain.
+-->
+<p>波浪号（<code>~</code>），若你还没做过足够多位操作而没遇见过，就是按位 <span class="small-caps">NOT</span>。它翻转操作数中所有的一与零。用安静 NaN 与符号位的按位取反去掩值，我们<em>清掉</em>那些位，让指针位留下。</p><!--
+One last macro:
+-->
+<p>最后一个宏：</p>
 <div class="codehilite"><pre class="insert-before">
 #define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
 </pre><div class="source-file"><em>value.h</em></div>
@@ -1112,20 +1431,28 @@ quiet NaN and sign bits, we <em>clear</em> those bits and let the pointer bits r
 #define AS_BOOL(value)      ((value) == TRUE_VAL)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
-
-<p>A Value storing an Obj pointer has its sign bit set, but so does any negative
+<!--
+A Value storing an Obj pointer has its sign bit set, but so does any negative
 number. To tell if a Value is an Obj pointer, we need to check that both the
 sign bit and all of the quiet NaN bits are set. This is similar to how we detect
 the type of the singleton values, except this time we use the sign bit as the
-tag.</p>
-<h3><a href="#value-functions" name="value-functions"><small>30&#8202;.&#8202;3&#8202;.&#8202;6</small>Value functions</a></h3>
-<p>The rest of the VM usually goes through the macros when working with Values, so
-we are almost done. However, there are a couple of functions in the &ldquo;value&rdquo;
+tag.
+-->
+<p>存放 Obj 指针的 Value 符号位置位，但任何负数也是。要判断一个 Value 是否为 Obj 指针，需要检查符号位与全部安静 NaN 位都置位。这与检测单例值类型的方式相似，只是这次用符号位当标签。</p><!--
+-- Value functions
+-->
+<h3><a href="#值相关函数" name="值相关函数"><small>30&#8202;.&#8202;3&#8202;.&#8202;6</small>值相关函数</a></h3><!--
+The rest of the VM usually goes through the macros when working with Values, so
+we are almost done. However, there are a couple of functions in the "value"
 module that peek inside the otherwise black box of Value and work with its
-encoding directly. We need to fix those too.</p>
-<p>The first is <code>printValue()</code>. It has separate code for each value type. We no
+encoding directly. We need to fix those too.
+-->
+<p>虚拟机其余部分处理 Value 时通常走那些宏，所以我们几乎完成了。不过，“value” 模块里还有几个函数会窥视 Value 这个黑盒并直接处理其编码。那些也需要修。</p><!--
+The first is `printValue()`. It has separate code for each value type. We no
 longer have an explicit type enum we can switch on, so instead we use a series
-of type tests to handle each kind of value.</p>
+of type tests to handle each kind of value.
+-->
+<p>第一个是 <code>printValue()</code>。它对每种值类型有单独代码。我们不再有可 switch 的显式类型枚举，于是改用一系列类型测试处理每类值。</p>
 <div class="codehilite"><pre class="insert-before">
 void printValue(Value value) {
 </pre><div class="source-file"><em>value.c</em><br>
@@ -1146,11 +1473,15 @@ in <em>printValue</em>()</div>
   switch (value.type) {
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>()</div>
-
-<p>This is technically a tiny bit slower than a switch, but compared to the
-overhead of actually writing to a stream, it&rsquo;s negligible.</p>
-<p>We still support the original tagged union representation, so we keep the old
-code and enclose it in the <code>#else</code> conditional section.</p>
+<!--
+This is technically a tiny bit slower than a switch, but compared to the
+overhead of actually writing to a stream, it's negligible.
+-->
+<p>技术上这比 switch 慢一点点，但与真正写入流的开销相比，可忽略不计。</p><!--
+We still support the original tagged union representation, so we keep the old
+code and enclose it in the `#else` conditional section.
+-->
+<p>我们仍支持原先的带标签联合表示，所以保留旧代码，并包在 <code>#else</code> 条件节里。</p>
 <div class="codehilite"><pre class="insert-before">
   }
 </pre><div class="source-file"><em>value.c</em><br>
@@ -1161,8 +1492,10 @@ in <em>printValue</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>()</div>
-
-<p>The other operation is testing two values for equality.</p>
+<!--
+The other operation is testing two values for equality.
+-->
+<p>另一项操作是测试两个值是否相等。</p>
 <div class="codehilite"><pre class="insert-before">
 bool valuesEqual(Value a, Value b) {
 </pre><div class="source-file"><em>value.c</em><br>
@@ -1175,31 +1508,39 @@ in <em>valuesEqual</em>()</div>
   if (a.type != b.type) return false;
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
-
-<p>It doesn&rsquo;t get much simpler than that! If the two bit representations are
+<!--
+It doesn't get much simpler than that! If the two bit representations are
 identical, the values are equal. That does the right thing for the singleton
 values since each has a unique bit representation and they are only equal to
 themselves. It also does the right thing for Obj pointers, since objects use
-identity for equality<span class="em">&mdash;</span>two Obj references are equal only if they point to the
-exact same object.</p>
-<p>It&rsquo;s <em>mostly</em> correct for numbers too. Most floating-point numbers with
+identity for equality -- two Obj references are equal only if they point to the
+exact same object.
+-->
+<p>不能更简单了！若两位表示相同，值就相等。这对单例值做对了，因为每个都有独特位表示且只等于自己。对 Obj 指针也对了，因为对象用同一性判等——两个 Obj 引用只有指向完全同一对象时才相等。</p><!--
+It's *mostly* correct for numbers too. Most floating-point numbers with
 different bit representations are distinct numeric values. Alas, IEEE 754
-contains a pothole to trip us up. For reasons that aren&rsquo;t entirely clear to me,
-the spec mandates that NaN values are <em>not</em> equal to <em>themselves</em>. This isn&rsquo;t a
+contains a pothole to trip us up. For reasons that aren't entirely clear to me,
+the spec mandates that NaN values are *not* equal to *themselves*. This isn't a
 problem for the special quiet NaNs that we are using for our own purposes. But
-it&rsquo;s possible to produce a &ldquo;real&rdquo; arithmetic NaN in Lox, and if we want to
+it's possible to produce a "real" arithmetic NaN in Lox, and if we want to
 correctly implement IEEE 754 numbers, then the resulting value is not supposed
-to be equal to itself. More concretely:</p>
+to be equal to itself. More concretely:
+-->
+<p>对数字也<em>大体</em>正确。多数位表示不同的浮点数是不同的数值。可惜 IEEE 754 有个坑等着绊我们。出于我不完全清楚的原因，规范规定 NaN 值<em>不</em>等于<em>自身</em>。这对我们自用的特殊安静 NaN 不是问题。但有可能在 Lox 里产生“真正的”算术 NaN；若我们想正确实现 IEEE 754 数字，则结果值不该等于自身。更具体地说：</p>
 <div class="codehilite"><pre>
 <span class="k">var</span> <span class="i">nan</span> = <span class="n">0</span>/<span class="n">0</span>;
 <span class="k">print</span> <span class="i">nan</span> == <span class="i">nan</span>;
-</pre></div>
-<p>IEEE 754 says this program is supposed to print &ldquo;false&rdquo;. It does the right thing
-with our old tagged union representation because the <code>VAL_NUMBER</code> case applies
-<code>==</code> to two values that the C compiler knows are doubles. Thus the compiler
-generates the right CPU instruction to perform an IEEE floating-point equality.</p>
-<p>Our new representation breaks that by defining Value to be a uint64_t. If we
-want to be <em>fully</em> compliant with IEEE 754, we need to handle this case.</p>
+</pre></div><!--
+IEEE 754 says this program is supposed to print "false". It does the right thing
+with our old tagged union representation because the `VAL_NUMBER` case applies
+`==` to two values that the C compiler knows are doubles. Thus the compiler
+generates the right CPU instruction to perform an IEEE floating-point equality.
+-->
+<p>IEEE 754 说该程序应打印 “false”。用旧的带标签联合表示时它做对了，因为 <code>VAL_NUMBER</code> 分支对 C 编译器已知为 double 的两个值应用 <code>==</code>。于是编译器生成正确的 CPU 指令来做 IEEE 浮点相等比较。</p><!--
+Our new representation breaks that by defining Value to be a uint64_t. If we
+want to be *fully* compliant with IEEE 754, we need to handle this case.
+-->
+<p>新表示把 Value 定义成 uint64_t，打破了这一点。若想<em>完全</em>符合 IEEE 754，需要处理这一情形。</p>
 <div class="codehilite"><pre class="insert-before">
 #ifdef NAN_BOXING
 </pre><div class="source-file"><em>value.c</em><br>
@@ -1212,19 +1553,25 @@ in <em>valuesEqual</em>()</div>
   return a == b;
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
-
-<p>I know, it&rsquo;s weird. And there is a performance cost to doing this type test
+<!--
+I know, it's weird. And there is a performance cost to doing this type test
 every time we check two Lox values for equality. If we are willing to sacrifice
-a little <span name="java">compatibility</span><span class="em">&mdash;</span>who <em>really</em> cares if NaN is
-not equal to itself?<span class="em">&mdash;</span>we could leave this off. I&rsquo;ll leave it up to you to
-decide how pedantic you want to be.</p>
-<aside name="java">
-<p>In fact, jlox gets NaN equality wrong. Java does the right thing when you
-compare primitive doubles using <code>==</code>, but not if you box those to Double or
-Object and compare them using <code>equals()</code>, which is how jlox implements equality.</p>
-</aside>
-<p>Finally, we close the conditional compilation section around the old
-implementation.</p>
+a little <span name="java">compatibility</span> -- who *really* cares if NaN is
+not equal to itself? -- we could leave this off. I'll leave it up to you to
+decide how pedantic you want to be.
+-->
+<p>我知道，这很怪。而且每次检查两个 Lox 值是否相等都做这个类型测试有性能代价。若我们愿意牺牲一点<span name="java">兼容性</span>——谁<em>真的</em>在乎 NaN 是否不等于自身？——可以省掉。多迂腐由你决定。</p>
+<aside name="java"><!--
+In fact, jlox gets NaN equality wrong. Java does the right thing when you
+compare primitive doubles using `==`, but not if you box those to Double or
+Object and compare them using `equals()`, which is how jlox implements equality.
+-->
+<p>事实上，jlox 的 NaN 相等性是错的。用 <code>==</code> 比较原始 double 时 Java 做对了，但若装箱成 Double 或 Object 再用 <code>equals()</code> 比较——而这正是 jlox 实现相等的方式——就不对了。</p>
+</aside><!--
+Finally, we close the conditional compilation section around the old
+implementation.
+-->
+<p>最后，我们关闭旧实现周围的条件编译节。</p>
 <div class="codehilite"><pre class="insert-before">
   }
 </pre><div class="source-file"><em>value.c</em><br>
@@ -1235,175 +1582,247 @@ in <em>valuesEqual</em>()</div>
 }
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
-
-<p>And that&rsquo;s it. This optimization is complete, as is our clox virtual machine.
-That was the last line of new code in the book.</p>
-<h3><a href="#evaluating-performance" name="evaluating-performance"><small>30&#8202;.&#8202;3&#8202;.&#8202;7</small>Evaluating performance</a></h3>
-<p>The code is done, but we still need to figure out if we actually made anything
+<!--
+And that's it. This optimization is complete, as is our clox virtual machine.
+That was the last line of new code in the book.
+-->
+<p>就是这样。这项优化完成了，我们的 clox 虚拟机也完成了。那是本书最后一行新代码。</p><!--
+-- Evaluating performance
+-->
+<h3><a href="#评估性能" name="评估性能"><small>30&#8202;.&#8202;3&#8202;.&#8202;7</small>评估性能</a></h3><!--
+The code is done, but we still need to figure out if we actually made anything
 better with these changes. Evaluating an optimization like this is very
 different from the previous one. There, we had a clear hotspot visible in the
 profiler. We fixed that part of the code and could instantly see the hotspot
-get faster.</p>
-<p>The effects of changing the value representation are more diffused. The macros
+get faster.
+-->
+<p>代码写完了，但我们仍需弄清这些改动是否真让事情更好了。评估这类优化与上一项很不一样。那里，分析器里有清晰可见的热点。我们修了那部分代码，立刻就能看到热点变快。</p><!--
+The effects of changing the value representation are more diffused. The macros
 are expanded in place wherever they are used, so the performance changes are
-spread across the codebase in a way that&rsquo;s hard for many profilers to track
-well, especially in an <span name="opt">optimized</span> build.</p>
-<aside name="opt">
-<p>When doing profiling work, you almost always want to profile an optimized
-&ldquo;release&rdquo; build of your program since that reflects the performance story your
+spread across the codebase in a way that's hard for many profilers to track
+well, especially in an <span name="opt">optimized</span> build.
+-->
+<p>改变值表示的效果更弥散。宏在使用处就地展开，所以性能变化散落在代码库各处，许多分析器难以很好追踪——尤其是在<span name="opt">优化</span>构建里。</p>
+<aside name="opt"><!--
+When doing profiling work, you almost always want to profile an optimized
+"release" build of your program since that reflects the performance story your
 end users experience. Compiler optimizations, like inlining, can dramatically
 affect which parts of the code are performance hotspots. Hand-optimizing a debug
-build risks sending you off &ldquo;fixing&rdquo; problems that the optimizing compiler will
-already solve for you.</p>
-<p>Make sure you don&rsquo;t accidentally benchmark and optimize your debug build. I seem
-to make that mistake at least once a year.</p>
-</aside>
-<p>We also can&rsquo;t easily <em>reason</em> about the effects of our change. We&rsquo;ve made values
+build risks sending you off "fixing" problems that the optimizing compiler will
+already solve for you.
+-->
+<p>做性能分析时，你几乎总想分析程序的优化“发布”构建，因为那反映最终用户体验到的性能故事。编译器优化（如内联）会剧烈影响哪些代码部分是性能热点。手工优化调试构建，有把你送去“修复”优化编译器本已替你解决的问题的风险。</p><!--
+Make sure you don't accidentally benchmark and optimize your debug build. I seem
+to make that mistake at least once a year.
+-->
+<p>确保别一不小心对调试构建做基准测试与优化。我似乎每年至少犯一次这错。</p>
+</aside><!--
+We also can't easily *reason* about the effects of our change. We've made values
 smaller, which reduces cache misses all across the VM. But the actual real-world
 performance effect of that change is highly dependent on the memory use of the
 Lox program being run. A tiny Lox microbenchmark may not have enough values
 scattered around in memory for the effect to be noticeable, and even things like
-the addresses handed out to us by the C memory allocator can impact the results.</p>
-<p>If we did our job right, basically everything gets a little faster, especially
+the addresses handed out to us by the C memory allocator can impact the results.
+-->
+<p>我们也无法轻易<em>推理</em>改动的效果。我们让值变小了，从而减少虚拟机各处的缓存未命中。但该改动的真实世界性能效果高度依赖所跑 Lox 程序的内存使用。小小的 Lox 微基准可能没有足够多散落在内存里的值让效果可察觉，甚至 C 内存分配器交给我们的地址之类也会影响结果。</p><!--
+If we did our job right, basically everything gets a little faster, especially
 on larger, more complex Lox programs. But it is possible that the extra bitwise
 operations we do when NaN-boxing values nullify the gains from the better
-memory use. Doing performance work like this is unnerving because you can&rsquo;t
-easily <em>prove</em> that you&rsquo;ve made the VM better. You can&rsquo;t point to a single
-surgically targeted microbenchmark and say, &ldquo;There, see?&rdquo;</p>
-<p>Instead, what we really need is a <em>suite</em> of larger benchmarks. Ideally, they
-would be distilled from real-world applications<span class="em">&mdash;</span>not that such a thing exists
+memory use. Doing performance work like this is unnerving because you can't
+easily *prove* that you've made the VM better. You can't point to a single
+surgically targeted microbenchmark and say, "There, see?"
+-->
+<p>若我们干得好，基本上一切都会快一点，尤其在更大、更复杂的 Lox 程序上。但也可能 NaN 装箱时多做的按位运算抵消了更好内存使用带来的收益。做这类性能工作令人不安，因为你无法轻易<em>证明</em>虚拟机变好了。你没法指着单个手术刀式微基准说：“瞧，看见了吧？”</p><!--
+Instead, what we really need is a *suite* of larger benchmarks. Ideally, they
+would be distilled from real-world applications -- not that such a thing exists
 for a toy language like Lox. Then we can measure the aggregate performance
 changes across all of those. I did my best to cobble together a handful of
 larger Lox programs. On my machine, the new value representation seems to make
-everything roughly 10% faster across the board.</p>
-<p>That&rsquo;s not a huge improvement, especially compared to the profound effect of
+everything roughly 10% faster across the board.
+-->
+<p>相反，我们真正需要的是一套<em>更大</em>的基准。理想情况下，它们从真实世界应用蒸馏而来——对 Lox 这种玩具语言来说，那种东西并不存在。然后我们可以跨全部基准测量总体性能变化。我尽力拼凑了几份较大的 Lox 程序。在我机器上，新值表示似乎全面大约快了 10%。</p><!--
+That's not a huge improvement, especially compared to the profound effect of
 making hash table lookups faster. I added this optimization in large part
-because it&rsquo;s a good example of a certain <em>kind</em> of performance work you may
-experience, and honestly, because I think it&rsquo;s technically really cool. It might
+because it's a good example of a certain *kind* of performance work you may
+experience, and honestly, because I think it's technically really cool. It might
 not be the first thing I would reach for if I were seriously trying to make clox
-faster. There is probably other, lower-hanging fruit.</p>
-<p>But, if you find yourself working on a program where all of the easy wins have
+faster. There is probably other, lower-hanging fruit.
+-->
+<p>这不算巨大改进，尤其相比让哈希表查找变快的深刻效果。我加入这项优化，很大程度上是因为它是你可能经历的某<em>类</em>性能工作的好例子，老实说，也因为我觉得技术上真酷。若我认真想让 clox 更快，这大概不是我会首先伸手去够的。大概还有其他更低垂的果实。</p><!--
+But, if you find yourself working on a program where all of the easy wins have
 been taken, then at some point you may want to think about tuning your value
 representation. I hope this chapter has shined a light on some of the options
-you have in that area.</p>
-<h2><a href="#where-to-next" name="where-to-next"><small>30&#8202;.&#8202;4</small>Where to Next</a></h2>
-<p>We&rsquo;ll stop here with the Lox language and our two interpreters. We could tinker
+you have in that area.
+-->
+<p>但若你发现自己在做一个轻松胜利都已被拿走的程序，总有一天你可能想调调值表示。希望本章照亮了那一领域你拥有的一些选项。</p><!--
+-- Where to Next
+-->
+<h2><a href="#下一步去哪里" name="下一步去哪里"><small>30&#8202;.&#8202;4</small>下一步去哪里</a></h2><!--
+We'll stop here with the Lox language and our two interpreters. We could tinker
 on it forever, adding new language features and clever speed improvements. But,
-for this book, I think we&rsquo;ve reached a natural place to call our work complete.
-I won&rsquo;t rehash everything we&rsquo;ve learned in the past many pages. You were there
-with me and you remember. Instead, I&rsquo;d like to take a minute to talk about where
+for this book, I think we've reached a natural place to call our work complete.
+I won't rehash everything we've learned in the past many pages. You were there
+with me and you remember. Instead, I'd like to take a minute to talk about where
 you might go from here. What is the next step in your programming language
-journey?</p>
-<p>Most of you probably won&rsquo;t spend a significant part of your career working in
-compilers or interpreters. It&rsquo;s a pretty small slice of the computer science
+journey?
+-->
+<p>我们在此停下 Lox 语言与两台解释器。我们可以永远摆弄它，加新语言特性与巧妙提速。但对本书而言，我认为已到了可以宣告工作完成的自然之处。我不会复述过去许多页学到的一切。你与我同在，你记得。相反，我想花一分钟谈谈你可能从这里去哪儿。你的程序设计语言之旅，下一步是什么？</p><!--
+Most of you probably won't spend a significant part of your career working in
+compilers or interpreters. It's a pretty small slice of the computer science
 academia pie, and an even smaller segment of software engineering in industry.
-That&rsquo;s OK. Even if you never work on a compiler again in your life, you will
-certainly <em>use</em> one, and I hope this book has equipped you with a better
+That's OK. Even if you never work on a compiler again in your life, you will
+certainly *use* one, and I hope this book has equipped you with a better
 understanding of how the programming languages you use are designed and
-implemented.</p>
-<p>You have also learned a handful of important, fundamental data structures and
+implemented.
+-->
+<p>你们多数人大概不会把职业生涯的重要部分花在编译器或解释器上。那是计算机科学学术派里相当小的一块，在工业软件工程里更小。没关系。即便你这辈子再也不做编译器，你也肯定会<em>使用</em>一台；希望本书让你更好理解所用程序设计语言如何设计与实现。</p><!--
+You have also learned a handful of important, fundamental data structures and
 gotten some practice doing low-level profiling and optimization work. That kind
-of expertise is helpful no matter what domain you program in.</p>
-<p>I also hope I gave you a new way of <span name="domain">looking</span> at and
+of expertise is helpful no matter what domain you program in.
+-->
+<p>你也学到了若干重要的基础数据结构，并练过底层性能分析与优化。无论你在哪个领域编程，那种专长都有帮助。</p><!--
+I also hope I gave you a new way of <span name="domain">looking</span> at and
 solving problems. Even if you never work on a language again, you may be
 surprised to discover how many programming problems can be seen as
-language-<em>like</em>. Maybe that report generator you need to write can be modeled as
-a series of stack-based &ldquo;instructions&rdquo; that the generator &ldquo;executes&rdquo;. That user
-interface you need to render looks an awful lot like traversing an AST.</p>
-<aside name="domain">
-<p>This goes for other domains too. I don&rsquo;t think there&rsquo;s a single topic I&rsquo;ve
-learned in programming<span class="em">&mdash;</span>or even outside of programming<span class="em">&mdash;</span>that I haven&rsquo;t ended
+language-*like*. Maybe that report generator you need to write can be modeled as
+a series of stack-based "instructions" that the generator "executes". That user
+interface you need to render looks an awful lot like traversing an AST.
+-->
+<p>我也希望给你一种新的<span name="domain">看待</span>与解决问题的方式。即便你再也不做语言，你可能会惊讶地发现：有多少编程问题可以看成语言<em>般</em>的。或许你要写的报表生成器，可以建模成生成器“执行”的一系列基于栈的“指令”。你要渲染的用户界面，看着极像遍历一棵 AST。</p>
+<aside name="domain"><!--
+This goes for other domains too. I don't think there's a single topic I've
+learned in programming -- or even outside of programming -- that I haven't ended
 up finding useful in other areas. One of my favorite aspects of software
-engineering is how much it rewards those with eclectic interests.</p>
-</aside>
-<p>If you do want to go further down the programming language rabbit hole, here
-are some suggestions for which branches in the tunnel to explore:</p>
+engineering is how much it rewards those with eclectic interests.
+-->
+<p>这对其他领域也成立。我不认为我在编程里——甚至编程外——学过的任何一个主题，最终没有在其他领域派上用场。软件工程我最喜欢的一面之一，就是它多么奖励兴趣庞杂的人。</p>
+</aside><!--
+If you do want to go further down the programming language rabbit hole, here
+are some suggestions for which branches in the tunnel to explore:
+-->
+<p>若你确实想沿程序设计语言的兔子洞再往下走，以下是一些建议，可探索隧道里哪些岔路：</p><!--
+*   Our simple, single-pass bytecode compiler pushed us towards mostly runtime
+    optimization. In a mature language implementation, compile-time optimization
+    is generally more important, and the field of compiler optimizations is
+    incredibly rich. Grab a classic <span name="cooper">compilers</span> book,
+    and rebuild the front end of clox or jlox to be a sophisticated compilation
+    pipeline with some interesting intermediate representations and optimization
+    passes.
+
+    Dynamic typing will place some restrictions on how far you can go, but there
+    is still a lot you can do. Or maybe you want to take a big leap and add
+    static types and a type checker to Lox. That will certainly give your front
+    end a lot more to chew on.
+-->
 <ul>
 <li>
-<p>Our simple, single-pass bytecode compiler pushed us towards mostly runtime
-optimization. In a mature language implementation, compile-time optimization
-is generally more important, and the field of compiler optimizations is
-incredibly rich. Grab a classic <span name="cooper">compilers</span> book,
-and rebuild the front end of clox or jlox to be a sophisticated compilation
-pipeline with some interesting intermediate representations and optimization
-passes.</p>
-<p>Dynamic typing will place some restrictions on how far you can go, but there
-is still a lot you can do. Or maybe you want to take a big leap and add
-static types and a type checker to Lox. That will certainly give your front
-end a lot more to chew on.</p>
-<aside name="cooper">
-<p>I like Cooper and Torczon&rsquo;s <em>Engineering a Compiler</em> for this. Appel&rsquo;s
-<em>Modern Compiler Implementation</em> books are also well regarded.</p>
+<p>我们简单的单遍字节码编译器把我们推向了主要做运行时优化。在成熟的语言实现里，编译期优化通常更重要，而编译器优化领域极其丰富。拿一本经典<span name="cooper">编译器</span>书，把 clox 或 jlox 的前端重建成带有有趣中间表示与优化遍的精致编译流水线。</p>
+<p>动态类型会限制你能走多远，但仍有许多可做。或许你想迈一大步，给 Lox 加上静态类型与类型检查器。那肯定会让前端有更多可啃的。</p>
+<aside name="cooper"><!--
+I like Cooper and Torczon's *Engineering a Compiler* for this. Appel's
+*Modern Compiler Implementation* books are also well regarded.
+-->
+<p>这方面我喜欢 Cooper 与 Torczon 的 <em>Engineering a Compiler</em>。Appel 的 <em>Modern Compiler Implementation</em> 系列也广受好评。</p>
 </aside></li>
+</ul><!--
+*   In this book, I aim to be correct, but not particularly rigorous. My goal is
+    mostly to give you an *intuition* and a feel for doing language work. If you
+    like more precision, then the whole world of programming language academia
+    is waiting for you. Languages and compilers have been studied formally since
+    before we even had computers, so there is no shortage of books and papers on
+    parser theory, type systems, semantics, and formal logic. Going down this
+    path will also teach you how to read CS papers, which is a valuable skill in
+    its own right.
+-->
+<ul>
+<li>在本书中，我力求正确，但不特别严谨。我的目标主要是给你做语言工作的<em>直觉</em>与手感。若你喜欢更多精确性，整个程序设计语言学术界在等你。语言与编译器在我们有计算机之前就已被形式化研究，所以解析器理论、类型系统、语义与形式逻辑的书与论文并不短缺。走这条路也会教你如何读 CS 论文——这本身就是一项宝贵技能。</li>
+</ul><!--
+*   Or, if you just really enjoy hacking on and making languages, you can take
+    Lox and turn it into your own <span name="license">plaything</span>. Change
+    the syntax to something that delights your eye. Add missing features or
+    remove ones you don't like. Jam new optimizations in there.
+-->
+<ul>
 <li>
-<p>In this book, I aim to be correct, but not particularly rigorous. My goal is
-mostly to give you an <em>intuition</em> and a feel for doing language work. If you
-like more precision, then the whole world of programming language academia
-is waiting for you. Languages and compilers have been studied formally since
-before we even had computers, so there is no shortage of books and papers on
-parser theory, type systems, semantics, and formal logic. Going down this
-path will also teach you how to read CS papers, which is a valuable skill in
-its own right.</p>
-</li>
-<li>
-<p>Or, if you just really enjoy hacking on and making languages, you can take
-Lox and turn it into your own <span name="license">plaything</span>. Change
-the syntax to something that delights your eye. Add missing features or
-remove ones you don&rsquo;t like. Jam new optimizations in there.</p>
-<aside name="license">
-<p>The <em>text</em> of this book is copyrighted to me, but the <em>code</em> and the
-implementations of jlox and clox use the very permissive <a href="https://en.wikipedia.org/wiki/MIT_License">MIT license</a>.
-You are more than welcome to <a href="https://github.com/munificent/craftinginterpreters">take either of those interpreters</a> and
-do whatever you want with them. Go to town.</p>
-<p>If you make significant changes to the language, it would be good to also
-change the name, mostly to avoid confusing people about what the name &ldquo;Lox&rdquo;
-represents.</p>
-</aside>
-<p>Eventually you may get to a point where you have something you think others
-could use as well. That gets you into the very distinct world of programming
-language <em>popularity</em>. Expect to spend a ton of time writing documentation,
-example programs, tools, and useful libraries. The field is crowded with
-languages vying for users. To thrive in that space you&rsquo;ll have to put on
-your marketing hat and <em>sell</em>. Not everyone enjoys that kind of
-public-facing work, but if you do, it can be incredibly gratifying to see
-people use your language to express themselves.</p>
-</li>
-</ul>
-<p>Or maybe this book has satisfied your craving and you&rsquo;ll stop here. Whichever
-way you go, or don&rsquo;t go, there is one lesson I hope to lodge in your heart. Like
+<p>或者，若你只是真的喜欢捣鼓与制造语言，可以把 Lox 变成你自己的<span name="license">玩物</span>。把语法改成赏心悦目的样子。加上缺失的特性，或去掉你不喜欢的。塞进新优化。</p>
+<aside name="license"><!--
+The *text* of this book is copyrighted to me, but the *code* and the
+implementations of jlox and clox use the very permissive [MIT license][].
+You are more than welcome to [take either of those interpreters][source] and
+do whatever you want with them. Go to town.
+-->
+<p>本书的<em>正文</em>版权归我，但 jlox 与 clox 的<em>代码</em>与实现使用非常宽松的 <a href="https://en.wikipedia.org/wiki/MIT_License">MIT 许可证</a>。非常欢迎你<a href="https://github.com/munificent/craftinginterpreters">拿去任一解释器</a>，爱怎么用就怎么用。尽情发挥。</p><!--
+If you make significant changes to the language, it would be good to also
+change the name, mostly to avoid confusing people about what the name "Lox"
+represents.
+-->
+<p>若你对语言做了重大改动，最好也改个名字，主要是避免人们混淆 “Lox” 这个名字代表什么。</p>
+</aside></li>
+</ul><!--
+    Eventually you may get to a point where you have something you think others
+    could use as well. That gets you into the very distinct world of programming
+    language *popularity*. Expect to spend a ton of time writing documentation,
+    example programs, tools, and useful libraries. The field is crowded with
+    languages vying for users. To thrive in that space you'll have to put on
+    your marketing hat and *sell*. Not everyone enjoys that kind of
+    public-facing work, but if you do, it can be incredibly gratifying to see
+    people use your language to express themselves.
+-->
+<pre><code>最终你或许会到某一点：手头有了你认为别人也能用的东西。那会把你带进程序设计语言*流行度*那个截然不同的世界。预期要花大量时间写文档、示例程序、工具与有用库。这片领域挤满了争夺用户的语言。要在那里茁壮成长，你得戴上营销帽去*推销*。不是人人都享受那种面向公众的工作；但若你享受，看见人们用你的语言表达自己，会无比满足。
+</code></pre><!--
+Or maybe this book has satisfied your craving and you'll stop here. Whichever
+way you go, or don't go, there is one lesson I hope to lodge in your heart. Like
 I was, you may have initially been intimidated by programming languages. But in
-these chapters, you&rsquo;ve seen that even really challenging material can be tackled
+these chapters, you've seen that even really challenging material can be tackled
 by us mortals if we get our hands dirty and take it a step at a time. If you can
-handle compilers and interpreters, you can do anything you put your mind to.</p>
-<div class="challenges">
-<h2><a href="#challenges" name="challenges">Challenges</a></h2>
-<p>Assigning homework on the last day of school seems cruel but if you really want
-something to do during your summer vacation:</p>
+handle compilers and interpreters, you can do anything you put your mind to.
+-->
+<p>又或许本书已满足你的渴望，你会停在这里。无论你走哪条路，或不走，有一课我希望嵌进你心里。像我一样，你起初可能被程序设计语言吓到。但在这些章节里，你已看见：即便真正有挑战的材料，只要我们动手、一步一步来，凡人也对付得了。若你能搞定编译器与解释器，你就能做成任何下定决心去做的事。</p>
+<div class="challenges"><!--
+-- Challenges
+-->
+<h2><a href="#挑战" name="挑战"><small>30&#8202;.&#8202;5</small>挑战</a></h2><!--
+Assigning homework on the last day of school seems cruel but if you really want
+something to do during your summer vacation:
+-->
+<p>在学期最后一天布置作业显得残忍，但若你暑假真想找点事做：</p><!--
+1.  Fire up your profiler, run a couple of benchmarks, and look for other
+    hotspots in the VM. Do you see anything in the runtime that you can improve?
+-->
 <ol>
+<li>拉起性能分析器，跑几个基准，在虚拟机里寻找其他热点。运行时里有没有你能改进的地方？</li>
+</ol><!--
+2.  Many strings in real-world user programs are small, often only a character
+    or two. This is less of a concern in clox because we intern strings, but
+    most VMs don't. For those that don't, heap allocating a tiny character array
+    for each of those little strings and then representing the value as a
+    pointer to that array is wasteful. Often, the pointer is larger than the
+    string's characters. A classic trick is to have a separate value
+    representation for small strings that stores the characters inline in the
+    value.
+
+    Starting from clox's original tagged union representation, implement that
+    optimization. Write a couple of relevant benchmarks and see if it helps.
+-->
+<ol start="2">
 <li>
-<p>Fire up your profiler, run a couple of benchmarks, and look for other
-hotspots in the VM. Do you see anything in the runtime that you can improve?</p>
+<p>真实世界用户程序里的许多字符串很小，常常只有一两个字符。在 clox 里这不太成问题，因为我们驻留字符串，但多数虚拟机不这么做。对那些不驻留的，为每个小字符串堆分配一个小字符数组，再把值表示成指向该数组的指针，很浪费。指针往往比字符串字符还大。经典技巧是为小字符串另设一种值表示，把字符内联存在值里。</p>
+<p>从 clox 原先的带标签联合表示出发，实现该优化。写几个相关基准，看看是否有帮助。</p>
 </li>
+</ol><!--
+3.  Reflect back on your experience with this book. What parts of it worked well
+    for you? What didn't? Was it easier for you to learn bottom-up or top-down?
+    Did the illustrations help or distract? Did the analogies clarify or
+    confuse?
+
+    The more you understand your personal learning style, the more effectively
+    you can upload knowledge into your head. You can specifically target
+    material that teaches you the way you learn best.
+-->
+<ol start="3">
 <li>
-<p>Many strings in real-world user programs are small, often only a character
-or two. This is less of a concern in clox because we intern strings, but
-most VMs don&rsquo;t. For those that don&rsquo;t, heap allocating a tiny character array
-for each of those little strings and then representing the value as a
-pointer to that array is wasteful. Often, the pointer is larger than the
-string&rsquo;s characters. A classic trick is to have a separate value
-representation for small strings that stores the characters inline in the
-value.</p>
-<p>Starting from clox&rsquo;s original tagged union representation, implement that
-optimization. Write a couple of relevant benchmarks and see if it helps.</p>
-</li>
-<li>
-<p>Reflect back on your experience with this book. What parts of it worked well
-for you? What didn&rsquo;t? Was it easier for you to learn bottom-up or top-down?
-Did the illustrations help or distract? Did the analogies clarify or
-confuse?</p>
-<p>The more you understand your personal learning style, the more effectively
-you can upload knowledge into your head. You can specifically target
-material that teaches you the way you learn best.</p>
+<p>回顾你与本书相处的体验。哪些部分对你有效？哪些无效？你更容易自底向上还是自顶向下学习？插图是帮助还是干扰？类比是澄清还是混淆？</p>
+<p>你越了解自己的学习风格，就越能有效地把知识上传进脑子。你可以专门对准以你最擅长的方式教你的材料。</p>
 </li>
 </ol>
 </div>
