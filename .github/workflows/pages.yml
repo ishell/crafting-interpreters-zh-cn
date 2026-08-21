@@ -1,0 +1,48 @@
+# Deploy the committed static site under site/ to GitHub Pages.
+# Keeps the same site/ layout as munificent/craftinginterpreters.
+#
+# After pushing this workflow, set:
+#   Settings → Pages → Source → GitHub Actions
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload site/
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: upload
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
