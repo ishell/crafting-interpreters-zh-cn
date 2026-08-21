@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Local Variables<small>22</small></a></h3>
 
 <ul>
@@ -56,7 +55,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="global-variables.html" title="Global Variables" class="prev">←</a>
 <a href="jumping-back-and-forth.html" title="Jumping Back and Forth" class="next">→</a>
 </nav>
@@ -64,9 +63,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Local Variables<small>22</small></a></h3>
 
 <ul>
@@ -94,36 +92,18 @@
   <div class="number">22</div>
   <h1>Local Variables</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#局部变量" name="局部变量"><small>22&#8202;.&#8202;0</small>局部变量</a></h1><!--
-> And as imagination bodies forth<br>
-> The forms of things unknown, the poet's pen<br>
-> Turns them to shapes and gives to airy nothing<br>
+<h1><a href="#局部变量" id="局部变量"><small>22&#8202;.&#8202;0</small>局部变量</a></h1><!--
+> And as imagination bodies forth<br />
+> The forms of things unknown, the poet's pen<br />
+> Turns them to shapes and gives to airy nothing<br />
 > A local habitation and a name.
 >
 > <cite>William Shakespeare, <em>A Midsummer Night's Dream</em></cite>
 -->
 <blockquote>
-<p>当想象力把那些无名之物<br>
-一一赋形，诗人的笔<br>
-便替它们描出轮廓，让一片空虚的乌有<br>
+<p>当想象力把那些无名之物<br />
+一一赋形，诗人的笔<br />
+便替它们描出轮廓，让一片空虚的乌有<br />
 有了栖身的居所，也有了名字。</p>
 <p><cite>威廉·莎士比亚，<em>《仲夏夜之梦》</em></cite></p>
 </blockquote><!--
@@ -164,7 +144,7 @@ local variables will lean heavily on the compiler.
 <p>所幸，词法作用域正是来帮我们的。顾名思义，词法作用域意味着我们只要看程序的文本就能解析出一个局部变量——局部变量<em>不是</em>晚绑定的。凡是在编译器里做掉的处理，运行时就<em>不必</em>再做一遍；因此，我们对局部变量的实现将极大地倚重编译器。</p><!--
 -- Representing Local Variables
 -->
-<h2><a href="#表示局部变量" name="表示局部变量"><small>22&#8202;.&#8202;1</small>表示局部变量</a></h2><!--
+<h2><a href="#表示局部变量" id="表示局部变量"><small>22&#8202;.&#8202;1</small>表示局部变量</a></h2><!--
 The nice thing about hacking on a programming language in modern times is
 there's a long lineage of other languages to learn from. So how do C and Java
 manage their local variables? Why, on the stack, of course! They typically use
@@ -246,8 +226,7 @@ we're going a little closer to the metal. All of the state lives in a new
 struct.
 -->
 <p>要把这整套东西跑起来，编译器里有不少状态需要追踪，我们就从那儿动手。在 jlox 中，我们用一条“环境” HashMap 的链来追踪当前哪些局部变量处于作用域内——那算是表示词法作用域的经典教科书做法。而对 clox，一如往常，我们要更贴近机器一些。所有状态都住在一个新的结构体里。</p>
-<div class="codehilite"><pre class="insert-before">
-} ParseRule;
+<div class="codehilite"><pre class="insert-before">} ParseRule;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after struct <em>ParseRule</em></div>
 <pre class="insert">
@@ -277,8 +256,7 @@ options for how to order them in the array.
 -->
 <p>我们写的是单遍编译器，所以在数组里怎么排序这件事上，可选的余地本也<em>没多少</em>。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-#define DEBUG_TRACE_EXECUTION
+<div class="codehilite"><pre class="insert-before">#define DEBUG_TRACE_EXECUTION
 </pre><div class="source-file"><em>common.h</em></div>
 <pre class="insert">
 
@@ -306,8 +284,7 @@ block ends.
 Each local in the array is one of these:
 -->
 <p>数组里的每个局部变量都是这么个东西：</p>
-<div class="codehilite"><pre class="insert-before">
-} ParseRule;
+<div class="codehilite"><pre class="insert-before">} ParseRule;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after struct <em>ParseRule</em></div>
 <pre class="insert">
@@ -346,14 +323,11 @@ global variable is a *bad* idea.
 -->
 <p>特别是，假如我们哪天想在多线程应用里使用这个编译器，甚至让多个编译器并行运转，那么用全局变量就是个<em>糟糕</em>的主意。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-Parser parser;
+<div class="codehilite"><pre class="insert-before">Parser parser;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
-<pre class="insert">
-<span class="t">Compiler</span>* <span class="i">current</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-Chunk* compilingChunk;
+<pre class="insert"><span class="t">Compiler</span>* <span class="i">current</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">Chunk* compilingChunk;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 <!--
@@ -362,8 +336,7 @@ Here's a little function to initialize the compiler:
 <p>这里有个小函数用来初始化编译器：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitConstant</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">initCompiler</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">initCompiler</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>) {
   <span class="i">compiler</span>-&gt;<span class="i">localCount</span> = <span class="n">0</span>;
   <span class="i">compiler</span>-&gt;<span class="i">scopeDepth</span> = <span class="n">0</span>;
   <span class="i">current</span> = <span class="i">compiler</span>;
@@ -374,15 +347,12 @@ add after <em>emitConstant</em>()</div>
 When we first start up the VM, we call it to get everything into a clean state.
 -->
 <p>虚拟机刚启动时，我们调用它，把一切都置入干净的状态。</p>
-<div class="codehilite"><pre class="insert-before">
-  initScanner(source);
+<div class="codehilite"><pre class="insert-before">  initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()</div>
-<pre class="insert">
-  <span class="t">Compiler</span> <span class="i">compiler</span>;
+<pre class="insert">  <span class="t">Compiler</span> <span class="i">compiler</span>;
   <span class="i">initCompiler</span>(&amp;<span class="i">compiler</span>);
-</pre><pre class="insert-after">
-  compilingChunk = chunk;
+</pre><pre class="insert-after">  compilingChunk = chunk;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 <!--
@@ -393,7 +363,7 @@ those as we need them. First, let's start building some language features.
 <p>编译器有了它需要的数据，却还没有作用于这些数据的操作：没法创建和销毁作用域，也没法添加和解析变量。我们会在需要时逐一补上。先来动手造几个语言特性。</p><!--
 -- Block Statements
 -->
-<h2><a href="#块语句" name="块语句"><small>22&#8202;.&#8202;2</small>块语句</a></h2><!--
+<h2><a href="#块语句" id="块语句"><small>22&#8202;.&#8202;2</small>块语句</a></h2><!--
 Before we can have any local variables, we need some local scopes. These come
 from two things: function bodies and <span name="block">blocks</span>. Functions
 are a big chunk of work that we'll tackle in [a later chapter][functions], so
@@ -401,8 +371,7 @@ for now we're only going to do blocks. As usual, we start with the syntax. The
 new grammar we'll introduce is:
 -->
 <p>要有局部变量，先得有局部作用域。局部作用域来自两处：函数体和<span name="block">块</span>。函数是一大摊活儿，我们留到<a href="calls-and-functions.html">后面的章节</a>再收拾，眼下只做块。照例，我们从语法开始。要引入的新文法是：</p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">printStmt</span>
                | <span class="i">block</span> ;
 
@@ -421,18 +390,15 @@ Blocks are a kind of statement, so the rule for them goes in the `statement`
 production. The corresponding code to compile one looks like this:
 -->
 <p>块是语句的一种，所以它的规则放进 <code>statement</code> 产生式。编译一个块的相应代码长这样：</p>
-<div class="codehilite"><pre class="insert-before">
-  if (match(TOKEN_PRINT)) {
+<div class="codehilite"><pre class="insert-before">  if (match(TOKEN_PRINT)) {
     printStatement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LEFT_BRACE</span>)) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LEFT_BRACE</span>)) {
     <span class="i">beginScope</span>();
     <span class="i">block</span>();
     <span class="i">endScope</span>();
-</pre><pre class="insert-after">
-  } else {
+</pre><pre class="insert-after">  } else {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>statement</em>()</div>
 <!--
@@ -447,8 +413,7 @@ This function will come in handy later for compiling function bodies.
 </aside>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expression</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">block</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">block</span>() {
   <span class="k">while</span> (!<span class="i">check</span>(<span class="a">TOKEN_RIGHT_BRACE</span>) &amp;&amp; !<span class="i">check</span>(<span class="a">TOKEN_EOF</span>)) {
     <span class="i">declaration</span>();
   }
@@ -472,8 +437,7 @@ this function to enter a new local scope:
 <p>执行一个块，无非是把它包含的语句一条接一条执行下去，所以编译起来没多少花样。块在语义上真正有趣的事是创建作用域。在编译块体之前，我们调用这个函数进入一个新的局部作用域：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">beginScope</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">beginScope</span>() {
   <span class="i">current</span>-&gt;<span class="i">scopeDepth</span>++;
 }
 </pre></div>
@@ -486,8 +450,7 @@ each one. Given `beginScope()`, you can probably guess what `endScope()` does.
 <p>为了“创建”一个作用域，我们做的仅仅是把当前深度加一。这显然比 jlox 快得多——那边每个作用域都要分配一整张新 HashMap。有了 <code>beginScope()</code>，你大概能猜到 <code>endScope()</code> 干什么。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>beginScope</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">endScope</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">endScope</span>() {
   <span class="i">current</span>-&gt;<span class="i">scopeDepth</span>--;
 }
 </pre></div>
@@ -499,7 +462,7 @@ variables into them.
 <p>块和作用域大抵就这些了，于是我们可以往里头塞点变量了。</p><!--
 -- Declaring Local Variables
 -->
-<h2><a href="#声明局部变量" name="声明局部变量"><small>22&#8202;.&#8202;3</small>声明局部变量</a></h2><!--
+<h2><a href="#声明局部变量" id="声明局部变量"><small>22&#8202;.&#8202;3</small>声明局部变量</a></h2><!--
 Usually we start with parsing here, but our compiler already supports parsing
 and compiling variable declarations. We've got `var` statements, identifier
 expressions and assignment in there now. It's just that the compiler assumes
@@ -519,8 +482,7 @@ Both of those helpers need a few changes to support local variables. In
 `parseVariable()`, we add:
 -->
 <p>这两个辅助函数都需要改动几处，才能支持局部变量。在 <code>parseVariable()</code> 中，我们加上：</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_IDENTIFIER, errorMessage);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_IDENTIFIER, errorMessage);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>parseVariable</em>()</div>
 <pre class="insert">
@@ -528,8 +490,7 @@ in <em>parseVariable</em>()</div>
   <span class="i">declareVariable</span>();
   <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">scopeDepth</span> &gt; <span class="n">0</span>) <span class="k">return</span> <span class="n">0</span>;
 
-</pre><pre class="insert-after">
-  return identifierConstant(&amp;parser.previous);
+</pre><pre class="insert-after">  return identifierConstant(&amp;parser.previous);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parseVariable</em>()</div>
 <!--
@@ -544,17 +505,14 @@ Over in `defineVariable()`, we need to emit the code to store a local variable
 if we're in a local scope. It looks like this:
 -->
 <p>到了 <code>defineVariable()</code> 这边，若身处局部作用域，我们需要发出存储局部变量的代码。它长这样：</p>
-<div class="codehilite"><pre class="insert-before">
-static void defineVariable(uint8_t global) {
+<div class="codehilite"><pre class="insert-before">static void defineVariable(uint8_t global) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>defineVariable</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">scopeDepth</span> &gt; <span class="n">0</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">scopeDepth</span> &gt; <span class="n">0</span>) {
     <span class="k">return</span>;
   }
 
-</pre><pre class="insert-after">
-  emitBytes(OP_DEFINE_GLOBAL, global);
+</pre><pre class="insert-after">  emitBytes(OP_DEFINE_GLOBAL, global);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>defineVariable</em>()</div>
 <!--
@@ -579,8 +537,7 @@ OK, so what's "declaring" about? Here's what that does:
 <p>好，那么“声明”又是怎么回事？它做的是这些：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>identifierConstant</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">declareVariable</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">declareVariable</span>() {
   <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">scopeDepth</span> == <span class="n">0</span>) <span class="k">return</span>;
 
   <span class="t">Token</span>* <span class="i">name</span> = &amp;<span class="i">parser</span>.<span class="i">previous</span>;
@@ -602,8 +559,7 @@ variables in the current scope. We implement that using another new function.
 <p>但对局部变量，编译器确实需要记住这个变量存在。这就是声明它的作用——把它加入编译器中当前作用域的变量列表。我们用另一个新函数来实现。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>identifierConstant</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">addLocal</span>(<span class="t">Token</span> <span class="i">name</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">addLocal</span>(<span class="t">Token</span> <span class="i">name</span>) {
   <span class="t">Local</span>* <span class="i">local</span> = &amp;<span class="i">current</span>-&gt;<span class="i">locals</span>[<span class="i">current</span>-&gt;<span class="i">localCount</span>++];
   <span class="i">local</span>-&gt;<span class="i">name</span> = <span class="i">name</span>;
   <span class="i">local</span>-&gt;<span class="i">depth</span> = <span class="i">current</span>-&gt;<span class="i">scopeDepth</span>;
@@ -642,26 +598,22 @@ If we try to go over that, not only could we not refer to them at runtime, but
 the compiler would overwrite its own locals array, too. Let's prevent that.
 -->
 <p>若试图越过这个数目，不仅运行时无法引用它们，编译器还会把自己的局部变量数组给覆盖掉。我们来防住它。</p>
-<div class="codehilite"><pre class="insert-before">
-static void addLocal(Token name) {
+<div class="codehilite"><pre class="insert-before">static void addLocal(Token name) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>addLocal</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">localCount</span> == <span class="a">UINT8_COUNT</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">localCount</span> == <span class="a">UINT8_COUNT</span>) {
     <span class="i">error</span>(<span class="s">&quot;Too many local variables in function.&quot;</span>);
     <span class="k">return</span>;
   }
 
-</pre><pre class="insert-after">
-  Local* local = &amp;current-&gt;locals[current-&gt;localCount++];
+</pre><pre class="insert-after">  Local* local = &amp;current-&gt;locals[current-&gt;localCount++];
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>addLocal</em>()</div>
 <!--
 The next case is trickier. Consider:
 -->
 <p>下一种情形更微妙。请看：</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;first&quot;</span>;
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;second&quot;</span>;
 }
@@ -682,8 +634,7 @@ code relies on it.
 Note that the above program is different from this one:
 -->
 <p>注意，上面那个程序与下面这个不同：</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
   {
     <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;inner&quot;</span>;
@@ -699,24 +650,21 @@ with the same name in the *same* local scope.
 We detect that error like so:
 -->
 <p>我们这样检出该错误：</p>
-<div class="codehilite"><pre class="insert-before">
-  Token* name = &amp;parser.previous;
+<div class="codehilite"><pre class="insert-before">  Token* name = &amp;parser.previous;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>declareVariable</em>()</div>
-<pre class="insert">
-  <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="i">current</span>-&gt;<span class="i">localCount</span> - <span class="n">1</span>; <span class="i">i</span> &gt;= <span class="n">0</span>; <span class="i">i</span>--) {
+<pre class="insert">  <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="i">current</span>-&gt;<span class="i">localCount</span> - <span class="n">1</span>; <span class="i">i</span> &gt;= <span class="n">0</span>; <span class="i">i</span>--) {
     <span class="t">Local</span>* <span class="i">local</span> = &amp;<span class="i">current</span>-&gt;<span class="i">locals</span>[<span class="i">i</span>];
     <span class="k">if</span> (<span class="i">local</span>-&gt;<span class="i">depth</span> != -<span class="n">1</span> &amp;&amp; <span class="i">local</span>-&gt;<span class="i">depth</span> &lt; <span class="i">current</span>-&gt;<span class="i">scopeDepth</span>) {
       <span class="k">break</span>;<span name="negative"> </span>
     }
 
     <span class="k">if</span> (<span class="i">identifiersEqual</span>(<span class="i">name</span>, &amp;<span class="i">local</span>-&gt;<span class="i">name</span>)) {
-      <span class="i">error</span>(<span class="s">&quot;Already variable with this name in this scope.&quot;</span>);
+      <span class="i">error</span>(<span class="s">&quot;Already a variable with this name in this scope.&quot;</span>);
     }
   }
 
-</pre><pre class="insert-after">
-  addLocal(*name);
+</pre><pre class="insert-after">  addLocal(*name);
 }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>declareVariable</em>()</div>
@@ -740,8 +688,7 @@ To see if two identifiers are the same, we use this:
 <p>判断两个标识符是否相同，我们用这个：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>identifierConstant</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">identifiersEqual</span>(<span class="t">Token</span>* <span class="i">a</span>, <span class="t">Token</span>* <span class="i">b</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">identifiersEqual</span>(<span class="t">Token</span>* <span class="i">a</span>, <span class="t">Token</span>* <span class="i">b</span>) {
   <span class="k">if</span> (<span class="i">a</span>-&gt;<span class="i">length</span> != <span class="i">b</span>-&gt;<span class="i">length</span>) <span class="k">return</span> <span class="k">false</span>;
   <span class="k">return</span> <span class="i">memcmp</span>(<span class="i">a</span>-&gt;<span class="i">start</span>, <span class="i">b</span>-&gt;<span class="i">start</span>, <span class="i">a</span>-&gt;<span class="i">length</span>) == <span class="n">0</span>;
 }
@@ -760,11 +707,9 @@ tokens aren't full LoxStrings, so we haven't calculated their hashes yet.
 -->
 <p>要是能比较它们的哈希值，倒是个不错的小优化；可记号并不是完整的 LoxString，我们还没算过它们的哈希。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdlib.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdlib.h&gt;
 </pre><div class="source-file"><em>compiler.c</em></div>
-<pre class="insert">
-<span class="a">#include &lt;string.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;string.h&gt;</span>
 </pre><pre class="insert-after">
 
 #include &quot;common.h&quot;
@@ -776,8 +721,7 @@ linger on beyond the scope where they are declared. When a block ends, we need
 to put them to rest.
 -->
 <p>有了这些，我们能让变量诞生了。可它们像幽魂一样，赖在声明它们的作用域之外不肯散去。块结束时，我们得让它们安息。</p>
-<div class="codehilite"><pre class="insert-before">
-  current-&gt;scopeDepth--;
+<div class="codehilite"><pre class="insert-before">  current-&gt;scopeDepth--;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endScope</em>()</div>
 <pre class="insert">
@@ -788,8 +732,7 @@ in <em>endScope</em>()</div>
     <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
     <span class="i">current</span>-&gt;<span class="i">localCount</span>--;
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endScope</em>()</div>
 <!--
@@ -814,7 +757,7 @@ that takes an operand for the number of slots to pop and pops them all at once.
 </aside><!--
 -- Using Locals
 -->
-<h2><a href="#使用局部变量" name="使用局部变量"><small>22&#8202;.&#8202;4</small>使用局部变量</a></h2><!--
+<h2><a href="#使用局部变量" id="使用局部变量"><small>22&#8202;.&#8202;4</small>使用局部变量</a></h2><!--
 We can now compile and execute local variable declarations. At runtime, their
 values are sitting where they should be on the stack. Let's start using them.
 We'll do both variable access and assignment at the same time since they touch
@@ -826,13 +769,11 @@ little software engineers -- we want to reuse as much of that existing code as
 we can. Something like this:
 -->
 <p>读写全局变量的代码我们已经有了；而作为乖巧的小软件工程师，我们想尽可能复用这些既有代码。差不多像这样：</p>
-<div class="codehilite"><pre class="insert-before">
-static void namedVariable(Token name, bool canAssign) {
+<div class="codehilite"><pre class="insert-before">static void namedVariable(Token name, bool canAssign) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>namedVariable</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">uint8_t</span> <span class="i">getOp</span>, <span class="i">setOp</span>;
+<pre class="insert">  <span class="t">uint8_t</span> <span class="i">getOp</span>, <span class="i">setOp</span>;
   <span class="t">int</span> <span class="i">arg</span> = <span class="i">resolveLocal</span>(<span class="i">current</span>, &amp;<span class="i">name</span>);
   <span class="k">if</span> (<span class="i">arg</span> != -<span class="n">1</span>) {
     <span class="i">getOp</span> = <span class="a">OP_GET_LOCAL</span>;
@@ -859,32 +800,26 @@ A little further down, we use those variables to emit the right instructions.
 For assignment:
 -->
 <p>再往下一点，我们用这两个变量发出正确的指令。赋值：</p>
-<div class="codehilite"><pre class="insert-before">
-  if (canAssign &amp;&amp; match(TOKEN_EQUAL)) {
+<div class="codehilite"><pre class="insert-before">  if (canAssign &amp;&amp; match(TOKEN_EQUAL)) {
     expression();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>namedVariable</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">emitBytes</span>(<span class="i">setOp</span>, (<span class="t">uint8_t</span>)<span class="i">arg</span>);
-</pre><pre class="insert-after">
-  } else {
+<pre class="insert">    <span class="i">emitBytes</span>(<span class="i">setOp</span>, (<span class="t">uint8_t</span>)<span class="i">arg</span>);
+</pre><pre class="insert-after">  } else {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>namedVariable</em>(), replace 1 line</div>
 <!--
 And for access:
 -->
 <p>访问：</p>
-<div class="codehilite"><pre class="insert-before">
-    emitBytes(setOp, (uint8_t)arg);
+<div class="codehilite"><pre class="insert-before">    emitBytes(setOp, (uint8_t)arg);
   } else {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>namedVariable</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">emitBytes</span>(<span class="i">getOp</span>, (<span class="t">uint8_t</span>)<span class="i">arg</span>);
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">emitBytes</span>(<span class="i">getOp</span>, (<span class="t">uint8_t</span>)<span class="i">arg</span>);
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>namedVariable</em>(), replace 1 line</div>
 <!--
@@ -894,8 +829,7 @@ here:
 <p>本章真正的心脏——解析局部变量的那一段——在这里：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>identifiersEqual</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">resolveLocal</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">Token</span>* <span class="i">name</span>) {
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">resolveLocal</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">Token</span>* <span class="i">name</span>) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="i">compiler</span>-&gt;<span class="i">localCount</span> - <span class="n">1</span>; <span class="i">i</span> &gt;= <span class="n">0</span>; <span class="i">i</span>--) {
     <span class="t">Local</span>* <span class="i">local</span> = &amp;<span class="i">compiler</span>-&gt;<span class="i">locals</span>[<span class="i">i</span>];
     <span class="k">if</span> (<span class="i">identifiersEqual</span>(<span class="i">name</span>, &amp;<span class="i">local</span>-&gt;<span class="i">name</span>)) {
@@ -932,37 +866,31 @@ wasn't found and should be assumed to be a global variable instead.
 <p>若把整个数组走完仍未找到给定名字的变量，它必定不是局部变量。这种情况下，我们返回 <code>-1</code>，示意没找到，应当改按全局变量来对待。</p><!--
 ### Interpreting local variables
 -->
-<h3><a href="#解释局部变量" name="解释局部变量"><small>22&#8202;.&#8202;4&#8202;.&#8202;2</small>解释局部变量</a></h3><!--
+<h3><a href="#解释局部变量" id="解释局部变量"><small>22&#8202;.&#8202;4&#8202;.&#8202;2</small>解释局部变量</a></h3><!--
 Our compiler is emitting two new instructions, so let's get them working. First
 is loading a local variable:
 -->
 <p>编译器正在发出两条新指令，我们来让它们跑起来。先是加载局部变量：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_POP,
+<div class="codehilite"><pre class="insert-before">  OP_POP,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_GET_LOCAL</span>,
-</pre><pre class="insert-after">
-  OP_GET_GLOBAL,
+<pre class="insert">  <span class="a">OP_GET_LOCAL</span>,
+</pre><pre class="insert-after">  OP_GET_GLOBAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 And its implementation:
 -->
 <p>以及它的实现：</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_POP: pop(); break;
+<div class="codehilite"><pre class="insert-before">      case OP_POP: pop(); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_GET_LOCAL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_GET_LOCAL</span>: {
         <span class="t">uint8_t</span> <span class="i">slot</span> = <span class="a">READ_BYTE</span>();
         <span class="i">push</span>(<span class="i">vm</span>.<span class="i">stack</span>[<span class="i">slot</span>]);<span name="slot"> </span>
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_GET_GLOBAL: {
+</pre><pre class="insert-after">      case OP_GET_GLOBAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -984,32 +912,26 @@ cost of having larger instructions with more operands.
 Next is assignment:
 -->
 <p>接下来是赋值：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_GET_LOCAL,
+<div class="codehilite"><pre class="insert-before">  OP_GET_LOCAL,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_SET_LOCAL</span>,
-</pre><pre class="insert-after">
-  OP_GET_GLOBAL,
+<pre class="insert">  <span class="a">OP_SET_LOCAL</span>,
+</pre><pre class="insert-after">  OP_GET_GLOBAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 You can probably predict the implementation.
 -->
 <p>实现你大概能猜到。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_SET_LOCAL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_SET_LOCAL</span>: {
         <span class="t">uint8_t</span> <span class="i">slot</span> = <span class="a">READ_BYTE</span>();
         <span class="i">vm</span>.<span class="i">stack</span>[<span class="i">slot</span>] = <span class="i">peek</span>(<span class="n">0</span>);
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_GET_GLOBAL: {
+</pre><pre class="insert-after">      case OP_GET_GLOBAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1023,17 +945,14 @@ itself, so the VM just leaves the value on the stack.
 Our disassembler is incomplete without support for these two new instructions.
 -->
 <p>少了对这两条新指令的支持，我们的反汇编器便不完整。</p>
-<div class="codehilite"><pre class="insert-before">
-      return simpleInstruction(&quot;OP_POP&quot;, offset);
+<div class="codehilite"><pre class="insert-before">      return simpleInstruction(&quot;OP_POP&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_GET_LOCAL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_GET_LOCAL</span>:
       <span class="k">return</span> <span class="i">byteInstruction</span>(<span class="s">&quot;OP_GET_LOCAL&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_SET_LOCAL</span>:
       <span class="k">return</span> <span class="i">byteInstruction</span>(<span class="s">&quot;OP_SET_LOCAL&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_GET_GLOBAL:
+</pre><pre class="insert-after">    case OP_GET_GLOBAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1055,8 +974,7 @@ local variable at each stack slot.
 </aside>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 add after <em>simpleInstruction</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">byteInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>,
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">byteInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>,
                            <span class="t">int</span> <span class="i">offset</span>) {
   <span class="t">uint8_t</span> <span class="i">slot</span> = <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span> + <span class="n">1</span>];
   <span class="i">printf</span>(<span class="s">&quot;%-16s %4d</span><span class="e">\n</span><span class="s">&quot;</span>, <span class="i">name</span>, <span class="i">slot</span>);
@@ -1067,7 +985,7 @@ add after <em>simpleInstruction</em>()</div>
 <!--
 ### Another scope edge case
 -->
-<h3><a href="#又一处作用域边角" name="又一处作用域边角"><small>22&#8202;.&#8202;4&#8202;.&#8202;4</small>又一处作用域边角</a></h3><!--
+<h3><a href="#又一处作用域边角" id="又一处作用域边角"><small>22&#8202;.&#8202;4&#8202;.&#8202;4</small>又一处作用域边角</a></h3><!--
 We already sunk some time into handling a couple of weird edge cases around
 scopes. We made sure shadowing works correctly. We report an error if two
 variables in the same local scope have the same name. For reasons that aren't
@@ -1084,8 +1002,7 @@ No, not even Scheme.
 We've got one more edge case to deal with before we end this chapter. Recall this strange beastie we first met in [jlox's implementation of variable resolution][shadow]:
 -->
 <p>本章收尾之前，还有一个边角情形要料理。还记得我们在 <a href="resolving-and-binding.html#resolving-variable-declarations">jlox 的变量解析实现</a>里初次遭遇的这头怪东西吗：</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
   {
     <span class="k">var</span> <span class="i">a</span> = <span class="i">a</span>;
@@ -1111,15 +1028,12 @@ little more parsimonious with memory. Instead, we'll set the variable's scope
 depth to a special sentinel value, `-1`.
 -->
 <p>要实现这一点，声明局部变量时，我们得设法标示出“未初始化”状态。可以给 Local 加个新字段，不过我们在内存上还是抠一点吧：改为把变量的作用域深度设为一个特殊的哨兵值 <code>-1</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-  local-&gt;name = name;
+<div class="codehilite"><pre class="insert-before">  local-&gt;name = name;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>addLocal</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="i">local</span>-&gt;<span class="i">depth</span> = -<span class="n">1</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">local</span>-&gt;<span class="i">depth</span> = -<span class="n">1</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>addLocal</em>(), replace 1 line</div>
 <!--
@@ -1127,14 +1041,11 @@ Later, once the variable's initializer has been compiled, we mark it
 initialized.
 -->
 <p>稍后，一旦变量的初始化式编译完成，我们就把它标记为已初始化。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (current-&gt;scopeDepth &gt; 0) {
+<div class="codehilite"><pre class="insert-before">  if (current-&gt;scopeDepth &gt; 0) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>defineVariable</em>()</div>
-<pre class="insert">
-    <span class="i">markInitialized</span>();
-</pre><pre class="insert-after">
-    return;
+<pre class="insert">    <span class="i">markInitialized</span>();
+</pre><pre class="insert-after">    return;
   }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>defineVariable</em>()</div>
@@ -1144,8 +1055,7 @@ That is implemented like so:
 <p>其实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>parseVariable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">markInitialized</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">markInitialized</span>() {
   <span class="i">current</span>-&gt;<span class="i">locals</span>[<span class="i">current</span>-&gt;<span class="i">localCount</span> - <span class="n">1</span>].<span class="i">depth</span> =
       <span class="i">current</span>-&gt;<span class="i">scopeDepth</span>;
 }
@@ -1161,16 +1071,13 @@ When we resolve a reference to a local variable, we check the scope depth to see
 if it's fully defined.
 -->
 <p>解析对某个局部变量的引用时，我们检查作用域深度，看它是否已完全定义。</p>
-<div class="codehilite"><pre class="insert-before">
-    if (identifiersEqual(name, &amp;local-&gt;name)) {
+<div class="codehilite"><pre class="insert-before">    if (identifiersEqual(name, &amp;local-&gt;name)) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>resolveLocal</em>()</div>
-<pre class="insert">
-      <span class="k">if</span> (<span class="i">local</span>-&gt;<span class="i">depth</span> == -<span class="n">1</span>) {
+<pre class="insert">      <span class="k">if</span> (<span class="i">local</span>-&gt;<span class="i">depth</span> == -<span class="n">1</span>) {
         <span class="i">error</span>(<span class="s">&quot;Can&#39;t read local variable in its own initializer.&quot;</span>);
       }
-</pre><pre class="insert-after">
-      return i;
+</pre><pre class="insert-after">      return i;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>resolveLocal</em>()</div>
 <!--
@@ -1207,7 +1114,7 @@ the bare bits.
 <div class="challenges"><!--
 ## Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>22&#8202;.&#8202;6</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>22&#8202;.&#8202;6</small>挑战</a></h2><!--
 1.  Our simple local array makes it easy to calculate the stack slot of each
     local variable. But it means that when the compiler resolves a reference to
     a variable, we have to do a linear scan through the array.
@@ -1232,8 +1139,7 @@ the bare bits.
 <ol start="2">
 <li>
 <p>其他语言如何处理这样的代码：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="i">a</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="i">a</span>;
 </pre></div>
 <p>如果这是你自己的语言，你会怎么做？为什么？</p>
 </li>
@@ -1266,7 +1172,7 @@ the bare bits.
 <a href="jumping-back-and-forth.html" class="next">
   Next Chapter: &ldquo;Jumping Back and Forth&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

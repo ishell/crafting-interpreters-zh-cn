@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Garbage Collection<small>26</small></a></h3>
 
 <ul>
@@ -58,7 +57,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="closures.html" title="Closures" class="prev">←</a>
 <a href="classes-and-instances.html" title="Classes and Instances" class="next">→</a>
 </nav>
@@ -66,9 +65,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Garbage Collection<small>26</small></a></h3>
 
 <ul>
@@ -98,25 +96,7 @@
   <div class="number">26</div>
   <h1>Garbage Collection</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#垃圾回收" name="垃圾回收"><small>26&#8202;.&#8202;0</small>垃圾回收</a></h1><!--
+<h1><a href="#垃圾回收" id="垃圾回收"><small>26&#8202;.&#8202;0</small>垃圾回收</a></h1><!--
 > I wanna, I wanna,<br>
 > I wanna, I wanna,<br>
 > I wanna be trash.<br>
@@ -169,7 +149,7 @@ knew.
 </aside><!--
 -- Reachability
 -->
-<h2><a href="#可达性" name="可达性"><small>26&#8202;.&#8202;1</small>可达性</a></h2><!--
+<h2><a href="#可达性" id="可达性"><small>26&#8202;.&#8202;1</small>可达性</a></h2><!--
 This raises a surprisingly difficult question: how does a VM tell what memory is
 *not* needed? Memory is only needed if it is read in the future, but short of
 having a time machine, how can an implementation tell what code the program
@@ -200,8 +180,7 @@ read? Actually, no, at least not in a memory-safe language like Lox. Here's an
 example:
 -->
 <p>这听起来<em>太</em>保守了。难道<em>任何</em>一点内存不都可能被读到吗？其实不然，至少在像 Lox 这样的内存安全语言里不是。举个例子：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;first value&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;first value&quot;</span>;
 <span class="i">a</span> = <span class="s">&quot;updated&quot;</span>;
 <span class="c">// GC here.</span>
 <span class="k">print</span> <span class="i">a</span>;
@@ -217,8 +196,7 @@ there is some way for a user program to reference it, otherwise, like the string
 Many values can be directly accessed by the VM. Take a look at:
 -->
 <p>许多值可以被虚拟机直接访问。看看这个：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">global</span> = <span class="s">&quot;string&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">global</span> = <span class="s">&quot;string&quot;</span>;
 {
   <span class="k">var</span> <span class="i">local</span> = <span class="s">&quot;another&quot;</span>;
   <span class="k">print</span> <span class="i">global</span> + <span class="i">local</span>;
@@ -252,8 +230,7 @@ We'll get there [soon][classes], though!
 -->
 <p>不过我们<a href="classes-and-instances.html">很快</a>就会到那儿！</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">makeClosure</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">makeClosure</span>() {
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;data&quot;</span>;
 
   <span class="k">fun</span> <span class="i">f</span>() { <span class="k">print</span> <span class="i">a</span>; }
@@ -331,7 +308,7 @@ to read. Or perhaps I have a strange idea of fun.
 </aside><!--
 -- Mark-Sweep Garbage Collection
 -->
-<h2><a href="#标记-清扫垃圾回收" name="标记-清扫垃圾回收"><small>26&#8202;.&#8202;2</small>标记-清扫垃圾回收</a></h2><!--
+<h2><a href="#标记-清扫垃圾回收" id="标记-清扫垃圾回收"><small>26&#8202;.&#8202;2</small>标记-清扫垃圾回收</a></h2><!--
 The first managed language was Lisp, the second "high-level" language to be
 invented, right after Fortran. John McCarthy considered using manual memory
 management or reference counting, but <span
@@ -394,7 +371,7 @@ didn't get marked, and then resume the user's program.
 <p>这就是我们要去实现的。每当我们认定该收回一些字节时，就会追踪一切、标记全部可达对象，释放没被标上的，然后恢复用户程序。</p><!--
 -- Collecting garbage
 -->
-<h3><a href="#收集垃圾" name="收集垃圾"><small>26&#8202;.&#8202;2&#8202;.&#8202;1</small>收集垃圾</a></h3><!--
+<h3><a href="#收集垃圾" id="收集垃圾"><small>26&#8202;.&#8202;2&#8202;.&#8202;1</small>收集垃圾</a></h3><!--
 This entire chapter is about implementing this one <span
 name="one">function</span>:
 -->
@@ -404,14 +381,11 @@ Of course, we'll end up adding a bunch of helper functions too.
 -->
 <p>当然，我们最终也会加上一堆辅助函数。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+<div class="codehilite"><pre class="insert-before">void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 </pre><div class="source-file"><em>memory.h</em><br>
 add after <em>reallocate</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">collectGarbage</span>();
-</pre><pre class="insert-after">
-void freeObjects();
+<pre class="insert"><span class="t">void</span> <span class="i">collectGarbage</span>();
+</pre><pre class="insert-after">void freeObjects();
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
 <!--
@@ -420,8 +394,7 @@ We'll work our way up to a full implementation starting with this empty shell:
 <p>我们从这具空壳起步，一步步走向完整实现：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>freeObject</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">collectGarbage</span>() {
+<pre><span class="t">void</span> <span class="i">collectGarbage</span>() {
 }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>freeObject</em>()</div>
@@ -432,8 +405,7 @@ chapter. For now we'll sidestep the issue and build ourselves a handy diagnostic
 tool in the process.
 -->
 <p>你可能会先问：这函数什么时候被调用？事实证明那是个微妙的问题，本章后面会花些时间讨论。眼下我们先绕开它，顺带给自己造一个好用的诊断工具。</p>
-<div class="codehilite"><pre class="insert-before">
-#define DEBUG_TRACE_EXECUTION
+<div class="codehilite"><pre class="insert-before">#define DEBUG_TRACE_EXECUTION
 </pre><div class="source-file"><em>common.h</em></div>
 <pre class="insert">
 
@@ -451,19 +423,16 @@ bugs that occur only when a GC is triggered at just the right moment. If *every*
 moment triggers a GC, you're likely to find those bugs.
 -->
 <p>我们给垃圾回收器加一个可选的“压力测试”模式。定义了这个标志后，GC 会尽可能频繁地跑。这对性能显然糟透了。但它很擅长把那些只在“恰到好处”的时刻触发 GC 才会出现的内存管理缺陷冲出来。若<em>每一个</em>时刻都触发 GC，你就很可能找到那些虫子。</p>
-<div class="codehilite"><pre class="insert-before">
-void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+<div class="codehilite"><pre class="insert-before">void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>reallocate</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">newSize</span> &gt; <span class="i">oldSize</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">newSize</span> &gt; <span class="i">oldSize</span>) {
 <span class="a">#ifdef DEBUG_STRESS_GC</span>
     <span class="i">collectGarbage</span>();
 <span class="a">#endif</span>
   }
 
-</pre><pre class="insert-after">
-  if (newSize == 0) {
+</pre><pre class="insert-after">  if (newSize == 0) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
 <!--
@@ -492,7 +461,7 @@ when a backward jump occurs.
 </aside><!--
 -- Debug logging
 -->
-<h3><a href="#调试日志" name="调试日志"><small>26&#8202;.&#8202;2&#8202;.&#8202;2</small>调试日志</a></h3><!--
+<h3><a href="#调试日志" id="调试日志"><small>26&#8202;.&#8202;2&#8202;.&#8202;2</small>调试日志</a></h3><!--
 While we're on the subject of diagnostics, let's put some more in. A real
 challenge I've found with garbage collectors is that they are opaque. We've been
 running lots of Lox programs just fine without any GC *at all* so far. Once we
@@ -503,11 +472,9 @@ write programs that plow through acres of memory? How do we debug that?
 An easy way to shine a light into the GC's inner workings is with some logging.
 -->
 <p>往 GC 内部运作里照进一点光的简便办法，就是日志。</p>
-<div class="codehilite"><pre class="insert-before">
-#define DEBUG_STRESS_GC
+<div class="codehilite"><pre class="insert-before">#define DEBUG_STRESS_GC
 </pre><div class="source-file"><em>common.h</em></div>
-<pre class="insert">
-<span class="a">#define DEBUG_LOG_GC</span>
+<pre class="insert"><span class="a">#define DEBUG_LOG_GC</span>
 </pre><pre class="insert-after">
 
 #define UINT8_COUNT (UINT8_MAX + 1)
@@ -521,8 +488,7 @@ something with dynamic memory.
 We need a couple of includes.
 -->
 <p>我们需要几条 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;vm.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;vm.h&quot;
 </pre><div class="source-file"><em>memory.c</em></div>
 <pre class="insert">
 
@@ -540,16 +506,13 @@ We don't have a collector yet, but we can start putting in some of the logging
 now. We'll want to know when a collection run starts.
 -->
 <p>我们还没有收集器，但现在就可以先放进一些日志。我们想知道一次收集运行何时开始。</p>
-<div class="codehilite"><pre class="insert-before">
-void collectGarbage() {
+<div class="codehilite"><pre class="insert-before">void collectGarbage() {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef DEBUG_LOG_GC</span>
+<pre class="insert"><span class="a">#ifdef DEBUG_LOG_GC</span>
   <span class="i">printf</span>(<span class="s">&quot;-- gc begin</span><span class="e">\n</span><span class="s">&quot;</span>);
 <span class="a">#endif</span>
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
 <!--
@@ -557,8 +520,7 @@ Eventually we will log some other operations during the collection, so we'll
 also want to know when the show's over.
 -->
 <p>最终我们还会在收集过程中记录另一些操作，所以也想知道这场戏何时落幕。</p>
-<div class="codehilite"><pre class="insert-before">
-  printf(&quot;-- gc begin\n&quot;);
+<div class="codehilite"><pre class="insert-before">  printf(&quot;-- gc begin\n&quot;);
 #endif
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
@@ -567,8 +529,7 @@ in <em>collectGarbage</em>()</div>
 <span class="a">#ifdef DEBUG_LOG_GC</span>
   <span class="i">printf</span>(<span class="s">&quot;-- gc end</span><span class="e">\n</span><span class="s">&quot;</span>);
 <span class="a">#endif</span>
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
 <!--
@@ -576,8 +537,7 @@ We don't have any code for the collector yet, but we do have functions for
 allocating and freeing, so we can instrument those now.
 -->
 <p>收集器的代码还没有，但分配与释放的函数已有，现在就可以给它们插桩。</p>
-<div class="codehilite"><pre class="insert-before">
-  vm.objects = object;
+<div class="codehilite"><pre class="insert-before">  vm.objects = object;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateObject</em>()</div>
 <pre class="insert">
@@ -586,25 +546,21 @@ in <em>allocateObject</em>()</div>
   <span class="i">printf</span>(<span class="s">&quot;%p allocate %zu for %d</span><span class="e">\n</span><span class="s">&quot;</span>, (<span class="t">void</span>*)<span class="i">object</span>, <span class="i">size</span>, <span class="i">type</span>);
 <span class="a">#endif</span>
 
-</pre><pre class="insert-after">
-  return object;
+</pre><pre class="insert-after">  return object;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateObject</em>()</div>
 <!--
 And at the end of an object's lifespan:
 -->
 <p>以及在对象寿命结束时：</p>
-<div class="codehilite"><pre class="insert-before">
-static void freeObject(Obj* object) {
+<div class="codehilite"><pre class="insert-before">static void freeObject(Obj* object) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef DEBUG_LOG_GC</span>
+<pre class="insert"><span class="a">#ifdef DEBUG_LOG_GC</span>
   <span class="i">printf</span>(<span class="s">&quot;%p free type %d</span><span class="e">\n</span><span class="s">&quot;</span>, (<span class="t">void</span>*)<span class="i">object</span>, <span class="i">object</span>-&gt;<span class="i">type</span>);
 <span class="a">#endif</span>
 
-</pre><pre class="insert-after">
-  switch (object-&gt;type) {
+</pre><pre class="insert-after">  switch (object-&gt;type) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -614,15 +570,14 @@ work through the rest of the chapter.
 <p>有了这两个标志，在本章余下部分推进时，我们应该能看见自己在取得进展。</p><!--
 -- Marking the Roots
 -->
-<h2><a href="#标记根" name="标记根"><small>26&#8202;.&#8202;3</small>标记根</a></h2><!--
+<h2><a href="#标记根" id="标记根"><small>26&#8202;.&#8202;3</small>标记根</a></h2><!--
 Objects are scattered across the heap like stars in the inky night sky. A
 reference from one object to another forms a connection, and these
 constellations are the graph that the mark phase traverses. Marking begins at
 the roots.
 -->
 <p>对象散落在堆上，像墨色夜空里的星星。从一个对象到另一个的引用形成连线，这些星座就是标记阶段要遍历的图。标记从根开始。</p>
-<div class="codehilite"><pre class="insert-before">
-#ifdef DEBUG_LOG_GC
+<div class="codehilite"><pre class="insert-before">#ifdef DEBUG_LOG_GC
   printf(&quot;-- gc begin\n&quot;);
 #endif
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -642,8 +597,7 @@ so we start by walking that.
 <p>大多数根是局部变量或就坐在虚拟机栈上的临时值，所以我们从走栈开始。</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>freeObject</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">markRoots</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">markRoots</span>() {
   <span class="k">for</span> (<span class="t">Value</span>* <span class="i">slot</span> = <span class="i">vm</span>.<span class="i">stack</span>; <span class="i">slot</span> &lt; <span class="i">vm</span>.<span class="i">stackTop</span>; <span class="i">slot</span>++) {
     <span class="i">markValue</span>(*<span class="i">slot</span>);
   }
@@ -654,14 +608,11 @@ add after <em>freeObject</em>()</div>
 To mark a Lox value, we use this new function:
 -->
 <p>要标记一个 Lox 值，我们用这个新函数：</p>
-<div class="codehilite"><pre class="insert-before">
-void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+<div class="codehilite"><pre class="insert-before">void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 </pre><div class="source-file"><em>memory.h</em><br>
 add after <em>reallocate</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">markValue</span>(<span class="t">Value</span> <span class="i">value</span>);
-</pre><pre class="insert-after">
-void collectGarbage();
+<pre class="insert"><span class="t">void</span> <span class="i">markValue</span>(<span class="t">Value</span> <span class="i">value</span>);
+</pre><pre class="insert-after">void collectGarbage();
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
 <!--
@@ -670,8 +621,7 @@ Its implementation is here:
 <p>实现在这边：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">markValue</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">void</span> <span class="i">markValue</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="k">if</span> (<span class="a">IS_OBJ</span>(<span class="i">value</span>)) <span class="i">markObject</span>(<span class="a">AS_OBJ</span>(<span class="i">value</span>));
 }
 </pre></div>
@@ -683,14 +633,11 @@ worry about them at all, so the first thing we do is ensure that the value is an
 actual heap object. If so, the real work happens in this function:
 -->
 <p>有些 Lox 值——数字、布尔值和 <code>nil</code>——直接内联存在 Value 里，不需要堆分配。垃圾回收器完全不必操心它们，所以我们先确保该值确实是一个堆对象。若是，真正的工作在这个函数里发生：</p>
-<div class="codehilite"><pre class="insert-before">
-void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+<div class="codehilite"><pre class="insert-before">void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 </pre><div class="source-file"><em>memory.h</em><br>
 add after <em>reallocate</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">markObject</span>(<span class="t">Obj</span>* <span class="i">object</span>);
-</pre><pre class="insert-after">
-void markValue(Value value);
+<pre class="insert"><span class="t">void</span> <span class="i">markObject</span>(<span class="t">Obj</span>* <span class="i">object</span>);
+</pre><pre class="insert-after">void markValue(Value value);
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
 <!--
@@ -699,8 +646,7 @@ Which is defined here:
 <p>定义在这边：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">markObject</span>(<span class="t">Obj</span>* <span class="i">object</span>) {
+<pre><span class="t">void</span> <span class="i">markObject</span>(<span class="t">Obj</span>* <span class="i">object</span>) {
   <span class="k">if</span> (<span class="i">object</span> == <span class="a">NULL</span>) <span class="k">return</span>;
   <span class="i">object</span>-&gt;<span class="i">isMarked</span> = <span class="k">true</span>;
 }
@@ -717,14 +663,11 @@ Assuming we do have a valid object, we mark it by setting a flag. That new field
 lives in the Obj header struct all objects share.
 -->
 <p>假定我们确实有一个有效对象，就通过设置一个标志来标记它。这个新字段住在所有对象共享的 Obj 头结构体里。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjType type;
+<div class="codehilite"><pre class="insert-before">  ObjType type;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>Obj</em></div>
-<pre class="insert">
-  <span class="t">bool</span> <span class="i">isMarked</span>;
-</pre><pre class="insert-after">
-  struct Obj* next;
+<pre class="insert">  <span class="t">bool</span> <span class="i">isMarked</span>;
+</pre><pre class="insert-after">  struct Obj* next;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>Obj</em></div>
 <!--
@@ -732,12 +675,10 @@ Every new object begins life unmarked because we haven't yet determined if it is
 reachable or not.
 -->
 <p>每个新对象以未标记状态开始生命，因为我们尚未判定它是否可达。</p>
-<div class="codehilite"><pre class="insert-before">
-  object-&gt;type = type;
+<div class="codehilite"><pre class="insert-before">  object-&gt;type = type;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateObject</em>()</div>
-<pre class="insert">
-  <span class="i">object</span>-&gt;<span class="i">isMarked</span> = <span class="k">false</span>;
+<pre class="insert">  <span class="i">object</span>-&gt;<span class="i">isMarked</span> = <span class="k">false</span>;
 </pre><pre class="insert-after">
 
   object-&gt;next = vm.objects;
@@ -747,20 +688,17 @@ in <em>allocateObject</em>()</div>
 Before we go any farther, let's add some logging to `markObject()`.
 -->
 <p>再往前走之前，先给 <code>markObject()</code> 加点日志。</p>
-<div class="codehilite"><pre class="insert-before">
-void markObject(Obj* object) {
+<div class="codehilite"><pre class="insert-before">void markObject(Obj* object) {
   if (object == NULL) return;
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markObject</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef DEBUG_LOG_GC</span>
+<pre class="insert"><span class="a">#ifdef DEBUG_LOG_GC</span>
   <span class="i">printf</span>(<span class="s">&quot;%p mark &quot;</span>, (<span class="t">void</span>*)<span class="i">object</span>);
   <span class="i">printValue</span>(<span class="a">OBJ_VAL</span>(<span class="i">object</span>));
   <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
 <span class="a">#endif</span>
 
-</pre><pre class="insert-after">
-  object-&gt;isMarked = true;
+</pre><pre class="insert-after">  object-&gt;isMarked = true;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
 <!--
@@ -769,16 +707,14 @@ of local variables and temporaries. The other main source of roots are the
 global variables.
 -->
 <p>这样我们就能看见标记阶段在做什么。标记栈照顾了局部变量和临时值。根的另一主要来源是全局变量。</p>
-<div class="codehilite"><pre class="insert-before">
-    markValue(*slot);
+<div class="codehilite"><pre class="insert-before">    markValue(*slot);
   }
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markRoots</em>()</div>
 <pre class="insert">
 
   <span class="i">markTable</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>);
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
 <!--
@@ -786,13 +722,11 @@ Those live in a hash table owned by the VM, so we'll declare another helper
 function for marking all of the objects in a table.
 -->
 <p>它们住在虚拟机拥有的一张哈希表里，所以我们再声明一个辅助函数，用来标记表中的全部对象。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjString* tableFindString(Table* table, const char* chars,
+<div class="codehilite"><pre class="insert-before">ObjString* tableFindString(Table* table, const char* chars,
                            int length, uint32_t hash);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>tableFindString</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">markTable</span>(<span class="t">Table</span>* <span class="i">table</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">markTable</span>(<span class="t">Table</span>* <span class="i">table</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -804,8 +738,7 @@ We implement that in the "table" module here:
 <p>我们在 “table” 模块里实现它：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableFindString</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">markTable</span>(<span class="t">Table</span>* <span class="i">table</span>) {
+<pre><span class="t">void</span> <span class="i">markTable</span>(<span class="t">Table</span>* <span class="i">table</span>) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">table</span>-&gt;<span class="i">capacity</span>; <span class="i">i</span>++) {
     <span class="t">Entry</span>* <span class="i">entry</span> = &amp;<span class="i">table</span>-&gt;<span class="i">entries</span>[<span class="i">i</span>];
     <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">entry</span>-&gt;<span class="i">key</span>);
@@ -822,7 +755,7 @@ strings too.
 <p>相当直白。我们走遍条目数组。对每一项，标记其值。我们也标记每条条目的键字符串，因为 GC 也管理那些字符串。</p><!--
 -- Less obvious roots
 -->
-<h3><a href="#不那么显眼的根" name="不那么显眼的根"><small>26&#8202;.&#8202;3&#8202;.&#8202;1</small>不那么显眼的根</a></h3><!--
+<h3><a href="#不那么显眼的根" id="不那么显眼的根"><small>26&#8202;.&#8202;3&#8202;.&#8202;1</small>不那么显眼的根</a></h3><!--
 Those cover the roots that we typically think of -- the values that are
 obviously reachable because they're stored in variables the user's program can
 see. But the VM has a few of its own hidey-holes where it squirrels away
@@ -835,8 +768,7 @@ being called. The VM uses those pointers to access constants and upvalues, so
 those closures need to be kept around too.
 -->
 <p>大多数函数调用状态住在值栈上，但虚拟机另维护一摞 CallFrame。每个 CallFrame 含有一个指向正在被调用的闭包的指针。虚拟机用这些指针访问常量和上值，所以那些闭包也需要留着。</p>
-<div class="codehilite"><pre class="insert-before">
-  }
+<div class="codehilite"><pre class="insert-before">  }
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markRoots</em>()</div>
 <pre class="insert">
@@ -854,8 +786,7 @@ Speaking of upvalues, the open upvalue list is another set of values that the
 VM can directly reach.
 -->
 <p>说到上值，打开上值列表是虚拟机可以直接到达的又一组值。</p>
-<div class="codehilite"><pre class="insert-before">
-  for (int i = 0; i &lt; vm.frameCount; i++) {
+<div class="codehilite"><pre class="insert-before">  for (int i = 0; i &lt; vm.frameCount; i++) {
     markObject((Obj*)vm.frames[i].closure);
   }
 </pre><div class="source-file"><em>memory.c</em><br>
@@ -884,26 +815,21 @@ To keep the compiler module cleanly separated from the rest of the VM, we'll do
 that in a separate function.
 -->
 <p>为了让编译器模块与虚拟机其余部分干净地分离，我们把这事放在一个单独的函数里做。</p>
-<div class="codehilite"><pre class="insert-before">
-  markTable(&amp;vm.globals);
+<div class="codehilite"><pre class="insert-before">  markTable(&amp;vm.globals);
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markRoots</em>()</div>
-<pre class="insert">
-  <span class="i">markCompilerRoots</span>();
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">markCompilerRoots</span>();
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
 <!--
 It's declared here:
 -->
 <p>声明在这边：</p>
-<div class="codehilite"><pre class="insert-before">
-ObjFunction* compile(const char* source);
+<div class="codehilite"><pre class="insert-before">ObjFunction* compile(const char* source);
 </pre><div class="source-file"><em>compiler.h</em><br>
 add after <em>compile</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">markCompilerRoots</span>();
+<pre class="insert"><span class="t">void</span> <span class="i">markCompilerRoots</span>();
 </pre><pre class="insert-after">
 
 #endif
@@ -913,14 +839,11 @@ add after <em>compile</em>()</div>
 Which means the "memory" module needs an include.
 -->
 <p>这意味着 “memory” 模块需要一条 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdlib.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdlib.h&gt;
 
 </pre><div class="source-file"><em>memory.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;compiler.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;memory.h&quot;
+<pre class="insert"><span class="a">#include &quot;compiler.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;memory.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em></div>
 <!--
@@ -929,8 +852,7 @@ And the definition is over in the "compiler" module.
 <p>而定义在 “compiler” 模块那边。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>compile</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">markCompilerRoots</span>() {
+<pre><span class="t">void</span> <span class="i">markCompilerRoots</span>() {
   <span class="t">Compiler</span>* <span class="i">compiler</span> = <span class="i">current</span>;
   <span class="k">while</span> (<span class="i">compiler</span> != <span class="a">NULL</span>) {
     <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">compiler</span>-&gt;<span class="i">function</span>);
@@ -949,13 +871,10 @@ whole list.
 Since the "compiler" module is calling `markObject()`, it also needs an include.
 -->
 <p>既然 “compiler” 模块在调用 <code>markObject()</code>，它也需要一条 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;compiler.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;compiler.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;memory.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;scanner.h&quot;
+<pre class="insert"><span class="a">#include &quot;memory.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;scanner.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
 <!--
@@ -966,7 +885,7 @@ mark bit set.
 <p>这些就是全部的根。跑完之后，虚拟机——运行时与编译器——<em>无需</em>经由其他对象就能到达的每个对象，其标记位都已置上。</p><!--
 -- Tracing Object References
 -->
-<h2><a href="#追踪对象引用" name="追踪对象引用"><small>26&#8202;.&#8202;4</small>追踪对象引用</a></h2><!--
+<h2><a href="#追踪对象引用" id="追踪对象引用"><small>26&#8202;.&#8202;4</small>追踪对象引用</a></h2><!--
 The next step in the marking process is tracing through the graph of references
 between objects to find the indirectly reachable values. We don't have instances
 with fields yet, so there aren't many objects that contain references, but we do
@@ -1004,7 +923,7 @@ future, so it's hard for the GC to know which order will help performance.
 </aside><!--
 -- The tricolor abstraction
 -->
-<h3><a href="#三色抽象" name="三色抽象"><small>26&#8202;.&#8202;4&#8202;.&#8202;1</small>三色抽象</a></h3><!--
+<h3><a href="#三色抽象" id="三色抽象"><small>26&#8202;.&#8202;4&#8202;.&#8202;1</small>三色抽象</a></h3><!--
 As the collector wanders through the graph of objects, we need to make sure it
 doesn't lose track of where it is or get stuck going in circles. This is
 particularly a concern for advanced implementations like incremental GCs that
@@ -1110,7 +1029,7 @@ maintains this invariant to ensure that no reachable object is ever collected.
 </aside><!--
 -- A worklist for gray objects
 -->
-<h3><a href="#灰色对象的工作列表" name="灰色对象的工作列表"><small>26&#8202;.&#8202;4&#8202;.&#8202;2</small>灰色对象的工作列表</a></h3><!--
+<h3><a href="#灰色对象的工作列表" id="灰色对象的工作列表"><small>26&#8202;.&#8202;4&#8202;.&#8202;2</small>灰色对象的工作列表</a></h3><!--
 In our implementation we have already marked the roots. They're all gray. The
 next step is to start picking them and traversing their references. But we don't
 have any easy way to find them. We set a field on the object, but that's it. We
@@ -1123,8 +1042,7 @@ objects. When an object turns gray, in addition to setting the mark field we'll
 also add it to the worklist.
 -->
 <p>取而代之，我们建一个单独的工作列表来跟踪全部灰色对象。对象变灰时，除了设置标记字段，还把它加进工作列表。</p>
-<div class="codehilite"><pre class="insert-before">
-  object-&gt;isMarked = true;
+<div class="codehilite"><pre class="insert-before">  object-&gt;isMarked = true;
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markObject</em>()</div>
 <pre class="insert">
@@ -1136,8 +1054,7 @@ in <em>markObject</em>()</div>
   }
 
   <span class="i">vm</span>.<span class="i">grayStack</span>[<span class="i">vm</span>.<span class="i">grayCount</span>++] = <span class="i">object</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
 <!--
@@ -1154,24 +1071,20 @@ space-time continuum.
 We'll manage its memory ourselves, explicitly. The VM owns the gray stack.
 -->
 <p>我们自己、显式地管理它的内存。灰色栈归虚拟机所有。</p>
-<div class="codehilite"><pre class="insert-before">
-  Obj* objects;
+<div class="codehilite"><pre class="insert-before">  Obj* objects;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">grayCount</span>;
+<pre class="insert">  <span class="t">int</span> <span class="i">grayCount</span>;
   <span class="t">int</span> <span class="i">grayCapacity</span>;
   <span class="t">Obj</span>** <span class="i">grayStack</span>;
-</pre><pre class="insert-after">
-} VM;
+</pre><pre class="insert-after">} VM;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 <!--
 It starts out empty.
 -->
 <p>它开始时为空。</p>
-<div class="codehilite"><pre class="insert-before">
-  vm.objects = NULL;
+<div class="codehilite"><pre class="insert-before">  vm.objects = NULL;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
 <pre class="insert">
@@ -1188,16 +1101,14 @@ in <em>initVM</em>()</div>
 And we need to free it when the VM shuts down.
 -->
 <p>虚拟机关闭时，我们也需要释放它。</p>
-<div class="codehilite"><pre class="insert-before">
-    object = next;
+<div class="codehilite"><pre class="insert-before">    object = next;
   }
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObjects</em>()</div>
 <pre class="insert">
 
   <span class="i">free</span>(<span class="i">vm</span>.<span class="i">grayStack</span>);
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObjects</em>()</div>
 <!--
@@ -1217,33 +1128,29 @@ gray stack, finish the GC, and free up more memory.
 -->
 <p>要更稳健，可以在启动虚拟机时分配一块“雨天基金”内存。若灰色栈分配失败，就释放那块雨天基金再试。那或许能在堆上挤出足够回旋余地，好创建灰色栈、完成 GC，并腾出更多内存。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-    vm.grayStack = (Obj**)realloc(vm.grayStack,
+<div class="codehilite"><pre class="insert-before">    vm.grayStack = (Obj**)realloc(vm.grayStack,
                                   sizeof(Obj*) * vm.grayCapacity);
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markObject</em>()</div>
 <pre class="insert">
 
     <span class="k">if</span> (<span class="i">vm</span>.<span class="i">grayStack</span> == <span class="a">NULL</span>) <span class="i">exit</span>(<span class="n">1</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
 <!--
 -- Processing gray objects
 -->
-<h3><a href="#处理灰色对象" name="处理灰色对象"><small>26&#8202;.&#8202;4&#8202;.&#8202;3</small>处理灰色对象</a></h3><!--
+<h3><a href="#处理灰色对象" id="处理灰色对象"><small>26&#8202;.&#8202;4&#8202;.&#8202;3</small>处理灰色对象</a></h3><!--
 OK, now when we're done marking the roots, we have both set a bunch of fields
 and filled our work list with objects to chew through. It's time for the next
 phase.
 -->
 <p>好，标记完根之后，我们既置了一批字段，又把工作列表填满了待啃的对象。该进入下一阶段了。</p>
-<div class="codehilite"><pre class="insert-before">
-  markRoots();
+<div class="codehilite"><pre class="insert-before">  markRoots();
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
-<pre class="insert">
-  <span class="i">traceReferences</span>();
+<pre class="insert">  <span class="i">traceReferences</span>();
 </pre><pre class="insert-after">
 
 #ifdef DEBUG_LOG_GC
@@ -1255,8 +1162,7 @@ Here's the implementation:
 <p>实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>markRoots</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">traceReferences</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">traceReferences</span>() {
   <span class="k">while</span> (<span class="i">vm</span>.<span class="i">grayCount</span> &gt; <span class="n">0</span>) {
     <span class="t">Obj</span>* <span class="i">object</span> = <span class="i">vm</span>.<span class="i">grayStack</span>[--<span class="i">vm</span>.<span class="i">grayCount</span>];
     <span class="i">blackenObject</span>(<span class="i">object</span>);
@@ -1278,8 +1184,7 @@ Here's where we traverse a single object's references:
 <p>遍历单个对象的引用，在这里：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>markValue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">blackenObject</span>(<span class="t">Obj</span>* <span class="i">object</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">blackenObject</span>(<span class="t">Obj</span>* <span class="i">object</span>) {
   <span class="k">switch</span> (<span class="i">object</span>-&gt;<span class="i">type</span>) {
     <span class="k">case</span> <span class="a">OBJ_NATIVE</span>:
     <span class="k">case</span> <span class="a">OBJ_STRING</span>:
@@ -1317,17 +1222,14 @@ time, friend.
 Now let's start adding in the other object types. The simplest is upvalues.
 -->
 <p>现在开始加入其他对象类型。最简单的是上值。</p>
-<div class="codehilite"><pre class="insert-before">
-static void blackenObject(Obj* object) {
+<div class="codehilite"><pre class="insert-before">static void blackenObject(Obj* object) {
   switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>blackenObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_UPVALUE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_UPVALUE</span>:
       <span class="i">markValue</span>(((<span class="t">ObjUpvalue</span>*)<span class="i">object</span>)-&gt;<span class="i">closed</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_NATIVE:
+</pre><pre class="insert-after">    case OBJ_NATIVE:
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
 <!--
@@ -1339,19 +1241,16 @@ reference to it from the upvalue.
 Next are functions.
 -->
 <p>接下来是函数。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (object-&gt;type) {
+<div class="codehilite"><pre class="insert-before">  switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>blackenObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>: {
       <span class="t">ObjFunction</span>* <span class="i">function</span> = (<span class="t">ObjFunction</span>*)<span class="i">object</span>;
       <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">function</span>-&gt;<span class="i">name</span>);
       <span class="i">markArray</span>(&amp;<span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">constants</span>);
       <span class="k">break</span>;
     }
-</pre><pre class="insert-after">
-    case OBJ_UPVALUE:
+</pre><pre class="insert-after">    case OBJ_UPVALUE:
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
 <!--
@@ -1362,8 +1261,7 @@ other objects. We trace all of those using this helper:
 <p>每个函数都有一个指向含函数名的 ObjString 的引用。更重要的是，函数有一张塞满对其他对象引用的常量表。我们用这个辅助函数追踪它们全部：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>markValue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">markArray</span>(<span class="t">ValueArray</span>* <span class="i">array</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">markArray</span>(<span class="t">ValueArray</span>* <span class="i">array</span>) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">array</span>-&gt;<span class="i">count</span>; <span class="i">i</span>++) {
     <span class="i">markValue</span>(<span class="i">array</span>-&gt;<span class="i">values</span>[<span class="i">i</span>]);
   }
@@ -1375,12 +1273,10 @@ The last object type we have now -- we'll add more in later chapters -- is
 closures.
 -->
 <p>我们现在有的最后一种对象类型——后面章节还会再加——是闭包。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (object-&gt;type) {
+<div class="codehilite"><pre class="insert-before">  switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>blackenObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>: {
       <span class="t">ObjClosure</span>* <span class="i">closure</span> = (<span class="t">ObjClosure</span>*)<span class="i">object</span>;
       <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">closure</span>-&gt;<span class="i">function</span>);
       <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">closure</span>-&gt;<span class="i">upvalueCount</span>; <span class="i">i</span>++) {
@@ -1388,8 +1284,7 @@ in <em>blackenObject</em>()</div>
       }
       <span class="k">break</span>;
     }
-</pre><pre class="insert-after">
-    case OBJ_FUNCTION: {
+</pre><pre class="insert-after">    case OBJ_FUNCTION: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
 <!--
@@ -1401,19 +1296,16 @@ That's the basic mechanism for processing a gray object, but there are two loose
 ends to tie up. First, some logging.
 -->
 <p>这就是处理灰色对象的基本机制，但还有两处松线要收。首先，一些日志。</p>
-<div class="codehilite"><pre class="insert-before">
-static void blackenObject(Obj* object) {
+<div class="codehilite"><pre class="insert-before">static void blackenObject(Obj* object) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>blackenObject</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef DEBUG_LOG_GC</span>
+<pre class="insert"><span class="a">#ifdef DEBUG_LOG_GC</span>
   <span class="i">printf</span>(<span class="s">&quot;%p blacken &quot;</span>, (<span class="t">void</span>*)<span class="i">object</span>);
   <span class="i">printValue</span>(<span class="a">OBJ_VAL</span>(<span class="i">object</span>));
   <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
 <span class="a">#endif</span>
 
-</pre><pre class="insert-after">
-  switch (object-&gt;type) {
+</pre><pre class="insert-after">  switch (object-&gt;type) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
 <!--
@@ -1428,15 +1320,12 @@ gray stack.
 The fix is easy.
 -->
 <p>修法很简单。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (object == NULL) return;
+<div class="codehilite"><pre class="insert-before">  if (object == NULL) return;
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markObject</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">object</span>-&gt;<span class="i">isMarked</span>) <span class="k">return</span>;
+<pre class="insert">  <span class="k">if</span> (<span class="i">object</span>-&gt;<span class="i">isMarked</span>) <span class="k">return</span>;
 
-</pre><pre class="insert-after">
-#ifdef DEBUG_LOG_GC
+</pre><pre class="insert-after">#ifdef DEBUG_LOG_GC
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markObject</em>()</div>
 <!--
@@ -1448,7 +1337,7 @@ words, it keeps the wavefront moving forward through only the white objects.
 <p>若对象已被标记，我们就不再标它，因而也不会把它加进灰色栈。这确保已是灰色的对象不会被冗余加入，黑色对象也不会被不小心变回灰色。换句话说，它让波前只穿过白色对象向前推进。</p><!--
 -- Sweeping Unused Objects
 -->
-<h2><a href="#清扫无用对象" name="清扫无用对象"><small>26&#8202;.&#8202;5</small>清扫无用对象</a></h2><!--
+<h2><a href="#清扫无用对象" id="清扫无用对象"><small>26&#8202;.&#8202;5</small>清扫无用对象</a></h2><!--
 When the loop in `traceReferences()` exits, we have processed all the objects we
 could get our hands on. The gray stack is empty, and every object in the heap is
 either black or white. The black objects are reachable, and we want to hang on to
@@ -1456,12 +1345,10 @@ them. Anything still white never got touched by the trace and is thus garbage.
 All that's left is to reclaim them.
 -->
 <p><code>traceReferences()</code> 里的循环退出时，我们已处理完能下手的全部对象。灰色栈空了，堆上每个对象非黑即白。黑色对象可达，我们要留着它们。仍是白色的东西从未被追踪触及，因而是垃圾。剩下的事就是收回它们。</p>
-<div class="codehilite"><pre class="insert-before">
-  traceReferences();
+<div class="codehilite"><pre class="insert-before">  traceReferences();
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
-<pre class="insert">
-  <span class="i">sweep</span>();
+<pre class="insert">  <span class="i">sweep</span>();
 </pre><pre class="insert-after">
 
 #ifdef DEBUG_LOG_GC
@@ -1473,8 +1360,7 @@ All of the logic lives in one function.
 <p>全部逻辑住在一个函数里。</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>traceReferences</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">sweep</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">sweep</span>() {
   <span class="t">Obj</span>* <span class="i">previous</span> = <span class="a">NULL</span>;
   <span class="t">Obj</span>* <span class="i">object</span> = <span class="i">vm</span>.<span class="i">objects</span>;
   <span class="k">while</span> (<span class="i">object</span> != <span class="a">NULL</span>) {
@@ -1515,14 +1401,11 @@ delete every node in a linked list that doesn't have a bit set in it.
 There's one little addition:
 -->
 <p>还有一处小小的补充：</p>
-<div class="codehilite"><pre class="insert-before">
-    if (object-&gt;isMarked) {
+<div class="codehilite"><pre class="insert-before">    if (object-&gt;isMarked) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>sweep</em>()</div>
-<pre class="insert">
-      <span class="i">object</span>-&gt;<span class="i">isMarked</span> = <span class="k">false</span>;
-</pre><pre class="insert-after">
-      previous = object;
+<pre class="insert">      <span class="i">object</span>-&gt;<span class="i">isMarked</span> = <span class="k">false</span>;
+</pre><pre class="insert-after">      previous = object;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>sweep</em>()</div>
 <!--
@@ -1534,7 +1417,7 @@ we go ahead and clear the bit now in anticipation of the next run.
 <p><code>sweep()</code> 完成后，剩下的只是标记位已置上的活着的黑色对象。这是对的，但当<em>下一</em>轮收集开始时，我们需要每个对象都是白的。所以每当遇到黑色对象，我们现在就清掉该位，为下一轮做准备。</p><!--
 -- Weak references and the string pool
 -->
-<h3><a href="#弱引用与字符串池" name="弱引用与字符串池"><small>26&#8202;.&#8202;5&#8202;.&#8202;1</small>弱引用与字符串池</a></h3><!--
+<h3><a href="#弱引用与字符串池" id="弱引用与字符串池"><small>26&#8202;.&#8202;5&#8202;.&#8202;1</small>弱引用与字符串池</a></h3><!--
 We are almost done collecting. There is one remaining corner of the VM that has
 some unusual requirements around memory. Recall that when we added strings to
 clox we made the VM intern them all. That means the VM has a hash table
@@ -1588,14 +1471,11 @@ and their mark bits -- are no longer around to check. So the right time is
 exactly between the marking and sweeping phases.
 -->
 <p>要移除对不可达字符串的引用，我们需要知道哪些字符串<em>是</em>不可达的。这要到标记阶段完成后才知道。但又不能等到清扫阶段结束——那时对象及其标记位都已不在，无从检查。所以正确时机，恰好在标记与清扫两阶段之间。</p>
-<div class="codehilite"><pre class="insert-before">
-  traceReferences();
+<div class="codehilite"><pre class="insert-before">  traceReferences();
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
-<pre class="insert">
-  <span class="i">tableRemoveWhite</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>);
-</pre><pre class="insert-after">
-  sweep();
+<pre class="insert">  <span class="i">tableRemoveWhite</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>);
+</pre><pre class="insert-after">  sweep();
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
 <!--
@@ -1603,16 +1483,14 @@ The logic for removing the about-to-be-deleted strings exists in a new function
 in the "table" module.
 -->
 <p>移除即将被删除的字符串的逻辑，在 “table” 模块的一个新函数里。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjString* tableFindString(Table* table, const char* chars,
+<div class="codehilite"><pre class="insert-before">ObjString* tableFindString(Table* table, const char* chars,
                            int length, uint32_t hash);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>tableFindString</em>()</div>
 <pre class="insert">
 
 <span class="t">void</span> <span class="i">tableRemoveWhite</span>(<span class="t">Table</span>* <span class="i">table</span>);
-</pre><pre class="insert-after">
-void markTable(Table* table);
+</pre><pre class="insert-after">void markTable(Table* table);
 
 </pre></div>
 <div class="source-file-narrow"><em>table.h</em>, add after <em>tableFindString</em>()</div>
@@ -1622,8 +1500,7 @@ The implementation is here:
 <p>实现在这边：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableFindString</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">tableRemoveWhite</span>(<span class="t">Table</span>* <span class="i">table</span>) {
+<pre><span class="t">void</span> <span class="i">tableRemoveWhite</span>(<span class="t">Table</span>* <span class="i">table</span>) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">table</span>-&gt;<span class="i">capacity</span>; <span class="i">i</span>++) {
     <span class="t">Entry</span>* <span class="i">entry</span> = &amp;<span class="i">table</span>-&gt;<span class="i">entries</span>[<span class="i">i</span>];
     <span class="k">if</span> (<span class="i">entry</span>-&gt;<span class="i">key</span> != <span class="a">NULL</span> &amp;&amp; !<span class="i">entry</span>-&gt;<span class="i">key</span>-&gt;<span class="i">obj</span>.<span class="i">isMarked</span>) {
@@ -1643,7 +1520,7 @@ won't see any dangling pointers.
 <p>我们走遍表中每一条目。字符串驻留表只用每条条目的键——它基本上是哈希<em>集合</em>而非哈希<em>映射</em>。若键字符串对象的标记位未置上，那它就是即将被清扫走的白色对象。我们先从哈希表删掉它，从而确保不会看到任何悬空指针。</p><!--
 -- When to Collect
 -->
-<h2><a href="#何时收集" name="何时收集"><small>26&#8202;.&#8202;6</small>何时收集</a></h2><!--
+<h2><a href="#何时收集" id="何时收集"><small>26&#8202;.&#8202;6</small>何时收集</a></h2><!--
 We have a fully functioning mark-sweep garbage collector now. When the stress
 testing flag is enabled, it gets called all the time, and with the logging
 enabled too, we can watch it do its thing and see that it is indeed reclaiming
@@ -1669,7 +1546,7 @@ get slower and slower.
 <p>现代机器有好几吉字节的物理 RAM，藏在操作系统更大的虚拟内存抽象后面，又与一大堆争夺各自那块内存的其他程序共享。操作系统会让你的程序要多少就申请多少，物理内存满了再从磁盘换入换出。你其实从不真正“用完”内存，只是越来越慢。</p><!--
 -- Latency and throughput
 -->
-<h3><a href="#延迟与吞吐量" name="延迟与吞吐量"><small>26&#8202;.&#8202;6&#8202;.&#8202;1</small>延迟与吞吐量</a></h3><!--
+<h3><a href="#延迟与吞吐量" id="延迟与吞吐量"><small>26&#8202;.&#8202;6&#8202;.&#8202;1</small>延迟与吞吐量</a></h3><!--
 It no longer makes sense to wait until you "have to", to run the GC, so we need
 a more subtle timing strategy. To reason about this more precisely, it's time to
 introduce two fundamental numbers used when measuring a memory manager's
@@ -1827,7 +1704,7 @@ and throughput.
 <p>事实上，我们想要中间某处；收集器运行的频率，是我们调节延迟与吞吐量取舍的主要旋钮之一。</p><!--
 -- Self-adjusting heap
 -->
-<h3><a href="#自适应堆" name="自适应堆"><small>26&#8202;.&#8202;6&#8202;.&#8202;2</small>自适应堆</a></h3><!--
+<h3><a href="#自适应堆" id="自适应堆"><small>26&#8202;.&#8202;6&#8202;.&#8202;2</small>自适应堆</a></h3><!--
 We want our GC to run frequently enough to minimize latency but infrequently
 enough to maintain decent throughput. But how do we find the balance between
 these when we have no idea how much memory the user's program needs and how
@@ -1860,16 +1737,14 @@ frequently so that we don't lose too much latency by waiting too long.
 The implementation requires two new bookkeeping fields in the VM.
 -->
 <p>实现需要在虚拟机里加两个新的簿记字段。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjUpvalue* openUpvalues;
+<div class="codehilite"><pre class="insert-before">  ObjUpvalue* openUpvalues;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
 <pre class="insert">
 
   <span class="t">size_t</span> <span class="i">bytesAllocated</span>;
   <span class="t">size_t</span> <span class="i">nextGC</span>;
-</pre><pre class="insert-after">
-  Obj* objects;
+</pre><pre class="insert-after">  Obj* objects;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 <!--
@@ -1878,12 +1753,10 @@ allocated. The second is the threshold that triggers the next collection. We
 initialize them when the VM starts up.
 -->
 <p>第一个是虚拟机已分配的托管内存字节数的累计总和。第二个是触发下一次收集的阈值。虚拟机启动时初始化它们。</p>
-<div class="codehilite"><pre class="insert-before">
-  vm.objects = NULL;
+<div class="codehilite"><pre class="insert-before">  vm.objects = NULL;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">bytesAllocated</span> = <span class="n">0</span>;
+<pre class="insert">  <span class="i">vm</span>.<span class="i">bytesAllocated</span> = <span class="n">0</span>;
   <span class="i">vm</span>.<span class="i">nextGC</span> = <span class="n">1024</span> * <span class="n">1024</span>;
 </pre><pre class="insert-after">
 
@@ -1910,22 +1783,18 @@ real-world programs it is actually intended for. It's like tuning a rally car
 Every time we allocate or free some memory, we adjust the counter by that delta.
 -->
 <p>每次分配或释放一些内存，我们按那个增量调整计数器。</p>
-<div class="codehilite"><pre class="insert-before">
-void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+<div class="codehilite"><pre class="insert-before">void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>reallocate</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">bytesAllocated</span> += <span class="i">newSize</span> - <span class="i">oldSize</span>;
-</pre><pre class="insert-after">
-  if (newSize &gt; oldSize) {
+<pre class="insert">  <span class="i">vm</span>.<span class="i">bytesAllocated</span> += <span class="i">newSize</span> - <span class="i">oldSize</span>;
+</pre><pre class="insert-after">  if (newSize &gt; oldSize) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
 <!--
 When the total crosses the limit, we run the collector.
 -->
 <p>总和越过限度时，我们跑收集器。</p>
-<div class="codehilite"><pre class="insert-before">
-    collectGarbage();
+<div class="codehilite"><pre class="insert-before">    collectGarbage();
 #endif
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>reallocate</em>()</div>
@@ -1934,8 +1803,7 @@ in <em>reallocate</em>()</div>
     <span class="k">if</span> (<span class="i">vm</span>.<span class="i">bytesAllocated</span> &gt; <span class="i">vm</span>.<span class="i">nextGC</span>) {
       <span class="i">collectGarbage</span>();
     }
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
 <!--
@@ -1946,8 +1814,7 @@ so after the collection completes, we know how many live bytes remain. We adjust
 the threshold of the next GC based on that.
 -->
 <p>现在，终于，用户在未启用我们隐藏诊断标志的情况下跑程序时，垃圾回收器也真会做事了。清扫阶段通过调用 <code>reallocate()</code> 释放对象，这会降低 <code>bytesAllocated</code> 的值，所以收集完成后，我们知道还剩多少存活字节。我们据此调整下一次 GC 的阈值。</p>
-<div class="codehilite"><pre class="insert-before">
-  sweep();
+<div class="codehilite"><pre class="insert-before">  sweep();
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
 <pre class="insert">
@@ -1965,8 +1832,7 @@ spent re-traversing the larger live set. Like other numbers in this chapter, the
 scaling factor is basically arbitrary.
 -->
 <p>阈值是堆大小的一个倍数。这样，程序使用的内存变多时，阈值会往外推，以限制重访更大存活集合所花的总时间。像本章其他数字一样，这个缩放因子基本上是随意的。</p>
-<div class="codehilite"><pre class="insert-before">
-#endif
+<div class="codehilite"><pre class="insert-before">#endif
 </pre><div class="source-file"><em>memory.c</em></div>
 <pre class="insert">
 
@@ -1982,30 +1848,24 @@ to benchmark it on. Right now, we can at least log some of the statistics that
 we have. We capture the heap size before the collection.
 -->
 <p>一旦有一些真实程序可做基准测试，你就会想在自己的实现里调这个。眼下，我们至少可以记录手头已有的一些统计。收集前捕获堆大小。</p>
-<div class="codehilite"><pre class="insert-before">
-  printf(&quot;-- gc begin\n&quot;);
+<div class="codehilite"><pre class="insert-before">  printf(&quot;-- gc begin\n&quot;);
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
-<pre class="insert">
-  <span class="t">size_t</span> <span class="i">before</span> = <span class="i">vm</span>.<span class="i">bytesAllocated</span>;
-</pre><pre class="insert-after">
-#endif
+<pre class="insert">  <span class="t">size_t</span> <span class="i">before</span> = <span class="i">vm</span>.<span class="i">bytesAllocated</span>;
+</pre><pre class="insert-after">#endif
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
 <!--
 And then print the results at the end.
 -->
 <p>然后在结束时打印结果。</p>
-<div class="codehilite"><pre class="insert-before">
-  printf(&quot;-- gc end\n&quot;);
+<div class="codehilite"><pre class="insert-before">  printf(&quot;-- gc end\n&quot;);
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>collectGarbage</em>()</div>
-<pre class="insert">
-  <span class="i">printf</span>(<span class="s">&quot;   collected %zu bytes (from %zu to %zu) next at %zu</span><span class="e">\n</span><span class="s">&quot;</span>,
+<pre class="insert">  <span class="i">printf</span>(<span class="s">&quot;   collected %zu bytes (from %zu to %zu) next at %zu</span><span class="e">\n</span><span class="s">&quot;</span>,
          <span class="i">before</span> - <span class="i">vm</span>.<span class="i">bytesAllocated</span>, <span class="i">before</span>, <span class="i">vm</span>.<span class="i">bytesAllocated</span>,
          <span class="i">vm</span>.<span class="i">nextGC</span>);
-</pre><pre class="insert-after">
-#endif
+</pre><pre class="insert-after">#endif
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>collectGarbage</em>()</div>
 <!--
@@ -2014,7 +1874,7 @@ This way we can see how much the garbage collector accomplished while it ran.
 <p>这样我们就能看见垃圾回收器在运行时完成了多少。</p><!--
 -- Garbage Collection Bugs
 -->
-<h2><a href="#垃圾回收的缺陷" name="垃圾回收的缺陷"><small>26&#8202;.&#8202;7</small>垃圾回收的缺陷</a></h2><!--
+<h2><a href="#垃圾回收的缺陷" id="垃圾回收的缺陷"><small>26&#8202;.&#8202;7</small>垃圾回收的缺陷</a></h2><!--
 In theory, we are all done now. We have a GC. It kicks in periodically, collects
 what it can, and leaves the rest. If this were a typical textbook, we would wipe
 the dust from our hands and bask in the soft glow of the flawless marble edifice
@@ -2086,7 +1946,7 @@ few. Give it a try and *see if you can fix any yourself*.
 <p>但我只修了<em>大多数</em>。我留了几个，因为想让你尝尝在野外撞上这些虫子是什么滋味。若启用压力测试标志并跑一些玩具 Lox 程序，你大概能绊到几个。试试看，<em>看你自己能不能修好几个</em>。</p><!--
 -- Adding to the constant table
 -->
-<h3><a href="#加入常量表" name="加入常量表"><small>26&#8202;.&#8202;7&#8202;.&#8202;1</small>加入常量表</a></h3><!--
+<h3><a href="#加入常量表" id="加入常量表"><small>26&#8202;.&#8202;7&#8202;.&#8202;1</small>加入常量表</a></h3><!--
 You are very likely to hit the first bug. The constant table each chunk owns is
 a dynamic array. When the compiler adds a new constant to the current function's
 table, that array may need to grow. The constant itself may also be some
@@ -2105,28 +1965,22 @@ The fix, as you've seen in other places, is to push the constant onto the stack
 temporarily.
 -->
 <p>修法，如你在别处见过的，是暂时把常量压进栈。</p>
-<div class="codehilite"><pre class="insert-before">
-int addConstant(Chunk* chunk, Value value) {
+<div class="codehilite"><pre class="insert-before">int addConstant(Chunk* chunk, Value value) {
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>addConstant</em>()</div>
-<pre class="insert">
-  <span class="i">push</span>(<span class="i">value</span>);
-</pre><pre class="insert-after">
-  writeValueArray(&amp;chunk-&gt;constants, value);
+<pre class="insert">  <span class="i">push</span>(<span class="i">value</span>);
+</pre><pre class="insert-after">  writeValueArray(&amp;chunk-&gt;constants, value);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>addConstant</em>()</div>
 <!--
 Once the constant table contains the object, we pop it off the stack.
 -->
 <p>常量表一旦含有该对象，我们就把它从栈上弹出。</p>
-<div class="codehilite"><pre class="insert-before">
-  writeValueArray(&amp;chunk-&gt;constants, value);
+<div class="codehilite"><pre class="insert-before">  writeValueArray(&amp;chunk-&gt;constants, value);
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>addConstant</em>()</div>
-<pre class="insert">
-  <span class="i">pop</span>();
-</pre><pre class="insert-after">
-  return chunk-&gt;constants.count - 1;
+<pre class="insert">  <span class="i">pop</span>();
+</pre><pre class="insert-after">  return chunk-&gt;constants.count - 1;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>addConstant</em>()</div>
 <!--
@@ -2135,11 +1989,9 @@ their functions, so the new constant is reachable now. We do need an include
 to call into the VM from the "chunk" module.
 -->
 <p>GC 标记根时，会走编译器链并标记各自的函数，于是新常量现在可达了。我们还需要一条 include，好从 “chunk” 模块调用进虚拟机。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;memory.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;memory.h&quot;
 </pre><div class="source-file"><em>chunk.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;vm.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;vm.h&quot;</span>
 </pre><pre class="insert-after">
 
 void initChunk(Chunk* chunk) {
@@ -2148,7 +2000,7 @@ void initChunk(Chunk* chunk) {
 <!--
 -- Interning strings
 -->
-<h3><a href="#驻留字符串" name="驻留字符串"><small>26&#8202;.&#8202;7&#8202;.&#8202;2</small>驻留字符串</a></h3><!--
+<h3><a href="#驻留字符串" id="驻留字符串"><small>26&#8202;.&#8202;7&#8202;.&#8202;2</small>驻留字符串</a></h3><!--
 Here's another similar one. All strings are interned in clox, so whenever we
 create a new string, we also add it to the intern table. You can see where this
 is going. Since the string is brand new, it isn't reachable anywhere. And
@@ -2156,31 +2008,26 @@ resizing the string pool can trigger a collection. Again, we go ahead and stash
 the string on the stack first.
 -->
 <p>再来一个类似的。clox 里所有字符串都驻留，所以每当创建新字符串，我们也把它加进驻留表。你看得出这会往哪儿走。字符串崭新，哪儿都不可达。而调整字符串池大小可能触发收集。同样，我们先把字符串囤在栈上。</p>
-<div class="codehilite"><pre class="insert-before">
-  string-&gt;chars = chars;
+<div class="codehilite"><pre class="insert-before">  string-&gt;chars = chars;
   string-&gt;hash = hash;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateString</em>()</div>
 <pre class="insert">
 
   <span class="i">push</span>(<span class="a">OBJ_VAL</span>(<span class="i">string</span>));
-</pre><pre class="insert-after">
-  tableSet(&amp;vm.strings, string, NIL_VAL);
+</pre><pre class="insert-after">  tableSet(&amp;vm.strings, string, NIL_VAL);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateString</em>()</div>
 <!--
 And then pop it back off once it's safely nestled in the table.
 -->
 <p>等它安全窝进表里，再弹回去。</p>
-<div class="codehilite"><pre class="insert-before">
-  tableSet(&amp;vm.strings, string, NIL_VAL);
+<div class="codehilite"><pre class="insert-before">  tableSet(&amp;vm.strings, string, NIL_VAL);
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateString</em>()</div>
-<pre class="insert">
-  <span class="i">pop</span>();
+<pre class="insert">  <span class="i">pop</span>();
 
-</pre><pre class="insert-after">
-  return string;
+</pre><pre class="insert-after">  return string;
 }
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateString</em>()</div>
@@ -2193,7 +2040,7 @@ heap allocation occurs.
 <p>这确保在表被调整大小时字符串是安全的。一旦它熬过那一关，<code>allocateString()</code> 会把它返回给某个调用者，后者再负责在下一次堆分配发生之前，确保字符串仍然可达。</p><!--
 -- Concatenating strings
 -->
-<h3><a href="#拼接字符串" name="拼接字符串"><small>26&#8202;.&#8202;7&#8202;.&#8202;3</small>拼接字符串</a></h3><!--
+<h3><a href="#拼接字符串" id="拼接字符串"><small>26&#8202;.&#8202;7&#8202;.&#8202;3</small>拼接字符串</a></h3><!--
 One last example: Over in the interpreter, the `OP_ADD` instruction can be used
 to concatenate two strings. As it does with numbers, it pops the two operands
 from the stack, computes the result, and pushes that new value back onto the
@@ -2206,13 +2053,11 @@ strings by that point, they can potentially be missed by the mark phase and get
 swept away. Instead of popping them off the stack eagerly, we peek them.
 -->
 <p>但拼接两个字符串需要在堆上分配新的字符数组，那进而可能触发 GC。那时我们已经弹出了操作数字符串，它们可能被标记阶段漏掉并被清扫走。与其急着把它们弹出栈，我们改为窥视它们。</p>
-<div class="codehilite"><pre class="insert-before">
-static void concatenate() {
+<div class="codehilite"><pre class="insert-before">static void concatenate() {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>concatenate</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="t">ObjString</span>* <span class="i">b</span> = <span class="a">AS_STRING</span>(<span class="i">peek</span>(<span class="n">0</span>));
+<pre class="insert">  <span class="t">ObjString</span>* <span class="i">b</span> = <span class="a">AS_STRING</span>(<span class="i">peek</span>(<span class="n">0</span>));
   <span class="t">ObjString</span>* <span class="i">a</span> = <span class="a">AS_STRING</span>(<span class="i">peek</span>(<span class="n">1</span>));
 </pre><pre class="insert-after">
 
@@ -2225,15 +2070,12 @@ string. Once that's done, we can safely pop them off and replace them with the
 result.
 -->
 <p>这样，我们创建结果字符串时，它们仍待在栈上。做完之后，我们就可以安全地把它们弹出，换成结果。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjString* result = takeString(chars, length);
+<div class="codehilite"><pre class="insert-before">  ObjString* result = takeString(chars, length);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>concatenate</em>()</div>
-<pre class="insert">
+<pre class="insert">  <span class="i">pop</span>();
   <span class="i">pop</span>();
-  <span class="i">pop</span>();
-</pre><pre class="insert-after">
-  push(OBJ_VAL(result));
+</pre><pre class="insert-after">  push(OBJ_VAL(result));
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>concatenate</em>()</div>
 <!--
@@ -2252,7 +2094,7 @@ mark-sweep garbage collector.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>26&#8202;.&#8202;8</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>26&#8202;.&#8202;8</small>挑战</a></h2><!--
 1.  The Obj header struct at the top of each object now has three fields:
     `type`, `isMarked`, and `next`. How much memory do those take up (on your
     machine)? Can you come up with something more compact? Is there a runtime
@@ -2282,7 +2124,7 @@ mark-sweep garbage collector.
 <div class="design-note"><!--
 -- Design Note: Generational Collectors
 -->
-<h2><a href="#设计笔记：分代收集器" name="设计笔记：分代收集器"><small>26&#8202;.&#8202;9</small>设计笔记：分代收集器</a></h2><!--
+<h2><a href="#设计笔记：分代收集器" id="设计笔记：分代收集器"><small>26&#8202;.&#8202;9</small>设计笔记：分代收集器</a></h2><!--
 A collector loses throughput if it spends a long time re-visiting objects that
 are still alive. But it can increase latency if it avoids collecting and
 accumulates a large pile of garbage to wade through. If only there were some way
@@ -2342,7 +2184,7 @@ simple policy for moving objects from one to the other.
 <a href="classes-and-instances.html" class="next">
   Next Chapter: &ldquo;Classes and Instances&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

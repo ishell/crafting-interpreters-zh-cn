@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Appendix I<small>A1</small></a></h3>
 
 <ul>
@@ -51,7 +50,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="backmatter.html" title="Backmatter" class="prev">←</a>
 <a href="appendix-ii.html" title="Appendix II" class="next">→</a>
 </nav>
@@ -59,9 +58,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Appendix I<small>A1</small></a></h3>
 
 <ul>
@@ -84,24 +82,6 @@
   <div class="number">A1</div>
   <h1>Appendix I</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
 <!--
 Here is a complete grammar for Lox. The chapters that introduce each part of the
 language include the grammar rules there, but this collects them all into one
@@ -110,24 +90,22 @@ place.
 <p>这里是一份完整的 Lox 文法。引入语言各部分的章节里已经各自给出过文法规则，这里把它们全部收拢到一处。</p><!--
 -- Syntax Grammar
 -->
-<h2><a href="#句法文法" name="句法文法"><small>A1&#8202;.&#8202;1</small>句法文法</a></h2><!--
+<h2><a href="#句法文法" id="句法文法"><small>A1&#8202;.&#8202;1</small>句法文法</a></h2><!--
 The syntactic grammar is used to parse the linear sequence of tokens into the
 nested syntax tree structure. It starts with the first rule that matches an
 entire Lox program (or a single REPL entry).
 -->
 <p>句法文法用来把线性的词法单元序列解析成嵌套的语法树结构。它从第一条能匹配整个 Lox 程序（或一条 REPL 输入）的规则开始。</p>
-<div class="codehilite"><pre>
-<span class="i">program</span>        → <span class="i">declaration</span>* <span class="t">EOF</span> ;
+<div class="codehilite"><pre><span class="i">program</span>        → <span class="i">declaration</span>* <span class="t">EOF</span> ;
 </pre></div><!--
 -- Declarations
 -->
-<h3><a href="#声明" name="声明"><small>A1&#8202;.&#8202;1&#8202;.&#8202;1</small>声明</a></h3><!--
+<h3><a href="#声明" id="声明"><small>A1&#8202;.&#8202;1&#8202;.&#8202;1</small>声明</a></h3><!--
 A program is a series of declarations, which are the statements that bind new
 identifiers or any of the other statement types.
 -->
 <p>一个程序是一系列声明——那些绑定新标识符的语句，以及其它任意语句类型。</p>
-<div class="codehilite"><pre>
-<span class="i">declaration</span>    → <span class="i">classDecl</span>
+<div class="codehilite"><pre><span class="i">declaration</span>    → <span class="i">classDecl</span>
                | <span class="i">funDecl</span>
                | <span class="i">varDecl</span>
                | <span class="i">statement</span> ;
@@ -139,13 +117,12 @@ identifiers or any of the other statement types.
 </pre></div><!--
 -- Statements
 -->
-<h3><a href="#语句" name="语句"><small>A1&#8202;.&#8202;1&#8202;.&#8202;2</small>语句</a></h3><!--
+<h3><a href="#语句" id="语句"><small>A1&#8202;.&#8202;1&#8202;.&#8202;2</small>语句</a></h3><!--
 The remaining statement rules produce side effects, but do not introduce
 bindings.
 -->
 <p>其余的语句规则会产生副作用，但不会引入绑定。</p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">forStmt</span>
                | <span class="i">ifStmt</span>
                | <span class="i">printStmt</span>
@@ -170,15 +147,14 @@ couple of other rules for things like function bodies.
 <p>注意 <code>block</code> 既是一条语句规则，也在其它几条规则里充当非终结符，比如函数体。</p><!--
 -- Expressions
 -->
-<h3><a href="#表达式" name="表达式"><small>A1&#8202;.&#8202;1&#8202;.&#8202;3</small>表达式</a></h3><!--
+<h3><a href="#表达式" id="表达式"><small>A1&#8202;.&#8202;1&#8202;.&#8202;3</small>表达式</a></h3><!--
 Expressions produce values. Lox has a number of unary and binary operators with
 different levels of precedence. Some grammars for languages do not directly
 encode the precedence relationships and specify that elsewhere. Here, we use a
 separate rule for each precedence level to make it explicit.
 -->
 <p>表达式产生值。Lox 有若干一元与二元运算符，优先级各不相同。有些语言的文法并不直接编码优先级关系，而是另行说明。这里我们为每个优先级单独写一条规则，好让它一目了然。</p>
-<div class="codehilite"><pre>
-<span class="i">expression</span>     → <span class="i">assignment</span> ;
+<div class="codehilite"><pre><span class="i">expression</span>     → <span class="i">assignment</span> ;
 
 <span class="i">assignment</span>     → ( <span class="i">call</span> <span class="s">&quot;.&quot;</span> )? <span class="t">IDENTIFIER</span> <span class="s">&quot;=&quot;</span> <span class="i">assignment</span>
                | <span class="i">logic_or</span> ;
@@ -198,26 +174,24 @@ separate rule for each precedence level to make it explicit.
 </pre></div><!--
 -- Utility rules
 -->
-<h3><a href="#辅助规则" name="辅助规则"><small>A1&#8202;.&#8202;1&#8202;.&#8202;4</small>辅助规则</a></h3><!--
+<h3><a href="#辅助规则" id="辅助规则"><small>A1&#8202;.&#8202;1&#8202;.&#8202;4</small>辅助规则</a></h3><!--
 In order to keep the above rules a little cleaner, some of the grammar is
 split out into a few reused helper rules.
 -->
 <p>为了让上面的规则稍稍干净些，文法里有一部分被拆成几条可复用的辅助规则。</p>
-<div class="codehilite"><pre>
-<span class="i">function</span>       → <span class="t">IDENTIFIER</span> <span class="s">&quot;(&quot;</span> <span class="i">parameters</span>? <span class="s">&quot;)&quot;</span> <span class="i">block</span> ;
+<div class="codehilite"><pre><span class="i">function</span>       → <span class="t">IDENTIFIER</span> <span class="s">&quot;(&quot;</span> <span class="i">parameters</span>? <span class="s">&quot;)&quot;</span> <span class="i">block</span> ;
 <span class="i">parameters</span>     → <span class="t">IDENTIFIER</span> ( <span class="s">&quot;,&quot;</span> <span class="t">IDENTIFIER</span> )* ;
 <span class="i">arguments</span>      → <span class="i">expression</span> ( <span class="s">&quot;,&quot;</span> <span class="i">expression</span> )* ;
 </pre></div><!--
 -- Lexical Grammar
 -->
-<h2><a href="#词法文法" name="词法文法"><small>A1&#8202;.&#8202;2</small>词法文法</a></h2><!--
+<h2><a href="#词法文法" id="词法文法"><small>A1&#8202;.&#8202;2</small>词法文法</a></h2><!--
 The lexical grammar is used by the scanner to group characters into tokens.
 Where the syntax is [context free][], the lexical grammar is [regular][] -- note
 that there are no recursive rules.
 -->
 <p>词法文法由扫描器用来把字符归组成词法单元。句法是<a href="https://en.wikipedia.org/wiki/Context-free_grammar">上下文无关</a>的，而词法文法则是<a href="https://en.wikipedia.org/wiki/Regular_grammar">正则</a>的——注意这里没有任何递归规则。</p>
-<div class="codehilite"><pre>
-<span class="t">NUMBER</span>         → <span class="t">DIGIT</span>+ ( <span class="s">&quot;.&quot;</span> <span class="t">DIGIT</span>+ )? ;
+<div class="codehilite"><pre><span class="t">NUMBER</span>         → <span class="t">DIGIT</span>+ ( <span class="s">&quot;.&quot;</span> <span class="t">DIGIT</span>+ )? ;
 <span class="t">STRING</span>         → <span class="s">&quot;</span><span class="e">\&quot;</span><span class="s">&quot;</span> &lt;<span class="i">any</span> <span class="i">char</span> <span class="i">except</span> <span class="s">&quot;</span><span class="e">\&quot;</span><span class="s">&quot;</span>&gt;* <span class="s">&quot;</span><span class="e">\&quot;</span><span class="s">&quot;</span> ;
 <span class="t">IDENTIFIER</span>     → <span class="t">ALPHA</span> ( <span class="t">ALPHA</span> | <span class="t">DIGIT</span> )* ;
 <span class="t">ALPHA</span>          → <span class="s">&quot;a&quot;</span> ... <span class="s">&quot;z&quot;</span> | <span class="s">&quot;A&quot;</span> ... <span class="s">&quot;Z&quot;</span> | <span class="s">&quot;_&quot;</span> ;
@@ -228,7 +202,7 @@ that there are no recursive rules.
 <a href="appendix-ii.html" class="next">
   Next Chapter: &ldquo;Appendix II&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

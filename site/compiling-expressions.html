@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Compiling Expressions<small>17</small></a></h3>
 
 <ul>
@@ -58,7 +57,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="scanning-on-demand.html" title="Scanning on Demand" class="prev">←</a>
 <a href="types-of-values.html" title="Types of Values" class="next">→</a>
 </nav>
@@ -66,9 +65,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Compiling Expressions<small>17</small></a></h3>
 
 <ul>
@@ -98,25 +96,7 @@
   <div class="number">17</div>
   <h1>Compiling Expressions</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#编译表达式" name="编译表达式"><small>17&#8202;.&#8202;0</small>编译表达式</a></h1>
+<h1><a href="#编译表达式" id="编译表达式"><small>17&#8202;.&#8202;0</small>编译表达式</a></h1>
 <blockquote>
 <p>在我们人生旅程的中途，我发现自己身处一片幽暗的森林，因为笔直的道路已然迷失。</p>
 <p><cite>但丁·阿利吉耶里，<em>《神曲·地狱篇》</em></cite></p>
@@ -131,13 +111,11 @@
 <p>Pratt 解析器在业界多少算是一种口耳相传的传统。我读过的没有任何一本编译器或语言的书讲过它。学术界极其专注于由工具生成的解析器，而 Pratt 的技术是面向手写解析器的，因此便遭到冷落。但在生产级的编译器中——手写解析器颇为常见——你会惊讶于懂得此法的人竟有如此之多。问他们从哪儿学来的，答案总是：&ldquo;哦，那都是多年前我参与某个编译器，我同事说他们是从某个老式前端里学来的……&ldquo;</p>
 </aside>
 <p>一如既往，在我们抵达那些有趣的部分之前，还有若干准备工作要处理。你必须先吃掉蔬菜才能吃甜点。先，让我们把之前为测试扫描器而搭起的临时脚手架拆掉，换成更有用的东西。</p>
-<div class="codehilite"><pre class="insert-before">
-InterpretResult interpret(const char* source) {
+<div class="codehilite"><pre class="insert-before">InterpretResult interpret(const char* source) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>interpret</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="t">Chunk</span> <span class="i">chunk</span>;
+<pre class="insert">  <span class="t">Chunk</span> <span class="i">chunk</span>;
   <span class="i">initChunk</span>(&amp;<span class="i">chunk</span>);
 
   <span class="k">if</span> (!<span class="i">compile</span>(<span class="i">source</span>, &amp;<span class="i">chunk</span>)) {
@@ -152,19 +130,16 @@ replace 2 lines</div>
 
   <span class="i">freeChunk</span>(&amp;<span class="i">chunk</span>);
   <span class="k">return</span> <span class="i">result</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>interpret</em>(), replace 2 lines</div>
 
 <p>我们创建一份新的空 chunk，并将其交给编译器。编译器将拿过用户的程序，并向那份 chunk 中填入字节码。至少，那是若程序没有任何编译错误时的做法。若它真的撞上了错误，<code>compile()</code> 便返回 <code>false</code>，而我们也就丢弃那份无法使用的 chunk。否则，我们便将一份已完成的 chunk 送往 VM 去执行。当 VM 跑完之后，我们释放该 chunk，一切便大功告成。正如你所见，<code>compile()</code> 的签名如今已然不同。</p>
-<div class="codehilite"><pre class="insert-before">
-#define clox_compiler_h
+<div class="codehilite"><pre class="insert-before">#define clox_compiler_h
 
 </pre><div class="source-file"><em>compiler.h</em><br>
 replace 1 line</div>
-<pre class="insert">
-<span class="a">#include &quot;vm.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;vm.h&quot;</span>
 
 <span class="t">bool</span> <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>);
 </pre><pre class="insert-after">
@@ -174,31 +149,25 @@ replace 1 line</div>
 <div class="source-file-narrow"><em>compiler.h</em>, replace 1 line</div>
 
 <p>我们传入编译器将要写入代码的那个 chunk，然后 <code>compile()</code> 返回编译是否成功。我们对实现中的签名也做同样的改动。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;scanner.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;scanner.h&quot;
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 function <em>compile</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="t">bool</span> <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>) {
-</pre><pre class="insert-after">
-  initScanner(source);
+<pre class="insert"><span class="t">bool</span> <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>) {
+</pre><pre class="insert-after">  initScanner(source);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>compile</em>(), replace 1 line</div>
 
 <p>那一行 <code>initScanner()</code> 的调用是本章仅存的一行。撕掉我们之前为测试扫描器而写的临时代码，换成下面这三行：</p>
-<div class="codehilite"><pre class="insert-before">
-  initScanner(source);
+<div class="codehilite"><pre class="insert-before">  initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()<br>
 replace 13 lines</div>
-<pre class="insert">
-  <span class="i">advance</span>();
+<pre class="insert">  <span class="i">advance</span>();
   <span class="i">expression</span>();
   <span class="i">consume</span>(<span class="a">TOKEN_EOF</span>, <span class="s">&quot;Expect end of expression.&quot;</span>);
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>(), replace 13 lines</div>
 
@@ -208,7 +177,7 @@ replace 13 lines</div>
 <p>若本章不怎么敲得开你的心窍，而你想从另一个角度再领略一下这些概念，我写过一篇文章，使用 Java 与面向对象的风格讲授同一算法：《<a href="http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/">Pratt Parsing: Expression Parsing Made Easy</a>》。</p>
 </aside>
 <p>我不想在每次为那张表多添一列时，都回过头去修改那四十来行代码。所以我们将从外部向内进入解析器的核心，并在抵达中央之前先讲清所有周边之事。这需要比多数章节多一点的耐心与脑中临时占用，但这是我所能做到的最好安排。</p>
-<h2><a href="#单遍编译" name="单遍编译"><small>17&#8202;.&#8202;1</small>单遍编译</a></h2>
+<h2><a href="#单遍编译" id="单遍编译"><small>17&#8202;.&#8202;1</small>单遍编译</a></h2>
 <p>一款编译器大致有两件事。它解析用户的源代码以理解其含义。然后，它将这份知识翻译为一串低层级的指令，以产生相同的语义。许多语言在实现中将这两种角色拆分为两道独立<span name="passes">的 pass</span>。一道解析器产出一棵 AST——正如同 jlox 所做的——然后一道代码生成器遍历那棵 AST，并产出目标代码。</p>
 <aside name="passes">
 <p>事实上，大多数精密的优化编译器远远不止两道 pass。去敲定究竟应当设置哪些优化 pass，以及如何对它们排序以将最多的性能从编译器中挤出——因为那些优化之间往往以复杂的方式相互影响——乃是介于&ldquo;开放的研究领域&ldquo;与&ldquo;玄学暗术&ldquo;之间的某种东西。</p>
@@ -219,10 +188,9 @@ replace 13 lines</div>
 </aside>
 <p>用实际的话说，这意味着我们这款&ldquo;编译器&rdquo; C 模块中既有 jlox 中那种你认得出的解析功能——消费 token、匹配所期待的 token 类型，等等—— 也有代码生成功能——发射字节码、并向目标 chunk 添加常量。（这意味着在本章与后续章节中，我将&ldquo;解析&ldquo;与&ldquo;编译&ldquo;两个词交替使用。）</p>
 <p>我们会先搭建解析与代码生成两个半边。然后，我们会用位于两者之间的那一段代码将它们缝在一起——它使用 Pratt 技术来解析 Lox 那一份特定的文法，并输出正确的字节码。</p>
-<h2><a href="#解析-token" name="解析-token"><small>17&#8202;.&#8202;2</small>解析 token</a></h2>
+<h2><a href="#解析-token" id="解析-token"><small>17&#8202;.&#8202;2</small>解析 token</a></h2>
 <p>先来前端这一半。这个函数的名字听上去应当很耳熟。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;scanner.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;scanner.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
 <pre class="insert">
 
@@ -240,8 +208,7 @@ replace 13 lines</div>
 <div class="source-file-narrow"><em>compiler.c</em></div>
 
 <p>正如在 jlox 中那样，它向前迈一步穿过 token 流。它向扫描器索要下一个 token，并将其存起来以备后用。在此之前，它将旧的 <code>current</code> token 藏起来，放进 <code>previous</code> 字段。这将在之后<strong>派上用场</strong>，以便我们在匹配一个 token 之后拿到该词素。读取下一个 token 的那段代码被裹在一个循环里。记住，clox 的扫描器并不报告词法错误。取而代之的是，它创建专门的错误 token，并将报告的差事留给解析器。我们便在这里做这件事。我们不断循环，读取 token 并报告错误，直至撞上一个非错误 token 或抵达末尾。如此一来，解析器的其余部分便只会看到合法的 token。当下与前一个 token 都被存在这个结构体中：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;scanner.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;scanner.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
 <pre class="insert">
 
@@ -258,12 +225,11 @@ static void advance() {
 <div class="source-file-narrow"><em>compiler.c</em></div>
 
 <p>正如我们在其它模块中所做的那样，我们拥有一份该结构体类型的全局变量，从而不必在编译器的各函数之间将状态传来传去。</p>
-<h3><a href="#处理语法错误" name="处理语法错误"><small>17&#8202;.&#8202;2&#8202;.&#8202;1</small>处理语法错误</a></h3>
+<h3><a href="#处理语法错误" id="处理语法错误"><small>17&#8202;.&#8202;2&#8202;.&#8202;1</small>处理语法错误</a></h3>
 <p>若扫描器抛给我们一个错误 token，我们便需要真正通知用户。那一步通过这个函数完成：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">errorAtCurrent</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">errorAtCurrent</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
   <span class="i">errorAt</span>(&amp;<span class="i">parser</span>.<span class="i">current</span>, <span class="i">message</span>);
 }
 </pre></div>
@@ -272,8 +238,7 @@ add after variable <em>parser</em></div>
 <p>我们从当下 token 中取出位置，以便告知用户错误发生在哪一行，并将其传给 <code>errorAt()</code>。更多的时候，我们会在刚才消费的那个 token 的位置报告错误，因此我们为这个另一个函数起了个更短的名字：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">error</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">error</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
   <span class="i">errorAt</span>(&amp;<span class="i">parser</span>.<span class="i">previous</span>, <span class="i">message</span>);
 }
 </pre></div>
@@ -282,8 +247,7 @@ add after variable <em>parser</em></div>
 <p>真正的工作在这里进行：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">errorAt</span>(<span class="t">Token</span>* <span class="i">token</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">errorAt</span>(<span class="t">Token</span>* <span class="i">token</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
   <span class="i">fprintf</span>(<span class="i">stderr</span>, <span class="s">&quot;[line %d] Error&quot;</span>, <span class="i">token</span>-&gt;<span class="i">line</span>);
 
   <span class="k">if</span> (<span class="i">token</span>-&gt;<span class="i">type</span> == <span class="a">TOKEN_EOF</span>) {
@@ -301,26 +265,20 @@ add after variable <em>parser</em></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 
 <p>首先，我们打印错误发生的位置。若词素是人类可读的，我们便试着把它展示出来。然后我们打印错误消息本身。此后，我们设置 <code>hadError</code> 标志位。它记录编译过程中是否出现过任何错误。这个字段也栖身于 parser 结构体之中。</p>
-<div class="codehilite"><pre class="insert-before">
-  Token previous;
+<div class="codehilite"><pre class="insert-before">  Token previous;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in struct <em>Parser</em></div>
-<pre class="insert">
-  <span class="t">bool</span> <span class="i">hadError</span>;
-</pre><pre class="insert-after">
-} Parser;
+<pre class="insert">  <span class="t">bool</span> <span class="i">hadError</span>;
+</pre><pre class="insert-after">} Parser;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Parser</em></div>
 
 <p>先前我曾说过，若出现错误，<code>compile()</code> 应当返回 <code>false</code>。现在我们可以真正让它做到这一点了。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_EOF, &quot;Expect end of expression.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_EOF, &quot;Expect end of expression.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()</div>
-<pre class="insert">
-  <span class="k">return</span> !<span class="i">parser</span>.<span class="i">hadError</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="k">return</span> !<span class="i">parser</span>.<span class="i">hadError</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
@@ -328,44 +286,34 @@ in <em>compile</em>()</div>
 <aside name="setjmp">
 <p>确实有 <code>setjmp()</code> 与 <code>longjmp()</code>，但我实在不想碰它们。那些东西太容易导致内存泄漏、忘记维护不变式、抑或其他各种&ldquo;非常糟糕的一天&ldquo;。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  bool hadError;
+<div class="codehilite"><pre class="insert-before">  bool hadError;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in struct <em>Parser</em></div>
-<pre class="insert">
-  <span class="t">bool</span> <span class="i">panicMode</span>;
-</pre><pre class="insert-after">
-} Parser;
+<pre class="insert">  <span class="t">bool</span> <span class="i">panicMode</span>;
+</pre><pre class="insert-after">} Parser;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Parser</em></div>
 
 <p>当发生一个错误时，我们将它置位。</p>
-<div class="codehilite"><pre class="insert-before">
-static void errorAt(Token* token, const char* message) {
+<div class="codehilite"><pre class="insert-before">static void errorAt(Token* token, const char* message) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>errorAt</em>()</div>
-<pre class="insert">
-  <span class="i">parser</span>.<span class="i">panicMode</span> = <span class="k">true</span>;
-</pre><pre class="insert-after">
-  fprintf(stderr, &quot;[line %d] Error&quot;, token-&gt;line);
+<pre class="insert">  <span class="i">parser</span>.<span class="i">panicMode</span> = <span class="k">true</span>;
+</pre><pre class="insert-after">  fprintf(stderr, &quot;[line %d] Error&quot;, token-&gt;line);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>errorAt</em>()</div>
 
 <p>此后，我们继续照常编译，仿佛那个错误从未发生过。所生成的字节码永远不会被执行，因此接着干下去是无害的。诀窍在于：当紧急模式标志位被置位时，我们仅仅抑制随后检测到的任何其他错误。</p>
-<div class="codehilite"><pre class="insert-before">
-static void errorAt(Token* token, const char* message) {
+<div class="codehilite"><pre class="insert-before">static void errorAt(Token* token, const char* message) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>errorAt</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">parser</span>.<span class="i">panicMode</span>) <span class="k">return</span>;
-</pre><pre class="insert-after">
-  parser.panicMode = true;
+<pre class="insert">  <span class="k">if</span> (<span class="i">parser</span>.<span class="i">panicMode</span>) <span class="k">return</span>;
+</pre><pre class="insert-after">  parser.panicMode = true;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>errorAt</em>()</div>
 
 <p>解析器很有可能在野草丛中迷失，但用户不会知道，因为所有错误都被<strong>默默吞下</strong>。紧急模式在解析器抵达一个同步点时结束。就 Lox 而言，我们选择的是语句交界处，所以当我们之后在编译器中添上那些之后，我们便在那里清除该标志位。这些新字段需要被初始化。</p>
-<div class="codehilite"><pre class="insert-before">
-  initScanner(source);
+<div class="codehilite"><pre class="insert-before">  initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()</div>
 <pre class="insert">
@@ -373,17 +321,14 @@ in <em>compile</em>()</div>
   <span class="i">parser</span>.<span class="i">hadError</span> = <span class="k">false</span>;
   <span class="i">parser</span>.<span class="i">panicMode</span> = <span class="k">false</span>;
 
-</pre><pre class="insert-after">
-  advance();
+</pre><pre class="insert-after">  advance();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
 <p>而为了显示错误，我们需要一个标准的头文件。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdio.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdio.h&gt;
 </pre><div class="source-file"><em>compiler.c</em></div>
-<pre class="insert">
-<span class="a">#include &lt;stdlib.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;stdlib.h&gt;</span>
 </pre><pre class="insert-after">
 
 #include &quot;common.h&quot;
@@ -393,8 +338,7 @@ in <em>compile</em>()</div>
 <p>我们还有一个最后一个解析函数，jlox 中的另一位老朋友。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>advance</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">consume</span>(<span class="t">TokenType</span> <span class="i">type</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">consume</span>(<span class="t">TokenType</span> <span class="i">type</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
   <span class="k">if</span> (<span class="i">parser</span>.<span class="i">current</span>.<span class="i">type</span> == <span class="i">type</span>) {
     <span class="i">advance</span>();
     <span class="k">return</span>;
@@ -406,42 +350,36 @@ add after <em>advance</em>()</div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>advance</em>()</div>
 
 <p>它与 <code>advance()</code> 类似，也会读取下一个 token。但它还会验证该 token 是否拥有所期待的类型。若没有，它会报告一个错误。这个函数是编译器中绝大多数语法错误的基石。好了，前端部分先到这里。</p>
-<h2><a href="#生成字节码" name="生成字节码"><small>17&#8202;.&#8202;3</small>生成字节码</a></h2>
+<h2><a href="#生成字节码" id="生成字节码"><small>17&#8202;.&#8202;3</small>生成字节码</a></h2>
 <p>在我们解析并理解了用户程序的某一片段之后，下一步是将其翻译为一串字节码指令。一切都从最简朴的那一步开始：往 chunk 中追加一个字节。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>consume</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">emitByte</span>(<span class="t">uint8_t</span> <span class="i">byte</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">emitByte</span>(<span class="t">uint8_t</span> <span class="i">byte</span>) {
   <span class="i">writeChunk</span>(<span class="i">currentChunk</span>(), <span class="i">byte</span>, <span class="i">parser</span>.<span class="i">previous</span>.<span class="i">line</span>);
 }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>consume</em>()</div>
 
 <p>很难相信如此简朴的一个函数竟能流淌出如此伟大的事物。它写入所给的那个字节——它可以是一个操作码，也可以是一条指令的操作数。它将前一个 token 的行信息一并传进去，以便运行时错误能够与该行关联起来。我们正在写入的那份 chunk 是被传给 <code>compile()</code> 的，但它需要走到 <code>emitByte()</code> 那里。为了这一步，我们倚赖于这个中介函数：</p>
-<div class="codehilite"><pre class="insert-before">
-Parser parser;
+<div class="codehilite"><pre class="insert-before">Parser parser;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>parser</em></div>
-<pre class="insert">
-<span class="t">Chunk</span>* <span class="i">compilingChunk</span>;
+<pre class="insert"><span class="t">Chunk</span>* <span class="i">compilingChunk</span>;
 
 <span class="k">static</span> <span class="t">Chunk</span>* <span class="i">currentChunk</span>() {
   <span class="k">return</span> <span class="i">compilingChunk</span>;
 }
 
-</pre><pre class="insert-after">
-static void errorAt(Token* token, const char* message) {
+</pre><pre class="insert-after">static void errorAt(Token* token, const char* message) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after variable <em>parser</em></div>
 
 <p>眼下，chunk 指针被存放在一个模块级的变量中，一如我们存其它全局状态那般。日后，当我们开始编译用户自定义的函数时，&ldquo;当前 chunk&rdquo;这一概念会变得更为复杂。为了避免回过头去改动大量代码，我将那套逻辑封在 <code>currentChunk()</code> 这一函数中。我们在写入任何字节码之前，先初始化这个新的模块级变量：</p>
-<div class="codehilite"><pre class="insert-before">
-bool compile(const char* source, Chunk* chunk) {
+<div class="codehilite"><pre class="insert-before">bool compile(const char* source, Chunk* chunk) {
   initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()</div>
-<pre class="insert">
-  <span class="i">compilingChunk</span> = <span class="i">chunk</span>;
+<pre class="insert">  <span class="i">compilingChunk</span> = <span class="i">chunk</span>;
 </pre><pre class="insert-after">
 
   parser.hadError = false;
@@ -449,22 +387,18 @@ in <em>compile</em>()</div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
 <p>随后，在最后，当我们编译完 chunk 之后，我们做收尾工作。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_EOF, &quot;Expect end of expression.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_EOF, &quot;Expect end of expression.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()</div>
-<pre class="insert">
-  <span class="i">endCompiler</span>();
-</pre><pre class="insert-after">
-  return !parser.hadError;
+<pre class="insert">  <span class="i">endCompiler</span>();
+</pre><pre class="insert-after">  return !parser.hadError;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
 <p>它调用这个：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitByte</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">endCompiler</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">endCompiler</span>() {
   <span class="i">emitReturn</span>();
 }
 </pre></div>
@@ -473,8 +407,7 @@ add after <em>emitByte</em>()</div>
 <p>在本章中，我们的 VM 只处理表达式。当你跑起 clox 时，它会解析、编译、并执行一条表达式，接着打印其结果。为了打印那个值，我们暂时使用 <code>OP_RETURN</code> 指令。于是我们让编译器在 chunk 末尾加一条。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitByte</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">emitReturn</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">emitReturn</span>() {
   <span class="i">emitByte</span>(<span class="a">OP_RETURN</span>);
 }
 </pre></div>
@@ -483,8 +416,7 @@ add after <em>emitByte</em>()</div>
 <p>既然我们已经到了后端，不如顺便让自己的生活更轻松一些。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitByte</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">emitBytes</span>(<span class="t">uint8_t</span> <span class="i">byte1</span>, <span class="t">uint8_t</span> <span class="i">byte2</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">emitBytes</span>(<span class="t">uint8_t</span> <span class="i">byte1</span>, <span class="t">uint8_t</span> <span class="i">byte2</span>) {
   <span class="i">emitByte</span>(<span class="i">byte1</span>);
   <span class="i">emitByte</span>(<span class="i">byte2</span>);
 }
@@ -492,13 +424,12 @@ add after <em>emitByte</em>()</div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>emitByte</em>()</div>
 
 <p>日积月累，我们会积累足够多的&ldquo;写一个操作码后跟一个一字节操作数&ldquo;的场景，以至于为此封一个便利函数是值得的。</p>
-<h2><a href="#解析前缀表达式" name="解析前缀表达式"><small>17&#8202;.&#8202;4</small>解析前缀表达式</a></h2>
+<h2><a href="#解析前缀表达式" id="解析前缀表达式"><small>17&#8202;.&#8202;4</small>解析前缀表达式</a></h2>
 <p>我们已搭好了解析与代码生成的那些工具函数。所缺的那一块是居中的那一段将它们连起来的代码。</p><img src="image/compiling-expressions/mystery.png" alt="左侧的解析函数，右侧的字节码发射函数。中间是什么？" />
 <p><code>compile()</code> 中唯一没实现的那一步是这个函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">expression</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">expression</span>() {
   <span class="c">// What goes here?</span>
 }
 </pre></div>
@@ -512,12 +443,11 @@ add after <em>endCompiler</em>()</div>
 <li>算术四骑士：<code>+</code>、<code>-</code>、<code>*</code>、<code>/</code></li>
 </ul>
 <p>当我们走过为各种表达式类型各自编译的函数时，我们也会凑齐驱动表的要求—— 那张表是调用这些函数的核心。</p>
-<h3><a href="#字面量-token-的解析器" name="字面量-token-的解析器"><small>17&#8202;.&#8202;4&#8202;.&#8202;1</small>字面量 token 的解析器</a></h3>
+<h3><a href="#字面量-token-的解析器" id="字面量-token-的解析器"><small>17&#8202;.&#8202;4&#8202;.&#8202;1</small>字面量 token 的解析器</a></h3>
 <p>眼下，让我们先关注那些仅由一个 token 构成的 Lox 表达式。在本章中，那就是数字字面量，但之后还会有更多。下面是我们将如何去编译它们：我们将每种 token 类型映射为一种不同的表达式类型。我们为每一种表达式都定义一个函数，以输出恰当的字节码。然后我们搭起一个函数指针数组。数组中的索引对应于 <code>TokenType</code> 枚举值，而每个索引处的函数便是编译该 token 类型之表达式的代码。为了编译数字字面量，我们将一个指向下面这个函数的指针存在数组的 <code>TOKEN_NUMBER</code> 索引处。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">number</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">number</span>() {
   <span class="t">double</span> <span class="i">value</span> = <span class="i">strtod</span>(<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">start</span>, <span class="a">NULL</span>);
   <span class="i">emitConstant</span>(<span class="i">value</span>);
 }
@@ -527,8 +457,7 @@ add after <em>endCompiler</em>()</div>
 <p>我们假设数字字面量的 token 已被消费并存在 <code>previous</code> 中。我们拿出该词素，并用 C 标准库将其转换为一个 double 值。然后，我们通过该函数生成代码以加载该值：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitReturn</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">emitConstant</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">emitConstant</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="i">emitBytes</span>(<span class="a">OP_CONSTANT</span>, <span class="i">makeConstant</span>(<span class="i">value</span>));
 }
 </pre></div>
@@ -537,8 +466,7 @@ add after <em>emitReturn</em>()</div>
 <p>首先，我们将该值添加至常量表，接着发射一条 <code>OP_CONSTANT</code> 指令，以在运行时将其推入栈。为了在常量表中插入一条，我们倚赖于：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitReturn</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">uint8_t</span> <span class="i">makeConstant</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="k">static</span> <span class="t">uint8_t</span> <span class="i">makeConstant</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="t">int</span> <span class="i">constant</span> = <span class="i">addConstant</span>(<span class="i">currentChunk</span>(), <span class="i">value</span>);
   <span class="k">if</span> (<span class="i">constant</span> &gt; <span class="a">UINT8_MAX</span>) {
     <span class="i">error</span>(<span class="s">&quot;Too many constants in one chunk.&quot;</span>);
@@ -555,12 +483,11 @@ add after <em>emitReturn</em>()</div>
 <p>是的，这个上限有些低。若这是一款真正的语言实现，我们会想要添上另一条指令—— 类如 <code>OP_CONSTANT_16</code> 的那种将索引存为两字节操作数的—— 以便我们能在需要时处理更多的常量。支持这一点的代码并不特别有启发性，所以我在 clox 中略去了它，但你一定会想让你的 VM 能扩展到更大的程序上。</p>
 </aside>
 <p>大体上就是这些了。只要有那些恰当的代码去消费一个 <code>TOKEN_NUMBER</code> token，在函数指针数组中查找 <code>number()</code>，并接着调用它，我们便可以将数字字面量编译为字节码。</p>
-<h3><a href="#用于分组的圆括号" name="用于分组的圆括号"><small>17&#8202;.&#8202;4&#8202;.&#8202;2</small>用于分组的圆括号</a></h3>
+<h3><a href="#用于分组的圆括号" id="用于分组的圆括号"><small>17&#8202;.&#8202;4&#8202;.&#8202;2</small>用于分组的圆括号</a></h3>
 <p>我们那些尚未出现的函数指针数组，若每条表达式都只有一个 token 长，就会很棒。可惜，大多数都更长。然而，许多表达式都以某个特定的 token 打头。我们称这些为前缀表达式。举例而言，当我们正在解析一条表达式，而当下 token 是 <code>(</code> 时，我们便知道我们必然正在面对一个带圆括号的分组表达式。事实上，我们的函数指针数组也能处理这些情形。一条表达式的解析函数可以消费它想要的任何其他 token，正如在一款普通的递归下降解析器中那样。下面是圆括号的工作方式：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">grouping</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">grouping</span>() {
   <span class="i">expression</span>();
   <span class="i">consume</span>(<span class="a">TOKEN_RIGHT_PAREN</span>, <span class="s">&quot;Expect &#39;)&#39; after expression.&quot;</span>);
 }
@@ -572,12 +499,11 @@ add after <em>endCompiler</em>()</div>
 <p>Pratt 解析器并不是递归下降解析器，但它依然是递归的。这倒不足为奇，因为文法本身就是递归的。</p>
 </aside>
 <p>就后端而言，一个分组表达式实在没什么花头。它唯一的作用是句法上的—— 它让你能够在某个期待出现较高优先级的位置插入一条较低优先级的表达式。因此，它本身并不具有任何运行时语义，也因此不发射任何字节码。其内部对 <code>expression()</code> 的调用负责为圆括号内的表达式生成字节码。</p>
-<h3><a href="#一元取负" name="一元取负"><small>17&#8202;.&#8202;4&#8202;.&#8202;3</small>一元取负</a></h3>
+<h3><a href="#一元取负" id="一元取负"><small>17&#8202;.&#8202;4&#8202;.&#8202;3</small>一元取负</a></h3>
 <p>一元减号也是一个前缀表达式，所以它也能纳入我们的这个模型。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>number</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">unary</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">unary</span>() {
   <span class="t">TokenType</span> <span class="i">operatorType</span> = <span class="i">parser</span>.<span class="i">previous</span>.<span class="i">type</span>;
 
   <span class="c">// Compile the operand.</span>
@@ -604,30 +530,26 @@ add after <em>number</em>()</div>
 </ol>
 <aside name="line">
 <p>在运算对象之后发射 <code>OP_NEGATE</code> 指令，意味着写入字节码时的当下 token 并不是 <code>-</code>。这大抵不会有多大影响，除非我们使用那个 token 来获取与该指令关联的行号。这意味着，若你拥有一个跨多行的取负表达式，比如：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> -
+<div class="codehilite"><pre><span class="k">print</span> -
   <span class="k">true</span>;
 </pre></div>
 <p>则运行时错误将在错误的行上报告。在此处，它会显示错误在第 2 行，尽管 <code>-</code> 位于第 1 行。一个更为稳健的做法是在编译运算对象之前先存储该 token 的行，然后将其传入 <code>emitByte()</code>，但我希望让本章保持简单。</p>
 </aside>
 <p>不过这段代码有一个问题。它所调用的 <code>expression()</code> 函数会为运算对象解析任何表达式，无视优先级。一旦我们添上二元运算符和其他语法，这会成为错误的做法。思考一下：</p>
-<div class="codehilite"><pre>
--<span class="i">a</span>.<span class="i">b</span> + <span class="i">c</span>;
+<div class="codehilite"><pre>-<span class="i">a</span>.<span class="i">b</span> + <span class="i">c</span>;
 </pre></div>
 <p>在此处， <code>-</code> 的运算对象应该只是 <code>a.b</code> 这条表达式，而不是整个 <code>a.b + c</code>。但若 <code>unary()</code> 调用 <code>expression()</code>，后者会欣然地将剩下的所有代码一并嚼烂，连 <code>+</code> 也不放过。它会错误地将 <code>-</code> 视为比 <code>+</code> 更低的优先级。在解析 <code>-</code> 的运算对象时，我们只需要编译某一优先级以上的表达式。在 jlox 的递归下降解析器中，我们通过调入我们所希望允许的最低优先级的解析方法（本例中是 <code>call()</code>） 来达到这一目的。每个用于解析特定表达式的方法也会解析比它更高优先级的那些表达式，从而也覆盖了优先级表的其余部分。</p>
 <p>clox 里的 <code>number()</code> 与 <code>unary()</code> 等解析函数则不同。每一位都只解析一种表达式。它们不会顺势延伸到也涵盖更高优先级的表达式。我们需要一个不同的解决方案，看起来如下：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>unary</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">parsePrecedence</span>(<span class="t">Precedence</span> <span class="i">precedence</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">parsePrecedence</span>(<span class="t">Precedence</span> <span class="i">precedence</span>) {
   <span class="c">// What goes here?</span>
 }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>unary</em>()</div>
 
 <p>这个函数—— 一旦我们实现了它—— 会从当下 token 起步，解析任何处于给定优先级或更高位置的表达式。我们还有别的铺垫要做，然后才能去写这个函数的函数体，但你大概已猜到它将使用我们一直在念叨的那张解析函数指针表。眼下，不必太担心它如何工作。为了将&ldquo;优先级&ldquo;作为参数接收，我们定义它为一个数字。</p>
-<div class="codehilite"><pre class="insert-before">
-} Parser;
+<div class="codehilite"><pre class="insert-before">} Parser;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after struct <em>Parser</em></div>
 <pre class="insert">
@@ -652,30 +574,24 @@ Parser parser;
 <div class="source-file-narrow"><em>compiler.c</em>, add after struct <em>Parser</em></div>
 
 <p>这些都是 Lox 的所有优先级层级，按从低到高排序。由于 C 隐式地为枚举赋值以递增的数字，这意味着 <code>PREC_CALL</code> 在数值上比 <code>PREC_UNARY</code> 更大。比如说，假如编译器正停留在这样一段代码上：</p>
-<div class="codehilite"><pre>
--<span class="i">a</span>.<span class="i">b</span> + <span class="i">c</span>
+<div class="codehilite"><pre>-<span class="i">a</span>.<span class="i">b</span> + <span class="i">c</span>
 </pre></div>
 <p>若我们调用 <code>parsePrecedence(PREC_ASSIGNMENT)</code>，那么它会解析整条表达式，因为 <code>+</code> 的优先级比赋值更高。若取而代之调用 <code>parsePrecedence(PREC_UNARY)</code>，那么它会编译 <code>-a.b</code> 并在此处停下。它不会继续穿过 <code>+</code>，因为加法的优先级比一元运算符更低。带上这个函数在手，补上 <code>expression()</code> 那个空缺的函数体实在是小菜一碟。</p>
-<div class="codehilite"><pre class="insert-before">
-static void expression() {
+<div class="codehilite"><pre class="insert-before">static void expression() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>expression</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="i">parsePrecedence</span>(<span class="a">PREC_ASSIGNMENT</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">parsePrecedence</span>(<span class="a">PREC_ASSIGNMENT</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>expression</em>(), replace 1 line</div>
 
 <p>我们只是解析最低的优先级层级，而它自然而然地也会涵盖所有更高优先级的表达式。现在，为了编译一元表达式的运算对象，我们调用这个新函数并将其限定在恰当的优先级上：</p>
-<div class="codehilite"><pre class="insert-before">
-  // Compile the operand.
+<div class="codehilite"><pre class="insert-before">  // Compile the operand.
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>unary</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="i">parsePrecedence</span>(<span class="a">PREC_UNARY</span>);
+<pre class="insert">  <span class="i">parsePrecedence</span>(<span class="a">PREC_UNARY</span>);
 </pre><pre class="insert-after">
 
   // Emit the operator instruction.
@@ -686,10 +602,9 @@ replace 1 line</div>
 <aside name="useful">
 <p>嵌套一元表达式在 Lox 中也算不上特别有用。但其它语言允许这么做，所以我们也跟着这么做。</p>
 </aside>
-<h2><a href="#解析中缀表达式" name="解析中缀表达式"><small>17&#8202;.&#8202;5</small>解析中缀表达式</a></h2>
+<h2><a href="#解析中缀表达式" id="解析中缀表达式"><small>17&#8202;.&#8202;5</small>解析中缀表达式</a></h2>
 <p>二元运算符与之前的表达式不同，因为它们是中缀的。对于其他表达式，我们从第一个 token 就知道我们在解析什么。对于中缀表达式，我们要在已经解析完它的左运算对象、接着撞上中间的那个运算符 token 之后，才知道我们正处于一个二元运算符的中间。举个例子：</p>
-<div class="codehilite"><pre>
-<span class="n">1</span> + <span class="n">2</span>
+<div class="codehilite"><pre><span class="n">1</span> + <span class="n">2</span>
 </pre></div>
 <p>让我们走一遍尝试用我们到目前为止所知的知识来编译它：</p>
 <ol>
@@ -705,8 +620,7 @@ replace 1 line</div>
 </ol>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">binary</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">binary</span>() {
   <span class="t">TokenType</span> <span class="i">operatorType</span> = <span class="i">parser</span>.<span class="i">previous</span>.<span class="i">type</span>;
   <span class="t">ParseRule</span>* <span class="i">rule</span> = <span class="i">getRule</span>(<span class="i">operatorType</span>);
   <span class="i">parsePrecedence</span>((<span class="t">Precedence</span>)(<span class="i">rule</span>-&gt;<span class="i">precedence</span> + <span class="n">1</span>));
@@ -723,31 +637,26 @@ add after <em>endCompiler</em>()</div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
 <p>当一个前缀解析函数被调用时，那个领头的 token 已被消费。一个中缀解析函数则更是身处其间——整个左侧运算对象都已被编译，接着的那个中缀运算符也已被消费。左侧运算对象会先被编译这回事恰好很妙。这意味着运行时那段代码会先执行。当它运行时，其产生的值会落到栈上。这正是中缀运算符即将需要的位置。随后，我们抵达 <code>binary()</code> 处理其它算术运算符。这个函数编译其右侧运算对象，类似于 <code>unary()</code> 编译它自己那个后跟的运算对象。最后，它发射执行那个二元运算的字节码指令。运行时，VM 会先后执行左、右侧运算对象的代码，顺序如此，并将它们的值留在栈上。接着它会执行那个运算符对应的指令。那会弹出两个值、计算运算、并将结果推回去。大概引起你注意的是那行 <code>getRule()</code>。当我们解析右侧运算对象时，我们再一次需要考虑优先级。看这样一条表达式：</p>
-<div class="codehilite"><pre>
-<span class="n">2</span> * <span class="n">3</span> + <span class="n">4</span>
+<div class="codehilite"><pre><span class="n">2</span> * <span class="n">3</span> + <span class="n">4</span>
 </pre></div>
 <p>当我们解析 <code>*</code> 的右侧运算对象时，我们只需捕获 <code>3</code>，而不应包括 <code>3 + 4</code>，因为 <code>+</code> 的优先级比 <code>*</code> 更低。我们本可以为每一个二元运算符各自定义一个函数。每个函数都会调用 <code>parsePrecedence()</code> 并传入其运算对象应遵循的正确优先级。但那样实在有些繁琐。每一个二元运算符其右侧运算对象的优先级都比它自己高一档。<span name="higher">更高</span> 一档。我们可以通过马上就要介绍的 <code>getRule()</code> 动态地查到那个值。利用这一点，我们调用 <code>parsePrecedence()</code> 并传入比当前运算符的优先级更高一档的参数。</p>
 <aside name="higher">
 <p>我们为右侧运算对象使用比其自身更高一档的优先级，是因为这些二元运算符都是左结合的。面对一串相同的运算符，比如：</p>
-<div class="codehilite"><pre>
-<span class="n">1</span> + <span class="n">2</span> + <span class="n">3</span> + <span class="n">4</span>
+<div class="codehilite"><pre><span class="n">1</span> + <span class="n">2</span> + <span class="n">3</span> + <span class="n">4</span>
 </pre></div>
 <p>我们希望将其解析为：</p>
-<div class="codehilite"><pre>
-((<span class="n">1</span> + <span class="n">2</span>) + <span class="n">3</span>) + <span class="n">4</span>
+<div class="codehilite"><pre>((<span class="n">1</span> + <span class="n">2</span>) + <span class="n">3</span>) + <span class="n">4</span>
 </pre></div>
 <p>于是，当解析第一个 <code>+</code> 的右侧运算对象时，我们希望捕获 <code>2</code>，而不包括其余部分，所以我们使用比 <code>+</code> 更高一档的优先级。但若我们的运算符是右结合的，这就错了。面对：</p>
-<div class="codehilite"><pre>
-<span class="i">a</span> = <span class="i">b</span> = <span class="i">c</span> = <span class="i">d</span>
+<div class="codehilite"><pre><span class="i">a</span> = <span class="i">b</span> = <span class="i">c</span> = <span class="i">d</span>
 </pre></div>
 <p>由于赋值是右结合的，我们希望将其解析为：</p>
-<div class="codehilite"><pre>
-<span class="i">a</span> = (<span class="i">b</span> = (<span class="i">c</span> = <span class="i">d</span>))
+<div class="codehilite"><pre><span class="i">a</span> = (<span class="i">b</span> = (<span class="i">c</span> = <span class="i">d</span>))
 </pre></div>
 <p>为了支持这一点，我们会用与当前运算符相同的优先级来调用 <code>parsePrecedence()</code>。</p>
 </aside>
 <p>以这种方式，我们便可以为所有的二元运算符使用同一个 <code>binary()</code> 函数，即使它们具有不同的优先级。</p>
-<h2><a href="#pratt-解析器" name="pratt-解析器"><small>17&#8202;.&#8202;6</small>Pratt 解析器</a></h2>
+<h2><a href="#pratt-解析器" id="pratt-解析器"><small>17&#8202;.&#8202;6</small>Pratt 解析器</a></h2>
 <p>我们现在已经将编译器的各个零件与部件摆好了位。我们为文法的每一个产生式都有一个函数： <code>number()</code>、<code>grouping()</code>、<code>unary()</code> 以及 <code>binary()</code>。我们还需要 <code>parsePrecedence()</code> 以及 <code>getRule()</code> 的实现。我们也知道我们需要一张表，给定一个 token 类型，它能让我们查找到：</p>
 <ul>
 <li>
@@ -764,8 +673,7 @@ add after <em>endCompiler</em>()</div>
 <p>我们并不需要记录以给定 token 开头的前缀表达式的优先级，因为 Lox 中所有的前缀运算符都拥有相同的优先级。</p>
 </aside>
 <p>我们将这三个属性打个包，放进一个小结构里，它代表解析表中的一行。</p>
-<div class="codehilite"><pre class="insert-before">
-} Precedence;
+<div class="codehilite"><pre class="insert-before">} Precedence;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after enum <em>Precedence</em></div>
 <pre class="insert">
@@ -785,8 +693,7 @@ Parser parser;
 <aside name="typedef" class="bottom">
 <p>C 在函数指针类型上的语法实在太糟糕了，所以我们总是把它藏在一个 typedef 后面。我理解这一语法背后的设计意图—— 那些&ldquo;声明反映使用&ldquo;的事儿—— 但我认为它是一个失败的语法实验。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-} Precedence;
+<div class="codehilite"><pre class="insert-before">} Precedence;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after enum <em>Precedence</em></div>
 <pre class="insert">
@@ -801,8 +708,7 @@ typedef struct {
 <p>驱动整款解析器的那张表是一个 ParseRules 数组。我们为它念叨了许久，终于你能看到它了。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>unary</em>()</div>
-<pre>
-<span class="t">ParseRule</span> <span class="i">rules</span>[] = {
+<pre><span class="t">ParseRule</span> <span class="i">rules</span>[] = {
   [<span class="a">TOKEN_LEFT_PAREN</span>]    = {<span class="i">grouping</span>, <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
   [<span class="a">TOKEN_RIGHT_PAREN</span>]   = {<span class="a">NULL</span>,     <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
   [<span class="a">TOKEN_LEFT_BRACE</span>]    = {<span class="a">NULL</span>,     <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},<span name="big"> </span>
@@ -853,8 +759,7 @@ add after <em>unary</em>()</div>
 <p>你可以看到 <code>grouping</code> 与 <code>unary</code> 如何分别安插在与其各自 token 类型对应的前缀解析列里。在下一列， <code>binary</code> 与四个算术中缀运算符相连。那些中缀运算符也有其优先级，设定在最后一列。除了这些之外，表的其余部分填满了 <code>NULL</code> 和 <code>PREC_NONE</code>。那些空格子大多是因为没有与那些 token 相关联的表达式。比如说，你不能以 <code>else</code> 作为一条表达式的起点，而 <code>}</code> 作为中缀运算符也会让人极为困惑。但同时，我们还没有填满整条文法。在后面的章节中，当我们添上新的表达式类型时，其中的一些格子会再次被填上函数。我喜欢这种解析方法的一个地方是：它让我们能够极其直观地看出哪些 token 正在被文法使用、哪些还留着空位。现在我们有了这张表，终于可以来写那些使用它的代码了。最容易定义的函数是 <code>getRule()</code>。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>parsePrecedence</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">ParseRule</span>* <span class="i">getRule</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
+<pre><span class="k">static</span> <span class="t">ParseRule</span>* <span class="i">getRule</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
   <span class="k">return</span> &amp;<span class="i">rules</span>[<span class="i">type</span>];
 }
 </pre></div>
@@ -864,8 +769,7 @@ add after <em>parsePrecedence</em>()</div>
 <aside name="forward">
 <p>这就是当你用一门为在 PDP-11 上编译而设计的语言来写你的 VM 时，所会发生的事情。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  emitReturn();
+<div class="codehilite"><pre class="insert-before">  emitReturn();
 }
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after <em>endCompiler</em>()</div>
@@ -875,21 +779,18 @@ add after <em>endCompiler</em>()</div>
 <span class="k">static</span> <span class="t">ParseRule</span>* <span class="i">getRule</span>(<span class="t">TokenType</span> <span class="i">type</span>);
 <span class="k">static</span> <span class="t">void</span> <span class="i">parsePrecedence</span>(<span class="t">Precedence</span> <span class="i">precedence</span>);
 
-</pre><pre class="insert-after">
-static void binary() {
+</pre><pre class="insert-after">static void binary() {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>endCompiler</em>()</div>
 
 <p>若你正在跟着一步步实现 clox，请仔细看那些小标注 —— 它们会告诉你该把这些代码片段放在哪。不用担心，即使你放错了位置， C 编译器也会很乐意告诉你。</p>
-<h3><a href="#带优先级的解析" name="带优先级的解析"><small>17&#8202;.&#8202;6&#8202;.&#8202;1</small>带优先级的解析</a></h3>
+<h3><a href="#带优先级的解析" id="带优先级的解析"><small>17&#8202;.&#8202;6&#8202;.&#8202;1</small>带优先级的解析</a></h3>
 <p>如今我们抵达了有趣的部分。统领那些我们已经定义的解析函数的那位指挥家，是 <code>parsePrecedence()</code>。让我们从解析前缀表达式开始。</p>
-<div class="codehilite"><pre class="insert-before">
-static void parsePrecedence(Precedence precedence) {
+<div class="codehilite"><pre class="insert-before">static void parsePrecedence(Precedence precedence) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>parsePrecedence</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="i">advance</span>();
+<pre class="insert">  <span class="i">advance</span>();
   <span class="t">ParseFn</span> <span class="i">prefixRule</span> = <span class="i">getRule</span>(<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">type</span>)-&gt;<span class="i">prefix</span>;
   <span class="k">if</span> (<span class="i">prefixRule</span> == <span class="a">NULL</span>) {
     <span class="i">error</span>(<span class="s">&quot;Expect expression.&quot;</span>);
@@ -897,14 +798,12 @@ replace 1 line</div>
   }
 
   <span class="i">prefixRule</span>();
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parsePrecedence</em>(), replace 1 line</div>
 
 <p>我们读取下一个 token，并查找相应的 ParseRule。若没有前缀解析器，则该 token 一定是一个语法错误。我们报告那一点并返回给调用方。否则，我们调用那个前缀解析函数，让它去干它的事。那个前缀解析器会编译那条前缀表达式的其余部分，消费它所需的其他 token，并返回到此。中缀表达式则是有趣之处 —— 因为优先级在此登场。实现起来出奇地简单。</p>
-<div class="codehilite"><pre class="insert-before">
-  prefixRule();
+<div class="codehilite"><pre class="insert-before">  prefixRule();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>parsePrecedence</em>()</div>
 <pre class="insert">
@@ -914,8 +813,7 @@ in <em>parsePrecedence</em>()</div>
     <span class="t">ParseFn</span> <span class="i">infixRule</span> = <span class="i">getRule</span>(<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">type</span>)-&gt;<span class="i">infix</span>;
     <span class="i">infixRule</span>();
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parsePrecedence</em>()</div>
 
@@ -925,39 +823,32 @@ in <em>parsePrecedence</em>()</div>
 <p>那条 <img src="image/compiling-expressions/calls.png" alt="一条实心箭头。" class="arrow" /> 箭头将一个函数连到另一个它直接调用的函数。那条 <img src="image/compiling-expressions/points-to.png" alt="一条空心箭头。" class="arrow" /> 箭头显示那张表指向各个解析函数的指针。</p>
 </aside>
 <p>之后，我们会需要对本章的代码略加调整，以应对赋值。但除此之外，我们所写的这些已经涵盖了我们在本书其余部分中解析表达式的全部需求。当我们添加新的表达式类型时，我们会把更多的解析函数插入那张表中，但 <code>parsePrecedence()</code> 本身已经完整了。</p>
-<h2><a href="#转储-chunk" name="转储-chunk"><small>17&#8202;.&#8202;7</small>转储 chunk</a></h2>
+<h2><a href="#转储-chunk" id="转储-chunk"><small>17&#8202;.&#8202;7</small>转储 chunk</a></h2>
 <p>在我们抵达编译器的核心之时，我们应该顺便加上一些检测工具。为了调试所生成的字节码，我们将添加一段在编译结束后转储 chunk 的代码。早些时候，在我们手工拼凑 chunk 时，我们有一些临时的日志输出。如今，我们会添上一些真正的代码，以便我们可以在任何想用的时候将其打开。由于这并不是为终端用户而设，我们将它隐藏在一个标志后面。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdint.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdint.h&gt;
 
 </pre><div class="source-file"><em>common.h</em></div>
-<pre class="insert">
-<span class="a">#define DEBUG_PRINT_CODE</span>
-</pre><pre class="insert-after">
-#define DEBUG_TRACE_EXECUTION
+<pre class="insert"><span class="a">#define DEBUG_PRINT_CODE</span>
+</pre><pre class="insert-after">#define DEBUG_TRACE_EXECUTION
 
 </pre></div>
 <div class="source-file-narrow"><em>common.h</em></div>
 
 <p>当那个标志被定义时，我们使用我们既有的&ldquo;debug&rdquo;模块来打印那份 chunk 的字节码。</p>
-<div class="codehilite"><pre class="insert-before">
-  emitReturn();
+<div class="codehilite"><pre class="insert-before">  emitReturn();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endCompiler</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef DEBUG_PRINT_CODE</span>
+<pre class="insert"><span class="a">#ifdef DEBUG_PRINT_CODE</span>
   <span class="k">if</span> (!<span class="i">parser</span>.<span class="i">hadError</span>) {
     <span class="i">disassembleChunk</span>(<span class="i">currentChunk</span>(), <span class="s">&quot;code&quot;</span>);
   }
 <span class="a">#endif</span>
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endCompiler</em>()</div>
 
 <p>我们只在编译完全没错的代码后才这样做。在发生语法错误之后，编译器会继续向前，但它此时处于一种有点古怪的状态，并可能会生成有问题的代码。这是无害的，因为它不会被执行，但若我们尝试去读它，也只会让我们自己一头雾水。最后，为了访问 <code>disassembleChunk()</code>，我们需要包含它的头文件。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;scanner.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;scanner.h&quot;
 </pre><div class="source-file"><em>compiler.c</em></div>
 <pre class="insert">
 
@@ -972,12 +863,11 @@ typedef struct {
 
 <p>我们搞定了！这是我们 VM 的编译与执行管道中需要安装的最后一大部件。我们的解释器看起来不起眼，但其内部却在扫描、解析、编译为字节码，并执行之。启动 VM 并输入一条表达式。若我们一切都做对了，它应该会计算并打印其结果。我们现在有了一款过度工程的算术计算器。在接下来的几章里，我们还有大批的语言特性要添上，但地基已经就位。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>17&#8202;.&#8202;8</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>17&#8202;.&#8202;8</small>挑战</a></h2>
 <ol>
 <li>
 <p>要真正理解解析器，你需要看一看执行线程是如何穿过那些有趣的解析函数——<code>parsePrecedence()</code> 以及存放在那张表中的各解析函数的。请拿这条（有些古怪）的表达式：</p>
-<div class="codehilite"><pre>
-(-<span class="n">1</span> + <span class="n">2</span>) * <span class="n">3</span> - -<span class="n">4</span>
+<div class="codehilite"><pre>(-<span class="n">1</span> + <span class="n">2</span>) * <span class="n">3</span> - -<span class="n">4</span>
 </pre></div>
 <p>请写出那些函数被调用的顺序—— 哪个调用哪个，以及向它们传入的参数。</p>
 </li>
@@ -990,7 +880,7 @@ typedef struct {
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：只是解析而已" name="设计笔记：只是解析而已"><small>17&#8202;.&#8202;9</small>设计笔记：只是解析而已</a></h2>
+<h2><a href="#设计笔记：只是解析而已" id="设计笔记：只是解析而已"><small>17&#8202;.&#8202;9</small>设计笔记：只是解析而已</a></h2>
 <p>我要在这里抛出一个可能会惹不少编译器与语言人士不痛快的主张。你不同意也没关系。个人而言，我从那些表述强硬、让我不同意的观点中学到的，远比从好几页的限定词与含糊之辞中学到的多。我的主张是，<em>解析并不重要</em>。这些年来，许多数程序设计语言方面的人 —— 尤其是学术界的那些——对解析器走火入魔，并把它们看得极为重要。最初，是那些 <span name="yacc">编译器编译器</span>、LALR 以及类似的玩意儿的编译器人士们玩得不可开交。龙书的前半部就是一封长长的情书，献给解析器生成器的奇妙。</p>
 <aside name="yacc">
 <p>我们所有人都有&ldquo;手里有了一把锤子之后，看什么都像钉子&ldquo;的坏毛病，但编译器人士的这种毛病可能最为触目惊心。你简直无法相信，一旦你向一位编译器黑客求助某个软件问题，下一秒他就会掏出一堆新的小语言来解决它。</p>
@@ -1004,7 +894,7 @@ typedef struct {
 <a href="types-of-values.html" class="next">
   Next Chapter: &ldquo;Types of Values&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

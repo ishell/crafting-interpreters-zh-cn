@@ -1,16 +1,16 @@
 # 局部变量
 
 <!--
-> And as imagination bodies forth<br>
-> The forms of things unknown, the poet's pen<br>
-> Turns them to shapes and gives to airy nothing<br>
+> And as imagination bodies forth<br />
+> The forms of things unknown, the poet's pen<br />
+> Turns them to shapes and gives to airy nothing<br />
 > A local habitation and a name.
 >
 > <cite>William Shakespeare, <em>A Midsummer Night's Dream</em></cite>
 -->
-> 当想象力把那些无名之物<br>
-> 一一赋形，诗人的笔<br>
-> 便替它们描出轮廓，让一片空虚的乌有<br>
+> 当想象力把那些无名之物<br />
+> 一一赋形，诗人的笔<br />
+> 便替它们描出轮廓，让一片空虚的乌有<br />
 > 有了栖身的居所，也有了名字。
 >
 > <cite>威廉·莎士比亚，<em>《仲夏夜之梦》</em></cite>

@@ -1,14 +1,14 @@
 {{> header }}
 
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
     {{> contents-nav }}
   </div>
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 {{# has_prev }}
 <a href="{{ prev_file }}.html" title="{{ prev }}" class="prev">←</a>
 {{/ has_prev }}
@@ -20,7 +20,7 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
     {{> contents-nav }}
   </div>
@@ -35,6 +35,12 @@
 <div class="chapters">
   <div class="row">
     <div class="first">
+    <h2><span class="num">&#10087;</span>前页</h2>
+    <ul>
+      <li><span class="num">&nbsp;</span><a href="dedication.html">献辞</a></li>
+      <li><span class="num">&nbsp;</span><a href="acknowledgements.html">致谢</a></li>
+    </ul>
+
     {{# part_1 }}
       {{> contents-part }}
     {{/ part_1 }}
@@ -60,7 +66,7 @@
   <a href="{{ next_file }}.html" class="next">
     First {{ next_type }}: &ldquo;{{ next }}&rdquo; &rarr;
   </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Global Variables<small>21</small></a></h3>
 
 <ul>
@@ -56,7 +55,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="hash-tables.html" title="Hash Tables" class="prev">←</a>
 <a href="local-variables.html" title="Local Variables" class="next">→</a>
 </nav>
@@ -64,9 +63,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Global Variables<small>21</small></a></h3>
 
 <ul>
@@ -94,25 +92,7 @@
   <div class="number">21</div>
   <h1>Global Variables</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#全局变量" name="全局变量"><small>21&#8202;.&#8202;0</small>全局变量</a></h1><!--
+<h1><a href="#全局变量" id="全局变量"><small>21&#8202;.&#8202;0</small>全局变量</a></h1><!--
 > If only there could be an invention that bottled up a memory, like scent. And
 > it never faded, and it never got stale. And then, when one wanted it, the
 > bottle could be uncorked, and it would be like living the moment all over
@@ -164,8 +144,7 @@ before the definition happens, everything is fine. In practice, that means you
 can refer to later variables inside the body of functions.
 -->
 <p>先快速复习一下 Lox 的语义：Lox 里的全局变量是“晚绑定”的，或者说动态解析的。这意味着你可以编译一段引用某个全局变量的代码，而那时该变量还没定义——只要代码在定义发生之前<em>不执行</em>，一切就没事。实践中，这意味着你可以在函数体里引用后面才定义的变量。</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">showVariable</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">showVariable</span>() {
   <span class="k">print</span> <span class="i">global</span>;
 }
 
@@ -186,7 +165,7 @@ globals.
 <p>局部变量则不同。局部变量的声明<em>总是</em>出现在使用之前，因此即便在简单的单遍编译器里，虚拟机也能在编译期解析它们。这让我们可以为局部变量采用更聪明的表示——但那是下一章的事。眼下，我们只操心全局变量。</p><!--
 -- Statements
 -->
-<h2><a href="#语句" name="语句"><small>21&#8202;.&#8202;1</small>语句</a></h2><!--
+<h2><a href="#语句" id="语句"><small>21&#8202;.&#8202;1</small>语句</a></h2><!--
 Variables come into being using variable declarations, which means now is also
 the time to add support for statements to our compiler. If you recall, Lox
 splits statements into two categories. "Declarations" are those statements that
@@ -195,8 +174,7 @@ print, etc. -- are just called "statements". We disallow declarations directly
 inside control flow statements, like this:
 -->
 <p>变量通过变量声明诞生，这意味着现在也是时候给编译器加上语句支持了。若你还记得，Lox 把语句分成两类：“声明”是那些把新名字绑定到值的语句；其余种类——控制流、<code>print</code> 等等——则统称“语句”。我们不允许声明直接出现在控制流语句里，比如：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">monday</span>) <span class="k">var</span> <span class="i">croissant</span> = <span class="s">&quot;yes&quot;</span>; <span class="c">// Error.</span>
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">monday</span>) <span class="k">var</span> <span class="i">croissant</span> = <span class="s">&quot;yes&quot;</span>; <span class="c">// Error.</span>
 </pre></div><!--
 Allowing it would raise confusing questions around the scope of the variable.
 So, like other languages, we prohibit it syntactically by having a separate
@@ -204,8 +182,7 @@ grammar rule for the subset of statements that *are* allowed inside a control
 flow body.
 -->
 <p>允许的话会在变量的作用域上引发一堆让人糊涂的问题。所以，像其他语言一样，我们在语法上禁止它：为允许出现在控制流体内的那部分语句单独设一条文法规则。</p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">forStmt</span>
                | <span class="i">ifStmt</span>
                | <span class="i">printStmt</span>
@@ -216,8 +193,7 @@ flow body.
 Then we use a separate rule for the top level of a script and inside a block.
 -->
 <p>然后，对脚本顶层和块内部使用另一条规则。</p>
-<div class="codehilite"><pre>
-<span class="i">declaration</span>    → <span class="i">classDecl</span>
+<div class="codehilite"><pre><span class="i">declaration</span>    → <span class="i">classDecl</span>
                | <span class="i">funDecl</span>
                | <span class="i">varDecl</span>
                | <span class="i">statement</span> ;
@@ -240,8 +216,7 @@ In this chapter, we'll cover only a couple of statements and one
 declaration.
 -->
 <p>本章我们只覆盖几种语句和一种声明。</p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">printStmt</span> ;
 
 <span class="i">declaration</span>    → <span class="i">varDecl</span>
@@ -252,8 +227,7 @@ all we could parse and compile. In a full Lox implementation, a program is a
 sequence of declarations. We're ready to support that now.
 -->
 <p>此前，我们的 VM 把“程序”当作单个表达式，因为那是我们唯一能解析和编译的东西。在完整的 Lox 实现里，程序是一串声明。我们现在可以支持这个了。</p>
-<div class="codehilite"><pre class="insert-before">
-  advance();
+<div class="codehilite"><pre class="insert-before">  advance();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()<br>
 replace 2 lines</div>
@@ -263,8 +237,7 @@ replace 2 lines</div>
     <span class="i">declaration</span>();
   }
 
-</pre><pre class="insert-after">
-  endCompiler();
+</pre><pre class="insert-after">  endCompiler();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>(), replace 2 lines</div>
 <!--
@@ -274,8 +247,7 @@ compile a single declaration using this:
 <p>我们不断编译声明，直到源文件结束。单个声明用下面这个函数编译：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expression</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">declaration</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">declaration</span>() {
   <span class="i">statement</span>();
 }
 </pre></div>
@@ -287,8 +259,7 @@ forward to `statement()`.
 <p>变量声明本章稍后再说，眼下只是转发到 <code>statement()</code>。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>declaration</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">statement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">statement</span>() {
   <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_PRINT</span>)) {
     <span class="i">printStatement</span>();
   }
@@ -301,21 +272,18 @@ statements. That means these two functions will eventually be recursive. We may
 as well write out the forward declarations now.
 -->
 <p>块可以包含声明，控制流语句也可以包含其他语句。这意味着这两个函数最终会递归。不妨现在就把前向声明写出来。</p>
-<div class="codehilite"><pre class="insert-before">
-static void expression();
+<div class="codehilite"><pre class="insert-before">static void expression();
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after <em>expression</em>()</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">statement</span>();
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">statement</span>();
 <span class="k">static</span> <span class="t">void</span> <span class="i">declaration</span>();
-</pre><pre class="insert-after">
-static ParseRule* getRule(TokenType type);
+</pre><pre class="insert-after">static ParseRule* getRule(TokenType type);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>expression</em>()</div>
 <!--
 ### Print statements
 -->
-<h3><a href="#print-语句" name="print-语句"><small>21&#8202;.&#8202;1&#8202;.&#8202;2</small>print 语句</a></h3><!--
+<h3><a href="#print-语句" id="print-语句"><small>21&#8202;.&#8202;1&#8202;.&#8202;2</small>print 语句</a></h3><!--
 We have two statement types to support in this chapter. Let's start with `print`
 statements, which begin, naturally enough, with a `print` token. We detect that
 using this helper function:
@@ -323,8 +291,7 @@ using this helper function:
 <p>本章有两种语句要支持。先从 <code>print</code> 语句开始——它自然以 <code>print</code> 词法单元打头。我们用这个辅助函数检测它：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>consume</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">match</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">match</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
   <span class="k">if</span> (!<span class="i">check</span>(<span class="i">type</span>)) <span class="k">return</span> <span class="k">false</span>;
   <span class="i">advance</span>();
   <span class="k">return</span> <span class="k">true</span>;
@@ -345,8 +312,7 @@ It's helpers all the way down!
 </aside>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>consume</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">check</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">check</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
   <span class="k">return</span> <span class="i">parser</span>.<span class="i">current</span>.<span class="i">type</span> == <span class="i">type</span>;
 }
 </pre></div>
@@ -372,8 +338,7 @@ here:
 <p>若确实匹配到了 <code>print</code> 词法单元，我们在这里编译语句的其余部分：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expression</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">printStatement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">printStatement</span>() {
   <span class="i">expression</span>();
   <span class="i">consume</span>(<span class="a">TOKEN_SEMICOLON</span>, <span class="s">&quot;Expect &#39;;&#39; after value.&quot;</span>);
   <span class="i">emitByte</span>(<span class="a">OP_PRINT</span>);
@@ -386,32 +351,26 @@ parse and compile that expression. The grammar expects a semicolon after that,
 so we consume it. Finally, we emit a new instruction to print the result.
 -->
 <p><code>print</code> 语句对一个表达式求值并打印结果，所以我们先解析并编译该表达式。文法要求在表达式之后跟分号，于是我们消费它。最后，发射一条新指令来打印结果。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_NEGATE,
+<div class="codehilite"><pre class="insert-before">  OP_NEGATE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_PRINT</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_PRINT</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 At runtime, we execute this instruction like so:
 -->
 <p>在运行时，我们这样执行该指令：</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_PRINT</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_PRINT</span>: {
         <span class="i">printValue</span>(<span class="i">pop</span>());
         <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -451,15 +410,12 @@ eventually overflow or underflow.
 While we're in the interpreter loop, we should delete a bit of code.
 -->
 <p>趁我们还在解释器循环里，该删掉一点代码了。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_RETURN: {
+<div class="codehilite"><pre class="insert-before">      case OP_RETURN: {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-        <span class="c">// Exit interpreter.</span>
-</pre><pre class="insert-after">
-        return INTERPRET_OK;
+<pre class="insert">        <span class="c">// Exit interpreter.</span>
+</pre><pre class="insert-after">        return INTERPRET_OK;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 2 lines</div>
 <!--
@@ -478,23 +434,19 @@ add functions. Right now, it exits the entire interpreter loop.
 As usual, a new instruction needs support in the disassembler.
 -->
 <p>照例，新指令也需要反汇编器的支持。</p>
-<div class="codehilite"><pre class="insert-before">
-      return simpleInstruction(&quot;OP_NEGATE&quot;, offset);
+<div class="codehilite"><pre class="insert-before">      return simpleInstruction(&quot;OP_NEGATE&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_PRINT</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_PRINT</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_PRINT&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
 That's our `print` statement. If you want, give it a whirl:
 -->
 <p><code>print</code> 语句就这些。若你愿意，可以试一下：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="n">1</span> + <span class="n">2</span>;
+<div class="codehilite"><pre><span class="k">print</span> <span class="n">1</span> + <span class="n">2</span>;
 <span class="k">print</span> <span class="n">3</span> * <span class="n">4</span>;
 </pre></div><!--
 Exciting! OK, maybe not thrilling, but we can build scripts that contain as many
@@ -503,20 +455,17 @@ statements as we want now, which feels like progress.
 <p>激动人心！好吧，也许谈不上热血沸腾，但我们终于可以写出想写多少条语句就写多少条的脚本了，这感觉像是一种进步。</p><!--
 ### Expression statements
 -->
-<h3><a href="#表达式语句" name="表达式语句"><small>21&#8202;.&#8202;1&#8202;.&#8202;4</small>表达式语句</a></h3><!--
+<h3><a href="#表达式语句" id="表达式语句"><small>21&#8202;.&#8202;1&#8202;.&#8202;4</small>表达式语句</a></h3><!--
 Wait until you see the next statement. If we *don't* see a `print` keyword, then
 we must be looking at an expression statement.
 -->
 <p>等着看下一类语句吧。若没看到 <code>print</code> 关键字，那一定是表达式语句。</p>
-<div class="codehilite"><pre class="insert-before">
-    printStatement();
+<div class="codehilite"><pre class="insert-before">    printStatement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> {
+<pre class="insert">  } <span class="k">else</span> {
     <span class="i">expressionStatement</span>();
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>statement</em>()</div>
 <!--
@@ -525,8 +474,7 @@ It's parsed like so:
 <p>解析方式如下：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expression</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">expressionStatement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">expressionStatement</span>() {
   <span class="i">expression</span>();
   <span class="i">consume</span>(<span class="a">TOKEN_SEMICOLON</span>, <span class="s">&quot;Expect &#39;;&#39; after expression.&quot;</span>);
   <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
@@ -540,8 +488,7 @@ Usually, it's so that you can call a function or evaluate an assignment for its
 side effect, like this:
 -->
 <p>“表达式语句”就是一个表达式后面跟分号。它让你在期望语句的上下文中写表达式——通常是为了调用函数，或为了副作用而对赋值表达式求值，比如：</p>
-<div class="codehilite"><pre>
-<span class="i">brunch</span> = <span class="s">&quot;quiche&quot;</span>;
+<div class="codehilite"><pre><span class="i">brunch</span> = <span class="s">&quot;quiche&quot;</span>;
 <span class="i">eat</span>(<span class="i">brunch</span>);
 </pre></div><!--
 Semantically, an expression statement evaluates the expression and discards the
@@ -549,14 +496,11 @@ result. The compiler directly encodes that behavior. It compiles the expression,
 and then emits an `OP_POP` instruction.
 -->
 <p>在语义上，表达式语句对表达式求值，然后丢弃结果。编译器直接编码这种行为：编译表达式，然后发射 <code>OP_POP</code> 指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_FALSE,
+<div class="codehilite"><pre class="insert-before">  OP_FALSE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_POP</span>,
-</pre><pre class="insert-after">
-  OP_EQUAL,
+<pre class="insert">  <span class="a">OP_POP</span>,
+</pre><pre class="insert-after">  OP_EQUAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
@@ -564,29 +508,23 @@ As the name implies, that instruction pops the top value off the stack and
 forgets it.
 -->
 <p>顾名思义，该指令弹出栈顶值并忘掉它。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_FALSE: push(BOOL_VAL(false)); break;
+<div class="codehilite"><pre class="insert-before">      case OP_FALSE: push(BOOL_VAL(false)); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_POP</span>: <span class="i">pop</span>(); <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_EQUAL: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_POP</span>: <span class="i">pop</span>(); <span class="k">break</span>;
+</pre><pre class="insert-after">      case OP_EQUAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
 We can disassemble it too.
 -->
 <p>反汇编也可以做。</p>
-<div class="codehilite"><pre class="insert-before">
-      return simpleInstruction(&quot;OP_FALSE&quot;, offset);
+<div class="codehilite"><pre class="insert-before">      return simpleInstruction(&quot;OP_FALSE&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_POP</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_POP</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_POP&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_EQUAL:
+</pre><pre class="insert-after">    case OP_EQUAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -604,7 +542,7 @@ have at the end of this chapter are expression statements.
 </aside><!--
 ### Error synchronization
 -->
-<h3><a href="#错误同步" name="错误同步"><small>21&#8202;.&#8202;1&#8202;.&#8202;6</small>错误同步</a></h3><!--
+<h3><a href="#错误同步" id="错误同步"><small>21&#8202;.&#8202;1&#8202;.&#8202;6</small>错误同步</a></h3><!--
 While we're getting this initial work done in the compiler, we can tie off a
 loose end we left [several chapters back][errors]. Like jlox, clox uses panic
 mode error recovery to minimize the number of cascaded compile errors that it
@@ -613,15 +551,13 @@ For Lox, we chose statement boundaries as that point. Now that we have
 statements, we can implement synchronization.
 -->
 <p>趁我们在编译器里做这批初始工作，可以把<a href="compiling-expressions.html#handling-syntax-errors">几章之前</a>留下的一截线头收束掉。与 jlox 一样，clox 使用恐慌模式错误恢复，尽量减少级联编译错误的报告数量。编译器到达同步点时退出恐慌模式。对 Lox，我们选语句边界作为那个点。现在我们有了语句，可以实现同步了。</p>
-<div class="codehilite"><pre class="insert-before">
-  statement();
+<div class="codehilite"><pre class="insert-before">  statement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>declaration</em>()</div>
 <pre class="insert">
 
   <span class="k">if</span> (<span class="i">parser</span>.<span class="i">panicMode</span>) <span class="i">synchronize</span>();
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>declaration</em>()</div>
 <!--
@@ -631,8 +567,7 @@ mode. When that happens, after the statement we start synchronizing.
 <p>若在解析上一条语句时碰到编译错误，我们进入恐慌模式。此时，在该语句之后开始同步。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>printStatement</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">synchronize</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">synchronize</span>() {
   <span class="i">parser</span>.<span class="i">panicMode</span> = <span class="k">false</span>;
 
   <span class="k">while</span> (<span class="i">parser</span>.<span class="i">current</span>.<span class="i">type</span> != <span class="a">TOKEN_EOF</span>) {
@@ -667,7 +602,7 @@ keywords.
 <p>我们无差别地跳过词法单元，直到遇到看起来像语句边界的东西。我们通过寻找能结束语句的前导词法单元来识别边界，比如分号；或者寻找能开始语句的后续词法单元，通常是控制流或声明关键字之一。</p><!--
 -- Variable Declarations
 -->
-<h2><a href="#变量声明" name="变量声明"><small>21&#8202;.&#8202;2</small>变量声明</a></h2><!--
+<h2><a href="#变量声明" id="变量声明"><small>21&#8202;.&#8202;2</small>变量声明</a></h2><!--
 Merely being able to *print* doesn't win your language any prizes at the
 programming language <span name="fair">fair</span>, so let's move on to
 something a little more ambitious and get variables going. There are three
@@ -693,13 +628,11 @@ We can't do either of the last two until we have some variables, so we start
 with declarations.
 -->
 <p>后两种在还没有变量之前都做不了，所以我们从声明开始。</p>
-<div class="codehilite"><pre class="insert-before">
-static void declaration() {
+<div class="codehilite"><pre class="insert-before">static void declaration() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>declaration</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_VAR</span>)) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_VAR</span>)) {
     <span class="i">varDeclaration</span>();
   } <span class="k">else</span> {
     <span class="i">statement</span>();
@@ -716,8 +649,7 @@ rule has an actual production now. If we match a `var` token, we jump here:
 <p>我们为声明文法规则草拟的占位解析函数，现在有了真正的产生式。若匹配到 <code>var</code> 词法单元，就跳到这里：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expression</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">varDeclaration</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">varDeclaration</span>() {
   <span class="t">uint8_t</span> <span class="i">global</span> = <span class="i">parseVariable</span>(<span class="s">&quot;Expect variable name.&quot;</span>);
 
   <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_EQUAL</span>)) {
@@ -758,12 +690,10 @@ The code it generates for the former is identical to what it produces for the
 latter.
 -->
 <p>本质上，编译器把这样的变量声明：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span>;
 </pre></div>
 <p>脱糖成：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="k">nil</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="k">nil</span>;
 </pre></div>
 <p>前者生成的代码与后者完全相同。</p>
 </aside><!--
@@ -771,13 +701,11 @@ There are two new functions here for working with variables and identifiers.
 Here is the first:
 -->
 <p>这里有两个处理变量与标识符的新函数。第一个是：</p>
-<div class="codehilite"><pre class="insert-before">
-static void parsePrecedence(Precedence precedence);
+<div class="codehilite"><pre class="insert-before">static void parsePrecedence(Precedence precedence);
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after <em>parsePrecedence</em>()</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">uint8_t</span> <span class="i">parseVariable</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">errorMessage</span>) {
+<pre class="insert"><span class="k">static</span> <span class="t">uint8_t</span> <span class="i">parseVariable</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">errorMessage</span>) {
   <span class="i">consume</span>(<span class="a">TOKEN_IDENTIFIER</span>, <span class="i">errorMessage</span>);
   <span class="k">return</span> <span class="i">identifierConstant</span>(&amp;<span class="i">parser</span>.<span class="i">previous</span>);
 }
@@ -788,13 +716,11 @@ It requires the next token to be an identifier, which it consumes and sends
 here:
 -->
 <p>它要求下一个词法单元是标识符，消费它，然后送到这里：</p>
-<div class="codehilite"><pre class="insert-before">
-static void parsePrecedence(Precedence precedence);
+<div class="codehilite"><pre class="insert-before">static void parsePrecedence(Precedence precedence);
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after <em>parsePrecedence</em>()</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">uint8_t</span> <span class="i">identifierConstant</span>(<span class="t">Token</span>* <span class="i">name</span>) {
+<pre class="insert"><span class="k">static</span> <span class="t">uint8_t</span> <span class="i">identifierConstant</span>(<span class="t">Token</span>* <span class="i">name</span>) {
   <span class="k">return</span> <span class="i">makeConstant</span>(<span class="a">OBJ_VAL</span>(<span class="i">copyString</span>(<span class="i">name</span>-&gt;<span class="i">start</span>,
                                          <span class="i">name</span>-&gt;<span class="i">length</span>)));
 }
@@ -819,8 +745,7 @@ hands it over to here:
 <p>该函数把索引一路返回给 <code>varDeclaration()</code>，后者再把它交给这里：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>parseVariable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">defineVariable</span>(<span class="t">uint8_t</span> <span class="i">global</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">defineVariable</span>(<span class="t">uint8_t</span> <span class="i">global</span>) {
   <span class="i">emitBytes</span>(<span class="a">OP_DEFINE_GLOBAL</span>, <span class="i">global</span>);
 }
 </pre></div>
@@ -845,33 +770,27 @@ and assignment expressions access them.
 Over in the runtime, we begin with this new instruction:
 -->
 <p>在运行时一侧，我们从这条新指令开始：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_POP,
+<div class="codehilite"><pre class="insert-before">  OP_POP,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_DEFINE_GLOBAL</span>,
-</pre><pre class="insert-after">
-  OP_EQUAL,
+<pre class="insert">  <span class="a">OP_DEFINE_GLOBAL</span>,
+</pre><pre class="insert-after">  OP_EQUAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 Thanks to our handy-dandy hash table, the implementation isn't too hard.
 -->
 <p>多亏我们顺手的哈希表，实现并不太难。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_POP: pop(); break;
+<div class="codehilite"><pre class="insert-before">      case OP_POP: pop(); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_DEFINE_GLOBAL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_DEFINE_GLOBAL</span>: {
         <span class="t">ObjString</span>* <span class="i">name</span> = <span class="a">READ_STRING</span>();
         <span class="i">tableSet</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>, <span class="i">name</span>, <span class="i">peek</span>(<span class="n">0</span>));
         <span class="i">pop</span>();
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_EQUAL: {
+</pre><pre class="insert-after">      case OP_EQUAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -897,14 +816,11 @@ value if the key happens to already be in the hash table.
 There's another little helper macro:
 -->
 <p>还有一个小辅助宏：</p>
-<div class="codehilite"><pre class="insert-before">
-#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
+<div class="codehilite"><pre class="insert-before">#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#define READ_STRING() AS_STRING(READ_CONSTANT())</span>
-</pre><pre class="insert-after">
-#define BINARY_OP(valueType, op) \
+<pre class="insert"><span class="a">#define READ_STRING() AS_STRING(READ_CONSTANT())</span>
+</pre><pre class="insert-after">#define BINARY_OP(valueType, op) \
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -919,14 +835,11 @@ Because we care about lexical hygiene, we also undefine this macro at the end of
 the interpret function.
 -->
 <p>因为我们讲究词法卫生，在 interpret 函数末尾也会取消定义这个宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#undef READ_CONSTANT
+<div class="codehilite"><pre class="insert-before">#undef READ_CONSTANT
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#undef READ_STRING</span>
-</pre><pre class="insert-after">
-#undef BINARY_OP
+<pre class="insert"><span class="a">#undef READ_STRING</span>
+</pre><pre class="insert-after">#undef BINARY_OP
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -935,14 +848,11 @@ place to store these globals. Since we want them to persist as long as clox is
 running, we store them right in the VM.
 -->
 <p>我老说“那张哈希表”，其实我们还没有。我们需要地方存这些全局变量。既然希望它们在 clox 运行期间一直存在，就把它们直接存在 VM 里。</p>
-<div class="codehilite"><pre class="insert-before">
-  Value* stackTop;
+<div class="codehilite"><pre class="insert-before">  Value* stackTop;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">Table</span> <span class="i">globals</span>;
-</pre><pre class="insert-after">
-  Table strings;
+<pre class="insert">  <span class="t">Table</span> <span class="i">globals</span>;
+</pre><pre class="insert-after">  Table strings;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 <!--
@@ -950,15 +860,13 @@ As we did with the string table, we need to initialize the hash table to a valid
 state when the VM boots up.
 -->
 <p>与字符串表一样，VM 启动时要把哈希表初始化到有效状态。</p>
-<div class="codehilite"><pre class="insert-before">
-  vm.objects = NULL;
+<div class="codehilite"><pre class="insert-before">  vm.objects = NULL;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
 <pre class="insert">
 
   <span class="i">initTable</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>);
-</pre><pre class="insert-after">
-  initTable(&amp;vm.strings);
+</pre><pre class="insert-after">  initTable(&amp;vm.strings);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
 <!--
@@ -971,30 +879,24 @@ the operating system to clean up our mess.
 -->
 <p>进程退出时会释放一切，但让操作系统来收拾我们的烂摊子，总觉得不太体面。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-void freeVM() {
+<div class="codehilite"><pre class="insert-before">void freeVM() {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>freeVM</em>()</div>
-<pre class="insert">
-  <span class="i">freeTable</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>);
-</pre><pre class="insert-after">
-  freeTable(&amp;vm.strings);
+<pre class="insert">  <span class="i">freeTable</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>);
+</pre><pre class="insert-after">  freeTable(&amp;vm.strings);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>freeVM</em>()</div>
 <!--
 As usual, we want to be able to disassemble the new instruction too.
 -->
 <p>照例，新指令也要能反汇编。</p>
-<div class="codehilite"><pre class="insert-before">
-      return simpleInstruction(&quot;OP_POP&quot;, offset);
+<div class="codehilite"><pre class="insert-before">      return simpleInstruction(&quot;OP_POP&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_DEFINE_GLOBAL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_DEFINE_GLOBAL</span>:
       <span class="k">return</span> <span class="i">constantInstruction</span>(<span class="s">&quot;OP_DEFINE_GLOBAL&quot;</span>, <span class="i">chunk</span>,
                                  <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_EQUAL:
+</pre><pre class="insert-after">    case OP_EQUAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1004,19 +906,16 @@ they've done so, because they can't actually *use* them. So let's fix that next.
 <p>至此，我们可以定义全局变量了——不过用户还<em>感觉</em>不到，因为他们实际上还<em>用</em>不了。接下来把它补上。</p><!--
 -- Reading Variables
 -->
-<h2><a href="#读取变量" name="读取变量"><small>21&#8202;.&#8202;3</small>读取变量</a></h2><!--
+<h2><a href="#读取变量" id="读取变量"><small>21&#8202;.&#8202;3</small>读取变量</a></h2><!--
 As in every programming language ever, we access a variable's value using its
 name. We hook up identifier tokens to the expression parser here:
 -->
 <p>与有史以来每一门程序语言一样，我们用名字访问变量的值。在这里把标识符词法单元挂到表达式解析器上：</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_LESS_EQUAL]    = {NULL,     binary, PREC_COMPARISON},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_LESS_EQUAL]    = {NULL,     binary, PREC_COMPARISON},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_IDENTIFIER</span>]    = {<span class="i">variable</span>, <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_STRING]        = {string,   NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_IDENTIFIER</span>]    = {<span class="i">variable</span>, <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_STRING]        = {string,   NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 <!--
@@ -1025,8 +924,7 @@ That calls this new parser function:
 <p>它会调用这个新的解析函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>string</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">variable</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">variable</span>() {
   <span class="i">namedVariable</span>(<span class="i">parser</span>.<span class="i">previous</span>);
 }
 </pre></div>
@@ -1038,8 +936,7 @@ pointless now but will become more useful in later chapters. I promise.
 <p>与声明一样，有几个小辅助函数眼下看似多余，后面章节会更有用。我保证。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>string</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">namedVariable</span>(<span class="t">Token</span> <span class="i">name</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">namedVariable</span>(<span class="t">Token</span> <span class="i">name</span>) {
   <span class="t">uint8_t</span> <span class="i">arg</span> = <span class="i">identifierConstant</span>(&amp;<span class="i">name</span>);
   <span class="i">emitBytes</span>(<span class="a">OP_GET_GLOBAL</span>, <span class="i">arg</span>);
 }
@@ -1052,26 +949,21 @@ string. All that remains is to emit an instruction that loads the global
 variable with that name. Here's the instruction:
 -->
 <p>它调用之前的 <code>identifierConstant()</code>，把给定标识符词法单元的词素作为字符串加入 chunk 常量表。剩下只需发射一条指令，加载该名字的全局变量。指令如下：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_POP,
+<div class="codehilite"><pre class="insert-before">  OP_POP,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_GET_GLOBAL</span>,
-</pre><pre class="insert-after">
-  OP_DEFINE_GLOBAL,
+<pre class="insert">  <span class="a">OP_GET_GLOBAL</span>,
+</pre><pre class="insert-after">  OP_DEFINE_GLOBAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 Over in the interpreter, the implementation mirrors `OP_DEFINE_GLOBAL`.
 -->
 <p>在解释器里，实现与 <code>OP_DEFINE_GLOBAL</code> 镜像对称。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_POP: pop(); break;
+<div class="codehilite"><pre class="insert-before">      case OP_POP: pop(); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_GET_GLOBAL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_GET_GLOBAL</span>: {
         <span class="t">ObjString</span>* <span class="i">name</span> = <span class="a">READ_STRING</span>();
         <span class="t">Value</span> <span class="i">value</span>;
         <span class="k">if</span> (!<span class="i">tableGet</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>, <span class="i">name</span>, &amp;<span class="i">value</span>)) {
@@ -1081,8 +973,7 @@ in <em>run</em>()</div>
         <span class="i">push</span>(<span class="i">value</span>);
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_DEFINE_GLOBAL: {
+</pre><pre class="insert-after">      case OP_DEFINE_GLOBAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1097,15 +988,12 @@ interpreter loop if that happens. Otherwise, we take the value and push it
 onto the stack.
 -->
 <p>若键不在哈希表里，说明该全局变量从未被定义。在 Lox 里这是运行时错误，我们会报告并退出解释器循环。否则，取该值推入栈。</p>
-<div class="codehilite"><pre class="insert-before">
-      return simpleInstruction(&quot;OP_POP&quot;, offset);
+<div class="codehilite"><pre class="insert-before">      return simpleInstruction(&quot;OP_POP&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_GET_GLOBAL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_GET_GLOBAL</span>:
       <span class="k">return</span> <span class="i">constantInstruction</span>(<span class="s">&quot;OP_GET_GLOBAL&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_DEFINE_GLOBAL:
+</pre><pre class="insert-after">    case OP_DEFINE_GLOBAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1113,8 +1001,7 @@ A little bit of disassembling, and we're done. Our interpreter is now able to
 run code like this:
 -->
 <p>再补一点反汇编，就完成了。解释器现在能运行这样的代码：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">beverage</span> = <span class="s">&quot;cafe au lait&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">beverage</span> = <span class="s">&quot;cafe au lait&quot;</span>;
 <span class="k">var</span> <span class="i">breakfast</span> = <span class="s">&quot;beignets with &quot;</span> + <span class="i">beverage</span>;
 <span class="k">print</span> <span class="i">breakfast</span>;
 </pre></div><!--
@@ -1123,7 +1010,7 @@ There's only one operation left.
 <p>只剩一种操作了。</p><!--
 -- Assignment
 -->
-<h2><a href="#赋值" name="赋值"><small>21&#8202;.&#8202;4</small>赋值</a></h2><!--
+<h2><a href="#赋值" id="赋值"><small>21&#8202;.&#8202;4</small>赋值</a></h2><!--
 Throughout this book, I've tried to keep you on a fairly safe and easy path. I
 don't avoid hard *problems*, but I try to not make the *solutions* more complex
 than they need to be. Alas, other design choices in our <span
@@ -1140,8 +1027,7 @@ on the fly without any intermediate AST. As soon as it recognizes a piece of
 syntax, it emits code for it. Assignment doesn't naturally fit that. Consider:
 -->
 <p>我们的字节码虚拟机用的是单遍编译器：边解析边生成字节码，中间不经过 AST。一认出某段语法，就立刻为它发射代码。赋值天然跟这种模式不太合得来。比方说：</p>
-<div class="codehilite"><pre>
-<span class="i">menu</span>.<span class="i">brunch</span>(<span class="i">sunday</span>).<span class="i">beverage</span> = <span class="s">&quot;mimosa&quot;</span>;
+<div class="codehilite"><pre><span class="i">menu</span>.<span class="i">brunch</span>(<span class="i">sunday</span>).<span class="i">beverage</span> = <span class="s">&quot;mimosa&quot;</span>;
 </pre></div><!--
 In this code, the parser doesn't realize `menu.brunch(sunday).beverage` is the
 target of an assignment and not a normal expression until it reaches `=`, many
@@ -1176,8 +1062,7 @@ getter.
 We don't have setters to worry about yet, so all we need to handle are variables.
 -->
 <p>我们还没有 setter 要操心，所以只需处理变量。</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t arg = identifierConstant(&amp;name);
+<div class="codehilite"><pre class="insert-before">  uint8_t arg = identifierConstant(&amp;name);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>namedVariable</em>()<br>
 replace 1 line</div>
@@ -1189,8 +1074,7 @@ replace 1 line</div>
   } <span class="k">else</span> {
     <span class="i">emitBytes</span>(<span class="a">OP_GET_GLOBAL</span>, <span class="i">arg</span>);
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>namedVariable</em>(), replace 1 line</div>
 <!--
@@ -1202,26 +1086,21 @@ access, we compile the assigned value and then emit an assignment instruction.
 That's the last instruction we need to add in this chapter.
 -->
 <p>这是本章要加的最后一条指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_DEFINE_GLOBAL,
+<div class="codehilite"><pre class="insert-before">  OP_DEFINE_GLOBAL,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_SET_GLOBAL</span>,
-</pre><pre class="insert-after">
-  OP_EQUAL,
+<pre class="insert">  <span class="a">OP_SET_GLOBAL</span>,
+</pre><pre class="insert-after">  OP_EQUAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 As you'd expect, its runtime behavior is similar to defining a new variable.
 -->
 <p>如你所料，其运行时行为与定义新变量类似。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_SET_GLOBAL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_SET_GLOBAL</span>: {
         <span class="t">ObjString</span>* <span class="i">name</span> = <span class="a">READ_STRING</span>();
         <span class="k">if</span> (<span class="i">tableSet</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>, <span class="i">name</span>, <span class="i">peek</span>(<span class="n">0</span>))) {
           <span class="i">tableDelete</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>, <span class="i">name</span>);<span name="delete"> </span>
@@ -1230,8 +1109,7 @@ in <em>run</em>()</div>
         }
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_EQUAL: {
+</pre><pre class="insert-after">      case OP_EQUAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1257,24 +1135,20 @@ there in case the assignment is nested inside some larger expression.
 Add a dash of disassembly:
 -->
 <p>再加点反汇编：</p>
-<div class="codehilite"><pre class="insert-before">
-      return constantInstruction(&quot;OP_DEFINE_GLOBAL&quot;, chunk,
+<div class="codehilite"><pre class="insert-before">      return constantInstruction(&quot;OP_DEFINE_GLOBAL&quot;, chunk,
                                  offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_SET_GLOBAL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_SET_GLOBAL</span>:
       <span class="k">return</span> <span class="i">constantInstruction</span>(<span class="s">&quot;OP_SET_GLOBAL&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_EQUAL:
+</pre><pre class="insert-after">    case OP_EQUAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
 So we're done, right? Well... not quite. We've made a mistake! Take a gander at:
 -->
 <p>那我们完成了，对吧？嗯……还没。我们犯了个错！看看这个：</p>
-<div class="codehilite"><pre>
-<span class="i">a</span> * <span class="i">b</span> = <span class="i">c</span> + <span class="i">d</span>;
+<div class="codehilite"><pre><span class="i">a</span> * <span class="i">b</span> = <span class="i">c</span> + <span class="i">d</span>;
 </pre></div><!--
 According to Lox's grammar, `=` has the lowest precedence, so this should be
 parsed roughly like:
@@ -1325,16 +1199,14 @@ doesn't need to know the actual level. It just cares that the precedence is low
 enough to allow assignment, so we pass that fact in as a Boolean.
 -->
 <p>要修复这一点，<code>variable()</code> 应只在低优先级表达式的上下文中查找并消费 <code>=</code>。知道当前优先级的是 <code>parsePrecedence()</code>——逻辑上本该如此。<code>variable()</code> 不需要知道具体级别，只关心优先级是否低到允许赋值，所以我们把这个事实作为布尔值传进去。</p>
-<div class="codehilite"><pre class="insert-before">
-    error(&quot;Expect expression.&quot;);
+<div class="codehilite"><pre class="insert-before">    error(&quot;Expect expression.&quot;);
     return;
   }
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>parsePrecedence</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">bool</span> <span class="i">canAssign</span> = <span class="i">precedence</span> &lt;= <span class="a">PREC_ASSIGNMENT</span>;
+<pre class="insert">  <span class="t">bool</span> <span class="i">canAssign</span> = <span class="i">precedence</span> &lt;= <span class="a">PREC_ASSIGNMENT</span>;
   <span class="i">prefixRule</span>(<span class="i">canAssign</span>);
 </pre><pre class="insert-after">
 
@@ -1350,8 +1222,7 @@ in an expression statement. That flag makes its way to the parser function here:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>variable</em>()<br>
 replace 3 lines</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">variable</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">variable</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
   <span class="i">namedVariable</span>(<span class="i">parser</span>.<span class="i">previous</span>, <span class="i">canAssign</span>);
 }
 </pre></div>
@@ -1363,26 +1234,21 @@ Which passes it through a new parameter:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>namedVariable</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">namedVariable</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  uint8_t arg = identifierConstant(&amp;name);
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">namedVariable</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  uint8_t arg = identifierConstant(&amp;name);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>namedVariable</em>(), replace 1 line</div>
 <!--
 And then finally uses it here:
 -->
 <p>最终在这里使用：</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t arg = identifierConstant(&amp;name);
+<div class="codehilite"><pre class="insert-before">  uint8_t arg = identifierConstant(&amp;name);
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>namedVariable</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">canAssign</span> &amp;&amp; <span class="i">match</span>(<span class="a">TOKEN_EQUAL</span>)) {
-</pre><pre class="insert-after">
-    expression();
+<pre class="insert">  <span class="k">if</span> (<span class="i">canAssign</span> &amp;&amp; <span class="i">match</span>(<span class="a">TOKEN_EQUAL</span>)) {
+</pre><pre class="insert-after">    expression();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>namedVariable</em>(), replace 1 line</div>
 <!--
@@ -1405,8 +1271,7 @@ right. If the `=` doesn't get consumed as part of the expression, nothing else
 is going to consume it. It's an error and we should report it.
 -->
 <p>然后 <code>parsePrecedence()</code> 静默返回给调用者。这也不对。若 <code>=</code> 没有作为表达式的一部分被消费，就没有别的东西会消费它。这是错误，我们应该报告。</p>
-<div class="codehilite"><pre class="insert-before">
-    infixRule();
+<div class="codehilite"><pre class="insert-before">    infixRule();
   }
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>parsePrecedence</em>()</div>
@@ -1415,8 +1280,7 @@ in <em>parsePrecedence</em>()</div>
   <span class="k">if</span> (<span class="i">canAssign</span> &amp;&amp; <span class="i">match</span>(<span class="a">TOKEN_EQUAL</span>)) {
     <span class="i">error</span>(<span class="s">&quot;Invalid assignment target.&quot;</span>);
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parsePrecedence</em>()</div>
 <!--
@@ -1439,15 +1303,12 @@ So we're going to finish off this chapter with some grunt work. First, let's go
 ahead and pass the flag to the infix parse functions.
 -->
 <p>所以我们用些体力活收束本章。首先，把标志传给中缀解析函数。</p>
-<div class="codehilite"><pre class="insert-before">
-    ParseFn infixRule = getRule(parser.previous.type)-&gt;infix;
+<div class="codehilite"><pre class="insert-before">    ParseFn infixRule = getRule(parser.previous.type)-&gt;infix;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>parsePrecedence</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">infixRule</span>(<span class="i">canAssign</span>);
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">infixRule</span>(<span class="i">canAssign</span>);
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>parsePrecedence</em>(), replace 1 line</div>
 <!--
@@ -1455,14 +1316,12 @@ We'll need that for setters eventually. Then we'll fix the typedef for the
 function type.
 -->
 <p>setter 迟早会用到。然后修正函数类型的 typedef。</p>
-<div class="codehilite"><pre class="insert-before">
-} Precedence;
+<div class="codehilite"><pre class="insert-before">} Precedence;
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after enum <em>Precedence</em><br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="t">void</span> (*<span class="t">ParseFn</span>)(<span class="t">bool</span> <span class="i">canAssign</span>);
+<pre class="insert"><span class="k">typedef</span> <span class="t">void</span> (*<span class="t">ParseFn</span>)(<span class="t">bool</span> <span class="i">canAssign</span>);
 </pre><pre class="insert-after">
 
 typedef struct {
@@ -1476,10 +1335,8 @@ parse functions. Here:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>binary</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">binary</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  TokenType operatorType = parser.previous.type;
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">binary</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  TokenType operatorType = parser.previous.type;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>binary</em>(), replace 1 line</div>
 <!--
@@ -1489,10 +1346,8 @@ And here:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>literal</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">literal</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  switch (parser.previous.type) {
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">literal</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  switch (parser.previous.type) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>literal</em>(), replace 1 line</div>
 <!--
@@ -1502,10 +1357,8 @@ And here:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>grouping</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">grouping</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  expression();
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">grouping</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  expression();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>grouping</em>(), replace 1 line</div>
 <!--
@@ -1515,10 +1368,8 @@ And here:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>number</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">number</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  double value = strtod(parser.previous.start, NULL);
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">number</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  double value = strtod(parser.previous.start, NULL);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>number</em>(), replace 1 line</div>
 <!--
@@ -1528,10 +1379,8 @@ And here too:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>string</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">string</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  emitConstant(OBJ_VAL(copyString(parser.previous.start + 1,
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">string</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  emitConstant(OBJ_VAL(copyString(parser.previous.start + 1,
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>string</em>(), replace 1 line</div>
 <!--
@@ -1541,10 +1390,8 @@ And, finally:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>unary</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">unary</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
-</pre><pre class="insert-after">
-  TokenType operatorType = parser.previous.type;
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">unary</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+</pre><pre class="insert-after">  TokenType operatorType = parser.previous.type;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>unary</em>(), replace 1 line</div>
 <!--
@@ -1552,8 +1399,7 @@ Phew! We're back to a C program we can compile. Fire it up and now you can run
 this:
 -->
 <p>呼！我们又回到可以编译的 C 程序了。启动它，现在可以运行：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">breakfast</span> = <span class="s">&quot;beignets&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">breakfast</span> = <span class="s">&quot;beignets&quot;</span>;
 <span class="k">var</span> <span class="i">beverage</span> = <span class="s">&quot;cafe au lait&quot;</span>;
 <span class="i">breakfast</span> = <span class="s">&quot;beignets with &quot;</span> + <span class="i">beverage</span>;
 
@@ -1565,7 +1411,7 @@ It's starting to look like real code for an actual language!
 <div class="challenges"><!--
 ## Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>21&#8202;.&#8202;6</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>21&#8202;.&#8202;6</small>挑战</a></h2><!--
 1.  The compiler adds a global variable's name to the constant table as a string
     every time an identifier is encountered. It creates a new constant each
     time, even if that variable name is already in a previous slot in the
@@ -1620,8 +1466,7 @@ It's starting to look like real code for an actual language!
 <li>
 <p>在 REPL 里，用户可能写了一个引用未知全局变量的函数，下一行再声明该变量。Lox 应优雅处理：在函数首次定义时不报告“未知变量”编译错误。</p>
 <p>但用户运行 Lox <em>脚本</em>时，编译器在任何代码运行之前就能访问整个程序的完整文本。考虑这个程序：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">useVar</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">useVar</span>() {
   <span class="k">print</span> <span class="i">oops</span>;
 }
 
@@ -1637,7 +1482,7 @@ It's starting to look like real code for an actual language!
 <a href="local-variables.html" class="next">
   Next Chapter: &ldquo;Local Variables&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

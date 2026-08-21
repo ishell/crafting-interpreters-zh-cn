@@ -29,27 +29,32 @@
 </head>
 <body>
 
-<!-- <div class="scrim"></div> -->
-
 <article>
 
-<a href="contents.html"><img src="image/logotype.png" title="Crafting Interpreters" class="logotype"></a>
+<header>
+  <a href="dedication.html"><img class="header big" src="image/header.png" alt="Crafting Interpreters by Robert Nystrom" /><img class="header small" src="image/header-small.png" alt="Crafting Interpreters by Robert Nystrom" /></a>
+</header>
 
 <main>
-<!--
-<blockquote>A handbook for making programming languages.</blockquote>
--->
-<blockquote>一本制作程序设计语言的行路指南。</blockquote>
+
+<div class="intro">
 
 <!--
-<p>This book contains everything you need to implement a full-featured,
-efficient scripting language. You&#8217;ll learn both high-level concepts around
-parsing and semantics and gritty details like bytecode representation and
-garbage collection. Your brain will light up with new ideas, and your hands will
-get dirty and calloused. It&#8217;s a blast.</p>
+<blockquote><p>Ever wanted to make your own programming language or wondered how
+they are designed and built?</p><p>If so, this book is for you.</p></blockquote>
 -->
-<p>本书囊括了实现一门功能齐全、稳定高效的脚本程序设计语言你所需要知晓的一切。你既可以学习到围绕程序设计语言的核心概念（如：词法分析、语法解析），还能深入理解语言实现的具体细节（如：字节码表示，垃圾收集等）。你的大脑将因新知变得熠熠生辉，你的双手将因实操变得伤痕累累，相信这一定会是段很有意义的经历。
-</p>
+<blockquote><p>可曾想过亲手做一门程序设计语言，或好奇它们究竟如何设计与实现？</p><p>若有，这本书就是为你写的。</p></blockquote>
+
+<div class="text">
+
+<!--
+<p><em>Crafting Interpreters</em> contains everything you need to implement a
+full-featured, efficient scripting language. You&#8217;ll learn both high-level
+concepts around parsing and semantics and gritty details like bytecode
+representation and garbage collection. Your brain will light up with new ideas,
+and your hands will get dirty and calloused. It&#8217;s a blast.</p>
+-->
+<p><em>Crafting Interpreters</em>（《解释器设计与实现》）囊括了实现一门功能齐全、高效的脚本语言所需的一切。你会学到词法分析、语义等高层概念，也会钻进字节码表示、垃圾收集这类泥泞细节。脑子会因新知发亮，双手会因实操起茧——非常过瘾。</p>
 
 <!--
 <p>Starting from <code>main()</code>, you build a language that features rich
@@ -58,107 +63,238 @@ functions, closures, classes, and inheritance. All packed into a few thousand
 lines of clean, fast code that you thoroughly understand because you write each
 one yourself.</p>
 -->
-<p>从主函数 <code>main()</code> 开始，你将逐步构建起一门羽翼丰满的程序设计语言，
-逐步为其添加语法实现、动态类型、垃圾收集、词法作用域、一等公民函数、闭包、类与继承等功能。
-所有功能都会在仅数千行简洁、高效的代码中被实现，你对这些代码了然于胸，因为这些代码将由你亲手写下。
+<p>从 <code>main()</code> 起，你亲手搭起一门语言：丰富语法、动态类型、垃圾收集、词法作用域、一等函数、闭包、类与继承。全部装进数千行干净、快速的代码里——你写过每一行，所以真正懂它们。</p>
 
 <!--
-<p>And you can read the whole book, for free, online:</p>
+<p>The book is available in four delectable formats:</p>
 -->
-<p>你可以完全免费地在线阅读此书：</p>
+<p>本书有四种诱人的版本可选：</p>
+
+</div>
+
+</div>
+
+<div class="format print">
+  <div class="format-info">
+    <!--
+    <h3>Print</h3>
+    <p>640 pages of beautiful typography and high resolution hand-drawn
+    illustrations. Each page lovingly typeset by the author. The premiere reading
+    experience.</p>
+    -->
+    <h3>纸质版</h3>
+    <p>640 页精美排版，配以高分辨率手绘插图。每一页都由作者亲手排定。首选阅读体验。</p>
+    <table>
+    <tr>
+    <td>
+      <a class="action" href="https://www.amazon.com/dp/0990582930" target="_blank">Amazon<small>.com</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.ca/dp/0990582930" target="_blank"><small>.ca</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.co.uk/dp/0990582930" target="_blank"><small>.uk</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.com.au/dp/0990582930" target="_blank"><small>.au</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.de/dp/0990582930" target="_blank"><small>.de</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.fr/dp/0990582930" target="_blank"><small>.fr</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.es/dp/0990582930" target="_blank"><small>.es</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.it/dp/0990582930" target="_blank"><small>.it</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.co.jp/dp/0990582930" target="_blank"><small>.jp</small></a>
+    </td>
+    </tr>
+    </table>
+    <table>
+    <tr>
+    <td>
+      <a class="action" href="https://www.barnesandnoble.com/w/crafting-interpreters-robert-nystrom/1139915245?ean=9780990582939" target="_blank">Barnes and Noble</a>
+    </td>
+    <td>
+      <a class="action" href="https://www.bookdepository.com/Crafting-Interpreters-Robert-Nystrom/9780990582939" target="_blank">Book Depository</a>
+    </td>
+    </tr>
+    </table>
+    <a class="action" href="/sample.pdf" target="_blank">Download Sample <small>PDF</small></a>
+  </div>
+</div>
+<div class="format ebook">
+  <div class="format-info">
+    <!--
+    <h3>eBook</h3>
+    <p>Carefully tuned CSS fits itself to your ebook reader and screen size.
+    Full-color syntax highlighting and live hyperlinks. Like Alan Kay's Dynabook
+    but real.</p>
+    -->
+    <h3>电子书</h3>
+    <p>精心调校的 CSS 会适配你的阅读器和屏幕尺寸。全彩语法高亮与可点超链接。像艾伦·凯的 Dynabook——但是真的。</p>
+    <table>
+    <tr>
+    <td>
+      <a class="action" href="https://www.amazon.com/dp/B09BCCVLCL" target="_blank">Kindle <small class="hide-small"><span class="hide-medium">Amazon</span>.com</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.co.uk/dp/B09BCCVLCL" target="_blank"><small>.uk</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.ca/dp/B09BCCVLCL" target="_blank"><small>.ca</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.com.au/dp/B09BCCVLCL" target="_blank"><small>.au</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.de/dp/B09BCCVLCL" target="_blank"><small>.de</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.in/dp/B09BCCVLCL" target="_blank"><small>.in</small></a>
+    </td>
+    </tr>
+    </table>
+    <table>
+    <tr>
+    <td>
+      <a class="action" href="https://www.amazon.fr/dp/B09BCCVLCL" target="_blank"><small>.fr</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.es/dp/B09BCCVLCL" target="_blank"><small>.es</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.it/dp/B09BCCVLCL" target="_blank"><small>.it</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.co.jp/dp/B09BCCVLCL" target="_blank"><small>.jp</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.com.br/dp/B09BCCVLCL" target="_blank"><small>.br</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.amazon.com.mx/dp/B09BCCVLCL" target="_blank"><small>.mx</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://books.apple.com/us/book/crafting-interpreters/id1578795812" target="_blank">Apple Books</a>
+    </td>
+    </tr>
+    </table>
+    <table>
+    <tr>
+    <td>
+      <a class="action" href="https://play.google.com/store/books/details?id=q0c6EAAAQBAJ" target="_blank">Play Books <small class="hide-small">Google</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.barnesandnoble.com/w/crafting-interpreters-robert-nystrom/1139915245?ean=2940164977092" target="_blank">Nook <small class="hide-small">B&amp;N</small></a>
+    </td>
+    <td>
+      <a class="action" href="https://www.smashwords.com/books/view/1096463" target="_blank">EPUB <small class="hide-small">Smashwords</small></a>
+    </td>
+    </tr>
+    </table>
+  </div>
+</div>
+<div class="format pdf">
+  <div class="format-info">
+    <!--
+    <h3>PDF</h3>
+    <p>Perfectly mirrors the hand-crafted typesetting and sharp illustrations of
+    the print book, but much easier to carry around.</p>
+    -->
+    <h3>PDF</h3>
+    <p>完美复现纸质书的手工排版与清晰插图，却好携带得多。</p>
+    <a class="action" href="https://payhip.com/b/F0zkr" target="_blank">Buy from Payhip</a>
+    <a class="action" href="/sample.pdf" target="_blank">Download Free Sample</a>
+  </div>
+</div>
+<div class="format web">
+  <div class="format-info">
+    <!--
+    <h3>Web</h3>
+    <p>Meticulous responsive design looks great from your desktop down to your
+    phone. Every chapter, aside, and illustration is there. Read the whole book
+    for free. Really.</p>
+    -->
+    <h3>网页版</h3>
+    <p>细致的响应式设计，从桌面到手机都好看。每一章、每一段旁注、每一幅插图都在。整本书免费读。真的。</p>
+    <a class="action" href="contents.html">开始阅读</a>
+  </div>
+</div>
+
+<img src="image/dogshot.jpg" class="author" />
+
+<div class="author">
+<!--
+<h3>About Robert Nystrom</h3>
+-->
+<h3>关于 Robert Nystrom</h3>
 
 <!--
-<p class="center">
-<a class="button" href="contents.html">Start Reading!</a>
-</p>
+<p>I got bitten by the language bug years ago while on paternity leave between
+midnight feedings. I cobbled together a <a href="http://wren.io/"
+target="_blank">number</a> <a href="http://magpie-lang.org/"
+target="_blank">of</a> <a href="http://finch.stuffwithstuff.com/"
+target="_blank">hobby</a> <a href="https://github.com/munificent/vigil"
+target="_blank">languages</a> before worming my way into an honest-to-God,
+full-time programming language job. Today, I work at Google on the <a
+href="http://dart.dev/" target="_blank">Dart language</a>.</p>
 -->
-<p class="center">
-<a class="button" href="contents.html">开始阅读！</a>
-</p>
+<p>多年前休陪产假、在半夜喂奶的间隙，我被“语言虫”咬了一口。我拼拼凑凑做了<a href="http://wren.io/"
+target="_blank">若干</a> <a href="http://magpie-lang.org/"
+target="_blank">业余</a> <a href="http://finch.stuffwithstuff.com/"
+target="_blank">小</a> <a href="https://github.com/munificent/vigil"
+target="_blank">语言</a>，后来钻进了一份正经的全职程序设计语言工作。如今我在 Google 做 <a
+href="http://dart.dev/" target="_blank">Dart 语言</a>。</p>
 
 <!--
-<h2>I Want to Hold the Book in My Hands</h2>
+<p>Before I fell in love with languages, I developed games at Electronic Arts
+for eight years. I wrote the best-selling book <em><a
+href="http://gameprogrammingpatterns.com/" target="_blank">Game Programming
+Patterns</a></em> based on what I learned there. You can read that book for free
+too.</p>
 -->
-<h2>我想要手握一本实体书</h2>
+<p>在爱上语言之前，我在艺电（Electronic Arts）做了八年游戏。根据那段经历，我写了畅销书 <em><a
+href="http://gameprogrammingpatterns.com/" target="_blank">Game Programming
+Patterns</a></em>（《游戏编程模式》）。那本书也可以免费在线阅读。</p>
 
 <!--
-<p>Call me old-fashioned, but the word &ldquo;book&rdquo; to me still implies
-ink and flattened rectangles of wood pulp. This book is not quite there yet. The
-chapters are written, but I am still designing the print edition. If you want to
-know when that&#8217;s ready, have I got the mailing list for you:</p>
+<p>If you want more, you can find me on Twitter (<a
+href="https://twitter.com/intent/user?screen_name=munificentbob"
+target="_blank"><code>@munificentbob</code></a>), email me at <code>bob</code>
+at this site's domain (though I am slow to respond), read <a
+href="http://journal.stuffwithstuff.com/" target="_blank">my blog</a>, or join
+my low frequency mailing list:</p>
 -->
-<p>
-或许，我有点老土赶不上时代了，但对我而言，“书本”一词仍意味着印刷油墨和原木纸浆。
-只可惜，这本书还没有被印刷成册。章节内容都已经写好，但我仍然在设计最终印刷的版式。
-如果你也想知道此书何时能印刷出版，可以在下方留下你的邮箱地址，我会把你加入到邮件列表中，
-及时通知你：
-</p>
+<p>若想了解更多，可以在 Twitter 找我（<a
+href="https://twitter.com/intent/user?screen_name=munificentbob"
+target="_blank"><code>@munificentbob</code></a>），往本站域名下的 <code>bob</code>
+发邮件（我回复较慢），读<a
+href="http://journal.stuffwithstuff.com/" target="_blank">我的博客</a>，或加入我低频更新的邮件列表：</p>
 
 <div class="sign-up">
   <!-- Begin MailChimp Signup Form -->
   <div id="mc_embed_signup">
   <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
     <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="你的邮箱地址" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups -->
     <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
+    <input type="submit" value="订阅" name="subscribe" id="mc-embedded-subscribe" class="button">
   </form>
   </div>
-  <!--End mc_embed_signup-->
-  <!--
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-  -->
-  <p class="small">（我大概只会一个月发送一回邮件，不用担心被我邮件轰炸啦 ^_^）</p>
+  <!--End mc_embed_signup -->
 </div>
 
-<h2>你是谁?</h2>
+</div>
 
-<!--
-<p>I&#8217;m Bob Nystrom. I got bitten by the language bug ten years ago when
-I was on paternity leave with a lot of free time between middle of the night
-feedings. Since then, I've cobbled together a <a href="http://wren.io/"
-target="_blank">number</a> <a href="http://magpie-lang.org/"
-target="_blank">of</a> <a href="http://finch.stuffwithstuff.com/"
-target="_blank">languages</a> <a href="https://github.com/munificent/vigil"
-target="_blank">of</a> <a href="https://github.com/munificent/jasic"
-target="_blank">various</a> <a href="https://github.com/munificent/lark"
-target="_blank">ilk</a> before worming my way into an honest-to-God, full-time
-programming language job. Today, I work at Google on the
-<a href="http://dart.dev/" target="_blank">Dart language</a>.</p>
--->
-<p>我的名字叫 Bob Nystrom。大约 10 年前，我被自己拼拼凑凑做出来的程序语言 bug 困扰得头疼不已，
-那时候我正在休陪产假，晚上有很多空闲时间可以捣鼓。从那时我才发现，原来我真的很喜欢程序设计语言开发啊，
-于是，我便遵从本心，投身于全职程序设计语言开发相关工作。现在，我在谷歌公司（Google）开发
-<a href="http://dart.dev/" target="_blank"> Dart 语言 </a>。
-
-<!--
-<p>Before I fell in love with languages, I developed games at Electronic Arts
-for eight years. I wrote the best-selling book &ldquo;<a
-href="http://gameprogrammingpatterns.com/" target="_blank">Game Programming
-Patterns</a>&rdquo; based on what I learned there. You can read that book for
-free too, because I love you.</p>
--->
-<p>
-在爱上程序设计语言之前，我在美国艺电公司（Electronic Arts）做了 8 年的游戏开发工作。
-基于在艺电学到的游戏开发知识，我当时写了本书，卖得还不错呢 <a href="http://gameprogrammingpatterns.com/" target="_blank">《Game Programming Patterns》</a>。现在，你同样可以免费阅读到它。至于你问我为什么要免费？因为我爱你们呀。 w(ﾟДﾟ)w
-</p>
-
-<!--
-<p>If you want to get in touch, you can email me at <code>bob</code> at this
-site's domain or find me (<a href="https://twitter.com/intent/user?screen_name=munificentbob"
-target="_blank"><code>@munificentbob</code></a>) on twitter. If you can&#8217;t
-get enough of my writing, I also have <a
-href="http://journal.stuffwithstuff.com/" target="_blank">a blog</a>. If you
-like the book, you&#8217;ll probably like it too.</p>
--->
-<p>
-如果你想联系我，可以给我发邮件（<code>bob@craftinginterpreters.com</code>），
-或是在 Twitter 上找到我（<a href="https://twitter.com/intent/user?screen_name=munificentbob"
-target="_blank"><code>@munificentbob</code></a>）。
-如果你觉得我的书写得不错，我还有个<a href="http://journal.stuffwithstuff.com/" target="_blank">个人博客</a>，
-也许你也会喜欢。
-</p>
-
+<footer>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
+</footer>
 </main>
 </article>
 </body>

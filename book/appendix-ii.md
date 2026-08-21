@@ -208,7 +208,7 @@ The curly-braced block statement that defines a local scope is introduced in
 ### 类语句
 
 <!--
-Class declaration is introduced in, unsurprisingly,
+Class declarations are introduced in, unsurprisingly,
 "[Classes](classes.html#class-declarations)".
 -->
 类声明——不出所料——在「[类](classes.html#class-declarations)」一章引入。

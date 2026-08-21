@@ -333,7 +333,7 @@ the pronunciation of Yacc like "yak".
 -->
 Yacc 不是其同类产品中的第一个，这也是为什么它被命名为 Yacc 的原因："*Yet Another* Compiler-Compiler"，在它之后还有[Bison][]这样的工具诞生。Yacc 的发音类似于："yak（牦牛）"。
 
-<img src="image/introduction/yak.png" alt="A yak.">
+<img src="image/introduction/yak.png" alt="A yak." />
 
 [bison]: https://en.wikipedia.org/wiki/GNU_bison
 
@@ -611,7 +611,7 @@ the image of pulling yourself up by your own bootstraps.
 -->
 当然在最开始的时候，你还不能用新语言自身去实现这门语言的编译器，因为语言编译器压根儿还没诞生呢。所以你选用其他已经实现的程序设计语言编写新语言编译器，一旦你得到了第一支新语言编译器程序，你就可以拿着它编译自身了。Go 语言是个很好的例子：最初版本 Go 语言的编译器使用 C 语言编写，再得到最初一版编译器后，我们就可以使用 Go 语言自身来开发 Go 语言的编译器了。这就是**自举**，听起来就像是一个人自己把自己给提了起来。
 
-<img src="image/introduction/bootstrap.png" alt="Fact: This is the primary mode of transportation of the American cowboy.">
+<img src="image/introduction/bootstrap.png" alt="Fact: This is the primary mode of transportation of the American cowboy." />
 
 </aside>
 

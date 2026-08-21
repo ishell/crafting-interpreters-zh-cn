@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">A Virtual Machine<small>15</small></a></h3>
 
 <ul>
@@ -54,7 +53,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="chunks-of-bytecode.html" title="Chunks of Bytecode" class="prev">←</a>
 <a href="scanning-on-demand.html" title="Scanning on Demand" class="next">→</a>
 </nav>
@@ -62,9 +61,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">A Virtual Machine<small>15</small></a></h3>
 
 <ul>
@@ -90,37 +88,18 @@
   <div class="number">15</div>
   <h1>A Virtual Machine</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#虚拟机" name="虚拟机"><small>15&#8202;.&#8202;0</small>虚拟机</a></h1>
+<h1><a href="#虚拟机" id="虚拟机"><small>15&#8202;.&#8202;0</small>虚拟机</a></h1>
 <blockquote>
 <p>魔术师守护他们的秘密，并非因为那些秘密有多么宏大与重要，而是因为它们实在太过渺小平凡。舞台上那些美轮美奂的奇效，往往源于一个荒谬到如此地步的秘密，以至于魔术师都不好意思承认事情<strong>就是</strong>这样做的。</p>
 <p><cite>克里斯托弗·普里斯特，<em>《致命魔术》</em></cite></p>
 </blockquote>
 <p>我们已经花了大量时间讨论如何将一段程序表示为一串字节码指令，但要不是那些填满内脏的标本，你很难真正理解它们<strong>究竟</strong>在做什么。当我们还没见过它们在<strong>执行</strong>时究竟如何行事，便很难想象编译器会如何将用户的源代码翻译成它们的一连串。</p>
 <p>于是，在我们动手打造这款新解释器的前端之前，我们先从后端——执行指令的虚拟机——开始。它为字节码注入生命。观察这些指令在舞台上腾挪跳跃，会让我们对编译器究竟如何翻译有更清晰的画面。</p>
-<h2><a href="#一台指令执行机" name="一台指令执行机"><small>15&#8202;.&#8202;1</small>一台指令执行机</a></h2>
+<h2><a href="#一台指令执行机" id="一台指令执行机"><small>15&#8202;.&#8202;1</small>一台指令执行机</a></h2>
 <p>虚拟机是我们解释器内部架构的一个组成部分。你交给它一段代码块——也就是字面意义上的一个 Chunk——它便去执行它。VM 的代码与数据结构栖身于一个新的模块。</p>
 <div class="codehilite"><div class="source-file"><em>vm.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_vm_h</span>
+<pre><span class="a">#ifndef clox_vm_h</span>
 <span class="a">#define clox_vm_h</span>
 
 <span class="a">#include &quot;chunk.h&quot;</span>
@@ -140,8 +119,7 @@ create new file</div>
 <p>一如我们对待大多数数据结构那般，我们也定义一些函数来创建与销毁一个 VM。下面是实现：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &quot;common.h&quot;</span>
+<pre><span class="a">#include &quot;common.h&quot;</span>
 <span class="a">#include &quot;vm.h&quot;</span>
 
 <span class="a">VM</span> <span class="i">vm</span>;<span name="one"> </span>
@@ -162,36 +140,28 @@ create new file</div>
 <p>我在这里做的事情，相当于一个全局变量，而<a href="http://gameprogrammingpatterns.com/singleton.html">关于全局变量你所听过的那些坏话</a>，在<strong>大规模</strong>编程时依旧成立。但当为了让书中的样例保持小巧——</p>
 </aside>
 <p>在我们开始把有趣的代码塞进 VM 之前，先把它与解释器的主入口接上线。</p>
-<div class="codehilite"><pre class="insert-before">
-int main(int argc, const char* argv[]) {
+<div class="codehilite"><pre class="insert-before">int main(int argc, const char* argv[]) {
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-  <span class="i">initVM</span>();
+<pre class="insert">  <span class="i">initVM</span>();
 
-</pre><pre class="insert-after">
-  Chunk chunk;
+</pre><pre class="insert-after">  Chunk chunk;
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>()</div>
 
 <p>我们在解释器初次启动时拉起这个 VM。然后当我们即将退出时，再将它关掉。</p>
-<div class="codehilite"><pre class="insert-before">
-  disassembleChunk(&amp;chunk, &quot;test chunk&quot;);
+<div class="codehilite"><pre class="insert-before">  disassembleChunk(&amp;chunk, &quot;test chunk&quot;);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-  <span class="i">freeVM</span>();
-</pre><pre class="insert-after">
-  freeChunk(&amp;chunk);
+<pre class="insert">  <span class="i">freeVM</span>();
+</pre><pre class="insert-after">  freeChunk(&amp;chunk);
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>()</div>
 
 <p>最后一件例行公事：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;debug.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;debug.h&quot;
 </pre><div class="source-file"><em>main.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;vm.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;vm.h&quot;</span>
 </pre><pre class="insert-after">
 
 int main(int argc, const char* argv[]) {
@@ -199,26 +169,21 @@ int main(int argc, const char* argv[]) {
 <div class="source-file-narrow"><em>main.c</em></div>
 
 <p>现在当你跑起 clox，它会在创建完<a href="chunks-of-bytecode.html#disassembling-chunks">上一章</a>那段手工拼凑的 chunk <strong>之前</strong>先启动 VM。VM 已准备就绪，那么让我们教它做点什么。</p>
-<h3><a href="#执行指令" name="执行指令"><small>15&#8202;.&#8202;1&#8202;.&#8202;1</small>执行指令</a></h3>
+<h3><a href="#执行指令" id="执行指令"><small>15&#8202;.&#8202;1&#8202;.&#8202;1</small>执行指令</a></h3>
 <p>VM 在我们命令它去解释一段字节码 chunk 时便一跃而起。</p>
-<div class="codehilite"><pre class="insert-before">
-  disassembleChunk(&amp;chunk, &quot;test chunk&quot;);
+<div class="codehilite"><pre class="insert-before">  disassembleChunk(&amp;chunk, &quot;test chunk&quot;);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-  <span class="i">interpret</span>(&amp;<span class="i">chunk</span>);
-</pre><pre class="insert-after">
-  freeVM();
+<pre class="insert">  <span class="i">interpret</span>(&amp;<span class="i">chunk</span>);
+</pre><pre class="insert-after">  freeVM();
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>()</div>
 
 <p>这个函数是通往 VM 的主入口。它声明如下：</p>
-<div class="codehilite"><pre class="insert-before">
-void freeVM();
+<div class="codehilite"><pre class="insert-before">void freeVM();
 </pre><div class="source-file"><em>vm.h</em><br>
 add after <em>freeVM</em>()</div>
-<pre class="insert">
-<span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>);
+<pre class="insert"><span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -226,20 +191,17 @@ add after <em>freeVM</em>()</div>
 <div class="source-file-narrow"><em>vm.h</em>, add after <em>freeVM</em>()</div>
 
 <p>VM 跑完那个 chunk，然后从这个枚举中返回一个值：</p>
-<div class="codehilite"><pre class="insert-before">
-} VM;
+<div class="codehilite"><pre class="insert-before">} VM;
 
 </pre><div class="source-file"><em>vm.h</em><br>
 add after struct <em>VM</em></div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">enum</span> {
+<pre class="insert"><span class="k">typedef</span> <span class="k">enum</span> {
   <span class="a">INTERPRET_OK</span>,
   <span class="a">INTERPRET_COMPILE_ERROR</span>,
   <span class="a">INTERPRET_RUNTIME_ERROR</span>
 } <span class="t">InterpretResult</span>;
 
-</pre><pre class="insert-after">
-void initVM();
+</pre><pre class="insert-after">void initVM();
 void freeVM();
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, add after struct <em>VM</em></div>
@@ -248,8 +210,7 @@ void freeVM();
 <p>我们正在一步步趋近某些真正的实现。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>freeVM</em>()</div>
-<pre>
-<span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>) {
+<pre><span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>) {
   <span class="i">vm</span>.<span class="i">chunk</span> = <span class="i">chunk</span>;
   <span class="i">vm</span>.<span class="i">ip</span> = <span class="i">vm</span>.<span class="i">chunk</span>-&gt;<span class="i">code</span>;
   <span class="k">return</span> <span class="i">run</span>();
@@ -262,15 +223,12 @@ add after <em>freeVM</em>()</div>
 <aside name="local">
 <p>倘若我们<strong>真的</strong>想从我们的字节码解释器里榨出每一滴性能，那么我们便会把 <code>ip</code> 存于一个局部变量。它在执行过程中被修改得太频繁了，我们想<strong>让 C 编译器把它保留在寄存器里</strong>。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
   Chunk* chunk;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">uint8_t</span>* <span class="i">ip</span>;
-</pre><pre class="insert-after">
-} VM;
+<pre class="insert">  <span class="t">uint8_t</span>* <span class="i">ip</span>;
+</pre><pre class="insert-after">} VM;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 
@@ -283,8 +241,7 @@ in struct <em>VM</em></div>
 <p>真正有趣的事情发生在 <code>run()</code> 之中。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>freeVM</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">InterpretResult</span> <span class="i">run</span>() {
+<pre><span class="k">static</span> <span class="t">InterpretResult</span> <span class="i">run</span>() {
 <span class="a">#define READ_BYTE() (*vm.ip++)</span>
 
   <span class="k">for</span> (;;) {
@@ -317,40 +274,33 @@ add after <em>freeVM</em>()</div>
 <p>可惜，最快的方案要么需要 C 语言的非标准扩展，要么需要手写的汇编代码。对于 clox，我们将保持简单。正如我们的反汇编器那样，我们有一个巨大的 <code>switch</code> 语句，为每一种操作码各自配一个 case。每个 case 的函数体实现该操作码的语义。</p>
 <p>到目前为止，我们只处理一条指令——<code>OP_RETURN</code>——而它所做的<strong>全部</strong>事情就是彻底退出循环。终有一天，那条指令将被用来从当前 Lox 函数返回；但我们眼下还没有函数，所以我们暂时将其改作&ldquo;终止执行&ldquo;之用。</p>
 <p>让我们继续支持我们那另一条指令。</p>
-<div class="codehilite"><pre class="insert-before">
-    switch (instruction = READ_BYTE()) {
+<div class="codehilite"><pre class="insert-before">    switch (instruction = READ_BYTE()) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_CONSTANT</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_CONSTANT</span>: {
         <span class="t">Value</span> <span class="i">constant</span> = <span class="a">READ_CONSTANT</span>();
         <span class="i">printValue</span>(<span class="i">constant</span>);
         <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>我们尚没有足够的机器来用一条常量做一些有用之事。眼下，我们只是将它打印出来，以便我们这些解释器黑客能窥见 VM 内部正在发生什么。那次对 <code>printf()</code> 的调用是一次必要的 include。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add to top of file</div>
-<pre class="insert">
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;stdio.h&gt;</span>
 
-</pre><pre class="insert-after">
-#include &quot;common.h&quot;
+</pre><pre class="insert-after">#include &quot;common.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, add to top of file</div>
 
 <p>我们还新定义了一个宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#define READ_BYTE() (*vm.ip++)
+<div class="codehilite"><pre class="insert-before">#define READ_BYTE() (*vm.ip++)
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])</span>
+<pre class="insert"><span class="a">#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])</span>
 </pre><pre class="insert-after">
 
   for (;;) {
@@ -359,25 +309,21 @@ in <em>run</em>()</div>
 
 <p><code>READ_CONSTANT()</code> 读取字节码中的下一个字节，将所得的数字当作一个索引，并在 chunk 的常量表中查找相应的 Value。在后续章节里，我们还会增加几道更多带有操作数、指向常量的指令，所以此处我们便顺势把这个辅助宏搭起来。</p>
 <p>与之前的 <code>READ_BYTE</code> 宏一样，<code>READ_CONSTANT</code> 也只在 <code>run()</code> 内部使用。为了让这一作用域更一目了然，宏的定义本身被限定于该函数之中。我们<span name="macro">定义</span>它们于开头，并——因为我们洁癖——于末尾将它们 <code>#undef</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-#undef READ_BYTE
+<div class="codehilite"><pre class="insert-before">#undef READ_BYTE
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#undef READ_CONSTANT</span>
-</pre><pre class="insert-after">
-}
+<pre class="insert"><span class="a">#undef READ_CONSTANT</span>
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <aside name="macro">
 <p>显式地 <code>#undef</code> 这些宏，看上去多少有些过度讲究，但 C 往往<strong>会</strong>惩罚那些大大咧咧的用户，而 C 预处理器<strong>更</strong>是如此。</p>
 </aside>
-<h3><a href="#执行追踪" name="执行追踪"><small>15&#8202;.&#8202;1&#8202;.&#8202;2</small>执行追踪</a></h3>
+<h3><a href="#执行追踪" id="执行追踪"><small>15&#8202;.&#8202;1&#8202;.&#8202;2</small>执行追踪</a></h3>
 <p>如果你此刻跑一跑 clox，它会执行我们在上一章中手工编写的那段 chunk，并在你的终端上吐出 <code>1.2</code>。我们看得出一切<strong>在</strong>跑——但这只是因为我们 <code>OP_CONSTANT</code> 的实现里有一行临时代码去记录那个值。一旦这条指令<strong>真的</strong>去做它应当做的事，并将那个常量一路传递给那些想要消费它的其它运算，VM 便会变成一个黑盒。这会让身为 VM 实现者的我们日子难过。</p>
 <p>为了帮自己一把，眼下正是为 VM 添一些诊断日志的好时机——与我们当年为 chunk 本身所做的如出一辙。事实上，我们<strong>甚至</strong>会复用同一段代码。我们并不希望<strong>始终</strong>开启这段日志——它只是为我们这些 VM 黑客准备的，Lox 用户并不需要——所以我们先创建一个 flag，把它隐藏在后面。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdint.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdint.h&gt;
 </pre><div class="source-file"><em>common.h</em></div>
 <pre class="insert">
 
@@ -389,46 +335,38 @@ in <em>run</em>()</div>
 <div class="source-file-narrow"><em>common.h</em></div>
 
 <p>当这个 flag 被定义时，VM 会在执行每一条指令之前，先反汇编并打印它。上一章我们的反汇编器是<strong>静态地</strong>走一遍整个 chunk，而此处则是<strong>动态地</strong>、即时地反汇编指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  for (;;) {
+<div class="codehilite"><pre class="insert-before">  for (;;) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef DEBUG_TRACE_EXECUTION</span>
+<pre class="insert"><span class="a">#ifdef DEBUG_TRACE_EXECUTION</span>
     <span class="i">disassembleInstruction</span>(<span class="i">vm</span>.<span class="i">chunk</span>,
                            (<span class="t">int</span>)(<span class="i">vm</span>.<span class="i">ip</span> - <span class="i">vm</span>.<span class="i">chunk</span>-&gt;<span class="i">code</span>));
 <span class="a">#endif</span>
 
-</pre><pre class="insert-after">
-    uint8_t instruction;
+</pre><pre class="insert-after">    uint8_t instruction;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>由于 <code>disassembleInstruction()</code> 接受一个整数<strong>字节 offset</strong>，而我们存储当前指令引用是用一个直接的指针，所以我们先做一点指针运算，把 <code>ip</code> 换算回从字节码开头算起的相对 offset。然后我们再反汇编从该字节开始的那条指令。</p>
 <p>一如既往，我们需要先把那个函数的声明 include 进来，然后才能调用它。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>vm.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;debug.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;vm.h&quot;
+<pre class="insert"><span class="a">#include &quot;debug.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;vm.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
 <p>我知道这段代码眼下并不<strong>怎么</strong>引人注目——它字面意义上就是一个 <code>switch</code> 语句裹着一个 <code>for</code> 循环——但信不信由你，这便是我们 VM 的两大主件之一。借由它，我们便能命令式地执行指令。它的简洁本身就是一种美德——它做的工作越少，它跑得便越快。回想一下我们在 jlox 里为了用访问者模式遍历 AST 而背负的那一切复杂性与开销，今日之 VM 与之形成了鲜明的对比。</p>
-<h2><a href="#一个值栈操控器" name="一个值栈操控器"><small>15&#8202;.&#8202;2</small>一个值栈操控器</a></h2>
+<h2><a href="#一个值栈操控器" id="一个值栈操控器"><small>15&#8202;.&#8202;2</small>一个值栈操控器</a></h2>
 <p>除了命令式的副作用之外，Lox 还有会产生、修改与消费值的表达式。因此，我们所编译出的字节码需要一种方式在那些需要它们的不同指令之间搬运值。举例而言：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="n">3</span> - <span class="n">2</span>;
+<div class="codehilite"><pre><span class="k">print</span> <span class="n">3</span> - <span class="n">2</span>;
 </pre></div>
 <p>我们显然需要为常量 3 与 2、<code>print</code> 语句以及减法运算各设一些指令。但那条减法指令<strong>如何</strong>知道 3 是<span name="word">被减数</span>而 2 是减数呢？那条 <code>print</code> 指令<strong>又</strong>如何知道要打印那次运算的结果呢？</p>
 <aside name="word">
 <p>是的，我<strong>确实</strong>不得不查字典才知道&ldquo;subtrahend&rdquo;与&ldquo;minuend&rdquo;该怎么写。但这两个词<strong>多么</strong>可爱！&ldquo;Minuend&rdquo;听起来像一种伊丽莎白时代的舞蹈，而&ldquo;subtrahend&rdquo;也许是某种史前的地下纪念碑。</p>
 </aside>
 <p>为了把这层意思说得更清楚些，看看下面这段：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">echo</span>(<span class="i">n</span>) {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">echo</span>(<span class="i">n</span>) {
   <span class="k">print</span> <span class="i">n</span>;
   <span class="k">return</span> <span class="i">n</span>;
 }
@@ -467,7 +405,7 @@ in <em>run</em>()</div>
 </aside>
 <p>在第二张图中，每当我们引入一个数字，我们便从右侧把它推入栈。当数字被消费时，它们也总是按<strong>从右至左</strong>的顺序弹出。</p>
 <p>由于我们所需追踪的临时值天然具有栈的行为，我们的 VM 将使用一座栈来管理它们。当一条指令&ldquo;产生&ldquo;一个值时，它将该值推入栈。当它需要消费一个或多个值时，它通过弹出栈来取得它们。</p>
-<h3><a href="#虚拟机的栈" name="虚拟机的栈"><small>15&#8202;.&#8202;2&#8202;.&#8202;1</small>虚拟机的栈</a></h3>
+<h3><a href="#虚拟机的栈" id="虚拟机的栈"><small>15&#8202;.&#8202;2&#8202;.&#8202;1</small>虚拟机的栈</a></h3>
 <p>或许这看起来并不像什么石破天惊的发现，但我<strong>酷爱</strong>栈式虚拟机。当你看一场魔术时，它好像真有什么魔力。但当你弄清了它的门道——通常不过是某种机械的小机关或障眼法——那份惊奇便随之消散。然而，在计算机科学里有那么<strong>几</strong>个想法，即便在我把它们拆解开来、洞悉了它们所有的诀窍之后，依然保留了一份最初的闪耀。栈式虚拟机便是其中之一。</p>
 <aside name="wonder">
 <p>堆——指的是<a href="https://en.wikipedia.org/wiki/Heap_(data_structure)">数据结构</a>这层意义上的堆，而非<a href="https://en.wikipedia.org/wiki/Memory_management#HEAP">内存管理</a>中那层意义上的堆——是另一个。Vaughan Pratt 的自顶向下算符优先文法，则是又一个<a href="compiling-expressions.html">届时我们将学到</a>。</p>
@@ -477,17 +415,14 @@ in <em>run</em>()</div>
 <p>稍稍泼点冷水：栈式解释器<strong>并非</strong>银弹。它们往往<strong>尚能胜任</strong>，但现代的 JVM、CLR 与 JavaScript 实现都采用精密的 <a href="https://en.wikipedia.org/wiki/Just-in-time_compilation">JIT 编译</a> 流水线，在运行中<strong>实时</strong>地生成<strong>远为</strong>快速的原生代码。</p>
 </aside>
 <p>好了，是时候撸起袖子了！下面便是栈：</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
   Chunk* chunk;
   uint8_t* ip;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">Value</span> <span class="i">stack</span>[<span class="a">STACK_MAX</span>];
+<pre class="insert">  <span class="t">Value</span> <span class="i">stack</span>[<span class="a">STACK_MAX</span>];
   <span class="t">Value</span>* <span class="i">stackTop</span>;
-</pre><pre class="insert-after">
-} VM;
+</pre><pre class="insert-after">} VM;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 
@@ -500,8 +435,7 @@ in struct <em>VM</em></div>
 </aside><img src="image/a-virtual-machine/stack-c.png" alt="一个数组，元素 0 处为 'c'。" />
 <p>……<code>stackTop</code> 始终指向<strong>最后</strong>一个元素<strong>之后</strong>的位置。</p><img src="image/a-virtual-machine/stack-crepe.png" alt="一个数组，前五个元素依次为 'c'、'r'、'e'、'p'、'e'。" />
 <p>我是这样记的：<code>stackTop</code> 指向<strong>下一个</strong>待推入的值将要放置的位置。眼下（暂时）我们能在栈上保存的最大值数量为：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;chunk.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;chunk.h&quot;
 </pre><div class="source-file"><em>vm.h</em></div>
 <pre class="insert">
 
@@ -513,11 +447,9 @@ typedef struct {
 <div class="source-file-narrow"><em>vm.h</em></div>
 
 <p>为我们的 VM 设定一个固定大小的栈，意味着某些指令序列可能会推入过多的值、耗尽栈空间——经典意义上的&ldquo;栈溢出&ldquo;。我们本可以按需动态地扩容栈，但眼下我们先保持简单。由于 VM 使用的是 Value 类型，我们还需要 include 它的声明。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;chunk.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;chunk.h&quot;
 </pre><div class="source-file"><em>vm.h</em></div>
-<pre class="insert">
-<span class="a">#include &quot;value.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;value.h&quot;</span>
 </pre><pre class="insert-after">
 
 #define STACK_MAX 256
@@ -525,22 +457,18 @@ typedef struct {
 <div class="source-file-narrow"><em>vm.h</em></div>
 
 <p>既然 VM 已有了些许有趣的状态，我们便可以初始化它了。</p>
-<div class="codehilite"><pre class="insert-before">
-void initVM() {
+<div class="codehilite"><pre class="insert-before">void initVM() {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
-<pre class="insert">
-  <span class="i">resetStack</span>();
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">resetStack</span>();
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
 
 <p>它会调用这个辅助函数：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after variable <em>vm</em></div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">resetStack</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">resetStack</span>() {
   <span class="i">vm</span>.<span class="i">stackTop</span> = <span class="i">vm</span>.<span class="i">stack</span>;
 }
 </pre></div>
@@ -548,12 +476,10 @@ add after variable <em>vm</em></div>
 
 <p>由于栈数组是直接内联在 VM 结构体中声明的，我们<strong>并不</strong>需要为它分配内存。我们<strong>甚至</strong>都不需要清空数组里那些未使用的格子——除非值已被存入其中，否则我们压根不会去访问它们。我们<strong>只</strong>需要做的初始化，便是将 <code>stackTop</code> 指向数组的开头，以表示栈为空。</p>
 <p>栈的协议支持两件操作：</p>
-<div class="codehilite"><pre class="insert-before">
-InterpretResult interpret(Chunk* chunk);
+<div class="codehilite"><pre class="insert-before">InterpretResult interpret(Chunk* chunk);
 </pre><div class="source-file"><em>vm.h</em><br>
 add after <em>interpret</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">push</span>(<span class="t">Value</span> <span class="i">value</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">push</span>(<span class="t">Value</span> <span class="i">value</span>);
 <span class="t">Value</span> <span class="i">pop</span>();
 </pre><pre class="insert-after">
 
@@ -564,8 +490,7 @@ add after <em>interpret</em>()</div>
 <p>你可以将一个新值推入栈顶，也可以将最近一次推入的值弹出。下面是第一个函数：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>freeVM</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">push</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">void</span> <span class="i">push</span>(<span class="t">Value</span> <span class="i">value</span>) {
   *<span class="i">vm</span>.<span class="i">stackTop</span> = <span class="i">value</span>;
   <span class="i">vm</span>.<span class="i">stackTop</span>++;
 }
@@ -576,8 +501,7 @@ add after <em>freeVM</em>()</div>
 <p>弹出则是其镜像。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>push</em>()</div>
-<pre>
-<span class="t">Value</span> <span class="i">pop</span>() {
+<pre><span class="t">Value</span> <span class="i">pop</span>() {
   <span class="i">vm</span>.<span class="i">stackTop</span>--;
   <span class="k">return</span> *<span class="i">vm</span>.<span class="i">stackTop</span>;
 }
@@ -585,108 +509,87 @@ add after <em>push</em>()</div>
 <div class="source-file-narrow"><em>vm.c</em>, add after <em>push</em>()</div>
 
 <p>首先，我们让栈指针<strong>回退</strong>，回到数组中最近一次被使用的那个槽位。然后我们查得位于那一索引处的值并将其返回。我们<strong>并不</strong>需要显式地将该值&ldquo;移出&ldquo;数组——只要把 <code>stackTop</code> 往下挪，便足以标记该槽位不再被使用。</p>
-<h3><a href="#栈追踪" name="栈追踪"><small>15&#8202;.&#8202;2&#8202;.&#8202;2</small>栈追踪</a></h3>
+<h3><a href="#栈追踪" id="栈追踪"><small>15&#8202;.&#8202;2&#8202;.&#8202;2</small>栈追踪</a></h3>
 <p>我们已然有了一座能工作的栈，但要<strong>看见</strong>它工作起来并不容易。当我们日后开始实现更复杂的指令、并将更大的 Lox 代码编译、运行起来时，我们将面临一大堆被挤入那份数组的值。如果我们能<strong>看见</strong>栈的状态，那我们的 VM 黑客之路便会轻松不少。</p>
 <p>为此，在我们<strong>追踪</strong>执行时，我们也会在解释每一条指令之前展示栈的当前内容。</p>
-<div class="codehilite"><pre class="insert-before">
-#ifdef DEBUG_TRACE_EXECUTION
+<div class="codehilite"><pre class="insert-before">#ifdef DEBUG_TRACE_EXECUTION
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-    <span class="i">printf</span>(<span class="s">&quot;          &quot;</span>);
+<pre class="insert">    <span class="i">printf</span>(<span class="s">&quot;          &quot;</span>);
     <span class="k">for</span> (<span class="t">Value</span>* <span class="i">slot</span> = <span class="i">vm</span>.<span class="i">stack</span>; <span class="i">slot</span> &lt; <span class="i">vm</span>.<span class="i">stackTop</span>; <span class="i">slot</span>++) {
       <span class="i">printf</span>(<span class="s">&quot;[ &quot;</span>);
       <span class="i">printValue</span>(*<span class="i">slot</span>);
       <span class="i">printf</span>(<span class="s">&quot; ]&quot;</span>);
     }
     <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
-</pre><pre class="insert-after">
-    disassembleInstruction(vm.chunk,
+</pre><pre class="insert-after">    disassembleInstruction(vm.chunk,
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>我们循环，从第一个（栈底）开始，一一打印数组中的值，直至抵达栈顶为止。这让我们得以观察每一条指令对栈的影响。输出颇有些冗长，但当我们从解释器的五脏六腑里手术般地挖出一条恶心的 bug 时，它便物有所值。</p>
 <p>栈已就绪，让我们重新审视那两条指令。先看第一条：</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_CONSTANT: {
+<div class="codehilite"><pre class="insert-before">      case OP_CONSTANT: {
         Value constant = READ_CONSTANT();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-        <span class="i">push</span>(<span class="i">constant</span>);
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="i">push</span>(<span class="i">constant</span>);
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 2 lines</div>
 
 <p>上一章里，我对 <code>OP_CONSTANT</code> 指令&ldquo;加载&ldquo;一条常量一笔带过。眼下我们已然有了栈，你知道&ldquo;产生&ldquo;一个值<strong>究竟</strong>意味着什么了吧：它会被推入栈。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_RETURN: {
+<div class="codehilite"><pre class="insert-before">      case OP_RETURN: {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-        <span class="i">printValue</span>(<span class="i">pop</span>());
+<pre class="insert">        <span class="i">printValue</span>(<span class="i">pop</span>());
         <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
-</pre><pre class="insert-after">
-        return INTERPRET_OK;
+</pre><pre class="insert-after">        return INTERPRET_OK;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>然后我们让 <code>OP_RETURN</code> 弹出栈顶的值并打印之，再退出。当我们为 clox 添上真正的函数支持时，我们会回过头来修改这段代码。但<strong>眼</strong>下，它给了我们一条途径，让 VM 能执行一段简单的指令序列并显示其结果。</p>
-<h2><a href="#一个算术计算器" name="一个算术计算器"><small>15&#8202;.&#8202;3</small>一个算术计算器</a></h2>
+<h2><a href="#一个算术计算器" id="一个算术计算器"><small>15&#8202;.&#8202;3</small>一个算术计算器</a></h2>
 <p>我们 VM 的灵魂与核心如今已各就各位。字节码循环分派并执行指令。栈随着值在其中的流动而伸缩。这两部分<strong>都</strong>能跑通，但仅凭我们目前这两道粗糙的指令，很难体会到它们彼此配合得<strong>多么</strong>巧妙。所以让我们教我们的解释器去做算术。</p>
 <p>我们从最简单的算术运算——一元取负——开始。</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="n">1.2</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="n">1.2</span>;
 <span class="k">print</span> -<span class="i">a</span>; <span class="c">// -1.2。</span>
 </pre></div>
 <p>前缀 <code>-</code> 运算符带一个运算对象——要被取负的那个值——并产生一个结果。我们<strong>暂且</strong>不会去涉及解析器，但我们可以添加上面那段语法将来会编译出的字节码指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_CONSTANT,
+<div class="codehilite"><pre class="insert-before">  OP_CONSTANT,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_NEGATE</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_NEGATE</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 
 <p>我们这样执行它：</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_NEGATE</span>:   <span class="i">push</span>(-<span class="i">pop</span>()); <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_NEGATE</span>:   <span class="i">push</span>(-<span class="i">pop</span>()); <span class="k">break</span>;
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>该指令需要一个运算对象，它通过从栈中弹出来获得。对那个值取负，再将结果推回栈，以供后续指令使用。再没有比这更简单的了。我们也可以一并反汇编它。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_CONSTANT:
+<div class="codehilite"><pre class="insert-before">    case OP_CONSTANT:
       return constantInstruction(&quot;OP_CONSTANT&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_NEGATE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_NEGATE</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_NEGATE&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
       return simpleInstruction(&quot;OP_RETURN&quot;, offset);
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 
 <p>我们还可以在我们的测试 chunk 中试试它。</p>
-<div class="codehilite"><pre class="insert-before">
-  writeChunk(&amp;chunk, constant, 123);
+<div class="codehilite"><pre class="insert-before">  writeChunk(&amp;chunk, constant, 123);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-  <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_NEGATE</span>, <span class="n">123</span>);
+<pre class="insert">  <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_NEGATE</span>, <span class="n">123</span>);
 </pre><pre class="insert-after">
 
   writeChunk(&amp;chunk, OP_RETURN, 123);
@@ -697,47 +600,39 @@ in <em>main</em>()</div>
 <div class="codehilite"><pre>-1.2
 </pre></div>
 <p>神奇！</p>
-<h3><a href="#二元运算符" name="二元运算符"><small>15&#8202;.&#8202;3&#8202;.&#8202;1</small>二元运算符</a></h3>
+<h3><a href="#二元运算符" id="二元运算符"><small>15&#8202;.&#8202;3&#8202;.&#8202;1</small>二元运算符</a></h3>
 <p>OK，一元运算符<strong>并不</strong>那么惊艳。我们仍自始至终只在栈上保有<strong>一个</strong>值。要真正看出一些<strong>深度</strong>，我们需要二元运算符。Lox 拥有四种二元<span name="ops">算术</span>运算符：加、减、乘、除。我们干脆一次性把它们都实现。</p>
 <aside name="ops">
 <p>Lox 还有一些别的二元运算符——比较与相等——但它们并不会产出数字，所以我们还没准备好。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  OP_CONSTANT,
+<div class="codehilite"><pre class="insert-before">  OP_CONSTANT,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_ADD</span>,
+<pre class="insert">  <span class="a">OP_ADD</span>,
   <span class="a">OP_SUBTRACT</span>,
   <span class="a">OP_MULTIPLY</span>,
   <span class="a">OP_DIVIDE</span>,
-</pre><pre class="insert-after">
-  OP_NEGATE,
+</pre><pre class="insert-after">  OP_NEGATE,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 
 <p>回到字节码循环，它们这样被执行：</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_ADD</span>:      <span class="a">BINARY_OP</span>(+); <span class="k">break</span>;
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_ADD</span>:      <span class="a">BINARY_OP</span>(+); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_SUBTRACT</span>: <span class="a">BINARY_OP</span>(-); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_MULTIPLY</span>: <span class="a">BINARY_OP</span>(*); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_DIVIDE</span>:   <span class="a">BINARY_OP</span>(/); <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_NEGATE:   push(-pop()); break;
+</pre><pre class="insert-after">      case OP_NEGATE:   push(-pop()); break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>这四条指令之间唯一的区别，是它们最终究竟用了哪种底层 C 运算符来组合那两个运算对象。围绕着那份核心算术表达式的，是一些模版代码，用于把值从栈上取下来、再把结果推回去。当我们之后加入动态类型支持时，这些模版代码会变长。为了不把同一段代码复制四遍，我把它封装到了一个宏里。</p>
-<div class="codehilite"><pre class="insert-before">
-#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
+<div class="codehilite"><pre class="insert-before">#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#define BINARY_OP(op) \</span>
+<pre class="insert"><span class="a">#define BINARY_OP(op) \</span>
 <span class="a">    do { \</span>
 <span class="a">      double b = pop(); \</span>
 <span class="a">      double a = pop(); \</span>
@@ -755,24 +650,19 @@ in <em>run</em>()</div>
 <p>我知道，你完全能<strong>感受到</strong>想要滥用这一点的诱惑，对吧？</p>
 </aside>
 <p>如果你对这一招并不熟悉，外层那个 <code>do while</code> 循环看起来多少有点古怪。这个宏需要展开成一系列语句。为了做个严谨的宏作者，我们希望确保这些语句在宏展开后<strong>全部</strong>落入同一个作用域。想象一下你定义了：</p>
-<div class="codehilite"><pre>
-<span class="a">#define WAKE_UP() makeCoffee(); drinkCoffee();</span>
+<div class="codehilite"><pre><span class="a">#define WAKE_UP() makeCoffee(); drinkCoffee();</span>
 </pre></div>
 <p>然后这样使用它：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">morning</span>) <span class="a">WAKE_UP</span>();
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">morning</span>) <span class="a">WAKE_UP</span>();
 </pre></div>
 <p>你本意是仅当 <code>morning</code> 为真时执行宏体的两条语句。但它会被展开为：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">morning</span>) <span class="i">makeCoffee</span>(); <span class="i">drinkCoffee</span>();;
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">morning</span>) <span class="i">makeCoffee</span>(); <span class="i">drinkCoffee</span>();;
 </pre></div>
 <p>哎呀。<code>if</code> 语句只<strong>搭</strong>上了第一条语句。你或许以为可以用一个块来修一修：</p>
-<div class="codehilite"><pre>
-<span class="a">#define WAKE_UP() { makeCoffee(); drinkCoffee(); }</span>
+<div class="codehilite"><pre><span class="a">#define WAKE_UP() { makeCoffee(); drinkCoffee(); }</span>
 </pre></div>
 <p>这好一点了，但你仍然可能面临：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">morning</span>)
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">morning</span>)
   <span class="a">WAKE_UP</span>();
 <span class="k">else</span>
   <span class="i">sleepIn</span>();
@@ -782,25 +672,20 @@ in <em>run</em>()</div>
 <p>请<strong>仔细</strong>注意那两次弹出的<strong>顺序</strong>。注意我们将首次弹出的运算对象赋值给了 <code>b</code>，而非 <code>a</code>。这看上去是反的。当运算对象<strong>自身</strong>被求值时，左侧先于右侧。这意味着左侧运算对象先于右侧运算对象被推入栈。因此，右侧运算对象会位于栈顶。于是，我们第一次弹出的，便是 <code>b</code>。</p>
 <p>举例而言，若我们编译 <code>3 - 1</code>，那么指令之间的数据流便是这样：</p><img src="image/a-virtual-machine/reverse.png" alt="一连串指令，各指令旁边的栈展示了推入与弹出值如何使它们颠倒顺序。" />
 <p>正如我们在 <code>run()</code> 中的其它宏那样，我们也在函数末尾清理现场。</p>
-<div class="codehilite"><pre class="insert-before">
-#undef READ_CONSTANT
+<div class="codehilite"><pre class="insert-before">#undef READ_CONSTANT
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#undef BINARY_OP</span>
-</pre><pre class="insert-after">
-}
+<pre class="insert"><span class="a">#undef BINARY_OP</span>
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>最后是反汇编器的支持。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_CONSTANT:
+<div class="codehilite"><pre class="insert-before">    case OP_CONSTANT:
       return constantInstruction(&quot;OP_CONSTANT&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_ADD</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_ADD</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_ADD&quot;</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_SUBTRACT</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_SUBTRACT&quot;</span>, <span class="i">offset</span>);
@@ -808,8 +693,7 @@ in <em>disassembleInstruction</em>()</div>
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_MULTIPLY&quot;</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_DIVIDE</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_DIVIDE&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_NEGATE:
+</pre><pre class="insert-after">    case OP_NEGATE:
       return simpleInstruction(&quot;OP_NEGATE&quot;, offset);
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
@@ -817,8 +701,7 @@ in <em>disassembleInstruction</em>()</div>
 <p>这些算术指令的格式与 <code>OP_RETURN</code> 一样简单。尽管算术<strong>运算符</strong>带有运算对象——它们位于栈上——算术<strong>字节码指令</strong>本身却不带。</p>
 <p>让我们把手头这些新指令好好练一练，通过计算一个更复杂的表达式：</p><img src="image/a-virtual-machine/chunk.png" alt="正在被求值的表达式：-((1.2 + 3.4) / 5.6)" />
 <p>在我们已有的示例 chunk 之上，下面是我们用来手工编译那段 AST 为字节码所需的额外指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  int constant = addConstant(&amp;chunk, 1.2);
+<div class="codehilite"><pre class="insert-before">  int constant = addConstant(&amp;chunk, 1.2);
   writeChunk(&amp;chunk, OP_CONSTANT, 123);
   writeChunk(&amp;chunk, constant, 123);
 </pre><div class="source-file"><em>main.c</em><br>
@@ -836,8 +719,7 @@ in <em>main</em>()</div>
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="i">constant</span>, <span class="n">123</span>);
 
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_DIVIDE</span>, <span class="n">123</span>);
-</pre><pre class="insert-after">
-  writeChunk(&amp;chunk, OP_NEGATE, 123);
+</pre><pre class="insert-after">  writeChunk(&amp;chunk, OP_NEGATE, 123);
 
   writeChunk(&amp;chunk, OP_RETURN, 123);
 </pre></div>
@@ -848,12 +730,11 @@ in <em>main</em>()</div>
 <p>在这段小小的示例 chunk 中，栈至多也就两格高，但当我们日后开始将 Lox 源码编译为字节码时，我们将拥有<strong>远为</strong>吃栈的 chunk。在此期间，不妨试着摆弄一下这段手工拼凑的 chunk，去计算不同的嵌套算术表达式，看看值是如何在指令与栈之间流动的。</p>
 <p>你不妨现在就把你想玩的都玩一遍。这是我们<strong>最后</strong>一段手工拼凑的 chunk。下一次我们再回顾字节码时，便是编写一款编译器来<strong>为我们</strong>生成它了。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>15&#8202;.&#8202;4</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>15&#8202;.&#8202;4</small>挑战</a></h2>
 <ol>
 <li>
 <p>对于下列表达式，你会生成怎样的字节码指令序列？</p>
-<div class="codehilite"><pre>
-<span class="n">1</span> * <span class="n">2</span> + <span class="n">3</span>
+<div class="codehilite"><pre><span class="n">1</span> * <span class="n">2</span> + <span class="n">3</span>
 <span class="n">1</span> + <span class="n">2</span> * <span class="n">3</span>
 <span class="n">3</span> - <span class="n">2</span> - <span class="n">1</span>
 <span class="n">1</span> + <span class="n">2</span> * <span class="n">3</span> - <span class="n">4</span> / -<span class="n">5</span>
@@ -862,8 +743,7 @@ in <em>main</em>()</div>
 </li>
 <li>
 <p>若我们真的想要一套极简的指令集，我们可以砍掉 <code>OP_NEGATE</code> 或 <code>OP_SUBTRACT</code> 中的任意一个。展示你所生成的字节码指令序列，分别针对：</p>
-<div class="codehilite"><pre>
-<span class="n">4</span> - <span class="n">3</span> * -<span class="n">2</span>
+<div class="codehilite"><pre><span class="n">4</span> - <span class="n">3</span> * -<span class="n">2</span>
 </pre></div>
 <p>先是不用 <code>OP_NEGATE</code>，然后是不用 <code>OP_SUBTRACT</code>。</p>
 <p>鉴于上述，你认为同时拥有两条指令<strong>有</strong>意义吗？还是<strong>没</strong>有？为什么？还有没有<strong>别</strong>的冗余指令是你会考虑一并删掉的？</p>
@@ -879,29 +759,26 @@ in <em>main</em>()</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：基于栈与基于寄存器的虚拟机" name="设计笔记：基于栈与基于寄存器的虚拟机"><small>15&#8202;.&#8202;5</small>设计笔记：基于栈与基于寄存器的虚拟机</a></h2>
+<h2><a href="#设计笔记：基于栈与基于寄存器的虚拟机" id="设计笔记：基于栈与基于寄存器的虚拟机"><small>15&#8202;.&#8202;5</small>设计笔记：基于栈与基于寄存器的虚拟机</a></h2>
 <p>在本书余下的部分里，我们将一丝不苟地围绕一套栈式字节码指令集来实现一款解释器。外面还有另一族字节码架构——<em>基于寄存器</em> 的。虽说名称吓人，但这些字节码指令并不像诸如 <span name="x64">x64</span> 那样的真实芯片中的寄存器那般难对付。在真实的硬件寄存器下，你通常整个程序仅有寥寥几个寄存器可用，因此你不得不花费大量精力去<strong>高效地使用它们</strong>，并来回搬运数据。</p>
 <aside name="x64">
 <p>基于寄存器的字节码与 SPARC 芯片所支持的<a href="https://en.wikipedia.org/wiki/Register_window"><strong>寄存器窗口</strong></a>有些接近。</p>
 </aside>
 <p>在一台基于寄存器的 VM 中，你仍有栈。临时值依然会被推入栈中，并在不再需要时弹出。最大的不同之处在于，指令可以从栈的<strong>任意</strong>位置读取其输入，并可以将它们的输出存入特定的栈槽里。</p>
 <p>考虑下面这段简短的 Lox 脚本：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="n">1</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="n">1</span>;
 <span class="k">var</span> <span class="i">b</span> = <span class="n">2</span>;
 <span class="k">var</span> <span class="i">c</span> = <span class="i">a</span> + <span class="i">b</span>;
 </pre></div>
 <p>在我们的栈式 VM 中，最后那条语句会被编译成大致如下：</p>
-<div class="codehilite"><pre>
-<span class="i">load</span> &lt;<span class="i">a</span>&gt;  <span class="c">// 读取局部变量 a，并将其推入栈。</span>
+<div class="codehilite"><pre><span class="i">load</span> &lt;<span class="i">a</span>&gt;  <span class="c">// 读取局部变量 a，并将其推入栈。</span>
 <span class="i">load</span> &lt;<span class="i">b</span>&gt;  <span class="c">// 读取局部变量 b，并将其推入栈。</span>
 <span class="i">add</span>       <span class="c">// 弹出两个值，相加，推入结果。</span>
 <span class="i">store</span> &lt;<span class="i">c</span>&gt; <span class="c">// 弹出一个值，并将其存入局部变量 c。</span>
 </pre></div>
 <p>（不必担心你<strong>尚未</strong>充分理解 load 与 store 指令。一旦我们实现<a href="global-variables.html">变量</a>时，我们会对其作更为详尽的讲解。）我们有四条独立的指令。这意味着要在字节码解释循环里转<strong>四</strong>圈、解码并分派<strong>四</strong>条指令。光是代码就至少需要七个字节——四个用于操作码，再加三个用于指明要加载与存储的局部变量的操作数。三次推入，三次弹出。活儿可真不少！</p>
 <p>在一套基于寄存器的指令集里，指令可以直接从局部变量中读取、并直接存入局部变量。上面那段最后一条语句的字节码便是：</p>
-<div class="codehilite"><pre>
-<span class="i">add</span> &lt;<span class="i">a</span>&gt; &lt;<span class="i">b</span>&gt; &lt;<span class="i">c</span>&gt; <span class="c">// 从 a 与 b 读取值，相加，存入 c。</span>
+<div class="codehilite"><pre><span class="i">add</span> &lt;<span class="i">a</span>&gt; &lt;<span class="i">b</span>&gt; &lt;<span class="i">c</span>&gt; <span class="c">// 从 a 与 b 读取值，相加，存入 c。</span>
 </pre></div>
 <p>那条 add 指令本身更大——它带有三个指令操作数，用以定义它在栈中读取输入的位置与写入结果的位置。但由于局部变量<strong>就</strong>栖身于栈上，它可以直接从 <code>a</code> 与 <code>b</code> 中读取，然后将结果直接<strong>存</strong>入 <code>c</code>。</p>
 <p>只需解码并分派<strong>一条</strong>指令，整条指令总共恰好四个字节。解码因额外的操作数而更为复杂，但它<strong>仍然</strong>是一项净胜出。没有推入弹出之类的栈操作。</p>
@@ -917,7 +794,7 @@ in <em>main</em>()</div>
 <a href="scanning-on-demand.html" class="next">
   Next Chapter: &ldquo;Scanning on Demand&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

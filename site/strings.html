@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Strings<small>19</small></a></h3>
 
 <ul>
@@ -56,7 +55,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="types-of-values.html" title="Types of Values" class="prev">←</a>
 <a href="hash-tables.html" title="Hash Tables" class="next">→</a>
 </nav>
@@ -64,9 +63,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Strings<small>19</small></a></h3>
 
 <ul>
@@ -94,25 +92,7 @@
   <div class="number">19</div>
   <h1>Strings</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#字符串" name="字符串"><small>19&#8202;.&#8202;0</small>字符串</a></h1>
+<h1><a href="#字符串" id="字符串"><small>19&#8202;.&#8202;0</small>字符串</a></h1>
 <blockquote>
 <p>&ldquo;啊？是对苦活儿的小小厌恶？&ldquo;医生挑了挑眉。
 &ldquo;可以理解，但大可不必。倒是应当珍视那些乏味至极的差事——它们让身体忙碌， 却让心灵得以解脱。&ldquo;</p>
@@ -124,43 +104,35 @@
 <p>UCSD Pascal，Pascal 的早期实现之一， 就采用了这种上限。它不像 C 那样用一个终止空节来标记字符串的末尾， 而是在字符串开头放一个长度值。由于 UCSD 只用一个字节存放长度， 字符串就不能超过 255 个字符长。</p><img src="image/strings/pstring.png" alt="Pascal 字符串 'hello'， 前面有一个长度字节 5。" />
 </aside>
 <p>我们需要一种支持大小不一的值的方法， 有时其大小的跨度还非常巨大。这正是堆上动态分配的存在意义。我们可以分配任意多少字节， 并收到一个指针， 之后就凭这个指针来在 VM 中追踪该值的流动。</p>
-<h2><a href="#值与对象" name="值与对象"><small>19&#8202;.&#8202;1</small>值与对象</a></h2>
+<h2><a href="#值与对象" id="值与对象"><small>19&#8202;.&#8202;1</small>值与对象</a></h2>
 <p>大值、 大小不一的值用堆来存放， 小的、 原子型的值用栈来存放—— 这便形成了一个两级的表示法。你能存入某个变量或者从某条表达式返回的每一个 Lox 值， 都会是一个 Value。对于数字这种小而定长的类型而言， 其载荷 直接存放于 Value 结构体本身之中。</p>
 <p>若该对象较大， 其数据则栖身于堆上。于是 <em>Value</em> 的载荷变成了一个指向那团内存的<strong>指针</strong>。我们最终会在 clox 中拥有若干种堆分配的类型： 字符串、 实例、 函数， 总而言之你能想到的都算。每一种类型有其各自独有的数据， 但也有一些 <a href="garbage-collection.html">我们未来的垃圾回收器</a> 会用于管理它们的内存的共同状态。</p><img src="image/strings/value.png" class="wide" alt=" 数字与 obj 值的字段布局。" />
 <p>我们将这一共同表示称作 <span name="short">&ldquo;Obj&rdquo;</span>。每一个状态栖身于堆上的 Lox 值都是一枚 Obj。于是我们可以用一个新的 ValueType 分支来涵盖所有堆分配的类型。</p>
 <aside name="short">
 <p>&ldquo;Obj&rdquo; 是 &ldquo;object&rdquo; 的缩写， 这自然不用多费口舌。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  VAL_NUMBER,
+<div class="codehilite"><pre class="insert-before">  VAL_NUMBER,
 </pre><div class="source-file"><em>value.h</em><br>
 in enum <em>ValueType</em></div>
-<pre class="insert">
-  <span class="a">VAL_OBJ</span>
-</pre><pre class="insert-after">
-} ValueType;
+<pre class="insert">  <span class="a">VAL_OBJ</span>
+</pre><pre class="insert-after">} ValueType;
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em>, in enum <em>ValueType</em></div>
 
 <p>当一枚 Value 的类型为 <code>VAL_OBJ</code> 时， 其载荷为一个指向堆内存的指针， 于是我们再向联合中添上一个相应的分支。</p>
-<div class="codehilite"><pre class="insert-before">
-    double number;
+<div class="codehilite"><pre class="insert-before">    double number;
 </pre><div class="source-file"><em>value.h</em><br>
 in struct <em>Value</em></div>
-<pre class="insert">
-    <span class="t">Obj</span>* <span class="i">obj</span>;
-</pre><pre class="insert-after">
-  } as;<span name="as"> </span>
+<pre class="insert">    <span class="t">Obj</span>* <span class="i">obj</span>;
+</pre><pre class="insert-after">  } as;<span name="as"> </span>
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em>, in struct <em>Value</em></div>
 
 <p>与对待其他值类型一样， 我们封装了几个便利的宏来处理 Obj 值。</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_NUMBER(value)  ((value).type == VAL_NUMBER)
+<div class="codehilite"><pre class="insert-before">#define IS_NUMBER(value)  ((value).type == VAL_NUMBER)
 </pre><div class="source-file"><em>value.h</em><br>
 add after struct <em>Value</em></div>
-<pre class="insert">
-<span class="a">#define IS_OBJ(value)     ((value).type == VAL_OBJ)</span>
+<pre class="insert"><span class="a">#define IS_OBJ(value)     ((value).type == VAL_OBJ)</span>
 </pre><pre class="insert-after">
 
 #define AS_BOOL(value)    ((value).as.boolean)
@@ -168,23 +140,18 @@ add after struct <em>Value</em></div>
 <div class="source-file-narrow"><em>value.h</em>, add after struct <em>Value</em></div>
 
 <p>若所给 Value 为一枚 Obj， 这段代码求值为 <code>true</code>。若如此， 我们便可以使用这个：</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_OBJ(value)     ((value).type == VAL_OBJ)
+<div class="codehilite"><pre class="insert-before">#define IS_OBJ(value)     ((value).type == VAL_OBJ)
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_OBJ(value)     ((value).as.obj)</span>
-</pre><pre class="insert-after">
-#define AS_BOOL(value)    ((value).as.boolean)
+<pre class="insert"><span class="a">#define AS_OBJ(value)     ((value).as.obj)</span>
+</pre><pre class="insert-after">#define AS_BOOL(value)    ((value).as.boolean)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 
 <p>它从 Value 中抽出 Obj 指针。 我们也可以反向操作。</p>
-<div class="codehilite"><pre class="insert-before">
-#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
+<div class="codehilite"><pre class="insert-before">#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})</span>
+<pre class="insert"><span class="a">#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})</span>
 </pre><pre class="insert-after">
 
 typedef struct {
@@ -192,7 +159,7 @@ typedef struct {
 <div class="source-file-narrow"><em>value.h</em></div>
 
 <p>它接受一个裸 Obj 指针， 并将其包入一枚完整的 Value 之中。</p>
-<h2><a href="#结构体继承" name="结构体继承"><small>19&#8202;.&#8202;2</small>结构体继承</a></h2>
+<h2><a href="#结构体继承" id="结构体继承"><small>19&#8202;.&#8202;2</small>结构体继承</a></h2>
 <p>每一个堆分配的值都是一枚 Obj， 但 <span name="objs"> 这些 Obj</span> 并不全都一样。对于字符串， 我们需要字符数组。等到实例的时候， 它们又需要自己的数据字段。一个函数对象则需要它的字节码块。那么， 对于这些各不相同的载荷与大小， 我们该如何应对？由于各种类型的大小参不齐， 我们无法再像 Value 那样使用联合。</p>
 <aside name="objs">
 <p>不， 我也不知道 &ldquo;objs&rdquo; 该怎样发音才好。总感觉里面应该有个元音才对。</p>
@@ -200,23 +167,19 @@ typedef struct {
 <p>取而代之， 我们将使用另一种技巧。它已经存在了很久很久， 久到了 C 标准的规范都为它刻意开了一道门， 但我不知道它有没有一个权威的名字。它是 <a href="https://en.wikipedia.org/wiki/Type_punning">类型双关</a> 的一个例子， 但这个词义太宽泛了。在没有更好主意的情况下， 我们将<em>其</em>称作结构体<strong>继承</strong>（struct inheritance）， 因为它倚赖于结构体， 并且大致沿着面向对象语言中单继承状态的运作方式。</p>
 <p>与标签联合类似， 每一枚 Obj 都以一个标签字段开头， 用于标识它是哪一种对象—— 字符串、 实例等等。在那之后便是各自的载荷字段。我们没有为每一种类型使用带各分支的联合， 而是让每一种类型各自成为一个独立的结构体。其中的难点在于， 由于 C 本身并没有继承或多态的概念， 我们如何统一地对待这些结构体。我很快就会解释这一点， 但先让我们把那些铺垫性的事情搞定。</p>
 <p>&ldquo;Obj&rdquo; 这个名字本身指向一个结构体， 该结构体包含了所有对象类型共用的状态。它有点类似对象的 &rdquo; 基类&ldquo;。由于 value 与 object 之间存在某些循环依赖， 我们在 &ldquo;value&rdquo; 模块中对它作了前置声明。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">struct</span> <span class="t">Obj</span> <span class="t">Obj</span>;
+<pre class="insert"><span class="k">typedef</span> <span class="k">struct</span> <span class="t">Obj</span> <span class="t">Obj</span>;
 
-</pre><pre class="insert-after">
-typedef enum {
+</pre><pre class="insert-after">typedef enum {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 
 <p>而其本体的定义 则栖身 于一个新模块中。</p>
 <div class="codehilite"><div class="source-file"><em>object.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_object_h</span>
+<pre><span class="a">#ifndef clox_object_h</span>
 <span class="a">#define clox_object_h</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
@@ -231,8 +194,7 @@ create new file</div>
 <div class="source-file-narrow"><em>object.h</em>, create new file</div>
 
 <p>眼下， 它只装有一个类型标签。很快， 我们会向其中添加其他用于内存管理的登记信息。那个类型枚举是这样 的：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;value.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;value.h&quot;
 </pre><div class="source-file"><em>object.h</em></div>
 <pre class="insert">
 
@@ -246,8 +208,7 @@ struct Obj {
 <div class="source-file-narrow"><em>object.h</em></div>
 
 <p>显然， 在之后我们添加更多堆分配的类型之后， 这会变得更为有用。由于我们会频繁访问这些标签类型， 值得封装一个小宏来从给定的 Value 中抽出对象类型标签。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;value.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;value.h&quot;
 </pre><div class="source-file"><em>object.h</em></div>
 <pre class="insert">
 
@@ -260,11 +221,9 @@ typedef enum {
 
 <p>这便是我们的基础了。</p>
 <p>现在， 我们在其之上搭起字符串。字符串的载荷于一个单独的结构体中定义。 同样地， 我们需要对它作前置声明。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct Obj Obj;
+<div class="codehilite"><pre class="insert-before">typedef struct Obj Obj;
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">struct</span> <span class="t">ObjString</span> <span class="t">ObjString</span>;
+<pre class="insert"><span class="k">typedef</span> <span class="k">struct</span> <span class="t">ObjString</span> <span class="t">ObjString</span>;
 </pre><pre class="insert-after">
 
 typedef enum {
@@ -272,8 +231,7 @@ typedef enum {
 <div class="source-file-narrow"><em>value.h</em></div>
 
 <p>本体的定义则与 Obj 同居。</p>
-<div class="codehilite"><pre class="insert-before">
-};
+<div class="codehilite"><pre class="insert-before">};
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>Obj</em></div>
 <pre class="insert">
@@ -301,8 +259,7 @@ add after struct <em>Obj</em></div>
 </aside>
 <p>对于一个 <code>ObjString*</code>， 你可以安全地将其转换为 <code>Obj*</code>， 并然后从其中访问 <code>type</code> 字段。每一个 ObjString 在面向对象编程的意义上 &rdquo; 是 &rdquo; 一枚 Obj。等到之后我们添加其他对象类型时， 每一个结构体都会将一个 Obj 作为它的第一个字段。 任何想要统一处理所有对象的代码都可以将它们视为基类 <code>Obj*</code>， 并对其之后可能存在的其他字段视而不见。</p>
 <p>你也 可以往反方向走： 对于一个 <code>Obj*</code>， 你可以将它 &rdquo; 下转型&rdquo; 为 <code>ObjString*</code>。 当然， 你需要确保手里那个 <code>Obj*</code> 指针确实指向的是一个 ObjString 的 <code>obj</code> 字段。否则， 你就是在不安全地重新诠释内存中的随机比特了。为了检测这一下转型是否安全， 我们再添一个宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
+<div class="codehilite"><pre class="insert-before">#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
 </pre><div class="source-file"><em>object.h</em></div>
 <pre class="insert">
 
@@ -314,30 +271,25 @@ typedef enum {
 <div class="source-file-narrow"><em>object.h</em></div>
 
 <p>它接受的是 Value 而不是裸 <code>Obj*</code>， 因为 VM 中大多数代码都是在与 Values 打交道。它倚赖于这个内联函数：</p>
-<div class="codehilite"><pre class="insert-before">
-};
+<div class="codehilite"><pre class="insert-before">};
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjString</em></div>
-<pre class="insert">
-<span class="k">static</span> <span class="k">inline</span> <span class="t">bool</span> <span class="i">isObjType</span>(<span class="t">Value</span> <span class="i">value</span>, <span class="t">ObjType</span> <span class="i">type</span>) {
+<pre class="insert"><span class="k">static</span> <span class="k">inline</span> <span class="t">bool</span> <span class="i">isObjType</span>(<span class="t">Value</span> <span class="i">value</span>, <span class="t">ObjType</span> <span class="i">type</span>) {
   <span class="k">return</span> <span class="a">IS_OBJ</span>(<span class="i">value</span>) &amp;&amp; <span class="a">AS_OBJ</span>(<span class="i">value</span>)-&gt;<span class="i">type</span> == <span class="i">type</span>;
 }
 
-</pre><pre class="insert-after">
-#endif
+</pre><pre class="insert-after">#endif
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjString</em></div>
 
 <p>小测 试： 为什么不直接将这个函数的函体放进宏里？它与其他那些有什么不同？对了， 这是因为该函体使用 <code>value</code> 了两次。宏的展开方式是将参数表达式插 入每一次参数名出现的位置。若一个宏在多处使用了同一个参数， 那个表达式会 被求值多次。</p>
 <p>若表达式带有副作用， 那就糟了。如果我们把 <code>isObjType()</code> 的函体塞进宏里， 然后你写了这样一句：</p>
-<div class="codehilite"><pre>
-<span class="a">IS_STRING</span>(<span class="a">POP</span>())
+<div class="codehilite"><pre><span class="a">IS_STRING</span>(<span class="a">POP</span>())
 </pre></div>
 <p>它就会从栈顶弹出两个值！使用一个函数就能修复这一点。</p>
 <p>只要我们在每次创建某种类型的 Obj 时都正确地设定类型标签， 这个宏就会告诉 我们何时可以安全地将一枚 Value 转换为某种具体的对象类型。 我们可以这样去做：</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
+<div class="codehilite"><pre class="insert-before">#define IS_STRING(value)       isObjType(value, OBJ_STRING)
 </pre><div class="source-file"><em>object.h</em></div>
 <pre class="insert">
 
@@ -350,24 +302,20 @@ typedef enum {
 <div class="source-file-narrow"><em>object.h</em></div>
 
 <p>这两个宏接受的是一枚预期装有一个有效 ObjString 的 Value。第一个返回 <code>ObjString*</code> 指针。第二个则走过那个对象返回其字符数组本身， 因为那通常正是我们最终会需要的那个东西。</p>
-<h2><a href="#字符串" name="字符串"><small>19&#8202;.&#8202;3</small>字符串</a></h2>
+<h2><a href="#字符串" id="字符串"><small>19&#8202;.&#8202;3</small>字符串</a></h2>
 <p>好， 我们的 VM 现在能够表示字符串值了。是时候把字符串本身纳入这门语言了。 照例， 我们从前端开始。词法分析器已经会产生字符串字面量的 token 了， 于是接下来该解析器上场。</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_STRING</span>]        = {<span class="i">string</span>,   <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_STRING</span>]        = {<span class="i">string</span>,   <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
 <p>当解析器碰上一个字符串 token 时， 它调用这个解析函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>number</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">string</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">string</span>() {
   <span class="i">emitConstant</span>(<span class="a">OBJ_VAL</span>(<span class="i">copyString</span>(<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">start</span> + <span class="n">1</span>,
                                   <span class="i">parser</span>.<span class="i">previous</span>.<span class="i">length</span> - <span class="n">2</span>)));
 }
@@ -379,36 +327,29 @@ add after <em>number</em>()</div>
 <p>若 Lox 支持字符串转义序列比如 <code>\n</code>， 我们会在此处翻译它们。由于 Lox 并不支持， 我们便可以原样取走那些字符。</p>
 </aside>
 <p>为了创建该字符串， 我们使用 <code>copyString()</code>， 它声明于 <code>object.h</code> 中。</p>
-<div class="codehilite"><pre class="insert-before">
-};
+<div class="codehilite"><pre class="insert-before">};
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjString</em></div>
-<pre class="insert">
-<span class="t">ObjString</span>* <span class="i">copyString</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>);
+<pre class="insert"><span class="t">ObjString</span>* <span class="i">copyString</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>);
 
-</pre><pre class="insert-after">
-static inline bool isObjType(Value value, ObjType type) {
+</pre><pre class="insert-after">static inline bool isObjType(Value value, ObjType type) {
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjString</em></div>
 
 <p>编译器模块需要包含它。</p>
-<div class="codehilite"><pre class="insert-before">
-#define clox_compiler_h
+<div class="codehilite"><pre class="insert-before">#define clox_compiler_h
 
 </pre><div class="source-file"><em>compiler.h</em></div>
-<pre class="insert">
-<span class="a">#include &quot;object.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;vm.h&quot;
+<pre class="insert"><span class="a">#include &quot;object.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;vm.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.h</em></div>
 
 <p>我们那个 &ldquo;object&rdquo; 模块得到一个实现文件， 我们在其中定义了这个新函数。</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre><span class="a">#include &lt;stdio.h&gt;</span>
 <span class="a">#include &lt;string.h&gt;</span>
 
 <span class="a">#include &quot;memory.h&quot;</span>
@@ -426,16 +367,13 @@ create new file</div>
 <div class="source-file-narrow"><em>object.c</em>, create new file</div>
 
 <p>首先， 我们在堆上分配一个新数组， 大小仅足以装下字符串的各个字符与末尾 <span name="terminator"> 的终止字节</span>。此处使用这个低层的宏， 它根据所给的元素类型与数量分配一个数组：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 
 </pre><div class="source-file"><em>memory.h</em></div>
-<pre class="insert">
-<span class="a">#define ALLOCATE(type, count) \</span>
+<pre class="insert"><span class="a">#define ALLOCATE(type, count) \</span>
 <span class="a">    (type*)reallocate(NULL, 0, sizeof(type) * (count))</span>
 
-</pre><pre class="insert-after">
-#define GROW_CAPACITY(capacity) \
+</pre><pre class="insert-after">#define GROW_CAPACITY(capacity) \
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em></div>
 
@@ -447,12 +385,10 @@ create new file</div>
 <p>你或许会 奇怪， 为什么 ObjString 不能仅仅回指到源字符串中的那些原始字符。一些 ObjString 会在运行时作为字符串运算的结果被动态创建， 比如拼接。那些字符串显然需要在堆上动态分配内存来装那些字符， 这意味着当该字符串不再被需要时， 它需要释放那些内存。</p>
 <p>若我们为一条字符串字面量也弄一枚 ObjString， 并试图去释放它的那段指向源码字符串中间的字符数组， 糟糕的事情就会发生。所以， 对于字面量， 我们抢先将那些字符复制到堆上。这样， 每一枚 ObjString 都可靠地拥有自己的字符数组， 并可以将其释放。</p>
 <p>创建一枚字符串对象的真正工作发生于这个函数中：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;vm.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;vm.h&quot;
 
 </pre><div class="source-file"><em>object.c</em></div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">ObjString</span>* <span class="i">allocateString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>) {
+<pre class="insert"><span class="k">static</span> <span class="t">ObjString</span>* <span class="i">allocateString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>) {
   <span class="t">ObjString</span>* <span class="i">string</span> = <span class="a">ALLOCATE_OBJ</span>(<span class="t">ObjString</span>, <span class="a">OBJ_STRING</span>);
   <span class="i">string</span>-&gt;<span class="i">length</span> = <span class="i">length</span>;
   <span class="i">string</span>-&gt;<span class="i">chars</span> = <span class="i">chars</span>;
@@ -462,8 +398,7 @@ create new file</div>
 <div class="source-file-narrow"><em>object.c</em></div>
 
 <p>它在堆上 创建一枚 ObjString， 接着初始化其各字段。它有些类似面向对象编程语言中的构造器。由于这一点， 它首先会调用 &rdquo; 基类&rdquo; 构造器来初始化 Obj 的状态， 所用的是一个新宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;vm.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;vm.h&quot;
 </pre><div class="source-file"><em>object.c</em></div>
 <pre class="insert">
 
@@ -479,8 +414,7 @@ static ObjString* allocateString(char* chars, int length) {
 <aside name="factored">
 <p>我承认本章有一大片辅助函数与宏需要去穿越。我力图让代码的分拆优雅， 但这会导致许多小小的函数四散分布。它们在之后被复用时便会回本。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-#define ALLOCATE_OBJ(type, objectType) \
+<div class="codehilite"><pre class="insert-before">#define ALLOCATE_OBJ(type, objectType) \
     (type*)allocateObject(sizeof(type), objectType)
 </pre><div class="source-file"><em>object.c</em></div>
 <pre class="insert">
@@ -501,26 +435,21 @@ static ObjString* allocateString(char* chars, int length) {
 <aside name="viola"><img src="image/strings/viola.png" class="above" alt="一把中提琴。" />
 <p>千万别把 &ldquo;voilà&rdquo; 与 &ldquo;viola&rdquo; 弄混了。一个意思是 &rdquo; 就这样 &ldquo;， 另一个是一件弦乐器—— 小提琴与大提琴之间的中间孩。 对了， 为了提一嘴这个， 我确实花了两个小时来画一把中提琴。</p>
 </aside>
-<h2><a href="#字符串上的运算" name="字符串上的运算"><small>19&#8202;.&#8202;4</small>字符串上的运算</a></h2>
+<h2><a href="#字符串上的运算" id="字符串上的运算"><small>19&#8202;.&#8202;4</small>字符串上的运算</a></h2>
 <p>我们那些花哨的字符串就在那里， 但它们还不怎么能干什么。一个良好的起点是让现有的打印代码不在碰上新的值类型时崩溃。</p>
-<div class="codehilite"><pre class="insert-before">
-    case VAL_NUMBER: printf(&quot;%g&quot;, AS_NUMBER(value)); break;
+<div class="codehilite"><pre class="insert-before">    case VAL_NUMBER: printf(&quot;%g&quot;, AS_NUMBER(value)); break;
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>printValue</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">VAL_OBJ</span>: <span class="i">printObject</span>(<span class="i">value</span>); <span class="k">break</span>;
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="k">case</span> <span class="a">VAL_OBJ</span>: <span class="i">printObject</span>(<span class="i">value</span>); <span class="k">break</span>;
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>()</div>
 
 <p>若值是一个堆分配的对象， 它会将工作转交给 &ldquo;object&rdquo; 模块中的一个辅助函数。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjString* copyString(const char* chars, int length);
+<div class="codehilite"><pre class="insert-before">ObjString* copyString(const char* chars, int length);
 </pre><div class="source-file"><em>object.h</em><br>
 add after <em>copyString</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">printObject</span>(<span class="t">Value</span> <span class="i">value</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">printObject</span>(<span class="t">Value</span> <span class="i">value</span>);
 </pre><pre class="insert-after">
 
 static inline bool isObjType(Value value, ObjType type) {
@@ -530,8 +459,7 @@ static inline bool isObjType(Value value, ObjType type) {
 <p>其实现看起来如此：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>copyString</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">printObject</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">void</span> <span class="i">printObject</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="k">switch</span> (<span class="a">OBJ_TYPE</span>(<span class="i">value</span>)) {
     <span class="k">case</span> <span class="a">OBJ_STRING</span>:
       <span class="i">printf</span>(<span class="s">&quot;%s&quot;</span>, <span class="a">AS_CSTRING</span>(<span class="i">value</span>));
@@ -546,34 +474,28 @@ add after <em>copyString</em>()</div>
 <p>看吧， 给字符串添加终止符终于派上用场了。</p>
 </aside>
 <p>相等性运算符也需要从容地应对字符串。试想一下：</p>
-<div class="codehilite"><pre>
-<span class="s">&quot;string&quot;</span> == <span class="s">&quot;string&quot;</span>
+<div class="codehilite"><pre><span class="s">&quot;string&quot;</span> == <span class="s">&quot;string&quot;</span>
 </pre></div>
 <p>这是两个相同的字符串字面量。编译器会进行两次各自的 <code>copyString()</code> 调用， 创建两个各不相同的 ObjString 对象， 并将其作为两条常量存进 chunk。它们是堆中两个不同的对象。但我们的用户（ 从而也是我们自己） 期待字符串具有值相等性。 上述表达式应该求值为 <code>true</code>。这需要一点特殊的支持。</p>
-<div class="codehilite"><pre class="insert-before">
-    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+<div class="codehilite"><pre class="insert-before">    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>valuesEqual</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">VAL_OBJ</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">VAL_OBJ</span>: {
       <span class="t">ObjString</span>* <span class="i">aString</span> = <span class="a">AS_STRING</span>(<span class="i">a</span>);
       <span class="t">ObjString</span>* <span class="i">bString</span> = <span class="a">AS_STRING</span>(<span class="i">b</span>);
       <span class="k">return</span> <span class="i">aString</span>-&gt;<span class="i">length</span> == <span class="i">bString</span>-&gt;<span class="i">length</span> &amp;&amp;
           <span class="i">memcmp</span>(<span class="i">aString</span>-&gt;<span class="i">chars</span>, <span class="i">bString</span>-&gt;<span class="i">chars</span>,
                  <span class="i">aString</span>-&gt;<span class="i">length</span>) == <span class="n">0</span>;
     }
-</pre><pre class="insert-after">
-    default:         return false; // Unreachable.
+</pre><pre class="insert-after">    default:         return false; // Unreachable.
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
 
 <p>若两个值都是字符串， 它们相等当且仅当 它们的字符数组包含同样的字符， 与它们是两个各自独立的对象还是 完全同一个毫无关系。这意味 着字符串的相等比较比其他类型要慢， 因为它必须走遍整条字符串。我们会 <a href="hash-tables.html"> 之后 </a> 对这一点加以改进， 但眼下这种做法给了我们 正确的语义。</p>
 <p>最后， 为了能使用 <code>memcmp()</code> 以及 &ldquo;object&rdquo; 模块中的新东西， 我们需要几个 include。这里：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdio.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdio.h&gt;
 </pre><div class="source-file"><em>value.c</em></div>
-<pre class="insert">
-<span class="a">#include &lt;string.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;string.h&gt;</span>
 </pre><pre class="insert-after">
 
 #include &quot;memory.h&quot;
@@ -581,28 +503,23 @@ in <em>valuesEqual</em>()</div>
 <div class="source-file-narrow"><em>value.c</em></div>
 
 <p>还有这里：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;string.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;string.h&gt;
 
 </pre><div class="source-file"><em>value.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;object.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;memory.h&quot;
+<pre class="insert"><span class="a">#include &quot;object.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;memory.h&quot;
 #include &quot;value.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em></div>
 
-<h3><a href="#拼接" name="拼接"><small>19&#8202;.&#8202;4&#8202;.&#8202;1</small>拼接</a></h3>
+<h3><a href="#拼接" id="拼接"><small>19&#8202;.&#8202;4&#8202;.&#8202;1</small>拼接</a></h3>
 <p>功能齐备的语言为字符串提供了一大堆操作——对单个字符的访问、字符串的长度、大小写转换、 分隔、拼接、搜索等等。当你实现自己的语言时， 你大概都会需要。但对于本书， 我们保持极简。</p>
 <p>我们对字符串支持的唯一一项有意思的运算是 <code>+</code>。若你用这个运算符对两个字符串进行操作， 它会产出一条由两个操作数拼接而成的新字符串。由于 Lox 是动态类型的， 我们无法在编译期知道应该采用哪种行为， 因为我们要到运行时才知道操作数的类型。于是 <code>OP_ADD</code> 指令会在运行时动态检查操作数，并选择正确的操作。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_LESS:     BINARY_OP(BOOL_VAL, &lt;); break;
+<div class="codehilite"><pre class="insert-before">      case OP_LESS:     BINARY_OP(BOOL_VAL, &lt;); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_ADD</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_ADD</span>: {
         <span class="k">if</span> (<span class="a">IS_STRING</span>(<span class="i">peek</span>(<span class="n">0</span>)) &amp;&amp; <span class="a">IS_STRING</span>(<span class="i">peek</span>(<span class="n">1</span>))) {
           <span class="i">concatenate</span>();
         } <span class="k">else</span> <span class="k">if</span> (<span class="a">IS_NUMBER</span>(<span class="i">peek</span>(<span class="n">0</span>)) &amp;&amp; <span class="a">IS_NUMBER</span>(<span class="i">peek</span>(<span class="n">1</span>))) {
@@ -616,8 +533,7 @@ replace 1 line</div>
         }
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
+</pre><pre class="insert-after">      case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 
@@ -629,8 +545,7 @@ replace 1 line</div>
 <p>为了拼接字符串， 我们定义了一个新函数。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>isFalsey</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">concatenate</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">concatenate</span>() {
   <span class="t">ObjString</span>* <span class="i">b</span> = <span class="a">AS_STRING</span>(<span class="i">pop</span>());
   <span class="t">ObjString</span>* <span class="i">a</span> = <span class="a">AS_STRING</span>(<span class="i">pop</span>());
 
@@ -648,11 +563,9 @@ add after <em>isFalsey</em>()</div>
 
 <p>它有些冗长， 这便是与字符串打交道的 C 代码的一贯作风。首先， 我们根据两个操作数的长度计算出结果字符串的长度。接着我们为结果分配一段字符数组， 再将那两半分别拷贝进去。一如既往， 我们慎重地确保字符串已被终止。</p>
 <p>为能调用 <code>memcpy()</code>，VM 需要一个 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdio.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdio.h&gt;
 </pre><div class="source-file"><em>vm.c</em></div>
-<pre class="insert">
-<span class="a">#include &lt;string.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;string.h&gt;</span>
 </pre><pre class="insert-after">
 
 #include &quot;common.h&quot;
@@ -660,23 +573,19 @@ add after <em>isFalsey</em>()</div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
 <p>最后， 我们产出一枚 ObjString 来装那些字符。 这一次我们使用了一个新函数， <code>takeString()</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-};
+<div class="codehilite"><pre class="insert-before">};
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjString</em></div>
-<pre class="insert">
-<span class="t">ObjString</span>* <span class="i">takeString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>);
-</pre><pre class="insert-after">
-ObjString* copyString(const char* chars, int length);
+<pre class="insert"><span class="t">ObjString</span>* <span class="i">takeString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>);
+</pre><pre class="insert-after">ObjString* copyString(const char* chars, int length);
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjString</em></div>
 
 <p>实现如此：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>allocateString</em>()</div>
-<pre>
-<span class="t">ObjString</span>* <span class="i">takeString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>) {
+<pre><span class="t">ObjString</span>* <span class="i">takeString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>) {
   <span class="k">return</span> <span class="i">allocateString</span>(<span class="i">chars</span>, <span class="i">length</span>);
 }
 </pre></div>
@@ -685,21 +594,17 @@ add after <em>allocateString</em>()</div>
 <p>之前那个 <code>copyString()</code> 函数假设它 不能取得你传给它的那些 字符的所有权。取而代之， 它会保守地在堆上创建一份字符的拷贝， 由 ObjString 去拥有。对于那些传入的字符位于源字符串中间的字面量而言，这是正确的做法。</p>
 <p>但对于拼接， 我们已经在堆上动态分配了一段字符数组。在其上再复制一份会是冗余的（ 而且意味着 <code>concatenate()</code> 必须记得去释放它的那一份拷贝）。取而代之， 这个函数会主动接管你给它的那条字符串的所有权。</p>
 <p>一如既往， 要把这些功能拼在一起， 还需要几个 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;debug.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;debug.h&quot;
 </pre><div class="source-file"><em>vm.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;object.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;object.h&quot;</span>
 <span class="a">#include &quot;memory.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;vm.h&quot;
+</pre><pre class="insert-after">#include &quot;vm.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
-<h2><a href="#释放对象" name="释放对象"><small>19&#8202;.&#8202;5</small>释放对象</a></h2>
+<h2><a href="#释放对象" id="释放对象"><small>19&#8202;.&#8202;5</small>释放对象</a></h2>
 <p>请看这条看似人畜无害的表达式：</p>
-<div class="codehilite"><pre>
-<span class="s">&quot;st&quot;</span> + <span class="s">&quot;ri&quot;</span> + <span class="s">&quot;ng&quot;</span>
+<div class="codehilite"><pre><span class="s">&quot;st&quot;</span> + <span class="s">&quot;ri&quot;</span> + <span class="s">&quot;ng&quot;</span>
 </pre></div>
 <p>当编译器咬碎这条表达式时， 它会为那三个字符串字面量各自分配一个 ObjString， 将它们存入 chunk 的常量表中， 并生成这段 <span name="stack"> 字节码</span>：</p>
 <aside name="stack">
@@ -724,91 +629,72 @@ add after <em>allocateString</em>()</div>
 <p>今天， 我们至少应该做一件最低限度的 事： 避免泄漏内存——确保 VM 能找到每一个已经分配的对象， 即便是 Lox 程序本身已不再引用它们的情况。 有许多复杂的方法可以被高级内存管理器用于追踪对象的分配与状态。 我们将采取最简而实用的做法。</p>
 <p>我们会创建一条存储所有 Obj 的链表。VM 可以遍历这条链表， 以找到每一个已在堆上分配的对象， 无视是否仍然有程序或栈上的引用指向它们。</p>
 <p>我们本可以单独定义一个链表节点的结构体， 但那样我们就也必须为它分配空间。取而代之， 我们将使用侵入式链表—— Obj 结构本身即充当链表节点。每一个 Obj 都拥有一个指向链表中下一个 Obj 的指针。</p>
-<div class="codehilite"><pre class="insert-before">
-struct Obj {
+<div class="codehilite"><pre class="insert-before">struct Obj {
   ObjType type;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>Obj</em></div>
-<pre class="insert">
-  <span class="k">struct</span> <span class="t">Obj</span>* <span class="i">next</span>;
-</pre><pre class="insert-after">
-};
+<pre class="insert">  <span class="k">struct</span> <span class="t">Obj</span>* <span class="i">next</span>;
+</pre><pre class="insert-after">};
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>Obj</em></div>
 
 <p>VM 存了一个指向链表头部的指针。</p>
-<div class="codehilite"><pre class="insert-before">
-  Value* stackTop;
+<div class="codehilite"><pre class="insert-before">  Value* stackTop;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">Obj</span>* <span class="i">objects</span>;
-</pre><pre class="insert-after">
-} VM;
+<pre class="insert">  <span class="t">Obj</span>* <span class="i">objects</span>;
+</pre><pre class="insert-after">} VM;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 
 <p>当我们首次初始化 VM 时， 还没有任何已分配的对象。</p>
-<div class="codehilite"><pre class="insert-before">
-  resetStack();
+<div class="codehilite"><pre class="insert-before">  resetStack();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">objects</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">vm</span>.<span class="i">objects</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
 
 <p>每当我们分配一枚 Obj 时， 我们会将它插入链表。</p>
-<div class="codehilite"><pre class="insert-before">
-  object-&gt;type = type;
+<div class="codehilite"><pre class="insert-before">  object-&gt;type = type;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateObject</em>()</div>
 <pre class="insert">
 
   <span class="i">object</span>-&gt;<span class="i">next</span> = <span class="i">vm</span>.<span class="i">objects</span>;
   <span class="i">vm</span>.<span class="i">objects</span> = <span class="i">object</span>;
-</pre><pre class="insert-after">
-  return object;
+</pre><pre class="insert-after">  return object;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateObject</em>()</div>
 
 <p>由于这是一条单链表， 最容易插入的位置是头部。这样， 我们就不需要同时存一个指向尾部的指针并不断更新它。</p>
 <p>&ldquo;object&rdquo; 模块正在直接使用来自 &ldquo;vm&rdquo; 模块的全局 <code>vm</code> 变量， 于是我们需要将该变量对外暴露。</p>
-<div class="codehilite"><pre class="insert-before">
-} InterpretResult;
+<div class="codehilite"><pre class="insert-before">} InterpretResult;
 
 </pre><div class="source-file"><em>vm.h</em><br>
 add after enum <em>InterpretResult</em></div>
-<pre class="insert">
-<span class="k">extern</span> <span class="a">VM</span> <span class="i">vm</span>;
+<pre class="insert"><span class="k">extern</span> <span class="a">VM</span> <span class="i">vm</span>;
 
-</pre><pre class="insert-after">
-void initVM();
+</pre><pre class="insert-after">void initVM();
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, add after enum <em>InterpretResult</em></div>
 
 <p>最终， 垃圾回收器会在 VM 还在运行的 时候就去释放内存。但即使如此， 当用户的程序完成时， 仍会有许多不再使用的对象滞留在内存中。VM 也应 当把它们一并清理掉。</p>
 <p>其中并不存在什么精巧的逻辑。一旦程序跑完， 我们便可以把<strong>所有</strong>的对象都释放掉。 我们现在就可以 也应该把这件事落到实处。</p>
-<div class="codehilite"><pre class="insert-before">
-void freeVM() {
+<div class="codehilite"><pre class="insert-before">void freeVM() {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>freeVM</em>()</div>
-<pre class="insert">
-  <span class="i">freeObjects</span>();
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">freeObjects</span>();
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>freeVM</em>()</div>
 
 <p>我们早先<a href="a-virtual-machine.html#an-instruction-execution-machine"> 定义的 </a> 那个空空如也的函数终于派上用场了！它调用这个：</p>
-<div class="codehilite"><pre class="insert-before">
-void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+<div class="codehilite"><pre class="insert-before">void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 </pre><div class="source-file"><em>memory.h</em><br>
 add after <em>reallocate</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">freeObjects</span>();
+<pre class="insert"><span class="t">void</span> <span class="i">freeObjects</span>();
 </pre><pre class="insert-after">
 
 #endif
@@ -818,8 +704,7 @@ add after <em>reallocate</em>()</div>
 <p>这样就释放了 那些对象：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">freeObjects</span>() {
+<pre><span class="t">void</span> <span class="i">freeObjects</span>() {
   <span class="t">Obj</span>* <span class="i">object</span> = <span class="i">vm</span>.<span class="i">objects</span>;
   <span class="k">while</span> (<span class="i">object</span> != <span class="a">NULL</span>) {
     <span class="t">Obj</span>* <span class="i">next</span> = <span class="i">object</span>-&gt;<span class="i">next</span>;
@@ -833,8 +718,7 @@ add after <em>reallocate</em>()</div>
 <p>这是一份经典的 CS 101 教科书式的链表遍历与释放节点的实现。对于每一个节点， 我们调用：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">freeObject</span>(<span class="t">Obj</span>* <span class="i">object</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">freeObject</span>(<span class="t">Obj</span>* <span class="i">object</span>) {
   <span class="k">switch</span> (<span class="i">object</span>-&gt;<span class="i">type</span>) {
     <span class="k">case</span> <span class="a">OBJ_STRING</span>: {
       <span class="t">ObjString</span>* <span class="i">string</span> = (<span class="t">ObjString</span>*)<span class="i">object</span>;
@@ -848,8 +732,7 @@ add after <em>reallocate</em>()</div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>reallocate</em>()</div>
 
 <p>我们并不只是在释放 Obj 本身。由于某些对象类型还会分配其他由自己拥有的内存， 我们也需要一些面向特定类型的代码来处理每种对象类型的特殊需要。这里， 那意味着我们先释放字符数组， 再释放 ObjString。这两步都使用了最后一个内存管理宏。</p>
-<div class="codehilite"><pre class="insert-before">
-    (type*)reallocate(NULL, 0, sizeof(type) * (count))
+<div class="codehilite"><pre class="insert-before">    (type*)reallocate(NULL, 0, sizeof(type) * (count))
 </pre><div class="source-file"><em>memory.h</em></div>
 <pre class="insert">
 
@@ -865,11 +748,9 @@ add after <em>reallocate</em>()</div>
 <p>用 <code>reallocate()</code> 来释放内存看起来或许有些多余。 为什么不直接调用 <code>free()</code>？之后， 这会帮助 VM 追踪至今仍在被使用的内存有多少。若所有的分配与释放都经过 <code>reallocate()</code>， 就很容易维护一个对于已分配字节数的持续累加。</p>
 </aside>
 <p>一如既往， 我们需要一个 include 来把一切串在一起。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>memory.h</em></div>
-<pre class="insert">
-<span class="a">#include &quot;object.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;object.h&quot;</span>
 </pre><pre class="insert-after">
 
 #define ALLOCATE(type, count) \
@@ -877,11 +758,9 @@ add after <em>reallocate</em>()</div>
 <div class="source-file-narrow"><em>memory.h</em></div>
 
 <p>然后在实现文件中：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;memory.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;memory.h&quot;
 </pre><div class="source-file"><em>memory.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;vm.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;vm.h&quot;</span>
 </pre><pre class="insert-after">
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
@@ -891,7 +770,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 <p>有了这一切， 我们的 VM 不再泄漏内存了。像一段良好的 C 程序那样， 它在退出之前清理了自己的一切残局。但在 VM 运行期间， 它仍不会释放任何对象。之后， 当有必要去写一些运行更久的 Lox 程序时，VM 会一边跑一边吃掉越来越多的内存， 直到整个程序跑完之前都不会归还一字一节。</p>
 <p>我们要到添上 <a href="garbage-collection.html">一个真正的垃圾回收器</a> 之后才会去解决这一问题， 但如此一来我们已经迈出了不小的一步。我们现在已经搭起了可以支持多种各不相同的动态分配对象的基础设施。 我们用它来为 clox 加上了字符串， 一种在大多数程序设计语言中使用最频繁的类型。而字符串又使我们能够去构造另一种基本的数据类型， 尤其在动态语言中：那位 <a href="hash-tables.html">声望卓著的哈希表</a>。但那就留给下一章吧 ……</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>19&#8202;.&#8202;6</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>19&#8202;.&#8202;6</small>挑战</a></h2>
 <ol>
 <li>
 <p>每条字符串都需要两个各自独立的动态分配——一个用于 ObjString， 另一个用于字符数组。从一个值中访问那些字符需要两次指针间接， 这对性能可能不利。一个更高效的解决方案倚赖于一项叫做 <a href="https://en.wikipedia.org/wiki/Flexible_array_member">柔性数组成员</a> 的技巧。使用它将 ObjString 与其字符数组存放于一次连续的分配中。</p>
@@ -906,7 +785,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：字符串编码" name="设计笔记：字符串编码"><small>19&#8202;.&#8202;7</small>设计笔记：字符串编码</a></h2>
+<h2><a href="#设计笔记：字符串编码" id="设计笔记：字符串编码"><small>19&#8202;.&#8202;7</small>设计笔记：字符串编码</a></h2>
 <p>在本书中， 我不试图躲避那些你在一门真正的语言实现中会碰到的那些棘手问题。我们可能不总是采用最精致的解决方案——毕竟这是一本入门书——但我不认为假装问题完全不存在是一种诚实的态度。然而， 我确实绕过了一个极其难缠的问题： 抉择如何表示字符串。</p>
 <p>字符串的编码有两个侧面：</p>
 <ul>
@@ -952,7 +831,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 <a href="hash-tables.html" class="next">
   Next Chapter: &ldquo;Hash Tables&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

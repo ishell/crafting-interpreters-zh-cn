@@ -13,8 +13,8 @@ Future<void> main(List<String> arguments) async {
   var tempDir = await Directory('.').createTemp('pages');
 
   // The `-r` argument is DPI.
-  var result = await Process.run(
-      'pdftoppm', ['-png', '-r', '40', 'ci.pdf', p.join(tempDir.path, 'page')]);
+  var result = await Process.run('pdftoppm',
+      ['-png', '-r', '40', arguments[0], p.join(tempDir.path, 'page')]);
   if (result.exitCode != 0) {
     print('Could not export pages:\n${result.stdout}\n${result.stderr}');
   }
@@ -35,12 +35,13 @@ Future<void> main(List<String> arguments) async {
 
   const columns = 36;
   const rows = 18;
+  const border = 4;
 
   var pageWidth = pages.first.width;
   var pageHeight = pages.first.height;
 
-  var tiled =
-      Image.rgb((pageWidth + 1) * columns + 1, (pageHeight + 1) * rows + 1);
+  var tiled = Image.rgb((pageWidth + border) * columns + border,
+      (pageHeight + border) * rows + border);
   tiled.fill(Color.fromRgb(0, 0, 0));
 
   for (var i = 0; i < pages.length; i++) {
@@ -48,11 +49,12 @@ Future<void> main(List<String> arguments) async {
     var y = i ~/ columns;
     print('Tiling page ${i + 1} ($x, $y)...');
     copyInto(tiled, pages[i],
-        dstX: x * (pageWidth + 1) + 1, dstY: y * (pageHeight + 1) + 1);
+        dstX: x * (pageWidth + border) + border,
+        dstY: y * (pageHeight + border) + border);
   }
 
-  print('Writing out.png...');
-  await File('out.png').writeAsBytes(encodePng(tiled));
+  print('Writing pages.png...');
+  await File('pages.png').writeAsBytes(encodePng(tiled));
 
   await tempDir.delete(recursive: true);
 }

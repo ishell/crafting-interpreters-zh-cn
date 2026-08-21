@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Methods and Initializers<small>28</small></a></h3>
 
 <ul>
@@ -56,7 +55,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="classes-and-instances.html" title="Classes and Instances" class="prev">←</a>
 <a href="superclasses.html" title="Superclasses" class="next">→</a>
 </nav>
@@ -64,9 +63,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Methods and Initializers<small>28</small></a></h3>
 
 <ul>
@@ -94,25 +92,7 @@
   <div class="number">28</div>
   <h1>Methods and Initializers</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#方法与初始化器" name="方法与初始化器"><small>28&#8202;.&#8202;0</small>方法与初始化器</a></h1><!--
+<h1><a href="#方法与初始化器" id="方法与初始化器"><small>28&#8202;.&#8202;0</small>方法与初始化器</a></h1><!--
 > When you are on the dancefloor, there is nothing to do but dance.
 >
 > <cite>Umberto Eco, <em>The Mysterious Flame of Queen Loana</em></cite>
@@ -134,44 +114,38 @@ to that fun, we gotta get the basic stuff working.
 <p>这些在先前的 jlox 解释器里都是熟地。第二次旅程里真正新鲜的，是一项重要优化：我们会把方法调用做得比基线性能快七倍以上。不过在享用那份乐趣之前，得先把基础跑通。</p><!--
 -- Method Declarations
 -->
-<h2><a href="#方法声明" name="方法声明"><small>28&#8202;.&#8202;1</small>方法声明</a></h2><!--
+<h2><a href="#方法声明" id="方法声明"><small>28&#8202;.&#8202;1</small>方法声明</a></h2><!--
 We can't optimize method calls before we have method calls, and we can't call
 methods without having methods to call, so we'll start with declarations.
 -->
 <p>没有方法调用，谈不上优化方法调用；没有可调用的方法，也谈不上调用。所以我们从声明开始。</p><!--
 -- Representing methods
 -->
-<h3><a href="#表示方法" name="表示方法"><small>28&#8202;.&#8202;1&#8202;.&#8202;1</small>表示方法</a></h3><!--
+<h3><a href="#表示方法" id="表示方法"><small>28&#8202;.&#8202;1&#8202;.&#8202;1</small>表示方法</a></h3><!--
 We usually start in the compiler, but let's knock the object model out first
 this time. The runtime representation for methods in clox is similar to that of
 jlox. Each class stores a hash table of methods. Keys are method names, and each
 value is an ObjClosure for the body of the method.
 -->
 <p>我们通常从编译器下手，这次先把对象模型敲定。clox 里方法的运行时表示与 jlox 相似。每个类存一张方法哈希表：键是方法名，值是方法体对应的 ObjClosure。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
   Obj obj;
   ObjString* name;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>ObjClass</em></div>
-<pre class="insert">
-  <span class="t">Table</span> <span class="i">methods</span>;
-</pre><pre class="insert-after">
-} ObjClass;
+<pre class="insert">  <span class="t">Table</span> <span class="i">methods</span>;
+</pre><pre class="insert-after">} ObjClass;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>ObjClass</em></div>
 <!--
 A brand new class begins with an empty method table.
 -->
 <p>崭新的类从一张空方法表起步。</p>
-<div class="codehilite"><pre class="insert-before">
-  klass-&gt;name = name;<span name="klass"> </span>
+<div class="codehilite"><pre class="insert-before">  klass-&gt;name = name;<span name="klass"> </span>
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>newClass</em>()</div>
-<pre class="insert">
-  <span class="i">initTable</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>);
-</pre><pre class="insert-after">
-  return klass;
+<pre class="insert">  <span class="i">initTable</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>);
+</pre><pre class="insert-after">  return klass;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>newClass</em>()</div>
 <!--
@@ -179,15 +153,12 @@ The ObjClass struct owns the memory for this table, so when the memory manager
 deallocates a class, the table should be freed too.
 -->
 <p>ObjClass 结构体拥有这张表的内存，所以内存管理器释放类时，表也该一并释放。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OBJ_CLASS: {
+<div class="codehilite"><pre class="insert-before">    case OBJ_CLASS: {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-      <span class="t">ObjClass</span>* <span class="i">klass</span> = (<span class="t">ObjClass</span>*)<span class="i">object</span>;
+<pre class="insert">      <span class="t">ObjClass</span>* <span class="i">klass</span> = (<span class="t">ObjClass</span>*)<span class="i">object</span>;
       <span class="i">freeTable</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>);
-</pre><pre class="insert-after">
-      FREE(ObjClass, object);
+</pre><pre class="insert-after">      FREE(ObjClass, object);
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -196,14 +167,11 @@ method table. If a class is still reachable (likely through some instance),
 then all of its methods certainly need to stick around too.
 -->
 <p>说到内存管理器：GC 需要从类追踪进方法表。若类仍可达（多半经由某个实例），它的全部方法当然也得留下。</p>
-<div class="codehilite"><pre class="insert-before">
-      markObject((Obj*)klass-&gt;name);
+<div class="codehilite"><pre class="insert-before">      markObject((Obj*)klass-&gt;name);
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>blackenObject</em>()</div>
-<pre class="insert">
-      <span class="i">markTable</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>);
-</pre><pre class="insert-after">
-      break;
+<pre class="insert">      <span class="i">markTable</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>);
+</pre><pre class="insert-after">      break;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
 <!--
@@ -226,22 +194,19 @@ find out.
 <p>如今，编译器想塞给运行时的每一片信息，都得挤过平坦字节码指令序列这扇接口。一个类声明可以含任意多方法——我们如何把它表示成字节码？且跳到编译器那边看看。</p><!--
 -- Compiling method declarations
 -->
-<h3><a href="#编译方法声明" name="编译方法声明"><small>28&#8202;.&#8202;1&#8202;.&#8202;2</small>编译方法声明</a></h3><!--
+<h3><a href="#编译方法声明" id="编译方法声明"><small>28&#8202;.&#8202;1&#8202;.&#8202;2</small>编译方法声明</a></h3><!--
 The last chapter left us with a compiler that parses classes but allows only an
 empty body. Now we insert a little code to compile a series of method
 declarations between the braces.
 -->
 <p>上一章留给我们的编译器能解析类，但只允许空类体。现在我们插一点代码，在花括号之间编译一连串方法声明。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_LEFT_BRACE, &quot;Expect '{' before class body.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_LEFT_BRACE, &quot;Expect '{' before class body.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="k">while</span> (!<span class="i">check</span>(<span class="a">TOKEN_RIGHT_BRACE</span>) &amp;&amp; !<span class="i">check</span>(<span class="a">TOKEN_EOF</span>)) {
+<pre class="insert">  <span class="k">while</span> (!<span class="i">check</span>(<span class="a">TOKEN_RIGHT_BRACE</span>) &amp;&amp; !<span class="i">check</span>(<span class="a">TOKEN_EOF</span>)) {
     <span class="i">method</span>();
   }
-</pre><pre class="insert-after">
-  consume(TOKEN_RIGHT_BRACE, &quot;Expect '}' after class body.&quot;);
+</pre><pre class="insert-after">  consume(TOKEN_RIGHT_BRACE, &quot;Expect '}' after class body.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -310,8 +275,7 @@ the runtime, starting here:
 <p>我们逐步写编译器代码，看看它们如何抵达运行时，从这里开始：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>function</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">method</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">method</span>() {
   <span class="i">consume</span>(<span class="a">TOKEN_IDENTIFIER</span>, <span class="s">&quot;Expect method name.&quot;</span>);
   <span class="t">uint8_t</span> <span class="i">constant</span> = <span class="i">identifierConstant</span>(&amp;<span class="i">parser</span>.<span class="i">previous</span>);
   <span class="i">emitBytes</span>(<span class="a">OP_METHOD</span>, <span class="i">constant</span>);
@@ -325,16 +289,14 @@ a table index. Then we emit an `OP_METHOD` instruction with that index as the
 operand. That's the name. Next is the method body:
 -->
 <p>和 <code>OP_GET_PROPERTY</code> 以及其他运行时需要名字的指令一样，编译器把方法名 token 的词素加进常量表，拿回一个表索引。然后发出以该索引为操作数的 <code>OP_METHOD</code>。名字就位了。接下来是方法体：</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t constant = identifierConstant(&amp;parser.previous);
+<div class="codehilite"><pre class="insert-before">  uint8_t constant = identifierConstant(&amp;parser.previous);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>method</em>()</div>
 <pre class="insert">
 
   <span class="t">FunctionType</span> <span class="i">type</span> = <span class="a">TYPE_FUNCTION</span>;
   <span class="i">function</span>(<span class="i">type</span>);
-</pre><pre class="insert-after">
-  emitBytes(OP_METHOD, constant);
+</pre><pre class="insert-after">  emitBytes(OP_METHOD, constant);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>method</em>()</div>
 <!--
@@ -363,14 +325,11 @@ Fear not. The compiler does know the *name* of the class. We can capture it
 right after we consume its token.
 -->
 <p>别慌。编译器确实知道类的<em>名字</em>。消费完名字 token 后，我们立刻把它记下来。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_IDENTIFIER, &quot;Expect class name.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_IDENTIFIER, &quot;Expect class name.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="t">Token</span> <span class="i">className</span> = <span class="i">parser</span>.<span class="i">previous</span>;
-</pre><pre class="insert-after">
-  uint8_t nameConstant = identifierConstant(&amp;parser.previous);
+<pre class="insert">  <span class="t">Token</span> <span class="i">className</span> = <span class="i">parser</span>.<span class="i">previous</span>;
+</pre><pre class="insert-after">  uint8_t nameConstant = identifierConstant(&amp;parser.previous);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -379,15 +338,12 @@ class. So we do the easy fix. Before we start binding methods, we emit whatever
 code is necessary to load the class back on top of the stack.
 -->
 <p>而且我们知道：不可能有别的同名声明把这个类影掉。于是走简单修补：开始绑定方法之前，发出把类重新加载到栈顶所需的一切代码。</p>
-<div class="codehilite"><pre class="insert-before">
-  defineVariable(nameConstant);
+<div class="codehilite"><pre class="insert-before">  defineVariable(nameConstant);
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="i">namedVariable</span>(<span class="i">className</span>, <span class="k">false</span>);
-</pre><pre class="insert-after">
-  consume(TOKEN_LEFT_BRACE, &quot;Expect '{' before class body.&quot;);
+<pre class="insert">  <span class="i">namedVariable</span>(<span class="i">className</span>, <span class="k">false</span>);
+</pre><pre class="insert-after">  consume(TOKEN_LEFT_BRACE, &quot;Expect '{' before class body.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -414,14 +370,11 @@ end of the methods, we no longer need the class and tell the VM to pop it off
 the stack.
 -->
 <p>这意味着执行每条 <code>OP_METHOD</code> 时，栈顶是方法的闭包，正下方是类。方法全部结束后，我们不再需要类，就让虚拟机把它弹出栈。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_RIGHT_BRACE, &quot;Expect '}' after class body.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_RIGHT_BRACE, &quot;Expect '}' after class body.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -429,8 +382,7 @@ Putting all of that together, here is an example class declaration to throw at
 the compiler:
 -->
 <p>把这一切拼起来，下面是扔给编译器的示例类声明：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Brunch</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Brunch</span> {
   <span class="i">bacon</span>() {}
   <span class="i">eggs</span>() {}
 }
@@ -445,50 +397,41 @@ instruction.
 <p>剩下的，就是为这条新的 <code>OP_METHOD</code> 实现运行时了。</p><!--
 -- Executing method declarations
 -->
-<h3><a href="#执行方法声明" name="执行方法声明"><small>28&#8202;.&#8202;1&#8202;.&#8202;3</small>执行方法声明</a></h3><!--
+<h3><a href="#执行方法声明" id="执行方法声明"><small>28&#8202;.&#8202;1&#8202;.&#8202;3</small>执行方法声明</a></h3><!--
 First we define the opcode.
 -->
 <p>先定义操作码。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_CLASS,
+<div class="codehilite"><pre class="insert-before">  OP_CLASS,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_METHOD</span>
-</pre><pre class="insert-after">
-} OpCode;
+<pre class="insert">  <span class="a">OP_METHOD</span>
+</pre><pre class="insert-after">} OpCode;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 We disassemble it like other instructions that have string constant operands.
 -->
 <p>反汇编方式和带有字符串常量操作数的其他指令一样。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_CLASS:
+<div class="codehilite"><pre class="insert-before">    case OP_CLASS:
       return constantInstruction(&quot;OP_CLASS&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_METHOD</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_METHOD</span>:
       <span class="k">return</span> <span class="i">constantInstruction</span>(<span class="s">&quot;OP_METHOD&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    default:
+</pre><pre class="insert-after">    default:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
 And over in the interpreter, we add a new case too.
 -->
 <p>解释器那边也加一个新分支。</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_METHOD</span>:
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_METHOD</span>:
         <span class="i">defineMethod</span>(<span class="a">READ_STRING</span>());
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-    }
+</pre><pre class="insert-after">    }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -497,8 +440,7 @@ There, we read the method name from the constant table and pass it here:
 <p>在那儿，我们从常量表读出方法名，再传到这里：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>closeUpvalues</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">defineMethod</span>(<span class="t">ObjString</span>* <span class="i">name</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">defineMethod</span>(<span class="t">ObjString</span>* <span class="i">name</span>) {
   <span class="t">Value</span> <span class="i">method</span> = <span class="i">peek</span>(<span class="n">0</span>);
   <span class="t">ObjClass</span>* <span class="i">klass</span> = <span class="a">AS_CLASS</span>(<span class="i">peek</span>(<span class="n">1</span>));
   <span class="i">tableSet</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>, <span class="i">name</span>, <span class="i">method</span>);
@@ -541,20 +483,18 @@ them.
 <p>一串 <code>OP_METHOD</code> 跑完、<code>OP_POP</code> 弹出类之后，我们就有了一个方法表填得妥妥的类，可以开始干活了。下一步是把那些方法再取出来用。</p><!--
 -- Method References
 -->
-<h2><a href="#方法引用" name="方法引用"><small>28&#8202;.&#8202;2</small>方法引用</a></h2><!--
+<h2><a href="#方法引用" id="方法引用"><small>28&#8202;.&#8202;2</small>方法引用</a></h2><!--
 Most of the time, methods are accessed and immediately called, leading to this
 familiar syntax:
 -->
 <p>多数时候，方法被访问后立刻调用，于是有了这熟悉语法：</p>
-<div class="codehilite"><pre>
-<span class="i">instance</span>.<span class="i">method</span>(<span class="i">argument</span>);
+<div class="codehilite"><pre><span class="i">instance</span>.<span class="i">method</span>(<span class="i">argument</span>);
 </pre></div><!--
 But remember, in Lox and some other languages, those two steps are distinct and
 can be separated.
 -->
 <p>但请记住：在 Lox 以及另一些语言里，这两步是分开的，可以拆开。</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">closure</span> = <span class="i">instance</span>.<span class="i">method</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">closure</span> = <span class="i">instance</span>.<span class="i">method</span>;
 <span class="i">closure</span>(<span class="i">argument</span>);
 </pre></div><!--
 Since users *can* separate the operations, we have to implement them separately.
@@ -569,8 +509,7 @@ that when you access a method, `this` gets bound to the instance the method was
 accessed from. Here's the example from [when we added methods to jlox][jlox]:
 -->
 <p>显而易见的做法是：在类的方法表里查找方法，返回与该名字关联的 ObjClosure。但还得记住：访问方法时，<code>this</code> 会绑定到取出方法的那个实例。下面是<a href="classes.html#methods-on-classes">我们给 jlox 加方法时</a>的例子：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Person</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Person</span> {
   <span class="i">sayName</span>() {
     <span class="k">print</span> <span class="k">this</span>.<span class="i">name</span>;
   }
@@ -597,7 +536,7 @@ runtime type.
 <p>我们的字节码虚拟机存储状态的架构更复杂。<a href="local-variables.html#representing-local-variables">局部变量与临时值</a>在栈上，<a href="global-variables.html#variable-declarations">全局变量</a>在哈希表里，闭包里的变量用<a href="closures.html#upvalues">上值</a>。于是在 clox 里追踪方法的接收者，需要略更复杂的方案，以及一种新的运行时类型。</p><!--
 -- Bound methods
 -->
-<h3><a href="#绑定方法" name="绑定方法"><small>28&#8202;.&#8202;2&#8202;.&#8202;1</small>绑定方法</a></h3><!--
+<h3><a href="#绑定方法" id="绑定方法"><small>28&#8202;.&#8202;2&#8202;.&#8202;1</small>绑定方法</a></h3><!--
 When the user executes a method access, we'll find the closure for that method
 and wrap it in a new <span name="bound">"bound method"</span> object that tracks
 the instance that the method was accessed from. This bound object can be called
@@ -614,20 +553,17 @@ and I used its implementation for inspiration.
 Here's the new object type:
 -->
 <p>新的对象类型如下：</p>
-<div class="codehilite"><pre class="insert-before">
-} ObjInstance;
+<div class="codehilite"><pre class="insert-before">} ObjInstance;
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjInstance</em></div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">struct</span> {
+<pre class="insert"><span class="k">typedef</span> <span class="k">struct</span> {
   <span class="t">Obj</span> <span class="i">obj</span>;
   <span class="t">Value</span> <span class="i">receiver</span>;
   <span class="t">ObjClosure</span>* <span class="i">method</span>;
 } <span class="t">ObjBoundMethod</span>;
 
-</pre><pre class="insert-after">
-ObjClass* newClass(ObjString* name);
+</pre><pre class="insert-after">ObjClass* newClass(ObjString* name);
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjInstance</em></div>
 <!--
@@ -642,58 +578,46 @@ The new struct implies the usual boilerplate you're used to by now. A new case
 in the object type enum:
 -->
 <p>新结构体意味着你已经熟透的那套样板。对象类型枚举里加一项：</p>
-<div class="codehilite"><pre class="insert-before">
-typedef enum {
+<div class="codehilite"><pre class="insert-before">typedef enum {
 </pre><div class="source-file"><em>object.h</em><br>
 in enum <em>ObjType</em></div>
-<pre class="insert">
-  <span class="a">OBJ_BOUND_METHOD</span>,
-</pre><pre class="insert-after">
-  OBJ_CLASS,
+<pre class="insert">  <span class="a">OBJ_BOUND_METHOD</span>,
+</pre><pre class="insert-after">  OBJ_CLASS,
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in enum <em>ObjType</em></div>
 <!--
 A macro to check a value's type:
 -->
 <p>检查值类型的宏：</p>
-<div class="codehilite"><pre class="insert-before">
-#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
+<div class="codehilite"><pre class="insert-before">#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
 
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_BOUND_METHOD(value) isObjType(value, OBJ_BOUND_METHOD)</span>
-</pre><pre class="insert-after">
-#define IS_CLASS(value)        isObjType(value, OBJ_CLASS)
+<pre class="insert"><span class="a">#define IS_BOUND_METHOD(value) isObjType(value, OBJ_BOUND_METHOD)</span>
+</pre><pre class="insert-after">#define IS_CLASS(value)        isObjType(value, OBJ_CLASS)
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
 Another macro to cast the value to an ObjBoundMethod pointer:
 -->
 <p>再一个宏，把值转成 ObjBoundMethod 指针：</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
+<div class="codehilite"><pre class="insert-before">#define IS_STRING(value)       isObjType(value, OBJ_STRING)
 
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_BOUND_METHOD(value) ((ObjBoundMethod*)AS_OBJ(value))</span>
-</pre><pre class="insert-after">
-#define AS_CLASS(value)        ((ObjClass*)AS_OBJ(value))
+<pre class="insert"><span class="a">#define AS_BOUND_METHOD(value) ((ObjBoundMethod*)AS_OBJ(value))</span>
+</pre><pre class="insert-after">#define AS_CLASS(value)        ((ObjClass*)AS_OBJ(value))
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
 A function to create a new ObjBoundMethod:
 -->
 <p>创建新 ObjBoundMethod 的函数：</p>
-<div class="codehilite"><pre class="insert-before">
-} ObjBoundMethod;
+<div class="codehilite"><pre class="insert-before">} ObjBoundMethod;
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjBoundMethod</em></div>
-<pre class="insert">
-<span class="t">ObjBoundMethod</span>* <span class="i">newBoundMethod</span>(<span class="t">Value</span> <span class="i">receiver</span>,
+<pre class="insert"><span class="t">ObjBoundMethod</span>* <span class="i">newBoundMethod</span>(<span class="t">Value</span> <span class="i">receiver</span>,
                                <span class="t">ObjClosure</span>* <span class="i">method</span>);
-</pre><pre class="insert-after">
-ObjClass* newClass(ObjString* name);
+</pre><pre class="insert-after">ObjClass* newClass(ObjString* name);
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjBoundMethod</em></div>
 <!--
@@ -702,8 +626,7 @@ And an implementation of that function here:
 <p>实现在这边：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>allocateObject</em>()</div>
-<pre>
-<span class="t">ObjBoundMethod</span>* <span class="i">newBoundMethod</span>(<span class="t">Value</span> <span class="i">receiver</span>,
+<pre><span class="t">ObjBoundMethod</span>* <span class="i">newBoundMethod</span>(<span class="t">Value</span> <span class="i">receiver</span>,
                                <span class="t">ObjClosure</span>* <span class="i">method</span>) {
   <span class="t">ObjBoundMethod</span>* <span class="i">bound</span> = <span class="a">ALLOCATE_OBJ</span>(<span class="t">ObjBoundMethod</span>,
                                        <span class="a">OBJ_BOUND_METHOD</span>);
@@ -718,16 +641,13 @@ The constructor-like function simply stores the given closure and receiver. When
 the bound method is no longer needed, we free it.
 -->
 <p>这个构造函数式的函数只是存下给定的闭包与接收者。绑定方法不再需要时，我们释放它。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (object-&gt;type) {
+<div class="codehilite"><pre class="insert-before">  switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>:
       <span class="a">FREE</span>(<span class="t">ObjBoundMethod</span>, <span class="i">object</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_CLASS: {
+</pre><pre class="insert-after">    case OBJ_CLASS: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -736,19 +656,16 @@ frees nothing but itself. However, those references do get traced by the garbage
 collector.
 -->
 <p>绑定方法持有几处引用，但并不<em>拥有</em>它们，所以除了自己什么也不释放。不过这些引用仍由垃圾回收器追踪。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (object-&gt;type) {
+<div class="codehilite"><pre class="insert-before">  switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>blackenObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>: {
       <span class="t">ObjBoundMethod</span>* <span class="i">bound</span> = (<span class="t">ObjBoundMethod</span>*)<span class="i">object</span>;
       <span class="i">markValue</span>(<span class="i">bound</span>-&gt;<span class="i">receiver</span>);
       <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">bound</span>-&gt;<span class="i">method</span>);
       <span class="k">break</span>;
     }
-</pre><pre class="insert-after">
-    case OBJ_CLASS: {
+</pre><pre class="insert-after">    case OBJ_CLASS: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>blackenObject</em>()</div>
 <!--
@@ -768,16 +685,13 @@ rely on that.
 The last operation all objects support is printing.
 -->
 <p>所有对象都支持的最后一项操作是打印。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (OBJ_TYPE(value)) {
+<div class="codehilite"><pre class="insert-before">  switch (OBJ_TYPE(value)) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>printObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>:
       <span class="i">printFunction</span>(<span class="a">AS_BOUND_METHOD</span>(<span class="i">value</span>)-&gt;<span class="i">method</span>-&gt;<span class="i">function</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_CLASS:
+</pre><pre class="insert-after">    case OBJ_CLASS:
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>printObject</em>()</div>
 <!--
@@ -796,7 +710,7 @@ of the book, and we're getting close to a complete VM.
 <p>戴上你的<span name="party">派对</span>帽吧——我们刚抵达一个小里程碑。ObjBoundMethod 是要给 clox 加的最后一个运行时类型。你已经写完了最后的 <code>IS_</code> 与 <code>AS_</code> 宏。离全书结尾只剩几章，一台完整的虚拟机近在咫尺。</p><!--
 -- Accessing methods
 -->
-<h3><a href="#访问方法" name="访问方法"><small>28&#8202;.&#8202;2&#8202;.&#8202;2</small>访问方法</a></h3><!--
+<h3><a href="#访问方法" id="访问方法"><small>28&#8202;.&#8202;2&#8202;.&#8202;2</small>访问方法</a></h3><!--
 Let's get our new object type doing something. Methods are accessed using the
 same "dot" property syntax we implemented in the last chapter. The compiler
 already parses the right expressions and emits `OP_GET_PROPERTY` instructions
@@ -812,8 +726,7 @@ The interpreter already handles fields, so we simply extend the
 `OP_GET_PROPERTY` case with another section.
 -->
 <p>解释器已能处理字段，我们只需给 <code>OP_GET_PROPERTY</code> 分支再加一段。</p>
-<div class="codehilite"><pre class="insert-before">
-          pop(); // Instance.
+<div class="codehilite"><pre class="insert-before">          pop(); // Instance.
           push(value);
           break;
         }
@@ -821,13 +734,11 @@ The interpreter already handles fields, so we simply extend the
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-        <span class="k">if</span> (!<span class="i">bindMethod</span>(<span class="i">instance</span>-&gt;<span class="i">klass</span>, <span class="i">name</span>)) {
+<pre class="insert">        <span class="k">if</span> (!<span class="i">bindMethod</span>(<span class="i">instance</span>-&gt;<span class="i">klass</span>, <span class="i">name</span>)) {
           <span class="k">return</span> <span class="a">INTERPRET_RUNTIME_ERROR</span>;
         }
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      }
+</pre><pre class="insert-after">      }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 2 lines</div>
 <!--
@@ -849,8 +760,7 @@ Here is the good stuff:
 <p>好戏在这里：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>callValue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">bindMethod</span>(<span class="t">ObjClass</span>* <span class="i">klass</span>, <span class="t">ObjString</span>* <span class="i">name</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">bindMethod</span>(<span class="t">ObjClass</span>* <span class="i">klass</span>, <span class="t">ObjString</span>* <span class="i">name</span>) {
   <span class="t">Value</span> <span class="i">method</span>;
   <span class="k">if</span> (!<span class="i">tableGet</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>, <span class="i">name</span>, &amp;<span class="i">method</span>)) {
     <span class="i">runtimeError</span>(<span class="s">&quot;Undefined property &#39;%s&#39;.&quot;</span>, <span class="i">name</span>-&gt;<span class="i">chars</span>);
@@ -876,8 +786,7 @@ the stack with the bound method.
 For example:
 -->
 <p>例如：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Brunch</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Brunch</span> {
   <span class="i">eggs</span>() {}
 }
 
@@ -894,7 +803,7 @@ simply get a function that they can call.
 <p>引擎盖下机件不少，但在用户看来，他们只是拿到一个可以调用的函数。</p><!--
 -- Calling methods
 -->
-<h3><a href="#调用方法" name="调用方法"><small>28&#8202;.&#8202;2&#8202;.&#8202;3</small>调用方法</a></h3><!--
+<h3><a href="#调用方法" id="调用方法"><small>28&#8202;.&#8202;2&#8202;.&#8202;3</small>调用方法</a></h3><!--
 Users can declare methods on classes, access them on instances, and get bound
 methods onto the stack. They just can't <span name="do">*do*</span> anything
 useful with those bound method objects. The operation we're missing is calling
@@ -908,17 +817,14 @@ it to functions, and otherwise do "value"-y stuff with it.
 -->
 <p>绑定方法<em>是</em>一等值，所以可以存进变量、传给函数，以及做其他“值”该做的事。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-    switch (OBJ_TYPE(callee)) {
+<div class="codehilite"><pre class="insert-before">    switch (OBJ_TYPE(callee)) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>callValue</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OBJ_BOUND_METHOD</span>: {
         <span class="t">ObjBoundMethod</span>* <span class="i">bound</span> = <span class="a">AS_BOUND_METHOD</span>(<span class="i">callee</span>);
         <span class="k">return</span> <span class="i">call</span>(<span class="i">bound</span>-&gt;<span class="i">method</span>, <span class="i">argCount</span>);
       }
-</pre><pre class="insert-after">
-      case OBJ_CLASS: {
+</pre><pre class="insert-after">      case OBJ_CLASS: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>callValue</em>()</div>
 <!--
@@ -928,8 +834,7 @@ for it onto the call stack. That's all it takes to be able to run this Lox
 program:
 -->
 <p>我们从 ObjBoundMethod 里取出原始闭包，用现成的 <code>call()</code> 辅助函数开始调用：往调用栈上压一个 CallFrame。这就足以跑下面这段 Lox 程序：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Scone</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Scone</span> {
   <span class="i">topping</span>(<span class="i">first</span>, <span class="i">second</span>) {
     <span class="k">print</span> <span class="s">&quot;scone with &quot;</span> + <span class="i">first</span> + <span class="s">&quot; and &quot;</span> + <span class="i">second</span>;
   }
@@ -946,7 +851,7 @@ that receiver at all.
 <p>三大步完成了：可以声明、访问并调用方法。可还缺一样。我们费尽周折把方法闭包包进绑定接收者的对象，真正调用时却完全没用到那个接收者。</p><!--
 -- This
 -->
-<h2><a href="#this" name="this"><small>28&#8202;.&#8202;3</small>this</a></h2><!--
+<h2><a href="#this" id="this"><small>28&#8202;.&#8202;3</small>this</a></h2><!--
 The reason bound methods need to keep hold of the receiver is so that it can be
 accessed inside the body of the method. Lox exposes a method's receiver through
 `this` expressions. It's time for some new syntax. The lexer already treats
@@ -954,14 +859,11 @@ accessed inside the body of the method. Lox exposes a method's receiver through
 parse table.
 -->
 <p>绑定方法之所以要紧握接收者，是为了能在方法体内部访问它。Lox 通过 <code>this</code> 表达式暴露方法的接收者。是时候加一点新语法了。词法分析器已把 <code>this</code> 当成特殊 token 类型，第一步是把它接到解析表上。</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_THIS</span>]          = {<span class="i">this_</span>,    <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_THIS</span>]          = {<span class="i">this_</span>,    <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
@@ -977,8 +879,7 @@ parser function.
 <p>解析器在前缀位置遇到 <code>this</code> 时，会派发到一个新的解析函数。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>variable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">this_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">this_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
   <span class="i">variable</span>(<span class="k">false</span>);
 }<span name="this"> </span>
 </pre></div>
@@ -1021,21 +922,18 @@ compile `this` expressions, the compiler simply needs to give the correct name
 to that local variable.
 -->
 <p>对函数调用，那个槽最终放着被调用的函数。槽没有名字，函数体从不访问它。你大概猜到要往哪儿走了。对<em>方法</em>调用，我们可以把那个槽改作存放接收者。槽零将存放 <code>this</code> 所绑定的实例。要编译 <code>this</code> 表达式，编译器只需给那个局部变量起对名字。</p>
-<div class="codehilite"><pre class="insert-before">
-  local-&gt;isCaptured = false;
+<div class="codehilite"><pre class="insert-before">  local-&gt;isCaptured = false;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>initCompiler</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">type</span> != <span class="a">TYPE_FUNCTION</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">type</span> != <span class="a">TYPE_FUNCTION</span>) {
     <span class="i">local</span>-&gt;<span class="i">name</span>.<span class="i">start</span> = <span class="s">&quot;this&quot;</span>;
     <span class="i">local</span>-&gt;<span class="i">name</span>.<span class="i">length</span> = <span class="n">4</span>;
   } <span class="k">else</span> {
     <span class="i">local</span>-&gt;<span class="i">name</span>.<span class="i">start</span> = <span class="s">&quot;&quot;</span>;
     <span class="i">local</span>-&gt;<span class="i">name</span>.<span class="i">length</span> = <span class="n">0</span>;
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>initCompiler</em>(), replace 2 lines</div>
 <!--
@@ -1045,8 +943,7 @@ write a `this` expression inside a function declaration which is itself inside a
 method, the `this` correctly resolves to the outer method's receiver.
 -->
 <p>我们只想对方法这么做。函数声明没有 <code>this</code>。而且它们<em>绝不能</em>声明名为 <code>"this"</code> 的变量，这样：若你在方法内部的函数声明里写 <code>this</code> 表达式，<code>this</code> 才会正确解析到外层方法的接收者。</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Nested</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Nested</span> {
   <span class="i">method</span>() {
     <span class="k">fun</span> <span class="i">function</span>() {
       <span class="k">print</span> <span class="k">this</span>;
@@ -1064,30 +961,24 @@ method declaration, so we add a new case to our FunctionType enum to distinguish
 methods.
 -->
 <p>这段程序应当打印 <code>"Nested instance"</code>。要决定给局部槽零起什么名字，编译器得知道自己在编译函数还是方法声明，于是我们在 FunctionType 枚举里加一项来区分方法。</p>
-<div class="codehilite"><pre class="insert-before">
-  TYPE_FUNCTION,
+<div class="codehilite"><pre class="insert-before">  TYPE_FUNCTION,
 </pre><div class="source-file"><em>compiler.c</em><br>
 in enum <em>FunctionType</em></div>
-<pre class="insert">
-  <span class="a">TYPE_METHOD</span>,
-</pre><pre class="insert-after">
-  TYPE_SCRIPT
+<pre class="insert">  <span class="a">TYPE_METHOD</span>,
+</pre><pre class="insert-after">  TYPE_SCRIPT
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in enum <em>FunctionType</em></div>
 <!--
 When we compile a method, we use that type.
 -->
 <p>编译方法时，我们使用那个类型。</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t constant = identifierConstant(&amp;parser.previous);
+<div class="codehilite"><pre class="insert-before">  uint8_t constant = identifierConstant(&amp;parser.previous);
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>method</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">FunctionType</span> <span class="i">type</span> = <span class="a">TYPE_METHOD</span>;
-</pre><pre class="insert-after">
-  function(type);
+<pre class="insert">  <span class="t">FunctionType</span> <span class="i">type</span> = <span class="a">TYPE_METHOD</span>;
+</pre><pre class="insert-after">  function(type);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>method</em>(), replace 1 line</div>
 <!--
@@ -1100,15 +991,12 @@ Except that at runtime, the receiver isn't actually *in* slot zero. The
 interpreter isn't holding up its end of the bargain yet. Here is the fix:
 -->
 <p>只不过在运行时，接收者其实并不<em>在</em>槽零里。解释器还没履行它那头的约定。修补如下：</p>
-<div class="codehilite"><pre class="insert-before">
-      case OBJ_BOUND_METHOD: {
+<div class="codehilite"><pre class="insert-before">      case OBJ_BOUND_METHOD: {
         ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>callValue</em>()</div>
-<pre class="insert">
-        <span class="i">vm</span>.<span class="i">stackTop</span>[-<span class="i">argCount</span> - <span class="n">1</span>] = <span class="i">bound</span>-&gt;<span class="i">receiver</span>;
-</pre><pre class="insert-after">
-        return call(bound-&gt;method, argCount);
+<pre class="insert">        <span class="i">vm</span>.<span class="i">stackTop</span>[-<span class="i">argCount</span> - <span class="n">1</span>] = <span class="i">bound</span>-&gt;<span class="i">receiver</span>;
+</pre><pre class="insert-after">        return call(bound-&gt;method, argCount);
       }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>callValue</em>()</div>
@@ -1119,8 +1007,7 @@ zero in the new CallFrame will be. This line of code inserts the receiver into
 that slot. For example, given a method call like this:
 -->
 <p>方法被调用时，栈顶是全部参数，再往下是被调方法的闭包。那正是新 CallFrame 里槽零所在。这行代码把接收者插入那个槽。例如，给定这样的方法调用：</p>
-<div class="codehilite"><pre>
-<span class="i">scone</span>.<span class="i">topping</span>(<span class="s">&quot;berries&quot;</span>, <span class="s">&quot;cream&quot;</span>);
+<div class="codehilite"><pre><span class="i">scone</span>.<span class="i">topping</span>(<span class="s">&quot;berries&quot;</span>, <span class="s">&quot;cream&quot;</span>);
 </pre></div><!--
 We calculate the slot to store the receiver like so:
 -->
@@ -1131,15 +1018,14 @@ The `-argCount` skips past the arguments and the `- 1` adjusts for the fact that
 <p><code>-argCount</code> 跳过参数，<code>- 1</code> 则是因为 <code>stackTop</code> 指向最后一个已用栈槽的<em>再往前一格</em>。</p><!--
 -- Misusing this
 -->
-<h3><a href="#误用-this" name="误用-this"><small>28&#8202;.&#8202;3&#8202;.&#8202;1</small>误用 this</a></h3><!--
+<h3><a href="#误用-this" id="误用-this"><small>28&#8202;.&#8202;3&#8202;.&#8202;1</small>误用 this</a></h3><!--
 Our VM now supports users *correctly* using `this`, but we also need to make
 sure it properly handles users *mis*using `this`. Lox says it is a compile
 error for a `this` expression to appear outside of the body of a method. These
 two wrong uses should be caught by the compiler:
 -->
 <p>虚拟机现在支持用户<em>正确</em>使用 <code>this</code>，但我们也得确保它妥善处理用户<em>误</em>用 <code>this</code>。Lox 规定：<code>this</code> 表达式出现在方法体之外是编译错误。下面两种错误用法应由编译器抓住：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="k">this</span>; <span class="c">// At top level.</span>
+<div class="codehilite"><pre><span class="k">print</span> <span class="k">this</span>; <span class="c">// At top level.</span>
 
 <span class="k">fun</span> <span class="i">notMethod</span>() {
   <span class="k">print</span> <span class="k">this</span>; <span class="c">// In a function.</span>
@@ -1164,12 +1050,10 @@ we may as well make our future selves' lives a little easier and put that
 machinery in place now.
 -->
 <p>下一章我们会需要最近包围类的信息。若手里有它，这里就能用来判断是否在方法内。不如让未来的自己轻松一点，现在就把这套机制装上。</p>
-<div class="codehilite"><pre class="insert-before">
-Compiler* current = NULL;
+<div class="codehilite"><pre class="insert-before">Compiler* current = NULL;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>current</em></div>
-<pre class="insert">
-<span class="t">ClassCompiler</span>* <span class="i">currentClass</span> = <span class="a">NULL</span>;
+<pre class="insert"><span class="t">ClassCompiler</span>* <span class="i">currentClass</span> = <span class="a">NULL</span>;
 </pre><pre class="insert-after">
 
 static Chunk* currentChunk() {
@@ -1180,8 +1064,7 @@ This module variable points to a struct representing the current, innermost
 class being compiled. The new type looks like this:
 -->
 <p>这个模块变量指向表示当前、最内层正在编译的类的结构体。新类型长这样：</p>
-<div class="codehilite"><pre class="insert-before">
-} Compiler;
+<div class="codehilite"><pre class="insert-before">} Compiler;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after struct <em>Compiler</em></div>
 <pre class="insert">
@@ -1207,18 +1090,15 @@ If we aren't inside any class declaration at all, the module variable
 a new ClassCompiler onto that implict linked stack.
 -->
 <p>若根本不在任何类声明里，模块变量 <code>currentClass</code> 为 <code>NULL</code>。编译器开始编译一个类时，就把一个新的 ClassCompiler 压上那条隐式链接栈。</p>
-<div class="codehilite"><pre class="insert-before">
-  defineVariable(nameConstant);
+<div class="codehilite"><pre class="insert-before">  defineVariable(nameConstant);
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="t">ClassCompiler</span> <span class="i">classCompiler</span>;
+<pre class="insert">  <span class="t">ClassCompiler</span> <span class="i">classCompiler</span>;
   <span class="i">classCompiler</span>.<span class="i">enclosing</span> = <span class="i">currentClass</span>;
   <span class="i">currentClass</span> = &amp;<span class="i">classCompiler</span>;
 
-</pre><pre class="insert-after">
-  namedVariable(className, false);
+</pre><pre class="insert-after">  namedVariable(className, false);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -1228,15 +1108,13 @@ the class body, we pop that compiler off the stack and restore the enclosing
 one.
 -->
 <p>ClassCompiler 结构体的内存就住在 C 栈上——用递归下降写编译器带来的便利。类体结束时，我们把那个编译器弹出栈，恢复包围的那个。</p>
-<div class="codehilite"><pre class="insert-before">
-  emitByte(OP_POP);
+<div class="codehilite"><pre class="insert-before">  emitByte(OP_POP);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
 <pre class="insert">
 
   <span class="i">currentClass</span> = <span class="i">currentClass</span>-&gt;<span class="i">enclosing</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -1245,18 +1123,15 @@ When an outermost class body ends, `enclosing` will be `NULL`, so this resets
 inside a method -- we simply check that module variable.
 -->
 <p>最外层类体结束时，<code>enclosing</code> 为 <code>NULL</code>，于是把 <code>currentClass</code> 重置为 <code>NULL</code>。因此，要看我们是否在类里——从而是否在方法里——只需检查那个模块变量。</p>
-<div class="codehilite"><pre class="insert-before">
-static void this_(bool canAssign) {
+<div class="codehilite"><pre class="insert-before">static void this_(bool canAssign) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>this_</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">currentClass</span> == <span class="a">NULL</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">currentClass</span> == <span class="a">NULL</span>) {
     <span class="i">error</span>(<span class="s">&quot;Can&#39;t use &#39;this&#39; outside of a class.&quot;</span>);
     <span class="k">return</span>;
   }
 
-</pre><pre class="insert-after">
-  variable(false);
+</pre><pre class="insert-after">  variable(false);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>this_</em>()</div>
 <!--
@@ -1267,7 +1142,7 @@ lets them affect the instance you called the method on. We're getting there!
 <p>如此，类外的 <code>this</code> 就被正确禁止了。如今我们的方法，才真正有面向对象意义上<em>方法</em>的感觉。访问接收者，让它们能影响你调用方法所在的那个实例。我们正一步步靠近！</p><!--
 -- Instance Initializers
 -->
-<h2><a href="#实例初始化器" name="实例初始化器"><small>28&#8202;.&#8202;4</small>实例初始化器</a></h2><!--
+<h2><a href="#实例初始化器" id="实例初始化器"><small>28&#8202;.&#8202;4</small>实例初始化器</a></h2><!--
 The reason object-oriented languages tie state and behavior together -- one of
 the core tenets of the paradigm -- is to ensure that objects are always in a
 valid, meaningful state. When the only way to touch an object's state is <span
@@ -1329,8 +1204,7 @@ fun create(klass) {
 Note how the value returned by `init()` is discarded.
 -->
 <p>就好像初始化器被隐式包进这样一捆代码：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">create</span>(<span class="i">klass</span>) {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">create</span>(<span class="i">klass</span>) {
   <span class="k">var</span> <span class="i">obj</span> = <span class="i">newInstance</span>(<span class="i">klass</span>);
   <span class="i">obj</span>.<span class="i">init</span>();
   <span class="k">return</span> <span class="i">obj</span>;
@@ -1344,22 +1218,19 @@ those three special rules. We'll go in order.
 <p>既然已支持方法，要加初始化器，只需实现这三条特殊规则。我们按顺序来。</p><!--
 -- Invoking initializers
 -->
-<h3><a href="#调用初始化器" name="调用初始化器"><small>28&#8202;.&#8202;4&#8202;.&#8202;1</small>调用初始化器</a></h3><!--
+<h3><a href="#调用初始化器" id="调用初始化器"><small>28&#8202;.&#8202;4&#8202;.&#8202;1</small>调用初始化器</a></h3><!--
 First, automatically calling `init()` on new instances:
 -->
 <p>首先，在新实例上自动调用 <code>init()</code>：</p>
-<div class="codehilite"><pre class="insert-before">
-        vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+<div class="codehilite"><pre class="insert-before">        vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>callValue</em>()</div>
-<pre class="insert">
-        <span class="t">Value</span> <span class="i">initializer</span>;
+<pre class="insert">        <span class="t">Value</span> <span class="i">initializer</span>;
         <span class="k">if</span> (<span class="i">tableGet</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>, <span class="i">vm</span>.<span class="i">initString</span>,
                      &amp;<span class="i">initializer</span>)) {
           <span class="k">return</span> <span class="i">call</span>(<span class="a">AS_CLOSURE</span>(<span class="i">initializer</span>), <span class="i">argCount</span>);
         }
-</pre><pre class="insert-after">
-        return true;
+</pre><pre class="insert-after">        return true;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>callValue</em>()</div>
 <!--
@@ -1368,8 +1239,7 @@ the class. If we find one, we initiate a call to it. This pushes a new CallFrame
 for the initializer's closure. Say we run this program:
 -->
 <p>运行时分配新实例后，我们在类上查找 <code>init()</code> 方法。若找到，就发起对它的调用。这会为初始化器的闭包压上一个新 CallFrame。假设跑这段程序：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Brunch</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Brunch</span> {
   <span class="i">init</span>(<span class="i">food</span>, <span class="i">drink</span>) {}
 }
 
@@ -1389,17 +1259,14 @@ method, then it doesn't make any sense to pass arguments to the class when
 creating the instance. We make that an error.
 -->
 <p>Lox 不要求类必须定义初始化器。若省略，运行时直接返回未初始化的新实例。可是若没有 <code>init()</code> 方法，创建实例时再给类传参就毫无意义。我们把这定为错误。</p>
-<div class="codehilite"><pre class="insert-before">
-          return call(AS_CLOSURE(initializer), argCount);
+<div class="codehilite"><pre class="insert-before">          return call(AS_CLOSURE(initializer), argCount);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>callValue</em>()</div>
-<pre class="insert">
-        } <span class="k">else</span> <span class="k">if</span> (<span class="i">argCount</span> != <span class="n">0</span>) {
+<pre class="insert">        } <span class="k">else</span> <span class="k">if</span> (<span class="i">argCount</span> != <span class="n">0</span>) {
           <span class="i">runtimeError</span>(<span class="s">&quot;Expected 0 arguments but got %d.&quot;</span>,
                        <span class="i">argCount</span>);
           <span class="k">return</span> <span class="k">false</span>;
-</pre><pre class="insert-after">
-        }
+</pre><pre class="insert-after">        }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>callValue</em>()</div>
 <!--
@@ -1415,22 +1282,18 @@ already implemented. To do that, the VM creates an ObjString for "init" and
 reuses it. The string lives right in the VM struct.
 -->
 <p>要调用初始化器，运行时按名字查找 <code>init()</code>。我们希望这很快，因为每次构造实例都会发生。那就该好好利用已实现的字符串驻留。为此，虚拟机为 <code>"init"</code> 创建一个 ObjString 并复用它。字符串就住在 VM 结构体里。</p>
-<div class="codehilite"><pre class="insert-before">
-  Table strings;
+<div class="codehilite"><pre class="insert-before">  Table strings;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">ObjString</span>* <span class="i">initString</span>;
-</pre><pre class="insert-after">
-  ObjUpvalue* openUpvalues;
+<pre class="insert">  <span class="t">ObjString</span>* <span class="i">initString</span>;
+</pre><pre class="insert-after">  ObjUpvalue* openUpvalues;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 <!--
 We create and intern the string when the VM boots up.
 -->
 <p>虚拟机启动时创建并驻留该字符串。</p>
-<div class="codehilite"><pre class="insert-before">
-  initTable(&amp;vm.strings);
+<div class="codehilite"><pre class="insert-before">  initTable(&amp;vm.strings);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
 <pre class="insert">
@@ -1445,14 +1308,11 @@ in <em>initVM</em>()</div>
 We want it to stick around, so the GC considers it a root.
 -->
 <p>我们希望它一直留下，所以 GC 把它当作根。</p>
-<div class="codehilite"><pre class="insert-before">
-  markCompilerRoots();
+<div class="codehilite"><pre class="insert-before">  markCompilerRoots();
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>markRoots</em>()</div>
-<pre class="insert">
-  <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">vm</span>.<span class="i">initString</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">markObject</span>((<span class="t">Obj</span>*)<span class="i">vm</span>.<span class="i">initString</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>markRoots</em>()</div>
 <!--
@@ -1463,15 +1323,12 @@ can trigger a GC. If the collector ran at just the wrong time, it would read
 `vm.initString` before it had been initialized. So, first we zero the field out.
 -->
 <p>仔细看。看出潜伏的缺陷了吗？没有？这是个微妙的。垃圾回收器现在会读 <code>vm.initString</code>。该字段由调用 <code>copyString()</code> 的结果初始化。但复制字符串会分配内存，可能触发 GC。若收集器恰在错误时刻跑，就会在字段初始化之前读到 <code>vm.initString</code>。所以，我们先把字段清零。</p>
-<div class="codehilite"><pre class="insert-before">
-  initTable(&amp;vm.strings);
+<div class="codehilite"><pre class="insert-before">  initTable(&amp;vm.strings);
 
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">initString</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-  vm.initString = copyString(&quot;init&quot;, 4);
+<pre class="insert">  <span class="i">vm</span>.<span class="i">initString</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">  vm.initString = copyString(&quot;init&quot;, 4);
 
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
@@ -1479,14 +1336,11 @@ in <em>initVM</em>()</div>
 We clear the pointer when the VM shuts down since the next line will free it.
 -->
 <p>虚拟机关闭时清掉指针，因为下一行会释放它。</p>
-<div class="codehilite"><pre class="insert-before">
-  freeTable(&amp;vm.strings);
+<div class="codehilite"><pre class="insert-before">  freeTable(&amp;vm.strings);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>freeVM</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">initString</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-  freeObjects();
+<pre class="insert">  <span class="i">vm</span>.<span class="i">initString</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">  freeObjects();
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>freeVM</em>()</div>
 <!--
@@ -1495,7 +1349,7 @@ OK, that lets us call initializers.
 <p>好，这样我们就能调用初始化器了。</p><!--
 -- Initializer return values
 -->
-<h3><a href="#初始化器的返回值" name="初始化器的返回值"><small>28&#8202;.&#8202;4&#8202;.&#8202;2</small>初始化器的返回值</a></h3><!--
+<h3><a href="#初始化器的返回值" id="初始化器的返回值"><small>28&#8202;.&#8202;4&#8202;.&#8202;2</small>初始化器的返回值</a></h3><!--
 The next step is ensuring that constructing an instance of a class with an
 initializer always returns the new instance, and not `nil` or whatever the body
 of the initializer returns. Right now, if a class defines an initializer, then
@@ -1518,32 +1372,26 @@ We detect that by checking to see if the name of the method we're compiling is
 "init".
 -->
 <p>为修好这一点：前端编译初始化器方法时，会在方法体末尾发出不同的字节码，让方法返回 <code>this</code>，而不是多数函数那种隐式 <code>nil</code>。要做<em>到</em>这一点，编译器得真正知道自己何时在编译初始化器。我们通过检查正在编译的方法名是否为 <code>"init"</code> 来检测。</p>
-<div class="codehilite"><pre class="insert-before">
-  FunctionType type = TYPE_METHOD;
+<div class="codehilite"><pre class="insert-before">  FunctionType type = TYPE_METHOD;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>method</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">length</span> == <span class="n">4</span> &amp;&amp;
+<pre class="insert">  <span class="k">if</span> (<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">length</span> == <span class="n">4</span> &amp;&amp;
       <span class="i">memcmp</span>(<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">start</span>, <span class="s">&quot;init&quot;</span>, <span class="n">4</span>) == <span class="n">0</span>) {
     <span class="i">type</span> = <span class="a">TYPE_INITIALIZER</span>;
   }
 
-</pre><pre class="insert-after">
-  function(type);
+</pre><pre class="insert-after">  function(type);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>method</em>()</div>
 <!--
 We define a new function type to distinguish initializers from other methods.
 -->
 <p>我们定义一种新的函数类型，把初始化器与其他方法区分开。</p>
-<div class="codehilite"><pre class="insert-before">
-  TYPE_FUNCTION,
+<div class="codehilite"><pre class="insert-before">  TYPE_FUNCTION,
 </pre><div class="source-file"><em>compiler.c</em><br>
 in enum <em>FunctionType</em></div>
-<pre class="insert">
-  <span class="a">TYPE_INITIALIZER</span>,
-</pre><pre class="insert-after">
-  TYPE_METHOD,
+<pre class="insert">  <span class="a">TYPE_INITIALIZER</span>,
+</pre><pre class="insert-after">  TYPE_METHOD,
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in enum <em>FunctionType</em></div>
 <!--
@@ -1551,20 +1399,17 @@ Whenever the compiler emits the implicit return at the end of a body, we check
 the type to decide whether to insert the initializer-specific behavior.
 -->
 <p>每当编译器在方法体末尾发出隐式 return 时，我们检查类型，决定是否插入初始化器特有的行为。</p>
-<div class="codehilite"><pre class="insert-before">
-static void emitReturn() {
+<div class="codehilite"><pre class="insert-before">static void emitReturn() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>emitReturn</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">type</span> == <span class="a">TYPE_INITIALIZER</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">type</span> == <span class="a">TYPE_INITIALIZER</span>) {
     <span class="i">emitBytes</span>(<span class="a">OP_GET_LOCAL</span>, <span class="n">0</span>);
   } <span class="k">else</span> {
     <span class="i">emitByte</span>(<span class="a">OP_NIL</span>);
   }
 
-</pre><pre class="insert-after">
-  emitByte(OP_RETURN);
+</pre><pre class="insert-after">  emitByte(OP_RETURN);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>emitReturn</em>(), replace 1 line</div>
 <!--
@@ -1577,25 +1422,22 @@ initializer.
 <p>在初始化器里，返回前不是把 <code>nil</code> 压栈，而是加载槽零——那里装着实例。编译无值的 <code>return</code> 语句时也会调用这个 <code>emitReturn()</code>，因此用户在初始化器里提前 return 的情况也被正确处理。</p><!--
 -- Incorrect returns in initializers
 -->
-<h3><a href="#初始化器中错误的-return" name="初始化器中错误的-return"><small>28&#8202;.&#8202;4&#8202;.&#8202;3</small>初始化器中错误的 return</a></h3><!--
+<h3><a href="#初始化器中错误的-return" id="初始化器中错误的-return"><small>28&#8202;.&#8202;4&#8202;.&#8202;3</small>初始化器中错误的 return</a></h3><!--
 The last step, the last item in our list of special features of initializers, is
 making it an error to try to return anything *else* from an initializer. Now
 that the compiler tracks the method type, this is straightforward.
 -->
 <p>最后一步，也是初始化器特殊特性清单上的最后一项：试图从初始化器返回任何<em>别的</em>东西，都定为错误。既然编译器已跟踪方法类型，这很直截了当。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (match(TOKEN_SEMICOLON)) {
+<div class="codehilite"><pre class="insert-before">  if (match(TOKEN_SEMICOLON)) {
     emitReturn();
   } else {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>returnStatement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">type</span> == <span class="a">TYPE_INITIALIZER</span>) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">type</span> == <span class="a">TYPE_INITIALIZER</span>) {
       <span class="i">error</span>(<span class="s">&quot;Can&#39;t return a value from an initializer.&quot;</span>);
     }
 
-</pre><pre class="insert-after">
-    expression();
+</pre><pre class="insert-after">    expression();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>returnStatement</em>()</div>
 <!--
@@ -1608,8 +1450,7 @@ Aside from inheritance, which we'll get to [soon][super], we now have a
 fairly full-featured class system working in clox.
 -->
 <p>除了继承——我们<a href="superclasses.html">很快</a>会讲到——如今 clox 里已有一套相当完整的类系统在运转。</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">CoffeeMaker</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">CoffeeMaker</span> {
   <span class="i">init</span>(<span class="i">coffee</span>) {
     <span class="k">this</span>.<span class="i">coffee</span> = <span class="i">coffee</span>;
   }
@@ -1639,7 +1480,7 @@ something.
 </aside><!--
 -- Optimized Invocations
 -->
-<h2><a href="#优化的调用" name="优化的调用"><small>28&#8202;.&#8202;5</small>优化的调用</a></h2><!--
+<h2><a href="#优化的调用" id="优化的调用"><small>28&#8202;.&#8202;5</small>优化的调用</a></h2><!--
 Our VM correctly implements the language's semantics for method calls and
 initializers. We could stop here. But the main reason we are building an entire
 second implementation of Lox from scratch is to execute faster than our old Java
@@ -1696,19 +1537,16 @@ makes decoding *all* instructions slower.
 <p>字节码解释器最大的性能开销之一，是每条指令的解码与分派。把几条融成一条，就能消掉一部分。</p>
 <p>难处在于判定<em>哪些</em>指令序列常见到值得优化。每条新超指令都要占一个操作码，而操作码数量有限。加太多，就需要更大的操作码编码，从而增大代码体积，并让<em>所有</em>指令的解码变慢。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  if (canAssign &amp;&amp; match(TOKEN_EQUAL)) {
+<div class="codehilite"><pre class="insert-before">  if (canAssign &amp;&amp; match(TOKEN_EQUAL)) {
     expression();
     emitBytes(OP_SET_PROPERTY, name);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>dot</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LEFT_PAREN</span>)) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LEFT_PAREN</span>)) {
     <span class="t">uint8_t</span> <span class="i">argCount</span> = <span class="i">argumentList</span>();
     <span class="i">emitBytes</span>(<span class="a">OP_INVOKE</span>, <span class="i">name</span>);
     <span class="i">emitByte</span>(<span class="i">argCount</span>);
-</pre><pre class="insert-after">
-  } else {
+</pre><pre class="insert-after">  } else {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>dot</em>()</div>
 <!--
@@ -1735,30 +1573,24 @@ In other words, this single instruction combines the operands of the
 really is a fusion of those two instructions. Let's define it.
 -->
 <p>换言之，这条单指令按顺序合并了它所取代的 <code>OP_GET_PROPERTY</code> 与 <code>OP_CALL</code> 的操作数。它真的是那两条指令的融合。来定义它。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_CALL,
+<div class="codehilite"><pre class="insert-before">  OP_CALL,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_INVOKE</span>,
-</pre><pre class="insert-after">
-  OP_CLOSURE,
+<pre class="insert">  <span class="a">OP_INVOKE</span>,
+</pre><pre class="insert-after">  OP_CLOSURE,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 And add it to the disassembler:
 -->
 <p>并加进反汇编器：</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_CALL:
+<div class="codehilite"><pre class="insert-before">    case OP_CALL:
       return byteInstruction(&quot;OP_CALL&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_INVOKE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_INVOKE</span>:
       <span class="k">return</span> <span class="i">invokeInstruction</span>(<span class="s">&quot;OP_INVOKE&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_CLOSURE: {
+</pre><pre class="insert-after">    case OP_CLOSURE: {
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1768,8 +1600,7 @@ disassembly logic.
 <p>这是新的特殊指令格式，需要一点定制反汇编逻辑。</p>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 add after <em>constantInstruction</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">invokeInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>,
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">invokeInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>,
                                 <span class="t">int</span> <span class="i">offset</span>) {
   <span class="t">uint8_t</span> <span class="i">constant</span> = <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span> + <span class="n">1</span>];
   <span class="t">uint8_t</span> <span class="i">argCount</span> = <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span> + <span class="n">2</span>];
@@ -1786,12 +1617,10 @@ argument count. Over in the interpreter's bytecode dispatch loop is where the
 real action begins.
 -->
 <p>我们读两个操作数，再打印方法名与参数个数。真正的好戏在解释器的字节码分派循环里开始。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_INVOKE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_INVOKE</span>: {
         <span class="t">ObjString</span>* <span class="i">method</span> = <span class="a">READ_STRING</span>();
         <span class="t">int</span> <span class="i">argCount</span> = <span class="a">READ_BYTE</span>();
         <span class="k">if</span> (!<span class="i">invoke</span>(<span class="i">method</span>, <span class="i">argCount</span>)) {
@@ -1800,8 +1629,7 @@ in <em>run</em>()</div>
         <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_CLOSURE: {
+</pre><pre class="insert-after">      case OP_CLOSURE: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1822,8 +1650,7 @@ The interesting work happens here:
 <p>有意思的活在这里：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>callValue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">invoke</span>(<span class="t">ObjString</span>* <span class="i">name</span>, <span class="t">int</span> <span class="i">argCount</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">invoke</span>(<span class="t">ObjString</span>* <span class="i">name</span>, <span class="t">int</span> <span class="i">argCount</span>) {
   <span class="t">Value</span> <span class="i">receiver</span> = <span class="i">peek</span>(<span class="i">argCount</span>);
   <span class="t">ObjInstance</span>* <span class="i">instance</span> = <span class="a">AS_INSTANCE</span>(<span class="i">receiver</span>);
   <span class="k">return</span> <span class="i">invokeFromClass</span>(<span class="i">instance</span>-&gt;<span class="i">klass</span>, <span class="i">name</span>, <span class="i">argCount</span>);
@@ -1841,8 +1668,7 @@ instructions, we also need to handle the case where a user incorrectly tries to
 call a method on a value of the wrong type.
 -->
 <p>那假定对象<em>是</em>实例。和 <code>OP_GET_PROPERTY</code> 一样，我们也得处理用户错误地试图在错误类型的值上调用方法的情况。</p>
-<div class="codehilite"><pre class="insert-before">
-  Value receiver = peek(argCount);
+<div class="codehilite"><pre class="insert-before">  Value receiver = peek(argCount);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>invoke</em>()</div>
 <pre class="insert">
@@ -1852,8 +1678,7 @@ in <em>invoke</em>()</div>
     <span class="k">return</span> <span class="k">false</span>;
   }
 
-</pre><pre class="insert-after">
-  ObjInstance* instance = AS_INSTANCE(receiver);
+</pre><pre class="insert-after">  ObjInstance* instance = AS_INSTANCE(receiver);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>invoke</em>()</div>
 <!--
@@ -1870,8 +1695,7 @@ we're going to reuse it later -- in this case for `super` calls.
 </aside>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>callValue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">invokeFromClass</span>(<span class="t">ObjClass</span>* <span class="i">klass</span>, <span class="t">ObjString</span>* <span class="i">name</span>,
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">invokeFromClass</span>(<span class="t">ObjClass</span>* <span class="i">klass</span>, <span class="t">ObjString</span>* <span class="i">name</span>,
                             <span class="t">int</span> <span class="i">argCount</span>) {
   <span class="t">Value</span> <span class="i">method</span>;
   <span class="k">if</span> (!<span class="i">tableGet</span>(&amp;<span class="i">klass</span>-&gt;<span class="i">methods</span>, <span class="i">name</span>, &amp;<span class="i">method</span>)) {
@@ -1922,15 +1746,14 @@ to win any races.
 </aside><img src="image/methods-and-initializers/benchmark.png" alt="Bar chart comparing the two benchmark results." /><!--
 -- Invoking fields
 -->
-<h3><a href="#调用字段" name="调用字段"><small>28&#8202;.&#8202;5&#8202;.&#8202;1</small>调用字段</a></h3><!--
+<h3><a href="#调用字段" id="调用字段"><small>28&#8202;.&#8202;5&#8202;.&#8202;1</small>调用字段</a></h3><!--
 The fundamental creed of optimization is: "Thou shalt not break correctness."
 <span name="monte">Users</span> like it when a language implementation gives
 them an answer faster, but only if it's the *right* answer. Alas, our
 implementation of faster method invocations fails to uphold that principle:
 -->
 <p>优化的根本信条是：“汝不可破坏正确性。”<span name="monte">用户</span>喜欢语言实现更快给出答案，但前提是答案是<em>对的</em>。唉，我们更快的方法调用实现未能守住这条原则：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Oops</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Oops</span> {
   <span class="i">init</span>() {
     <span class="k">fun</span> <span class="i">f</span>() {
       <span class="k">print</span> <span class="s">&quot;not a method&quot;</span>;
@@ -1969,8 +1792,7 @@ Earlier, when we implemented `OP_GET_PROPERTY`, we handled both field and method
 accesses. To squash this new bug, we need to do the same thing for `OP_INVOKE`.
 -->
 <p>先前实现 <code>OP_GET_PROPERTY</code> 时，我们同时处理了字段与方法访问。要压掉这个新缺陷，<code>OP_INVOKE</code> 也得做同样的事。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjInstance* instance = AS_INSTANCE(receiver);
+<div class="codehilite"><pre class="insert-before">  ObjInstance* instance = AS_INSTANCE(receiver);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>invoke</em>()</div>
 <pre class="insert">
@@ -1981,8 +1803,7 @@ in <em>invoke</em>()</div>
     <span class="k">return</span> <span class="i">callValue</span>(<span class="i">value</span>, <span class="i">argCount</span>);
   }
 
-</pre><pre class="insert-after">
-  return invokeFromClass(instance-&gt;klass, name, argCount);
+</pre><pre class="insert-after">  return invokeFromClass(instance-&gt;klass, name, argCount);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>invoke</em>()</div>
 <!--
@@ -2053,7 +1874,7 @@ of an object-oriented programming language, and with respectable performance.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>28&#8202;.&#8202;6</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>28&#8202;.&#8202;6</small>挑战</a></h2><!--
 1.  The hash table lookup to find a class's `init()` method is constant time,
     but still fairly slow. Implement something faster. Write a benchmark and
     measure the performance difference.
@@ -2094,7 +1915,7 @@ of an object-oriented programming language, and with respectable performance.
 <div class="design-note"><!--
 -- Design Note: Novelty Budget
 -->
-<h2><a href="#设计笔记：新鲜感预算" name="设计笔记：新鲜感预算"><small>28&#8202;.&#8202;7</small>设计笔记：新鲜感预算</a></h2><!--
+<h2><a href="#设计笔记：新鲜感预算" id="设计笔记：新鲜感预算"><small>28&#8202;.&#8202;7</small>设计笔记：新鲜感预算</a></h2><!--
 I still remember the first time I wrote a tiny BASIC program on a TRS-80 and
 made a computer do something it hadn't done before. It felt like a superpower.
 The first time I cobbled together just enough of a parser and interpreter to let
@@ -2243,7 +2064,7 @@ proportionally smaller (but likely more devoted) audience size, go for it.
 <a href="superclasses.html" class="next">
   Next Chapter: &ldquo;Superclasses&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

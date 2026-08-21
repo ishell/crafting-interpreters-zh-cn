@@ -993,7 +993,8 @@ keyword.
 <aside name="fun">
 
 <!--
-Yes, I *am* proud of myself for this dumb joke, thank you for asking.
+Yes, I am going to make a dumb joke about the `fun` keyword every time it
+comes up.
 -->
 是的，我*确实*为这个蹩脚笑话感到自豪，谢谢你问。
 

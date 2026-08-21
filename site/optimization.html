@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Optimization<small>30</small></a></h3>
 
 <ul>
@@ -54,7 +53,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="superclasses.html" title="Superclasses" class="prev">←</a>
 <a href="backmatter.html" title="Backmatter" class="next">→</a>
 </nav>
@@ -62,9 +61,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Optimization<small>30</small></a></h3>
 
 <ul>
@@ -90,25 +88,7 @@
   <div class="number">30</div>
   <h1>Optimization</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#优化" name="优化"><small>30&#8202;.&#8202;0</small>优化</a></h1><!--
+<h1><a href="#优化" id="优化"><small>30&#8202;.&#8202;0</small>优化</a></h1><!--
 > The evening's the best part of the day. You've done your day's work. Now you
 > can put your feet up and enjoy it.
 >
@@ -129,7 +109,7 @@ or any program, really.
 <p>若我还住在新奥尔良，我会把这一章叫做 <em>lagniappe</em>（新奥尔良的“额外赠品”）——送给顾客的一点免费小礼物。你已经拥有一整本书、一台完整的虚拟机，可我还想让你在 clox 上多玩一会儿。这一次，我们冲着纯粹的性能去。我们会给虚拟机施加两种截然不同的优化。过程中，你会摸到测量并改进一门语言实现——其实是任何程序——性能的那种手感。</p><!--
 -- Measuring Performance
 -->
-<h2><a href="#测量性能" name="测量性能"><small>30&#8202;.&#8202;1</small>测量性能</a></h2><!--
+<h2><a href="#测量性能" id="测量性能"><small>30&#8202;.&#8202;1</small>测量性能</a></h2><!--
 **Optimization** means taking a working application and improving its
 performance. An optimized program does the same thing, it just takes less
 resources to do so. The resource we usually think of when optimizing is runtime
@@ -145,7 +125,11 @@ understand a program's performance just by thinking real hard. Those days are
 long gone, separated from the present by microcode, cache lines, branch
 prediction, deep compiler pipelines, and mammoth instruction sets. We like to
 pretend C is a "low-level" language, but the stack of technology between
-`printf("Hello, world!");` and a greeting appearing on screen is now miles tall.
+```c
+printf("Hello, world!");
+```
+
+and a greeting appearing on screen is now perilously tall.
 -->
 <p>计算早期有那么一段时光：熟练的程序员能把整台硬件架构与编译器流水线装进脑子里，光靠使劲想就能理解程序的性能。那些日子早已远去，中间隔着微码、缓存行、分支预测、深邃的编译器流水线，以及庞大的指令集。我们喜欢假装 C 是“低级”语言，可从 <code>printf("Hello, world!");</code> 到屏幕上出现问候，技术栈如今已高得吓人。</p><!--
 Optimization today is an empirical science. Our program is a border collie
@@ -163,7 +147,7 @@ the VM, and different architectures have their own strengths and weaknesses.
 <p>正如敏捷训练针对的是某一只狗、某一条障碍赛道，我们也不能假定虚拟机优化会让<em>所有</em> Lox 程序在<em>所有</em>硬件上都更快。不同的 Lox 程序压迫虚拟机的不同区域，不同架构也各有长短。</p><!--
 -- Benchmarks
 -->
-<h3><a href="#基准测试" name="基准测试"><small>30&#8202;.&#8202;1&#8202;.&#8202;1</small>基准测试</a></h3><!--
+<h3><a href="#基准测试" id="基准测试"><small>30&#8202;.&#8202;1&#8202;.&#8202;1</small>基准测试</a></h3><!--
 When we add new functionality, we validate correctness by writing tests -- Lox
 programs that use a feature and validate the VM's behavior. Tests pin down
 semantics and ensure we don't break existing features when we add new ones. We
@@ -255,7 +239,7 @@ but treat benchmarking as its own skill that improves with practice.
 <p>基准测试是一门微妙的艺术。像测试一样，你既要避免对实现过拟合，又要确保基准确实触碰到你关心的代码路径。测量性能时，你需要补偿 CPU 降频、缓存，以及其他古怪的硬件与操作系统怪癖带来的方差。我不会在此布道一整篇，但请把基准测试当作一门随练习而精进的独立技能。</p><!--
 -- Profiling
 -->
-<h3><a href="#性能分析" name="性能分析"><small>30&#8202;.&#8202;1&#8202;.&#8202;2</small>性能分析</a></h3><!--
+<h3><a href="#性能分析" id="性能分析"><small>30&#8202;.&#8202;1&#8202;.&#8202;2</small>性能分析</a></h3><!--
 OK, so you've got a few benchmarks now. You want to make them go faster. Now
 what? First of all, let's assume you've done all the obvious, easy work. You are
 using the right algorithms and data structures -- or, at least, you aren't using
@@ -296,7 +280,7 @@ my own through trial and error. Profilers are wonderful, magical tools.
 <p>各种操作系统与语言都有许多性能分析器。无论你在哪块平台上编程，值得熟悉一款像样的分析器。不必成为大师。我把程序扔给分析器几分钟就学到的东西，自己试错可能要花上<em>几天</em>。性能分析器是美妙而神奇的工具。</p><!--
 -- Faster Hash Table Probing
 -->
-<h2><a href="#更快的哈希表探测" name="更快的哈希表探测"><small>30&#8202;.&#8202;2</small>更快的哈希表探测</a></h2><!--
+<h2><a href="#更快的哈希表探测" id="更快的哈希表探测"><small>30&#8202;.&#8202;2</small>更快的哈希表探测</a></h2><!--
 Enough pontificating, let's get some performance charts going up and to the
 right. The first optimization we'll do, it turns out, is about the *tiniest*
 possible change we could make to our VM.
@@ -310,8 +294,7 @@ code is field accesses and method calls, so one of my benchmarks looked
 something like this:
 -->
 <p>当我第一次让 clox 的祖先——那台字节码虚拟机——跑起来时，我做了任何有自尊心的虚拟机黑客都会做的事。拼凑几个基准，拉起性能分析器，把那些脚本扔进解释器。在像 Lox 这样的动态类型语言里，用户代码很大一块是字段访问与方法调用，所以我的一个基准大致长这样：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Zoo</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Zoo</span> {
   <span class="i">init</span>() {
     <span class="k">this</span>.<span class="i">aardvark</span> = <span class="n">1</span>;
     <span class="k">this</span>.<span class="i">baboon</span>   = <span class="n">1</span>;
@@ -407,14 +390,13 @@ dynamism. But, still, *wow.*
 <p>那么我们有三个热点要优化？其实没有。因为原来这三条指令几乎把全部时间都花在对同一个函数的调用上：<code>tableGet()</code>。该函数独占了整整 72% 的执行时间（同样是包容时间）。在动态类型语言里，我们本来就预期会花不少时间在哈希表里查找——那多少是动态性的代价。可即便如此，<em>哇</em>。</p><!--
 -- Slow key wrapping
 -->
-<h3><a href="#缓慢的键回绕" name="缓慢的键回绕"><small>30&#8202;.&#8202;2&#8202;.&#8202;1</small>缓慢的键回绕</a></h3><!--
+<h3><a href="#缓慢的键回绕" id="缓慢的键回绕"><small>30&#8202;.&#8202;2&#8202;.&#8202;1</small>缓慢的键回绕</a></h3><!--
 If you take a look at `tableGet()`, you'll see it's mostly a wrapper around a
 call to `findEntry()` where the actual hash table lookup happens. To refresh
 your memory, here it is in full:
 -->
 <p>若你看看 <code>tableGet()</code>，会发现它多半只是包了一层对 <code>findEntry()</code> 的调用——真正的哈希表查找发生在那里。温习一下，完整如下：</p>
-<div class="codehilite"><pre>
-<span class="k">static</span> <span class="t">Entry</span>* <span class="i">findEntry</span>(<span class="t">Entry</span>* <span class="i">entries</span>, <span class="t">int</span> <span class="i">capacity</span>,
+<div class="codehilite"><pre><span class="k">static</span> <span class="t">Entry</span>* <span class="i">findEntry</span>(<span class="t">Entry</span>* <span class="i">entries</span>, <span class="t">int</span> <span class="i">capacity</span>,
                         <span class="t">ObjString</span>* <span class="i">key</span>) {
   <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> % <span class="i">capacity</span>;
   <span class="t">Entry</span>* <span class="i">tombstone</span> = <span class="a">NULL</span>;
@@ -443,8 +425,7 @@ When running that previous benchmark -- on my machine, at least -- the VM spends
 to which one? No? It's this:
 -->
 <p>跑先前那个基准时——至少在我的机器上——虚拟机把总执行时间的 70% 花在这个函数的<em>一行</em>上。猜猜是哪一行？猜不到？就是这行：</p>
-<div class="codehilite"><pre>
-  <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> % <span class="i">capacity</span>;
+<div class="codehilite"><pre>  <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> % <span class="i">capacity</span>;
 </pre></div><!--
 That pointer dereference isn't the problem. It's the little `%`. It turns out
 the modulo operator is *really* slow. Much slower than other <span
@@ -500,16 +481,13 @@ with a very fast decrement and bitwise <span class="small-caps">AND</span>. We
 simply change the offending line of code to this:
 -->
 <p>换言之，你可以对任意二的幂取模，只需与该二的幂减一做 <span class="small-caps">AND</span>。我还不够数学家到能<em>证明</em>给你看这为什么成立，但你想通了就会觉得合理。我们可以用非常快的减一与按位 <span class="small-caps">AND</span> 替换那缓慢的取模。只需把那行惹事的代码改成这样：</p>
-<div class="codehilite"><pre class="insert-before">
-static Entry* findEntry(Entry* entries, int capacity,
+<div class="codehilite"><pre class="insert-before">static Entry* findEntry(Entry* entries, int capacity,
                         ObjString* key) {
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>findEntry</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> &amp; (<span class="i">capacity</span> - <span class="n">1</span>);
-</pre><pre class="insert-after">
-  Entry* tombstone = NULL;
+<pre class="insert">  <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> &amp; (<span class="i">capacity</span> - <span class="n">1</span>);
+</pre><pre class="insert-after">  Entry* tombstone = NULL;
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>findEntry</em>(), replace 1 line</div>
 <!--
@@ -528,18 +506,15 @@ Our linear probing search may need to wrap around the end of the array, so there
 is another modulo in `findEntry()` to update.
 -->
 <p>我们的线性探测搜索可能需要从数组末尾回绕，所以 <code>findEntry()</code> 里还有另一处取模要更新。</p>
-<div class="codehilite"><pre class="insert-before">
-      // We found the key.
+<div class="codehilite"><pre class="insert-before">      // We found the key.
       return entry;
     }
 
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>findEntry</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">index</span> = (<span class="i">index</span> + <span class="n">1</span>) &amp; (<span class="i">capacity</span> - <span class="n">1</span>);
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">index</span> = (<span class="i">index</span> + <span class="n">1</span>) &amp; (<span class="i">capacity</span> - <span class="n">1</span>);
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>findEntry</em>(), replace 1 line</div>
 <!--
@@ -553,16 +528,13 @@ which wasn't heavily stressed by our benchmark. But a Lox program that created
 lots of strings might noticeably benefit from this change.
 -->
 <p><code>findEntry()</code> 有个姊妹函数 <code>tableFindString()</code>，为字符串驻留做哈希表查找。不妨也在那里施加同样的优化。该函数只在驻留字符串时调用，我们的基准并未重压它。但若某段 Lox 程序创建大量字符串，可能会明显受益于这一改动。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (table-&gt;count == 0) return NULL;
+<div class="codehilite"><pre class="insert-before">  if (table-&gt;count == 0) return NULL;
 
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>tableFindString</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">hash</span> &amp; (<span class="i">table</span>-&gt;<span class="i">capacity</span> - <span class="n">1</span>);
-</pre><pre class="insert-after">
-  for (;;) {
+<pre class="insert">  <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">hash</span> &amp; (<span class="i">table</span>-&gt;<span class="i">capacity</span> - <span class="n">1</span>);
+</pre><pre class="insert-after">  for (;;) {
     Entry* entry = &amp;table-&gt;entries[index];
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>tableFindString</em>(), replace 1 line</div>
@@ -570,17 +542,14 @@ replace 1 line</div>
 And also when the linear probing wraps around.
 -->
 <p>线性探测回绕时也一样。</p>
-<div class="codehilite"><pre class="insert-before">
-      return entry-&gt;key;
+<div class="codehilite"><pre class="insert-before">      return entry-&gt;key;
     }
 
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>tableFindString</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">index</span> = (<span class="i">index</span> + <span class="n">1</span>) &amp; (<span class="i">table</span>-&gt;<span class="i">capacity</span> - <span class="n">1</span>);
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">index</span> = (<span class="i">index</span> + <span class="n">1</span>) &amp; (<span class="i">table</span>-&gt;<span class="i">capacity</span> - <span class="n">1</span>);
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>tableFindString</em>(), replace 1 line</div>
 <!--
@@ -635,7 +604,7 @@ they are for discovering problems.
 <p>为强化这一点，让我们在现已优化的虚拟机上再跑原先的基准，看看分析器怎么说。在我机器上，<code>tableGet()</code> 仍占相当大一块执行时间。对动态类型语言来说这在意料之中。但它已从总执行时间的 72% 降到 35%。这更符合我们想看到的，也说明优化不只是让程序更快，而是按我们<em>预期的方式</em>更快。性能分析器验证方案与发现问题一样有用。</p><!--
 -- NaN Boxing
 -->
-<h2><a href="#nan-装箱" name="nan-装箱"><small>30&#8202;.&#8202;3</small>NaN 装箱</a></h2><!--
+<h2><a href="#nan-装箱" id="nan-装箱"><small>30&#8202;.&#8202;3</small>NaN 装箱</a></h2><!--
 This next optimization has a very different feel. Thankfully, despite the odd
 name, it does not involve punching your grandmother. It's different, but not,
 like, *that* different. With our previous optimization, the profiler told us
@@ -706,7 +675,7 @@ floating point. Lox is in that same boat.
 <p>动态语言一派讨厌输给静态阵营，于是想出许多极巧妙的办法，把类型信息与载荷塞进少量比特。NaN 装箱就是其中之一。它对 JavaScript、Lua 这类所有数字都是双精度浮点的语言尤其合适。Lox 也在同一条船上。</p><!--
 -- What is (and is not) a number?
 -->
-<h3><a href="#什么是（以及不是）数字？" name="什么是（以及不是）数字？"><small>30&#8202;.&#8202;3&#8202;.&#8202;1</small>什么是（以及不是）数字？</a></h3><!--
+<h3><a href="#什么是（以及不是）数字？" id="什么是（以及不是）数字？"><small>30&#8202;.&#8202;3&#8202;.&#8202;1</small>什么是（以及不是）数字？</a></h3><!--
 Before we start optimizing, we need to really understand how our friend the CPU
 represents floating-point numbers. Almost all machines today use the same
 scheme, encoded in the venerable scroll [IEEE 754][754], known to mortals as the
@@ -836,7 +805,7 @@ of the VM should just work.
 <p>对其余值类型，当然有转换步骤。但幸好，虚拟机把从值到原始类型的全部机制藏在少数宏后面。重写那些宏以实现 NaN 装箱，虚拟机其余部分应当就能直接工作。</p><!--
 -- Conditional support
 -->
-<h3><a href="#条件支持" name="条件支持"><small>30&#8202;.&#8202;3&#8202;.&#8202;2</small>条件支持</a></h3><!--
+<h3><a href="#条件支持" id="条件支持"><small>30&#8202;.&#8202;3&#8202;.&#8202;2</small>条件支持</a></h3><!--
 I know the details of this new representation aren't clear in your head yet.
 Don't worry, they will crystallize as we work through the implementation. Before
 we get to that, we're going to put some compile-time scaffolding in place.
@@ -855,14 +824,11 @@ the old tagged union implementation of Value and the new NaN-boxed form. We
 select which representation we want at compile time using this flag:
 -->
 <p>若虚拟机只因值表示就彻底失去对某架构的支持，那就糟了。为避免如此，我们会同时维持对<em>两种</em>表示的支持：旧的带标签联合 Value，以及新的 NaN 装箱形式。编译期用这个标志选择想要的表示：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;stdint.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;stdint.h&gt;
 
 </pre><div class="source-file"><em>common.h</em></div>
-<pre class="insert">
-<span class="a">#define NAN_BOXING</span>
-</pre><pre class="insert-after">
-#define DEBUG_PRINT_CODE
+<pre class="insert"><span class="a">#define NAN_BOXING</span>
+</pre><pre class="insert-after">#define DEBUG_PRINT_CODE
 </pre></div>
 <div class="source-file-narrow"><em>common.h</em></div>
 <!--
@@ -877,19 +843,16 @@ Most of the work happens in the "value" module where we add a section for the
 new type.
 -->
 <p>大部分工作发生在 “value” 模块，我们为新类型加一节。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct ObjString ObjString;
+<div class="codehilite"><pre class="insert-before">typedef struct ObjString ObjString;
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#ifdef NAN_BOXING</span>
+<pre class="insert"><span class="a">#ifdef NAN_BOXING</span>
 
 <span class="k">typedef</span> <span class="t">uint64_t</span> <span class="t">Value</span>;
 
 <span class="a">#else</span>
 
-</pre><pre class="insert-after">
-typedef enum {
+</pre><pre class="insert-after">typedef enum {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
@@ -904,8 +867,7 @@ Before we start re-implementing those macros, we close the `#else` branch of the
 `#ifdef` at the end of the definitions for the old representation.
 -->
 <p>开始重实现那些宏之前，我们在旧表示定义的末尾关闭 <code>#ifdef</code> 的 <code>#else</code> 分支。</p>
-<div class="codehilite"><pre class="insert-before">
-#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
+<div class="codehilite"><pre class="insert-before">#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -923,7 +885,7 @@ it one value type at a time, from easiest to hardest.
 <p>剩下的任务只是用新实现对那个 <code>#ifdef</code> 第一节填满 <code>#else</code> 侧已有的全部东西。我们会按值类型逐个推进，从最易到最难。</p><!--
 -- Numbers
 -->
-<h3><a href="#数字" name="数字"><small>30&#8202;.&#8202;3&#8202;.&#8202;3</small>数字</a></h3><!--
+<h3><a href="#数字" id="数字"><small>30&#8202;.&#8202;3&#8202;.&#8202;3</small>数字</a></h3><!--
 We'll start with numbers since they have the most direct representation under
 NaN boxing. To "convert" a C double to a NaN-boxed clox Value, we don't need to
 touch a single bit -- the representation is exactly the same. But we do need to
@@ -966,8 +928,7 @@ expression, so the conversion macros have to call out to helper functions.
 Here's the first macro:
 -->
 <p>我知道一种把 <code>double</code> 转成 <code>Value</code> 再转回来的办法，我相信 C 与 C++ 规范都支持。不幸的是，它放不进单个表达式，所以转换宏得调用辅助函数。第一个宏如下：</p>
-<div class="codehilite"><pre class="insert-before">
-typedef uint64_t Value;
+<div class="codehilite"><pre class="insert-before">typedef uint64_t Value;
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -981,8 +942,7 @@ typedef uint64_t Value;
 That macro passes the double here:
 -->
 <p>该宏把 double 传到这里：</p>
-<div class="codehilite"><pre class="insert-before">
-#define NUMBER_VAL(num) numToValue(num)
+<div class="codehilite"><pre class="insert-before">#define NUMBER_VAL(num) numToValue(num)
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1009,8 +969,7 @@ entirely.
 "Unwrapping" a Lox number is the mirror image.
 -->
 <p>“解包”一个 Lox 数字是镜像操作。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef uint64_t Value;
+<div class="codehilite"><pre class="insert-before">typedef uint64_t Value;
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1024,8 +983,7 @@ typedef uint64_t Value;
 That macro calls this function:
 -->
 <p>该宏调用这个函数：</p>
-<div class="codehilite"><pre class="insert-before">
-#define NUMBER_VAL(num) numToValue(num)
+<div class="codehilite"><pre class="insert-before">#define NUMBER_VAL(num) numToValue(num)
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1051,8 +1009,7 @@ If you find yourself with a compiler that does not optimize the `memcpy()` away,
 try this instead:
 -->
 <p>若你碰到不会优化掉 <code>memcpy()</code> 的编译器，试试这个：</p>
-<div class="codehilite"><pre>
-<span class="t">double</span> <span class="i">valueToNum</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<div class="codehilite"><pre><span class="t">double</span> <span class="i">valueToNum</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="k">union</span> {
     <span class="t">uint64_t</span> <span class="i">bits</span>;
     <span class="t">double</span> <span class="i">num</span>;
@@ -1062,8 +1019,7 @@ try this instead:
 }
 </pre></div>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-#define clox_value_h
+<div class="codehilite"><pre class="insert-before">#define clox_value_h
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1080,8 +1036,7 @@ we have are exactly the bits for a double, how do we tell that it *is* a double?
 It's time to get bit twiddling.
 -->
 <p>为了最终只是让 C 类型检查器闭嘴，这可写了不少代码。对 Lox 数字做运行时类型<em>测试</em>更有趣一点。若我们手里恰好是 double 的那些比特，怎么判断它<em>是</em> double？是时候玩位操作了。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef uint64_t Value;
+<div class="codehilite"><pre class="insert-before">typedef uint64_t Value;
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1117,8 +1072,7 @@ across a number of architectures, I haven't seen it happen.
 The set of quiet NaN bits are declared like this:
 -->
 <p>安静 NaN 位集合声明如下：</p>
-<div class="codehilite"><pre class="insert-before">
-#ifdef NAN_BOXING
+<div class="codehilite"><pre class="insert-before">#ifdef NAN_BOXING
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1139,7 +1093,7 @@ to dodge that Intel value.
 <p>这恰好是全部指数位，加上安静 NaN 位，再加上一位额外的，好躲开那个 Intel 值。</p><!--
 -- Nil, true, and false
 -->
-<h3><a href="#nil、true-与-false" name="nil、true-与-false"><small>30&#8202;.&#8202;3&#8202;.&#8202;4</small>nil、true 与 false</a></h3><!--
+<h3><a href="#nil、true-与-false" id="nil、true-与-false"><small>30&#8202;.&#8202;3&#8202;.&#8202;4</small>nil、true 与 false</a></h3><!--
 The next type to handle is `nil`. That's pretty simple since there's only one
 `nil` value and thus we need only a single bit pattern to represent it. There
 are two other singleton values, the two Booleans, `true` and `false`. This calls
@@ -1152,8 +1106,7 @@ these three singleton values we're looking at. The three type tags are defined
 like so:
 -->
 <p>两位给出四种不同组合，足够了。我们把未用尾数空间的最低两位声明为“类型标签”，以判定看到的是这三个单例中的哪一个。三个类型标签定义如下：</p>
-<div class="codehilite"><pre class="insert-before">
-#define QNAN     ((uint64_t)0x7ffc000000000000)
+<div class="codehilite"><pre class="insert-before">#define QNAN     ((uint64_t)0x7ffc000000000000)
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -1173,14 +1126,11 @@ quiet NaN representation along with the `nil` type tag bits:
 In code, we check the bits like so:
 -->
 <p>在代码里，我们这样检查这些位：</p>
-<div class="codehilite"><pre class="insert-before">
-#define AS_NUMBER(value)    valueToNum(value)
+<div class="codehilite"><pre class="insert-before">#define AS_NUMBER(value)    valueToNum(value)
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define NIL_VAL         ((Value)(uint64_t)(QNAN | TAG_NIL))</span>
-</pre><pre class="insert-after">
-#define NUMBER_VAL(num) numToValue(num)
+<pre class="insert"><span class="a">#define NIL_VAL         ((Value)(uint64_t)(QNAN | TAG_NIL))</span>
+</pre><pre class="insert-after">#define NUMBER_VAL(num) numToValue(num)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
@@ -1194,29 +1144,23 @@ name="equal">equality</span> on uint64_t to see if a Value is `nil`.
 -->
 <p>既然 <code>nil</code> 只有一种位表示，我们可以对 uint64_t 用<span
 name="equal">相等</span>比较来看一个 Value 是否为 <code>nil</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef uint64_t Value;
+<div class="codehilite"><pre class="insert-before">typedef uint64_t Value;
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_NIL(value)       ((value) == NIL_VAL)</span>
-</pre><pre class="insert-after">
-#define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
+<pre class="insert"><span class="a">#define IS_NIL(value)       ((value) == NIL_VAL)</span>
+</pre><pre class="insert-after">#define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
 You can guess how we define the `true` and `false` values.
 -->
 <p>你可以猜到我们如何定义 <code>true</code> 与 <code>false</code> 值。</p>
-<div class="codehilite"><pre class="insert-before">
-#define AS_NUMBER(value)    valueToNum(value)
+<div class="codehilite"><pre class="insert-before">#define AS_NUMBER(value)    valueToNum(value)
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define FALSE_VAL       ((Value)(uint64_t)(QNAN | TAG_FALSE))</span>
+<pre class="insert"><span class="a">#define FALSE_VAL       ((Value)(uint64_t)(QNAN | TAG_FALSE))</span>
 <span class="a">#define TRUE_VAL        ((Value)(uint64_t)(QNAN | TAG_TRUE))</span>
-</pre><pre class="insert-after">
-#define NIL_VAL         ((Value)(uint64_t)(QNAN | TAG_NIL))
+</pre><pre class="insert-after">#define NIL_VAL         ((Value)(uint64_t)(QNAN | TAG_NIL))
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
@@ -1227,14 +1171,11 @@ To convert a C bool into a Lox Boolean, we rely on these two singleton values
 and the good old conditional operator.
 -->
 <p>把 C 的 bool 转成 Lox 布尔，我们依赖这两个单例值，以及好用的条件运算符。</p>
-<div class="codehilite"><pre class="insert-before">
-#define AS_NUMBER(value)    valueToNum(value)
+<div class="codehilite"><pre class="insert-before">#define AS_NUMBER(value)    valueToNum(value)
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define BOOL_VAL(b)     ((b) ? TRUE_VAL : FALSE_VAL)</span>
-</pre><pre class="insert-after">
-#define FALSE_VAL       ((Value)(uint64_t)(QNAN | TAG_FALSE))
+<pre class="insert"><span class="a">#define BOOL_VAL(b)     ((b) ? TRUE_VAL : FALSE_VAL)</span>
+</pre><pre class="insert-after">#define FALSE_VAL       ((Value)(uint64_t)(QNAN | TAG_FALSE))
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
@@ -1243,14 +1184,11 @@ compiler can figure one out faster than I can. Going the other direction is
 simpler.
 -->
 <p>大概有更巧妙的按位做法，但我直觉是编译器能比我更快想出来。反过来方向更简单。</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
+<div class="codehilite"><pre class="insert-before">#define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_BOOL(value)      ((value) == TRUE_VAL)</span>
-</pre><pre class="insert-after">
-#define AS_NUMBER(value)    valueToNum(value)
+<pre class="insert"><span class="a">#define AS_BOOL(value)      ((value) == TRUE_VAL)</span>
+</pre><pre class="insert-after">#define AS_NUMBER(value)    valueToNum(value)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
@@ -1260,22 +1198,18 @@ must be `false`. This macro does assume you call it only on a Value that you
 know *is* a Lox Boolean. To check that, there's one more macro.
 -->
 <p>既然我们知道 Lox 里恰好有两种布尔位表示——不像 C 里任何非零值都可视为“真”——若它不是 <code>true</code>，就必定是 <code>false</code>。该宏假定你只对已知<em>是</em> Lox 布尔的 Value 调用它。要检查这一点，还有一个宏。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef uint64_t Value;
+<div class="codehilite"><pre class="insert-before">typedef uint64_t Value;
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_BOOL(value)      (((value) | 1) == TRUE_VAL)</span>
-</pre><pre class="insert-after">
-#define IS_NIL(value)       ((value) == NIL_VAL)
+<pre class="insert"><span class="a">#define IS_BOOL(value)      (((value) | 1) == TRUE_VAL)</span>
+</pre><pre class="insert-after">#define IS_NIL(value)       ((value) == NIL_VAL)
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 <!--
 That looks a little strange. A more obvious macro would look like this:
 -->
 <p>这看起来有点怪。更显而易见的宏会像这样：</p>
-<div class="codehilite"><pre>
-<span class="a">#define IS_BOOL(v) ((v) == TRUE_VAL || (v) == FALSE_VAL)</span>
+<div class="codehilite"><pre><span class="a">#define IS_BOOL(v) ((v) == TRUE_VAL || (v) == FALSE_VAL)</span>
 </pre></div><!--
 Unfortunately, that's not safe. The expansion mentions `v` twice, which means if
 that expression has any side effects, they will be executed twice. We could have
@@ -1310,7 +1244,7 @@ in the first two states or the third.
 <p>此时，我们只需把结果与 <code>TRUE_VAL</code> 比较，看我们处于前两种状态还是第三种。</p><!--
 -- Objects
 -->
-<h3><a href="#对象" name="对象"><small>30&#8202;.&#8202;3&#8202;.&#8202;5</small>对象</a></h3><!--
+<h3><a href="#对象" id="对象"><small>30&#8202;.&#8202;3&#8202;.&#8202;5</small>对象</a></h3><!--
 The last value type is the hardest. Unlike the singleton values, there are
 billions of different pointer values we need to box inside a NaN. This means we
 need both some kind of tag to indicate that these particular NaNs *are* Obj
@@ -1349,11 +1283,9 @@ To convert a raw Obj pointer to a Value, we take the pointer and set all of the
 quiet NaN bits and the sign bit.
 -->
 <p>把原始 Obj 指针转成 Value，我们取该指针，置上全部安静 NaN 位与符号位。</p>
-<div class="codehilite"><pre class="insert-before">
-#define NUMBER_VAL(num) numToValue(num)
+<div class="codehilite"><pre class="insert-before">#define NUMBER_VAL(num) numToValue(num)
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define OBJ_VAL(obj) \</span>
+<pre class="insert"><span class="a">#define OBJ_VAL(obj) \</span>
 <span class="a">    (Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj))</span>
 </pre><pre class="insert-after">
 
@@ -1384,14 +1316,11 @@ lawless territory too. It's up to you to decide if the gains are worth it.
 We define the sign bit like so:
 -->
 <p>我们这样定义符号位：</p>
-<div class="codehilite"><pre class="insert-before">
-#ifdef NAN_BOXING
+<div class="codehilite"><pre class="insert-before">#ifdef NAN_BOXING
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define SIGN_BIT ((uint64_t)0x8000000000000000)</span>
-</pre><pre class="insert-after">
-#define QNAN     ((uint64_t)0x7ffc000000000000)
+<pre class="insert"><span class="a">#define SIGN_BIT ((uint64_t)0x8000000000000000)</span>
+</pre><pre class="insert-after">#define QNAN     ((uint64_t)0x7ffc000000000000)
 
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
@@ -1399,11 +1328,9 @@ We define the sign bit like so:
 To get the Obj pointer back out, we simply mask off all of those extra bits.
 -->
 <p>要取出 Obj 指针，只需掩掉所有那些额外位。</p>
-<div class="codehilite"><pre class="insert-before">
-#define AS_NUMBER(value)    valueToNum(value)
+<div class="codehilite"><pre class="insert-before">#define AS_NUMBER(value)    valueToNum(value)
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_OBJ(value) \</span>
+<pre class="insert"><span class="a">#define AS_OBJ(value) \</span>
 <span class="a">    ((Obj*)(uintptr_t)((value) &amp; ~(SIGN_BIT | QNAN)))</span>
 </pre><pre class="insert-after">
 
@@ -1420,11 +1347,9 @@ quiet NaN and sign bits, we *clear* those bits and let the pointer bits remain.
 One last macro:
 -->
 <p>最后一个宏：</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
+<div class="codehilite"><pre class="insert-before">#define IS_NUMBER(value)    (((value) &amp; QNAN) != QNAN)
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_OBJ(value) \</span>
+<pre class="insert"><span class="a">#define IS_OBJ(value) \</span>
 <span class="a">    (((value) &amp; (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))</span>
 </pre><pre class="insert-after">
 
@@ -1441,7 +1366,7 @@ tag.
 <p>存放 Obj 指针的 Value 符号位置位，但任何负数也是。要判断一个 Value 是否为 Obj 指针，需要检查符号位与全部安静 NaN 位都置位。这与检测单例值类型的方式相似，只是这次用符号位当标签。</p><!--
 -- Value functions
 -->
-<h3><a href="#值相关函数" name="值相关函数"><small>30&#8202;.&#8202;3&#8202;.&#8202;6</small>值相关函数</a></h3><!--
+<h3><a href="#值相关函数" id="值相关函数"><small>30&#8202;.&#8202;3&#8202;.&#8202;6</small>值相关函数</a></h3><!--
 The rest of the VM usually goes through the macros when working with Values, so
 we are almost done. However, there are a couple of functions in the "value"
 module that peek inside the otherwise black box of Value and work with its
@@ -1453,12 +1378,10 @@ longer have an explicit type enum we can switch on, so instead we use a series
 of type tests to handle each kind of value.
 -->
 <p>第一个是 <code>printValue()</code>。它对每种值类型有单独代码。我们不再有可 switch 的显式类型枚举，于是改用一系列类型测试处理每类值。</p>
-<div class="codehilite"><pre class="insert-before">
-void printValue(Value value) {
+<div class="codehilite"><pre class="insert-before">void printValue(Value value) {
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>printValue</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef NAN_BOXING</span>
+<pre class="insert"><span class="a">#ifdef NAN_BOXING</span>
   <span class="k">if</span> (<span class="a">IS_BOOL</span>(<span class="i">value</span>)) {
     <span class="i">printf</span>(<span class="a">AS_BOOL</span>(<span class="i">value</span>) ? <span class="s">&quot;true&quot;</span> : <span class="s">&quot;false&quot;</span>);
   } <span class="k">else</span> <span class="k">if</span> (<span class="a">IS_NIL</span>(<span class="i">value</span>)) {
@@ -1469,8 +1392,7 @@ in <em>printValue</em>()</div>
     <span class="i">printObject</span>(<span class="i">value</span>);
   }
 <span class="a">#else</span>
-</pre><pre class="insert-after">
-  switch (value.type) {
+</pre><pre class="insert-after">  switch (value.type) {
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>()</div>
 <!--
@@ -1482,30 +1404,24 @@ We still support the original tagged union representation, so we keep the old
 code and enclose it in the `#else` conditional section.
 -->
 <p>我们仍支持原先的带标签联合表示，所以保留旧代码，并包在 <code>#else</code> 条件节里。</p>
-<div class="codehilite"><pre class="insert-before">
-  }
+<div class="codehilite"><pre class="insert-before">  }
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>printValue</em>()</div>
-<pre class="insert">
-<span class="a">#endif</span>
-</pre><pre class="insert-after">
-}
+<pre class="insert"><span class="a">#endif</span>
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>()</div>
 <!--
 The other operation is testing two values for equality.
 -->
 <p>另一项操作是测试两个值是否相等。</p>
-<div class="codehilite"><pre class="insert-before">
-bool valuesEqual(Value a, Value b) {
+<div class="codehilite"><pre class="insert-before">bool valuesEqual(Value a, Value b) {
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>valuesEqual</em>()</div>
-<pre class="insert">
-<span class="a">#ifdef NAN_BOXING</span>
+<pre class="insert"><span class="a">#ifdef NAN_BOXING</span>
   <span class="k">return</span> <span class="i">a</span> == <span class="i">b</span>;
 <span class="a">#else</span>
-</pre><pre class="insert-after">
-  if (a.type != b.type) return false;
+</pre><pre class="insert-after">  if (a.type != b.type) return false;
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
 <!--
@@ -1527,8 +1443,7 @@ correctly implement IEEE 754 numbers, then the resulting value is not supposed
 to be equal to itself. More concretely:
 -->
 <p>对数字也<em>大体</em>正确。多数位表示不同的浮点数是不同的数值。可惜 IEEE 754 有个坑等着绊我们。出于我不完全清楚的原因，规范规定 NaN 值<em>不</em>等于<em>自身</em>。这对我们自用的特殊安静 NaN 不是问题。但有可能在 Lox 里产生“真正的”算术 NaN；若我们想正确实现 IEEE 754 数字，则结果值不该等于自身。更具体地说：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">nan</span> = <span class="n">0</span>/<span class="n">0</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">nan</span> = <span class="n">0</span>/<span class="n">0</span>;
 <span class="k">print</span> <span class="i">nan</span> == <span class="i">nan</span>;
 </pre></div><!--
 IEEE 754 says this program is supposed to print "false". It does the right thing
@@ -1541,16 +1456,13 @@ Our new representation breaks that by defining Value to be a uint64_t. If we
 want to be *fully* compliant with IEEE 754, we need to handle this case.
 -->
 <p>新表示把 Value 定义成 uint64_t，打破了这一点。若想<em>完全</em>符合 IEEE 754，需要处理这一情形。</p>
-<div class="codehilite"><pre class="insert-before">
-#ifdef NAN_BOXING
+<div class="codehilite"><pre class="insert-before">#ifdef NAN_BOXING
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>valuesEqual</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="a">IS_NUMBER</span>(<span class="i">a</span>) &amp;&amp; <span class="a">IS_NUMBER</span>(<span class="i">b</span>)) {
+<pre class="insert">  <span class="k">if</span> (<span class="a">IS_NUMBER</span>(<span class="i">a</span>) &amp;&amp; <span class="a">IS_NUMBER</span>(<span class="i">b</span>)) {
     <span class="k">return</span> <span class="a">AS_NUMBER</span>(<span class="i">a</span>) == <span class="a">AS_NUMBER</span>(<span class="i">b</span>);
   }
-</pre><pre class="insert-after">
-  return a == b;
+</pre><pre class="insert-after">  return a == b;
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
 <!--
@@ -1572,14 +1484,11 @@ Finally, we close the conditional compilation section around the old
 implementation.
 -->
 <p>最后，我们关闭旧实现周围的条件编译节。</p>
-<div class="codehilite"><pre class="insert-before">
-  }
+<div class="codehilite"><pre class="insert-before">  }
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>valuesEqual</em>()</div>
-<pre class="insert">
-<span class="a">#endif</span>
-</pre><pre class="insert-after">
-}
+<pre class="insert"><span class="a">#endif</span>
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
 <!--
@@ -1589,7 +1498,7 @@ That was the last line of new code in the book.
 <p>就是这样。这项优化完成了，我们的 clox 虚拟机也完成了。那是本书最后一行新代码。</p><!--
 -- Evaluating performance
 -->
-<h3><a href="#评估性能" name="评估性能"><small>30&#8202;.&#8202;3&#8202;.&#8202;7</small>评估性能</a></h3><!--
+<h3><a href="#评估性能" id="评估性能"><small>30&#8202;.&#8202;3&#8202;.&#8202;7</small>评估性能</a></h3><!--
 The code is done, but we still need to figure out if we actually made anything
 better with these changes. Evaluating an optimization like this is very
 different from the previous one. There, we had a clear hotspot visible in the
@@ -1657,7 +1566,7 @@ you have in that area.
 <p>但若你发现自己在做一个轻松胜利都已被拿走的程序，总有一天你可能想调调值表示。希望本章照亮了那一领域你拥有的一些选项。</p><!--
 -- Where to Next
 -->
-<h2><a href="#下一步去哪里" name="下一步去哪里"><small>30&#8202;.&#8202;4</small>下一步去哪里</a></h2><!--
+<h2><a href="#下一步去哪里" id="下一步去哪里"><small>30&#8202;.&#8202;4</small>下一步去哪里</a></h2><!--
 We'll stop here with the Lox language and our two interpreters. We could tinker
 on it forever, adding new language features and clever speed improvements. But,
 for this book, I think we've reached a natural place to call our work complete.
@@ -1781,7 +1690,7 @@ handle compilers and interpreters, you can do anything you put your mind to.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>30&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>30&#8202;.&#8202;5</small>挑战</a></h2><!--
 Assigning homework on the last day of school seems cruel but if you really want
 something to do during your summer vacation:
 -->
@@ -1831,7 +1740,7 @@ something to do during your summer vacation:
 <a href="backmatter.html" class="next">
   Next Part: &ldquo;Backmatter&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Jumping Back and Forth<small>23</small></a></h3>
 
 <ul>
@@ -55,7 +54,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="local-variables.html" title="Local Variables" class="prev">←</a>
 <a href="calls-and-functions.html" title="Calls and Functions" class="next">→</a>
 </nav>
@@ -63,9 +62,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Jumping Back and Forth<small>23</small></a></h3>
 
 <ul>
@@ -92,25 +90,7 @@
   <div class="number">23</div>
   <h1>Jumping Back and Forth</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#来回跳转" name="来回跳转"><small>23&#8202;.&#8202;0</small>来回跳转</a></h1><!--
+<h1><a href="#来回跳转" id="来回跳转"><small>23&#8202;.&#8202;0</small>来回跳转</a></h1><!--
 > The order that our mind imagines is like a net, or like a ladder, built to
 > attain something. But afterward you must throw the ladder away, because you
 > discover that, even if it was useful, it was meaningless.
@@ -150,8 +130,7 @@ necessary is to change the `ip` in more interesting ways. The simplest control
 flow construct is an `if` statement with no `else` clause:
 -->
 <p>正常执行靠递增 <code>ip</code>。但我们可以随意改写那个变量。要实现控制流，所需要的不过是用更有趣的方式改动 <code>ip</code>。最简单的控制流构造，是没有 <code>else</code> 子句的 <code>if</code> 语句：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">condition</span>) <span class="k">print</span>(<span class="s">&quot;condition was truthy&quot;</span>);
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">condition</span>) <span class="k">print</span>(<span class="s">&quot;condition was truthy&quot;</span>);
 </pre></div><!--
 The VM evaluates the bytecode for the condition expression. If the result is
 truthy, then it continues along and executes the `print` statement in the body.
@@ -194,22 +173,19 @@ and get started with that.
 <p>总之，我本无意扯那么哲学。要紧的是：只要有那一条条件跳转指令，就足以实现没有 <code>else</code> 子句的 Lox <code>if</code> 语句。那咱们就动手吧。</p><!--
 -- If Statements
 -->
-<h2><a href="#if-语句" name="if-语句"><small>23&#8202;.&#8202;1</small>if 语句</a></h2><!--
+<h2><a href="#if-语句" id="if-语句"><small>23&#8202;.&#8202;1</small>if 语句</a></h2><!--
 This many chapters in, you know the drill. Any new feature starts in the front
 end and works its way through the pipeline. An `if` statement is, well, a
 statement, so that's where we hook it into the parser.
 -->
 <p>写到这么多章了，你知道套路。任何新特性从前端起步，一路穿过流水线。<code>if</code> 语句嘛，就是一条语句，所以我们在解析器里从这儿挂上。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (match(TOKEN_PRINT)) {
+<div class="codehilite"><pre class="insert-before">  if (match(TOKEN_PRINT)) {
     printStatement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_IF</span>)) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_IF</span>)) {
     <span class="i">ifStatement</span>();
-</pre><pre class="insert-after">
-  } else if (match(TOKEN_LEFT_BRACE)) {
+</pre><pre class="insert-after">  } else if (match(TOKEN_LEFT_BRACE)) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>statement</em>()</div>
 <!--
@@ -218,8 +194,7 @@ When we see an `if` keyword, we hand off compilation to this function:
 <p>看见 <code>if</code> 关键字时，我们把编译交给这个函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expressionStatement</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">ifStatement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">ifStatement</span>() {
   <span class="i">consume</span>(<span class="a">TOKEN_LEFT_PAREN</span>, <span class="s">&quot;Expect &#39;(&#39; after &#39;if&#39;.&quot;</span>);
   <span class="i">expression</span>();
   <span class="i">consume</span>(<span class="a">TOKEN_RIGHT_PAREN</span>, <span class="s">&quot;Expect &#39;)&#39; after condition.&quot;</span>);<span name="paren"> </span>
@@ -238,8 +213,7 @@ anything useful? The language would be just as unambiguous and easy to parse
 without it, like:
 -->
 <p>你有没有注意到：<code>if</code> 关键字后面的 <code>(</code> 其实并不干任何有用的事？没有它，语言同样无歧义、同样好解析，比如：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> <span class="i">condition</span>) <span class="k">print</span>(<span class="s">&quot;looks weird&quot;</span>);
+<div class="codehilite"><pre><span class="k">if</span> <span class="i">condition</span>) <span class="k">print</span>(<span class="s">&quot;looks weird&quot;</span>);
 </pre></div><!--
 The closing `)` is useful because it separates the condition expression from the
 body. Some languages use a `then` keyword instead. But the opening `(` doesn't
@@ -285,8 +259,7 @@ We encode this trick into two helper functions.
 <p>我们把这招编进两个辅助函数。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitBytes</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">emitJump</span>(<span class="t">uint8_t</span> <span class="i">instruction</span>) {
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">emitJump</span>(<span class="t">uint8_t</span> <span class="i">instruction</span>) {
   <span class="i">emitByte</span>(<span class="i">instruction</span>);
   <span class="i">emitByte</span>(<span class="n">0xff</span>);
   <span class="i">emitByte</span>(<span class="n">0xff</span>);
@@ -314,8 +287,7 @@ compiling the then branch, we take that offset and pass it to this:
 <p>该函数返回已发出指令在块中的偏移。编译完 then 分支后，我们拿这个偏移传给下面这个：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitConstant</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">patchJump</span>(<span class="t">int</span> <span class="i">offset</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">patchJump</span>(<span class="t">int</span> <span class="i">offset</span>) {
   <span class="c">// -2 to adjust for the bytecode for the jump offset itself.</span>
   <span class="t">int</span> <span class="i">jump</span> = <span class="i">currentChunk</span>()-&gt;<span class="i">count</span> - <span class="i">offset</span> - <span class="n">2</span>;
 
@@ -340,33 +312,27 @@ statement.
 That's all we need at compile time. Let's define the new instruction.
 -->
 <p>编译期需要的就这些。来定义新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_PRINT,
+<div class="codehilite"><pre class="insert-before">  OP_PRINT,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_JUMP_IF_FALSE</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_JUMP_IF_FALSE</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 Over in the VM, we get it working like so:
 -->
 <p>到虚拟机那边，我们这样让它工作：</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
       }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_JUMP_IF_FALSE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_JUMP_IF_FALSE</span>: {
         <span class="t">uint16_t</span> <span class="i">offset</span> = <span class="a">READ_SHORT</span>();
         <span class="k">if</span> (<span class="i">isFalsey</span>(<span class="i">peek</span>(<span class="n">0</span>))) <span class="i">vm</span>.<span class="i">ip</span> += <span class="i">offset</span>;
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -374,15 +340,12 @@ This is the first instruction we've added that takes a 16-bit operand. To read
 that from the chunk, we use a new macro.
 -->
 <p>这是我们加入的第一条带 16 位操作数的指令。要从块里读它，我们用一个新宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
+<div class="codehilite"><pre class="insert-before">#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#define READ_SHORT() \</span>
+<pre class="insert"><span class="a">#define READ_SHORT() \</span>
 <span class="a">    (vm.ip += 2, (uint16_t)((vm.ip[-2] &lt;&lt; 8) | vm.ip[-1]))</span>
-</pre><pre class="insert-after">
-#define READ_STRING() AS_STRING(READ_CONSTANT())
+</pre><pre class="insert-after">#define READ_STRING() AS_STRING(READ_CONSTANT())
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -390,14 +353,11 @@ It yanks the next two bytes from the chunk and builds a 16-bit unsigned integer
 out of them. As usual, we clean up our macro when we're done with it.
 -->
 <p>它从块里拽出接下来两个字节，拼成一个 16 位无符号整数。照例，用完后我们清理这个宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#undef READ_BYTE
+<div class="codehilite"><pre class="insert-before">#undef READ_BYTE
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-<span class="a">#undef READ_SHORT</span>
-</pre><pre class="insert-after">
-#undef READ_CONSTANT
+<pre class="insert"><span class="a">#undef READ_SHORT</span>
+</pre><pre class="insert-after">#undef READ_CONSTANT
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -422,8 +382,7 @@ could do the same thing purely arithmetically. Let's assume we have a function
 Then we could implement the jump instruction like:
 -->
 <p>我说过不会用 C 的 <code>if</code> 来实现 Lox 的控制流，可这里确实用了一条，来决定是否偏移指令指针。但我们并不是真在用 C 做<em>控制流</em>。若愿意，可以纯用算术做同样的事。假设有个函数 <code>falsey()</code>，吃一个 Lox 值，假值返回 1，否则返回 0。那跳转指令可以这样实现：</p>
-<div class="codehilite"><pre>
-<span class="k">case</span> <span class="a">OP_JUMP_IF_FALSE</span>: {
+<div class="codehilite"><pre><span class="k">case</span> <span class="a">OP_JUMP_IF_FALSE</span>: {
   <span class="t">uint16_t</span> <span class="i">offset</span> = <span class="a">READ_SHORT</span>();
   <span class="i">vm</span>.<span class="i">ip</span> += <span class="i">falsey</span>() * <span class="i">offset</span>;
   <span class="k">break</span>;
@@ -444,21 +403,19 @@ support it at runtime in the VM.
 <p>注意：跳转指令并不会把条件值从栈上弹出。所以我们还没完全做完——栈上多漂着一个值。很快会清掉。眼下先忽略这点，我们在 Lox 里已经有了能工作的 <code>if</code> 语句，运行时虚拟机只需一条小小的指令来支持它。</p><!--
 -- Else clauses
 -->
-<h3><a href="#else-子句" name="else-子句"><small>23&#8202;.&#8202;1&#8202;.&#8202;1</small>else 子句</a></h3><!--
+<h3><a href="#else-子句" id="else-子句"><small>23&#8202;.&#8202;1&#8202;.&#8202;1</small>else 子句</a></h3><!--
 An `if` statement without support for `else` clauses is like Morticia Addams
 without Gomez. So, after we compile the then branch, we look for an `else`
 keyword. If we find one, we compile the else branch.
 -->
 <p>没有 <code>else</code> 子句的 <code>if</code>，就像没有 Gomez 的 Morticia Addams。所以，编译完 then 分支后，我们找有没有 <code>else</code> 关键字。找到了，就编译 else 分支。</p>
-<div class="codehilite"><pre class="insert-before">
-  patchJump(thenJump);
+<div class="codehilite"><pre class="insert-before">  patchJump(thenJump);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>ifStatement</em>()</div>
 <pre class="insert">
 
   <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_ELSE</span>)) <span class="i">statement</span>();
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>ifStatement</em>()</div>
 <!--
@@ -476,30 +433,24 @@ branch. That way, in either case, we only execute a single branch, like this:
 To implement that, we need another jump from the end of the then branch.
 -->
 <p>要实现这点，我们需要从 then 分支末尾再来一次跳转。</p>
-<div class="codehilite"><pre class="insert-before">
-  statement();
+<div class="codehilite"><pre class="insert-before">  statement();
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>ifStatement</em>()</div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">elseJump</span> = <span class="i">emitJump</span>(<span class="a">OP_JUMP</span>);
+<pre class="insert">  <span class="t">int</span> <span class="i">elseJump</span> = <span class="i">emitJump</span>(<span class="a">OP_JUMP</span>);
 
-</pre><pre class="insert-after">
-  patchJump(thenJump);
+</pre><pre class="insert-after">  patchJump(thenJump);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>ifStatement</em>()</div>
 <!--
 We patch that offset after the end of the else body.
 -->
 <p>在 else 体结束之后，我们修补那个偏移。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (match(TOKEN_ELSE)) statement();
+<div class="codehilite"><pre class="insert-before">  if (match(TOKEN_ELSE)) statement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>ifStatement</em>()</div>
-<pre class="insert">
-  <span class="i">patchJump</span>(<span class="i">elseJump</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">patchJump</span>(<span class="i">elseJump</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>ifStatement</em>()</div>
 <!--
@@ -508,33 +459,27 @@ branch. Unlike the other jump, this jump is unconditional. We always take it, so
 we need another instruction that expresses that.
 -->
 <p>执行完 then 分支后，这会跳到 else 分支之后的下一条语句。与另一条跳转不同，这次是无条件的——我们总会走它，所以需要另一条指令来表达这点。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_PRINT,
+<div class="codehilite"><pre class="insert-before">  OP_PRINT,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_JUMP</span>,
-</pre><pre class="insert-after">
-  OP_JUMP_IF_FALSE,
+<pre class="insert">  <span class="a">OP_JUMP</span>,
+</pre><pre class="insert-after">  OP_JUMP_IF_FALSE,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 We interpret it like so:
 -->
 <p>解释起来是这样：</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
       }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_JUMP</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_JUMP</span>: {
         <span class="t">uint16_t</span> <span class="i">offset</span> = <span class="a">READ_SHORT</span>();
         <span class="i">vm</span>.<span class="i">ip</span> += <span class="i">offset</span>;
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_JUMP_IF_FALSE: {
+</pre><pre class="insert-after">      case OP_JUMP_IF_FALSE: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -559,26 +504,21 @@ When the condition is truthy, we pop it right before the code inside the then
 branch.
 -->
 <p>条件为真值时，我们在 then 分支内部代码之前立刻弹出它。</p>
-<div class="codehilite"><pre class="insert-before">
-  int thenJump = emitJump(OP_JUMP_IF_FALSE);
+<div class="codehilite"><pre class="insert-before">  int thenJump = emitJump(OP_JUMP_IF_FALSE);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>ifStatement</em>()</div>
-<pre class="insert">
-  <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
-</pre><pre class="insert-after">
-  statement();
+<pre class="insert">  <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
+</pre><pre class="insert-after">  statement();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>ifStatement</em>()</div>
 <!--
 Otherwise, we pop it at the beginning of the else branch.
 -->
 <p>否则，在 else 分支开头弹出。</p>
-<div class="codehilite"><pre class="insert-before">
-  patchJump(thenJump);
+<div class="codehilite"><pre class="insert-before">  patchJump(thenJump);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>ifStatement</em>()</div>
-<pre class="insert">
-  <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
+<pre class="insert">  <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
 </pre><pre class="insert-after">
 
   if (match(TOKEN_ELSE)) statement();
@@ -598,17 +538,14 @@ ensures the condition is popped first. All that remains is a little disassembler
 support.
 -->
 <p>若你跟着走一遍，会看见它总是只执行一个分支，并确保先弹出条件。剩下的只是一点点反汇编器支持。</p>
-<div class="codehilite"><pre class="insert-before">
-      return simpleInstruction(&quot;OP_PRINT&quot;, offset);
+<div class="codehilite"><pre class="insert-before">      return simpleInstruction(&quot;OP_PRINT&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_JUMP</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_JUMP</span>:
       <span class="k">return</span> <span class="i">jumpInstruction</span>(<span class="s">&quot;OP_JUMP&quot;</span>, <span class="n">1</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_JUMP_IF_FALSE</span>:
       <span class="k">return</span> <span class="i">jumpInstruction</span>(<span class="s">&quot;OP_JUMP_IF_FALSE&quot;</span>, <span class="n">1</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -618,8 +555,7 @@ utility function to disassemble them.
 <p>这两条指令有带 16 位操作数的新格式，所以我们加一个新工具函数来反汇编它们。</p>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 add after <em>byteInstruction</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">jumpInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">int</span> <span class="i">sign</span>,
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">jumpInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">int</span> <span class="i">sign</span>,
                            <span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">int</span> <span class="i">offset</span>) {
   <span class="t">uint16_t</span> <span class="i">jump</span> = (<span class="t">uint16_t</span>)(<span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span> + <span class="n">1</span>] &lt;&lt; <span class="n">8</span>);
   <span class="i">jump</span> |= <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span> + <span class="n">2</span>];
@@ -643,7 +579,7 @@ My enduring love of Depeche Mode notwithstanding.
 </aside><!--
 -- Logical Operators
 -->
-<h2><a href="#逻辑运算符" name="逻辑运算符"><small>23&#8202;.&#8202;2</small>逻辑运算符</a></h2><!--
+<h2><a href="#逻辑运算符" id="逻辑运算符"><small>23&#8202;.&#8202;2</small>逻辑运算符</a></h2><!--
 You probably remember this from jlox, but the logical operators `and` and `or`
 aren't just another pair of binary operators like `+` and `-`. Because they
 short-circuit and may not evaluate their right operand depending on the value of
@@ -656,14 +592,11 @@ control flow it produces in the resulting bytecode. Starting with `and`, we hook
 it into the expression parsing table here:
 -->
 <p>它们基本上是带 <code>else</code> 子句的 <code>if</code> 语句的小小变体。最省事的解释方式，就是直接给你看编译器代码，以及它在结果字节码里产生的控制流。从 <code>and</code> 开始，我们在表达式解析表里挂上：</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_AND</span>]           = {<span class="a">NULL</span>,     <span class="i">and_</span>,   <span class="a">PREC_AND</span>},
-</pre><pre class="insert-after">
-  [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_AND</span>]           = {<span class="a">NULL</span>,     <span class="i">and_</span>,   <span class="a">PREC_AND</span>},
+</pre><pre class="insert-after">  [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 <!--
@@ -672,8 +605,7 @@ That hands off to a new parser function.
 <p>那会交给一个新的解析函数。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>defineVariable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">and_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">and_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
   <span class="t">int</span> <span class="i">endJump</span> = <span class="i">emitJump</span>(<span class="a">OP_JUMP_IF_FALSE</span>);
 
   <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
@@ -712,18 +644,15 @@ they affect performance.
 </aside><!--
 -- Logical or operator
 -->
-<h3><a href="#逻辑-or-运算符" name="逻辑-or-运算符"><small>23&#8202;.&#8202;2&#8202;.&#8202;1</small>逻辑 or 运算符</a></h3><!--
+<h3><a href="#逻辑-or-运算符" id="逻辑-or-运算符"><small>23&#8202;.&#8202;2&#8202;.&#8202;1</small>逻辑 or 运算符</a></h3><!--
 The `or` operator is a little more complex. First we add it to the parse table.
 -->
 <p><code>or</code> 运算符稍微复杂些。先把它加进解析表。</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_OR</span>]            = {<span class="a">NULL</span>,     <span class="i">or_</span>,    <span class="a">PREC_OR</span>},
-</pre><pre class="insert-after">
-  [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_OR</span>]            = {<span class="a">NULL</span>,     <span class="i">or_</span>,    <span class="a">PREC_OR</span>},
+</pre><pre class="insert-after">  [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 <!--
@@ -732,8 +661,7 @@ When that parser consumes an infix `or` token, it calls this:
 <p>解析器消费到中缀 <code>or</code> 记号时，会调用这个：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>number</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">or_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">or_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
   <span class="t">int</span> <span class="i">elseJump</span> = <span class="i">emitJump</span>(<span class="a">OP_JUMP_IF_FALSE</span>);
   <span class="t">int</span> <span class="i">endJump</span> = <span class="i">emitJump</span>(<span class="a">OP_JUMP</span>);
 
@@ -774,21 +702,18 @@ and maybe a conditional expression like `?:`, but Lox keeps it simple.
 <p>好了，这就是 Lox 里三种<em>分支</em>构造。我的意思是：这些控制流特性只<em>向前</em>跳过代码。其他语言常有某种多路分支语句，比如 <code>switch</code>，或许还有像 <code>?:</code> 这样的条件表达式，但 Lox 保持简单。</p><!--
 -- While Statements
 -->
-<h2><a href="#while-语句" name="while-语句"><small>23&#8202;.&#8202;3</small>while 语句</a></h2><!--
+<h2><a href="#while-语句" id="while-语句"><small>23&#8202;.&#8202;3</small>while 语句</a></h2><!--
 That takes us to the *looping* statements, which jump *backward* so that code
 can be executed more than once. Lox only has two loop constructs, `while` and
 `for`. A `while` loop is (much) simpler, so we start the party there.
 -->
 <p>接下来是<em>循环</em>语句——它们<em>向后</em>跳转，好让代码能执行不止一次。Lox 只有两种循环构造：<code>while</code> 与 <code>for</code>。<code>while</code> 循环（远）更简单，我们就从这儿开场。</p>
-<div class="codehilite"><pre class="insert-before">
-    ifStatement();
+<div class="codehilite"><pre class="insert-before">    ifStatement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_WHILE</span>)) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_WHILE</span>)) {
     <span class="i">whileStatement</span>();
-</pre><pre class="insert-after">
-  } else if (match(TOKEN_LEFT_BRACE)) {
+</pre><pre class="insert-after">  } else if (match(TOKEN_LEFT_BRACE)) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>statement</em>()</div>
 <!--
@@ -797,8 +722,7 @@ When we reach a `while` token, we call:
 <p>遇到 <code>while</code> 记号时，我们调用：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>printStatement</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">whileStatement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">whileStatement</span>() {
   <span class="i">consume</span>(<span class="a">TOKEN_LEFT_PAREN</span>, <span class="s">&quot;Expect &#39;(&#39; after &#39;while&#39;.&quot;</span>);
   <span class="i">expression</span>();
   <span class="i">consume</span>(<span class="a">TOKEN_RIGHT_PAREN</span>, <span class="s">&quot;Expect &#39;)&#39; after condition.&quot;</span>);
@@ -830,12 +754,10 @@ for the logical operators.
 -->
 <p>真开始后悔用同一套跳转指令来伺候逻辑运算符了。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  statement();
+<div class="codehilite"><pre class="insert-before">  statement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>whileStatement</em>()</div>
-<pre class="insert">
-  <span class="i">emitLoop</span>(<span class="i">loopStart</span>);
+<pre class="insert">  <span class="i">emitLoop</span>(<span class="i">loopStart</span>);
 </pre><pre class="insert-after">
 
   patchJump(exitJump);
@@ -853,14 +775,11 @@ it's right before the condition expression.
 All we need to do is capture that location as we compile it.
 -->
 <p>我们只需在编译时捕获那个位置。</p>
-<div class="codehilite"><pre class="insert-before">
-static void whileStatement() {
+<div class="codehilite"><pre class="insert-before">static void whileStatement() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>whileStatement</em>()</div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">loopStart</span> = <span class="i">currentChunk</span>()-&gt;<span class="i">count</span>;
-</pre><pre class="insert-after">
-  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after 'while'.&quot;);
+<pre class="insert">  <span class="t">int</span> <span class="i">loopStart</span> = <span class="i">currentChunk</span>()-&gt;<span class="i">count</span>;
+</pre><pre class="insert-after">  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after 'while'.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>whileStatement</em>()</div>
 <!--
@@ -873,8 +792,7 @@ about to compile. Then we pass that into this helper function:
 <p>执行完 <code>while</code> 循环体后，我们一路跳回条件之前。这样，每次迭代都会重新求值条件表达式。我们把块当前的指令计数存进 <code>loopStart</code>，记下即将编译的条件表达式正前方在字节码里的偏移。然后把它传给这个辅助函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>emitBytes</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">emitLoop</span>(<span class="t">int</span> <span class="i">loopStart</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">emitLoop</span>(<span class="t">int</span> <span class="i">loopStart</span>) {
   <span class="i">emitByte</span>(<span class="a">OP_LOOP</span>);
 
   <span class="t">int</span> <span class="i">offset</span> = <span class="i">currentChunk</span>()-&gt;<span class="i">count</span> - <span class="i">loopStart</span> + <span class="n">2</span>;
@@ -905,32 +823,26 @@ opcode space available, so why not use it?
 The new instruction is here:
 -->
 <p>新指令在这儿：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_JUMP_IF_FALSE,
+<div class="codehilite"><pre class="insert-before">  OP_JUMP_IF_FALSE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_LOOP</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_LOOP</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 And in the VM, we implement it thusly:
 -->
 <p>在虚拟机里，我们这样实现：</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_LOOP</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_LOOP</span>: {
         <span class="t">uint16_t</span> <span class="i">offset</span> = <span class="a">READ_SHORT</span>();
         <span class="i">vm</span>.<span class="i">ip</span> -= <span class="i">offset</span>;
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -938,15 +850,12 @@ The only difference from `OP_JUMP` is a subtraction instead of an addition.
 Disassembly is similar too.
 -->
 <p>与 <code>OP_JUMP</code> 唯一的差别是减法而非加法。反汇编也类似。</p>
-<div class="codehilite"><pre class="insert-before">
-      return jumpInstruction(&quot;OP_JUMP_IF_FALSE&quot;, 1, chunk, offset);
+<div class="codehilite"><pre class="insert-before">      return jumpInstruction(&quot;OP_JUMP_IF_FALSE&quot;, 1, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_LOOP</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_LOOP</span>:
       <span class="k">return</span> <span class="i">jumpInstruction</span>(<span class="s">&quot;OP_LOOP&quot;</span>, -<span class="n">1</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -957,7 +866,7 @@ backward after we have executed the body. The flow looks like this:
 <p>这就是我们的 <code>while</code> 语句。它包含两次跳转——一次有条件向前，条件不满足时逃出循环；一次无条件向后循环，在执行完体之后。流长这样：</p><img src="image/jumping-back-and-forth/while.png" alt="Flowchart of the compiled bytecode of a while statement." /><!--
 -- For Statements
 -->
-<h2><a href="#for-语句" name="for-语句"><small>23&#8202;.&#8202;4</small>for 语句</a></h2><!--
+<h2><a href="#for-语句" id="for-语句"><small>23&#8202;.&#8202;4</small>for 语句</a></h2><!--
 The other looping statement in Lox is the venerable `for` loop, inherited from
 C. It's got a lot more going on with it compared to a `while` loop. It has three
 clauses, all of which are optional:
@@ -999,15 +908,12 @@ We'll work our way through the implementation a piece at a time, starting with
 the `for` keyword.
 -->
 <p>我们一块一块推进实现，从 <code>for</code> 关键字开始。</p>
-<div class="codehilite"><pre class="insert-before">
-    printStatement();
+<div class="codehilite"><pre class="insert-before">    printStatement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_FOR</span>)) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_FOR</span>)) {
     <span class="i">forStatement</span>();
-</pre><pre class="insert-after">
-  } else if (match(TOKEN_IF)) {
+</pre><pre class="insert-after">  } else if (match(TOKEN_IF)) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>statement</em>()</div>
 <!--
@@ -1017,8 +923,7 @@ like `for (;;)`, then we could implement it like this:
 <p>它调用一个辅助函数。若我们只支持像 <code>for (;;)</code> 这种空子句的 <code>for</code> 循环，可以这样实现：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>expressionStatement</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">forStatement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">forStatement</span>() {
   <span class="i">consume</span>(<span class="a">TOKEN_LEFT_PAREN</span>, <span class="s">&quot;Expect &#39;(&#39; after &#39;for&#39;.&quot;</span>);
   <span class="i">consume</span>(<span class="a">TOKEN_SEMICOLON</span>, <span class="s">&quot;Expect &#39;;&#39;.&quot;</span>);
 
@@ -1046,18 +951,16 @@ a runtime error.
 </aside><!--
 -- Initializer clause
 -->
-<h3><a href="#初始化子句" name="初始化子句"><small>23&#8202;.&#8202;4&#8202;.&#8202;1</small>初始化子句</a></h3><!--
+<h3><a href="#初始化子句" id="初始化子句"><small>23&#8202;.&#8202;4&#8202;.&#8202;1</small>初始化子句</a></h3><!--
 Now we'll add the first clause, the initializer. It executes only once, before
 the body, so compiling is straightforward.
 -->
 <p>现在加上第一个子句：初始化。它在体之前只执行一次，所以编译很直接。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after 'for'.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after 'for'.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>forStatement</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_SEMICOLON</span>)) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_SEMICOLON</span>)) {
     <span class="c">// No initializer.</span>
   } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_VAR</span>)) {
     <span class="i">varDeclaration</span>();
@@ -1082,44 +985,36 @@ If a `for` statement declares a variable, that variable should be scoped to the
 loop body. We ensure that by wrapping the whole statement in a scope.
 -->
 <p>若 <code>for</code> 语句声明了变量，该变量的作用域应限于循环体。我们把整个语句包进一个作用域来确保这点。</p>
-<div class="codehilite"><pre class="insert-before">
-static void forStatement() {
+<div class="codehilite"><pre class="insert-before">static void forStatement() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>forStatement</em>()</div>
-<pre class="insert">
-  <span class="i">beginScope</span>();
-</pre><pre class="insert-after">
-  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after 'for'.&quot;);
+<pre class="insert">  <span class="i">beginScope</span>();
+</pre><pre class="insert-after">  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after 'for'.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>forStatement</em>()</div>
 <!--
 Then we close it at the end.
 -->
 <p>然后在末尾关闭它。</p>
-<div class="codehilite"><pre class="insert-before">
-  emitLoop(loopStart);
+<div class="codehilite"><pre class="insert-before">  emitLoop(loopStart);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>forStatement</em>()</div>
-<pre class="insert">
-  <span class="i">endScope</span>();
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">endScope</span>();
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>forStatement</em>()</div>
 <!--
 -- Condition clause
 -->
-<h3><a href="#条件子句" name="条件子句"><small>23&#8202;.&#8202;4&#8202;.&#8202;2</small>条件子句</a></h3><!--
+<h3><a href="#条件子句" id="条件子句"><small>23&#8202;.&#8202;4&#8202;.&#8202;2</small>条件子句</a></h3><!--
 Next, is the condition expression that can be used to exit the loop.
 -->
 <p>接下来是可用于退出循环的条件表达式。</p>
-<div class="codehilite"><pre class="insert-before">
-  int loopStart = currentChunk()-&gt;count;
+<div class="codehilite"><pre class="insert-before">  int loopStart = currentChunk()-&gt;count;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>forStatement</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">exitJump</span> = -<span class="n">1</span>;
+<pre class="insert">  <span class="t">int</span> <span class="i">exitJump</span> = -<span class="n">1</span>;
   <span class="k">if</span> (!<span class="i">match</span>(<span class="a">TOKEN_SEMICOLON</span>)) {
     <span class="i">expression</span>();
     <span class="i">consume</span>(<span class="a">TOKEN_SEMICOLON</span>, <span class="s">&quot;Expect &#39;;&#39; after loop condition.&quot;</span>);
@@ -1129,8 +1024,7 @@ replace 1 line</div>
     <span class="i">emitByte</span>(<span class="a">OP_POP</span>); <span class="c">// Condition.</span>
   }
 
-</pre><pre class="insert-after">
-  consume(TOKEN_RIGHT_PAREN, &quot;Expect ')' after for clauses.&quot;);
+</pre><pre class="insert-after">  consume(TOKEN_RIGHT_PAREN, &quot;Expect ')' after for clauses.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>forStatement</em>(), replace 1 line</div>
 <!--
@@ -1148,8 +1042,7 @@ the value when the condition is true.
 After the loop body, we need to patch that jump.
 -->
 <p>循环体之后，我们需要修补那次跳转。</p>
-<div class="codehilite"><pre class="insert-before">
-  emitLoop(loopStart);
+<div class="codehilite"><pre class="insert-before">  emitLoop(loopStart);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>forStatement</em>()</div>
 <pre class="insert">
@@ -1159,8 +1052,7 @@ in <em>forStatement</em>()</div>
     <span class="i">emitByte</span>(<span class="a">OP_POP</span>); <span class="c">// Condition.</span>
   }
 
-</pre><pre class="insert-after">
-  endScope();
+</pre><pre class="insert-after">  endScope();
 }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>forStatement</em>()</div>
@@ -1171,7 +1063,7 @@ jump to patch and no condition value on the stack to pop.
 <p>仅在有条件子句时才做这些。若没有，就没有跳转可修补，栈上也没有条件值可弹。</p><!--
 -- Increment clause
 -->
-<h3><a href="#递增子句" name="递增子句"><small>23&#8202;.&#8202;4&#8202;.&#8202;3</small>递增子句</a></h3><!--
+<h3><a href="#递增子句" id="递增子句"><small>23&#8202;.&#8202;4&#8202;.&#8202;3</small>递增子句</a></h3><!--
 I've saved the best for last, the increment clause. It's pretty convoluted. It
 appears textually before the body, but executes *after* it. If we parsed to an
 AST and generated code in a separate pass, we could simply traverse into and
@@ -1188,14 +1080,12 @@ I know, a little weird, but hey, it beats manually managing ASTs in memory in C,
 right? Here's the code:
 -->
 <p>我知道，有点怪，可嘿，总好过在 C 里手动管理内存中的 AST，对吧？代码在这儿：</p>
-<div class="codehilite"><pre class="insert-before">
-  }
+<div class="codehilite"><pre class="insert-before">  }
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>forStatement</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (!<span class="i">match</span>(<span class="a">TOKEN_RIGHT_PAREN</span>)) {
+<pre class="insert">  <span class="k">if</span> (!<span class="i">match</span>(<span class="a">TOKEN_RIGHT_PAREN</span>)) {
     <span class="t">int</span> <span class="i">bodyJump</span> = <span class="i">emitJump</span>(<span class="a">OP_JUMP</span>);
     <span class="t">int</span> <span class="i">incrementStart</span> = <span class="i">currentChunk</span>()-&gt;<span class="i">count</span>;
     <span class="i">expression</span>();
@@ -1258,15 +1148,14 @@ I couldn't resist the pun. I regret nothing.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>23&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>23&#8202;.&#8202;5</small>挑战</a></h2><!--
 1.  In addition to `if` statements, most C-family languages have a multi-way
     `switch` statement. Add one to clox. The grammar is:
 -->
 <ol>
 <li>
 <p>除了 <code>if</code> 语句，多数 C 族语言还有多路 <code>switch</code> 语句。给 clox 加一个。语法是：</p>
-<div class="codehilite"><pre>
-<span class="i">switchStmt</span>     → <span class="s">&quot;switch&quot;</span> <span class="s">&quot;(&quot;</span> <span class="i">expression</span> <span class="s">&quot;)&quot;</span>
+<div class="codehilite"><pre><span class="i">switchStmt</span>     → <span class="s">&quot;switch&quot;</span> <span class="s">&quot;(&quot;</span> <span class="i">expression</span> <span class="s">&quot;)&quot;</span>
                  <span class="s">&quot;{&quot;</span> <span class="i">switchCase</span>* <span class="i">defaultCase</span>? <span class="s">&quot;}&quot;</span> ;
 <span class="i">switchCase</span>     → <span class="s">&quot;case&quot;</span> <span class="i">expression</span> <span class="s">&quot;:&quot;</span> <span class="i">statement</span>* ;
 <span class="i">defaultCase</span>    → <span class="s">&quot;default&quot;</span> <span class="s">&quot;:&quot;</span> <span class="i">statement</span>* ;
@@ -1294,8 +1183,7 @@ I couldn't resist the pun. I regret nothing.
 <ol>
 <li>
 <p>在 jlox 里，我们有一道挑战是加 <code>break</code> 语句支持。这一次，我们来做 <code>continue</code>：</p>
-<div class="codehilite"><pre>
-<span class="i">continueStmt</span>   → <span class="s">&quot;continue&quot;</span> <span class="s">&quot;;&quot;</span> ;
+<div class="codehilite"><pre><span class="i">continueStmt</span>   → <span class="s">&quot;continue&quot;</span> <span class="s">&quot;;&quot;</span> ;
 </pre></div>
 </li>
 </ol><!--
@@ -1332,7 +1220,7 @@ I couldn't resist the pun. I regret nothing.
 <div class="design-note"><!--
 -- Design Note: Considering Goto Harmful
 -->
-<h2><a href="#设计笔记：再思-goto-有害论" name="设计笔记：再思-goto-有害论"><small>23&#8202;.&#8202;6</small>设计笔记：再思 Goto 有害论</a></h2><!--
+<h2><a href="#设计笔记：再思-goto-有害论" id="设计笔记：再思-goto-有害论"><small>23&#8202;.&#8202;6</small>设计笔记：再思 Goto 有害论</a></h2><!--
 Discovering that all of our beautiful structured control flow in Lox is actually
 compiled to raw unstructured jumps is like the moment in Scooby Doo when the
 monster rips the mask off their face. It was goto all along! Except in this
@@ -1521,8 +1409,7 @@ exit out of a series of nested loops:
 -->
 <p>可我有时仍会想：我们是不是连洗澡水带婴儿一起泼掉了。没有 goto 时，我们常常诉诸更复杂的结构化模式。“循环里套 switch”是经典一例。另一例是用守卫变量退出一串嵌套循环：</p><span name="break">
 </span>
-<div class="codehilite"><pre>
-<span class="c">// See if the matrix contains a zero.</span>
+<div class="codehilite"><pre><span class="c">// See if the matrix contains a zero.</span>
 <span class="t">bool</span> <span class="i">found</span> = <span class="k">false</span>;
 <span class="k">for</span> (<span class="t">int</span> <span class="i">x</span> = <span class="n">0</span>; <span class="i">x</span> &lt; <span class="i">xSize</span>; <span class="i">x</span>++) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">y</span> = <span class="n">0</span>; <span class="i">y</span> &lt; <span class="i">ySize</span>; <span class="i">y</span>++) {
@@ -1541,8 +1428,7 @@ exit out of a series of nested loops:
 Is that really better than:
 -->
 <p>这真的比下面更好吗：</p>
-<div class="codehilite"><pre>
-<span class="k">for</span> (<span class="t">int</span> <span class="i">x</span> = <span class="n">0</span>; <span class="i">x</span> &lt; <span class="i">xSize</span>; <span class="i">x</span>++) {
+<div class="codehilite"><pre><span class="k">for</span> (<span class="t">int</span> <span class="i">x</span> = <span class="n">0</span>; <span class="i">x</span> &lt; <span class="i">xSize</span>; <span class="i">x</span>++) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">y</span> = <span class="n">0</span>; <span class="i">y</span> &lt; <span class="i">ySize</span>; <span class="i">y</span>++) {
     <span class="k">for</span> (<span class="t">int</span> <span class="i">z</span> = <span class="n">0</span>; <span class="i">z</span> &lt; <span class="i">zSize</span>; <span class="i">z</span>++) {
       <span class="k">if</span> (<span class="i">matrix</span>[<span class="i">x</span>][<span class="i">y</span>][<span class="i">z</span>] == <span class="n">0</span>) {
@@ -1574,7 +1460,7 @@ for quality creative work.
 <a href="calls-and-functions.html" class="next">
   Next Chapter: &ldquo;Calls and Functions&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

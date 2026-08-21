@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Hash Tables<small>20</small></a></h3>
 
 <ul>
@@ -55,7 +54,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="strings.html" title="Strings" class="prev">←</a>
 <a href="global-variables.html" title="Global Variables" class="next">→</a>
 </nav>
@@ -63,9 +62,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Hash Tables<small>20</small></a></h3>
 
 <ul>
@@ -92,25 +90,7 @@
   <div class="number">20</div>
   <h1>Hash Tables</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#哈希表" name="哈希表"><small>20&#8202;.&#8202;0</small>哈希表</a></h1>
+<h1><a href="#哈希表" id="哈希表"><small>20&#8202;.&#8202;0</small>哈希表</a></h1>
 <blockquote>
 <p>Hash, x. 词典查不到这个词条——谁都不知道 hash 是什么。</p>
 <p><cite>安布罗斯·比尔斯，<em>《魔鬼词典（未删节版）》</em></cite></p>
@@ -126,7 +106,7 @@
 <aside name="rolodex">
 <p>把那些名片全塞进一个旋转式名片簿里（ 谁还记得那玩意儿？）， 每个字母一隔， 你的查找速度会得到惊人的提升。正如我们将要看到的， 哈希表使用的那套把戏， 与此相去并不遥远。</p>
 </aside>
-<h2><a href="#一桶接一桶的数组" name="一桶接一桶的数组"><small>20&#8202;.&#8202;1</small>一桶接一桶的数组</a></h2>
+<h2><a href="#一桶接一桶的数组" id="一桶接一桶的数组"><small>20&#8202;.&#8202;1</small>一桶接一桶的数组</a></h2>
 <p>一张完整的、 高速的哈希表有若干运动部件。我会通过一些玩具问题与它们的解决方案， 逐个地介绍它们。最后， 我们会搭起一个能将任意一套名字与其值关联起来的数据结构。</p>
 <p>此时此刻， 试想如果 Lox 的变量名受的约束更多一些。如果一个变量的名字只能是 <span name="basic"> 一个小写字母</span> 该如何？我们该如何高效地表示一套变量名与其值的集合呢？</p>
 <aside name="basic">
@@ -138,7 +118,7 @@
 <p>内存占用极佳—— 只有一个大小合理的 <span name="bucket">数组</span>。空桶会带来一些浪费， 但并不多。没有指针、 填充等在链表或树之类数据结构中会碰到的额外开销。</p>
 <p>性能更佳。给定一个变量名（ 其字符）， 你可以减去 <code>a</code> 的 ASCII 值， 将其结果用作下标直接访问数组。然后你要么查找已存在的值， 要么直接将新值存进那个槽位。没什么能比这更快的了。</p>
 <p>这可以说是我们的 &rdquo; 柏拉图式理想&rdquo; 数据结构。快若闪电、 简单到极致、 内存又紧凑。当我们添加对更复杂键的支持时， 不免要作些妥协， 但这就是我们的追求目标。即使日后加上哈希函数、 动态扩容与冲突解决， 这仍然是每一张哈希表的核心—— 一段连续的桶数组， 你直接根据下标访问。</p>
-<h3><a href="#装载因子与回卷键" name="装载因子与回卷键"><small>20&#8202;.&#8202;1&#8202;.&#8202;1</small>装载因子与回卷键</a></h3>
+<h3><a href="#装载因子与回卷键" id="装载因子与回卷键"><small>20&#8202;.&#8202;1&#8202;.&#8202;1</small>装载因子与回卷键</a></h3>
 <p>将 Lox 的变量限为单字母会让我们作为实现者的工作轻松许多， 但在一门只给你 26 个存储位的语言里编程大概不怎么有趣。如果我们稍微放宽一点， 允许变量名最多 <span name="six"> 八个字符</span> 长呢？</p>
 <aside name="six">
 <p>这一约束也不是那么离谱。早期面向 C 的链接器只把外部标识符的前六个字符视为有效， 其后的全被忽略。如果你一直在好奇为什么 C 标准库那么热衷于缩写（ 就说你吧，<code>strncmp()</code>）， 其实这完全不是因为当时小屏幕（ 或电传 ！）的缘故。</p>
@@ -152,21 +132,21 @@
 <p>以数组大小为模数让我们可以将键的数值空间向下折叠到任意大小的数组之中。于是我们便可以独立于键的范围控制桶的数目。这解决了浪费问题， 但也带来了一个新问题。任何两个变量， 只要它们的键值除以数组大小后的余数相同， 最终就会落入同一个桶。键与键之间<strong>冲突</strong>了。比如说， 如果我们想添加 &ldquo;jam&rdquo;， 它也会落入桶 2。</p><img src="image/hash-tables/collision.png" alt=" 'Bagel' 与 'jam' 都落入了桶下标 2 之中。" />
 <p>我们对此有些主动权—— 可以通过调整数组大小来改善。数组越大， 被映射到同一桶的下标越少，冲突发生的概率也越小。哈希表实现者通过测量该表的<strong>装载因子</strong>来追踪这一冲突倾向。它的定义是条目数与桶数的比值。于是， 一张含 5 条条目与 16 个元素数组的哈希表的装载因子为 0.3125。装载因子越高， 冲突的可能性就越大。</p>
 <p>我们缓解冲突的一种方式是对数组进行扩容。与之前实现的动态数组一样， 我们在哈希表快被装满时重新分配并扩容。 然而与普通动态数组不同的是， 我们不会等到数组<strong>完全装满</strong>才动手。取而代之， 我们挑一个期待的装载因子， 在数组达到该阈值时便立即扩容。</p>
-<h2><a href="#冲突解决" name="冲突解决"><small>20&#8202;.&#8202;2</small>冲突解决</a></h2>
+<h2><a href="#冲突解决" id="冲突解决"><small>20&#8202;.&#8202;2</small>冲突解决</a></h2>
 <p>即使装载因子很低， 冲突仍然可能发生。<a href="https://en.wikipedia.org/wiki/Birthday_problem">生日悖论</a> 告诉我们， 随着哈希表中条目数的增加， 冲突的概率极快地上升。我们可以挑一个很大的数组大小来降低这一概率， 但这是一场输不起的战争。比如说， 我们想在一张哈希表中存一百项。为了让冲突概率保持在仍算不低的 10% 以下， 我们需要一份至少有 47,015 个元素的数组。为了将概率压到 1% 以下， 则需要有 492,555 个元素的数组——每一个使用中的元素对应着 4000 多个空桶。</p>
 <p>较低的装载因子可以使冲突更加 <span name="pigeon">稀少</span>， 但 <a href="https://en.wikipedia.org/wiki/Pigeonhole_principle">鸽笼原则</a> 告诉我们， 冲突永远不会完全消失。如果你有 5 只宠物鸽与 4 个鸽笼， 至少有一个笼子最终会装着不止一只鸽。对于 18,446,744,073,709,551,616 种不同的变量名， 任意一个大小合理的数组都有可能让多个键落入同一桶中。</p>
 <p>于是， 即使冲突真的发生了， 我们仍然需要从容地应对。若他们的程序设计语言只能在<em>大多数</em>时候正确地查到变量， 用户们可不会喜欢。</p>
 <aside name="pigeon">
 <p>把这两条有趣名字的数学定理放在一起， 你会得到这样一项观察：取一个装 365 个鸽笼的鸽舍， 用每只鸽子的生日来决定将它放进哪一个笼。你只需大约 26 只随机挑选的鸽子， 就会有 50% 以上的几率让两只鸽子落入同一笼。</p><img src="image/hash-tables/pigeons.png" alt=" 两只鸽子落入同一笼。" />
 </aside>
-<h3><a href="#链地址法" name="链地址法"><small>20&#8202;.&#8202;2&#8202;.&#8202;1</small>链地址法</a></h3>
+<h3><a href="#链地址法" id="链地址法"><small>20&#8202;.&#8202;2&#8202;.&#8202;1</small>链地址法</a></h3>
 <p>解决冲突的技巧大致可以分为两类。第一类叫做<strong>链地址法</strong>。不再让每一个桶只装一条记录， 我们允许它装一套记录。在经典实现中， 每一个桶指向一条记录的链表。要查找一条记录， 你先找到它的桶， 接着沿链表逐个遍历， 直至找到一条键相匹配的记录。</p><img src="image/hash-tables/chaining.png" alt=" 一个有八个桶的数组。桶 2 链向一条含两个节点的链表。桶 5 链向一个单节点。" />
 <p>在极端糟糕的情形下 —— 即每一条记录都冲突在同一桶中 —— 这个数据结构退化成一条单的无序链表， 查找性能变为 O(n)。实践中， 只要通过控制装载因子以及如何让条目均匀分散在各桶中， 便很容易避免这种情形。在典型的链地址哈希表中， 某一桶含超过一两条记录的情况很少出现。</p>
 <p>链地址法概念上很简单—— 字面意义上就是一个装满链表的数组。大多数操作都直接好实现， 甚至包括删除（ 如我们将要看到的， 这可能有点麻烦）。但它与现代 CPU 并不十分合拍。它有大量的指针开销， 而那些链表节点又往往散落在内存各处—— 这对缓存的使用极不友好。</p>
 <aside name="node">
 <p>有几种优化手段。许多实现将第一条记录直接存在桶中， 这样在最常见的 &ldquo;一桶一条&rdquo; 情形下就不需要额外的指针间接。你也可以让每个链表节点存储若干条记录， 以降低指针的开销。</p>
 </aside>
-<h3><a href="#开放寻址" name="开放寻址"><small>20&#8202;.&#8202;2&#8202;.&#8202;2</small>开放寻址</a></h3>
+<h3><a href="#开放寻址" id="开放寻址"><small>20&#8202;.&#8202;2&#8202;.&#8202;2</small>开放寻址</a></h3>
 <p>另一种技巧叫做 <span name="open"><strong>开放寻址</strong></span>（也叫 &ldquo;闭式哈希&ldquo;， 命名相当混乱）。使用该技巧时， 所有记录直接存在桶数组中， 一桶一条。若两条记录冲突在同一桶， 我们便找一个其他空桶来替用。</p>
 <aside name="open">
 <p>它叫 &ldquo;开放&rdquo; 寻址， 因为记录最终可能出现在其 &rdquo; 首选&rdquo; 之外的地址（桶）之中。它叫 &ldquo;闭式&rdquo; 哈希， 是因为所有记录都留在桶数组之内。</p>
@@ -187,7 +167,7 @@
 <p>当我们尝试插入 &ldquo;eggs&rdquo; 时， 它也想落进桶 5。那桶满了， 于是我们跳至桶 6。桶 6 也满了。请注意， 那里的那条记录并不属于同一条探测序列。&ldquo;fruit&rdquo; 位于它首选的桶 6。于是， 5 与 6 两条序列彼此交错了。我们跳过那些， 最终把 &ldquo;eggs&rdquo; 放进桶 7。</p><img src="image/hash-tables/insert-6.png" alt="Eggs 落入桶 7， 因为 5 与 6 均已满。" class="wide" />
 <p>我们碰上了一个类似的问题。&ldquo;nuts&rdquo; 无法像它所想的那样落入桶 6。也无法进入桶 7。于是我们继续向下。然而我们已经到了数组的末端， 于是回绕到桶 0， 把它放在了那儿。</p><img src="image/hash-tables/insert-7.png" alt="Nuts 由于 6 与 7 均已满， 回绕至桶 0。" class="wide" />
 <p>实践中， 这种交错其实并不是什么大问题。即使在链地址法中， 我们也需要沿链表走， 一个个检查键， 因为多个键可能被约化到同一桶。对于开放寻址， 我们同样需要那步检查， 这也覆盖了跨越本 &ldquo;属于&rdquo; 别人之桶的那些记录的情形。</p>
-<h2><a href="#哈希函数" name="哈希函数"><small>20&#8202;.&#8202;3</small>哈希函数</a></h2>
+<h2><a href="#哈希函数" id="哈希函数"><small>20&#8202;.&#8202;3</small>哈希函数</a></h2>
 <p>此时我们已可以为最多 8 字符长的变量名构建一张尚算高效的表， 但这一长度限制仍然令人讨厌。为了解除最后这一约束， 我们需要一种方法， 能将任意长度的字符串转换为一个固定大小的整数。</p>
 <p>终于， 我们要谈谈 &rdquo; 哈希表&rdquo; 中的 &ldquo;哈希部分&rdquo; 了。一个<strong>哈希函数</strong>将某一较大的数据块进行 &rdquo; 哈希&ldquo;， 产生一个固定大小的整数<strong>哈希值</strong>， 其值取决于原始数据的所有位。一个 <span name="crypto"> 好</span> 的哈希函数有三个主要目标：</p>
 <aside name="crypto">
@@ -213,12 +193,11 @@
 <p>说不定哈希函数也会成为你的最爱呢？</p>
 </aside>
 <p>好了， 桶、 装载因子、 开放寻址、 冲突解决、 以及哈希函数—— 这些内容都过了一遍。文字太多， 代码太少。如果此刻仍有些模糊不必担心。等我们写完之后， 一切都会豁然开朗。</p>
-<h2><a href="#构建哈希表" name="构建哈希表"><small>20&#8202;.&#8202;4</small>构建哈希表</a></h2>
+<h2><a href="#构建哈希表" id="构建哈希表"><small>20&#8202;.&#8202;4</small>构建哈希表</a></h2>
 <p>与其他经典技术比起来， 哈希表的精妙之处在于其实际的数据结构极为简单。我们那一款装进一个新模块之中。</p>
 <div class="codehilite"><div class="source-file"><em>table.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_table_h</span>
+<pre><span class="a">#ifndef clox_table_h</span>
 <span class="a">#define clox_table_h</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
@@ -236,8 +215,7 @@ create new file</div>
 
 <p>一张哈希表是一个条目数组。与我们之前的动态数组一样， 我们同时记录着数组已分配的大小（<code>capacity</code>） 与当前存在于其中的键/值对的数量（<code>count</code>）。前者与后者的比值， 正是该哈希表的装载因子。</p>
 <p>每一条条目就是下面这个模样：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;value.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;value.h&quot;
 </pre><div class="source-file"><em>table.h</em></div>
 <pre class="insert">
 
@@ -256,24 +234,20 @@ typedef struct {
 <p>在 clox 中， 我们只需要支持字符串类型的键。处理其它类型的键也不会带来多少复杂度。只要你能够比较两个对象是否相等、 并将它们约化为一串比特， 把它们作为哈希键就很容易。</p>
 </aside>
 <p>为了创建一张新的空哈希表， 我们声明一个类似构造函数的函数。</p>
-<div class="codehilite"><pre class="insert-before">
-} Table;
+<div class="codehilite"><pre class="insert-before">} Table;
 
 </pre><div class="source-file"><em>table.h</em><br>
 add after struct <em>Table</em></div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">initTable</span>(<span class="t">Table</span>* <span class="i">table</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">initTable</span>(<span class="t">Table</span>* <span class="i">table</span>);
 
-</pre><pre class="insert-after">
-#endif
+</pre><pre class="insert-after">#endif
 </pre></div>
 <div class="source-file-narrow"><em>table.h</em>, add after struct <em>Table</em></div>
 
 <p>我们需要一个新的实现文件来定义它。顺便也把那些讨厌的 include 一次性都解决掉。</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdlib.h&gt;</span>
+<pre><span class="a">#include &lt;stdlib.h&gt;</span>
 <span class="a">#include &lt;string.h&gt;</span>
 
 <span class="a">#include &quot;memory.h&quot;</span>
@@ -290,12 +264,10 @@ create new file</div>
 <div class="source-file-narrow"><em>table.c</em>, create new file</div>
 
 <p>与我们之前的动态值数组类似， 一张哈希表最初的大小为零、 数组为 <code>NULL</code>。我们在需要的时候才去分配。假设我们未来确实会去分配点什么， 我们还需要一个函数来释放它。</p>
-<div class="codehilite"><pre class="insert-before">
-void initTable(Table* table);
+<div class="codehilite"><pre class="insert-before">void initTable(Table* table);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>initTable</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">freeTable</span>(<span class="t">Table</span>* <span class="i">table</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">freeTable</span>(<span class="t">Table</span>* <span class="i">table</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -305,8 +277,7 @@ add after <em>initTable</em>()</div>
 <p>其辉煌的实现如此：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>initTable</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">freeTable</span>(<span class="t">Table</span>* <span class="i">table</span>) {
+<pre><span class="t">void</span> <span class="i">freeTable</span>(<span class="t">Table</span>* <span class="i">table</span>) {
   <span class="a">FREE_ARRAY</span>(<span class="t">Entry</span>, <span class="i">table</span>-&gt;<span class="i">entries</span>, <span class="i">table</span>-&gt;<span class="i">capacity</span>);
   <span class="i">initTable</span>(<span class="i">table</span>);
 }
@@ -314,18 +285,15 @@ add after <em>initTable</em>()</div>
 <div class="source-file-narrow"><em>table.c</em>, add after <em>initTable</em>()</div>
 
 <p>它看起来又跟动态数组一模一样。事实上， 你可以把哈希表想象成一种本质上的动态数组， 只不过它有一套极其奇怪的插入策略。这里也不需要检查 <code>NULL</code>， 因为 <code>FREE_ARRAY()</code> 已经从容地处理了这一情形。</p>
-<h3><a href="#字符串哈希" name="字符串哈希"><small>20&#8202;.&#8202;4&#8202;.&#8202;1</small>字符串哈希</a></h3>
+<h3><a href="#字符串哈希" id="字符串哈希"><small>20&#8202;.&#8202;4&#8202;.&#8202;1</small>字符串哈希</a></h3>
 <p>在我们能向表中添加条目之前， 我们需要对键进行哈希。为了确保那些条目能均匀地分布在数组各段， 我们要求一个好的哈希函数去查看键字符串的所有几位。如果它只看例如前几个字符， 那一串具有相同前缀的字符串就会全部冲突在同一桶中。</p>
 <p>另一方面， 为了算哈希值而把整条字符串走一遍有些慢。如果我们在表中每找一次键都得把键走一遍， 便会损失哈希表部分的性能优势。于是我们做了一件显然的事情：把它缓存起来。</p>
 <p>在 &ldquo;object&rdquo; 模块的 ObjString 中， 我们添上：</p>
-<div class="codehilite"><pre class="insert-before">
-  char* chars;
+<div class="codehilite"><pre class="insert-before">  char* chars;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>ObjString</em></div>
-<pre class="insert">
-  <span class="t">uint32_t</span> <span class="i">hash</span>;
-</pre><pre class="insert-after">
-};
+<pre class="insert">  <span class="t">uint32_t</span> <span class="i">hash</span>;
+</pre><pre class="insert-after">};
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>ObjString</em></div>
 
@@ -334,72 +302,57 @@ in struct <em>ObjString</em></div>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 function <em>allocateString</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">ObjString</span>* <span class="i">allocateString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>,
+<pre class="insert"><span class="k">static</span> <span class="t">ObjString</span>* <span class="i">allocateString</span>(<span class="t">char</span>* <span class="i">chars</span>, <span class="t">int</span> <span class="i">length</span>,
                                  <span class="t">uint32_t</span> <span class="i">hash</span>) {
-</pre><pre class="insert-after">
-  ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+</pre><pre class="insert-after">  ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, function <em>allocateString</em>(), replace 1 line</div>
 
 <p>那个函数只需将哈希值存入结构体即可。</p>
-<div class="codehilite"><pre class="insert-before">
-  string-&gt;chars = chars;
+<div class="codehilite"><pre class="insert-before">  string-&gt;chars = chars;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateString</em>()</div>
-<pre class="insert">
-  <span class="i">string</span>-&gt;<span class="i">hash</span> = <span class="i">hash</span>;
-</pre><pre class="insert-after">
-  return string;
+<pre class="insert">  <span class="i">string</span>-&gt;<span class="i">hash</span> = <span class="i">hash</span>;
+</pre><pre class="insert-after">  return string;
 }
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateString</em>()</div>
 
 <p>精彩的部分在调用方那儿。<code>allocateString()</code>有两个调用方：复制字符串的函数与获得现有动态分配字符串所有权的函数。我们先看第一个。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjString* copyString(const char* chars, int length) {
+<div class="codehilite"><pre class="insert-before">ObjString* copyString(const char* chars, int length) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>copyString</em>()</div>
-<pre class="insert">
-  <span class="t">uint32_t</span> <span class="i">hash</span> = <span class="i">hashString</span>(<span class="i">chars</span>, <span class="i">length</span>);
-</pre><pre class="insert-after">
-  char* heapChars = ALLOCATE(char, length + 1);
+<pre class="insert">  <span class="t">uint32_t</span> <span class="i">hash</span> = <span class="i">hashString</span>(<span class="i">chars</span>, <span class="i">length</span>);
+</pre><pre class="insert-after">  char* heapChars = ALLOCATE(char, length + 1);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>copyString</em>()</div>
 
 <p>这里没什么魔法。我们算出哈希值， 接着将其传出去。</p>
-<div class="codehilite"><pre class="insert-before">
-  memcpy(heapChars, chars, length);
+<div class="codehilite"><pre class="insert-before">  memcpy(heapChars, chars, length);
   heapChars[length] = '\0';
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>copyString</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">return</span> <span class="i">allocateString</span>(<span class="i">heapChars</span>, <span class="i">length</span>, <span class="i">hash</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="k">return</span> <span class="i">allocateString</span>(<span class="i">heapChars</span>, <span class="i">length</span>, <span class="i">hash</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>copyString</em>(), replace 1 line</div>
 
 <p>另一个字符串函数也类似。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjString* takeString(char* chars, int length) {
+<div class="codehilite"><pre class="insert-before">ObjString* takeString(char* chars, int length) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>takeString</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">uint32_t</span> <span class="i">hash</span> = <span class="i">hashString</span>(<span class="i">chars</span>, <span class="i">length</span>);
+<pre class="insert">  <span class="t">uint32_t</span> <span class="i">hash</span> = <span class="i">hashString</span>(<span class="i">chars</span>, <span class="i">length</span>);
   <span class="k">return</span> <span class="i">allocateString</span>(<span class="i">chars</span>, <span class="i">length</span>, <span class="i">hash</span>);
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>takeString</em>(), replace 1 line</div>
 
 <p>有趣的代码在这儿：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>allocateString</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">uint32_t</span> <span class="i">hashString</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">key</span>, <span class="t">int</span> <span class="i">length</span>) {
+<pre><span class="k">static</span> <span class="t">uint32_t</span> <span class="i">hashString</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">key</span>, <span class="t">int</span> <span class="i">length</span>) {
   <span class="t">uint32_t</span> <span class="i">hash</span> = <span class="n">2166136261u</span>;
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">length</span>; <span class="i">i</span>++) {
     <span class="i">hash</span> ^= (<span class="t">uint8_t</span>)<span class="i">key</span>[<span class="i">i</span>];
@@ -413,14 +366,12 @@ add after <em>allocateString</em>()</div>
 <p>这就是 clox 中那个货真价实的 &ldquo;哈希函数&ldquo;。这个算法叫做 &ldquo;FNV-1a&rdquo;， 是我所知的最短的像点样子的哈希函数。在这样一本力图将每一行代码都呈现给你的书中， 简短无疑是一大美德。</p>
 <p>其基本想法很简单， 许多哈希函数也遵循同一模式。你从某个初始哈希值开始， 通常是一个具有某些精心挑选的数学性质的常数。接着你遍历待哈希的数据。对于每一个字节（ 有时是字）， 你以某种方式将那些比特混入哈希值之中， 接着再对所产生的比特作一些搅乱。</p>
 <p>什么叫 &ldquo;混入&rdquo; 与 &ldquo;搅乱&rdquo; 可以变得相当深奥。不过说到底， 其根本目标还是<strong>均匀性</strong> —— 我们希望产生的哈希值尽可能均匀地散布于整个数值范围之中， 以避免冲突与聚集。</p>
-<h3><a href="#插入条目" name="插入条目"><small>20&#8202;.&#8202;4&#8202;.&#8202;2</small>插入条目</a></h3>
+<h3><a href="#插入条目" id="插入条目"><small>20&#8202;.&#8202;4&#8202;.&#8202;2</small>插入条目</a></h3>
 <p>如今字符串对象已知自己的哈希值， 我们便可以开始向哈希表中放东西了。</p>
-<div class="codehilite"><pre class="insert-before">
-void freeTable(Table* table);
+<div class="codehilite"><pre class="insert-before">void freeTable(Table* table);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>freeTable</em>()</div>
-<pre class="insert">
-<span class="t">bool</span> <span class="i">tableSet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span> <span class="i">value</span>);
+<pre class="insert"><span class="t">bool</span> <span class="i">tableSet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span> <span class="i">value</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -430,8 +381,7 @@ add after <em>freeTable</em>()</div>
 <p>该函数将所给定的键/值对添加到所给定的哈希表中。若该键的条目已存在， 新值会覆盖旧值。若添加了一条新条目， 函数返回 <code>true</code>。以下是实现：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>freeTable</em>()</div>
-<pre>
-<span class="t">bool</span> <span class="i">tableSet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">bool</span> <span class="i">tableSet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span> <span class="i">value</span>) {
   <span class="t">Entry</span>* <span class="i">entry</span> = <span class="i">findEntry</span>(<span class="i">table</span>-&gt;<span class="i">entries</span>, <span class="i">table</span>-&gt;<span class="i">capacity</span>, <span class="i">key</span>);
   <span class="t">bool</span> <span class="i">isNewKey</span> = <span class="i">entry</span>-&gt;<span class="i">key</span> == <span class="a">NULL</span>;
   <span class="k">if</span> (<span class="i">isNewKey</span>) <span class="i">table</span>-&gt;<span class="i">count</span>++;
@@ -446,32 +396,26 @@ add after <em>freeTable</em>()</div>
 <p>大部分有趣的逻辑在 <code>findEntry()</code> 之中， 我们很快会谈到它。那个函数的工作是接下一个键与一个桶数组， 并算出它究竟该归属哪一个桶。它返回一个指向那个桶的指针 —— 数组中对应那一个 Entry 的地址。</p>
 <p>一旦手头有了一个桶， 插入便直接得多了。我们更新一下哈希表的大小， 并小心不为那些覆写已存在键的情形增加计数。接着我们将键与值分别复制进对应的 Entry 字段之中。</p>
 <p>我们还漏了一点小东西。我们其实还没有分配出 Entry 数组。哎呀！在能插入任何东西之前， 我们需要保证有一份数组， 而且大小足够。</p>
-<div class="codehilite"><pre class="insert-before">
-bool tableSet(Table* table, ObjString* key, Value value) {
+<div class="codehilite"><pre class="insert-before">bool tableSet(Table* table, ObjString* key, Value value) {
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>tableSet</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">table</span>-&gt;<span class="i">count</span> + <span class="n">1</span> &gt; <span class="i">table</span>-&gt;<span class="i">capacity</span> * <span class="a">TABLE_MAX_LOAD</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">table</span>-&gt;<span class="i">count</span> + <span class="n">1</span> &gt; <span class="i">table</span>-&gt;<span class="i">capacity</span> * <span class="a">TABLE_MAX_LOAD</span>) {
     <span class="t">int</span> <span class="i">capacity</span> = <span class="a">GROW_CAPACITY</span>(<span class="i">table</span>-&gt;<span class="i">capacity</span>);
     <span class="i">adjustCapacity</span>(<span class="i">table</span>, <span class="i">capacity</span>);
   }
 
-</pre><pre class="insert-after">
-  Entry* entry = findEntry(table-&gt;entries, table-&gt;capacity, key);
+</pre><pre class="insert-after">  Entry* entry = findEntry(table-&gt;entries, table-&gt;capacity, key);
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>tableSet</em>()</div>
 
 <p>这段代码与我们之前为动态数组扩容所写的很相似。如果现有容量不足以插入一项，我们便重新分配并扩容数组。这个 <code>GROW_CAPACITY()</code> 宏接受一个旧容量并将其放大数倍，以确保一连串插入的均摊常量级性能。</p>
 <p>有趣的不同之处在于 <code>TABLE_MAX_LOAD</code> 这个常量。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;value.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;value.h&quot;
 
 </pre><div class="source-file"><em>table.c</em></div>
-<pre class="insert">
-<span class="a">#define TABLE_MAX_LOAD 0.75</span>
+<pre class="insert"><span class="a">#define TABLE_MAX_LOAD 0.75</span>
 
-</pre><pre class="insert-after">
-void initTable(Table* table) {
+</pre><pre class="insert-after">void initTable(Table* table) {
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em></div>
 
@@ -482,8 +426,7 @@ void initTable(Table* table) {
 <p>我们很快便会看到 <code>adjustCapacity()</code> 的实现。首先， 让我们看一下那个一直吊你胃口的 <code>findEntry()</code> 函数。</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>freeTable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Entry</span>* <span class="i">findEntry</span>(<span class="t">Entry</span>* <span class="i">entries</span>, <span class="t">int</span> <span class="i">capacity</span>,
+<pre><span class="k">static</span> <span class="t">Entry</span>* <span class="i">findEntry</span>(<span class="t">Entry</span>* <span class="i">entries</span>, <span class="t">int</span> <span class="i">capacity</span>,
                         <span class="t">ObjString</span>* <span class="i">key</span>) {
   <span class="t">uint32_t</span> <span class="i">index</span> = <span class="i">key</span>-&gt;<span class="i">hash</span> % <span class="i">capacity</span>;
   <span class="k">for</span> (;;) {
@@ -517,12 +460,11 @@ add after <em>freeTable</em>()</div>
 </ul>
 <p>当我们找到一个空桶或一个键与所查键相同的桶时， 我们便退出循环。你也许会担心出现无限循环：如果每一桶都冲突怎么办？幸运的是， 这种情况不会发生， 这有赖于我们的装载因子。由于我们在数组接近装满时便开始扩容， 我们知道总会有空桶可用。</p>
 <p>我们直接在循环内部返回， 将一个指向所找到 Entry 的指针交给调用方， 由它决定是向其中插入某物还是从其中读取某物。回到 <code>tableSet()</code> 那儿 —— 那个最初引发这一切的函数—— 我们将新条目存入那个返回的桶中， 大功告成。</p>
-<h3><a href="#分配与扩容" name="分配与扩容"><small>20&#8202;.&#8202;4&#8202;.&#8202;3</small>分配与扩容</a></h3>
+<h3><a href="#分配与扩容" id="分配与扩容"><small>20&#8202;.&#8202;4&#8202;.&#8202;3</small>分配与扩容</a></h3>
 <p>在我们能向表中放东西之前， 我们确实需要一处存放之所。我们需要分配一段桶数组。这步骤发生于这个函数中：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>findEntry</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">adjustCapacity</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">int</span> <span class="i">capacity</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">adjustCapacity</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">int</span> <span class="i">capacity</span>) {
   <span class="t">Entry</span>* <span class="i">entries</span> = <span class="a">ALLOCATE</span>(<span class="t">Entry</span>, <span class="i">capacity</span>);
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">capacity</span>; <span class="i">i</span>++) {
     <span class="i">entries</span>[<span class="i">i</span>].<span class="i">key</span> = <span class="a">NULL</span>;
@@ -538,8 +480,7 @@ add after <em>findEntry</em>()</div>
 <p>我们创建一个有 <code>capacity</code>个元素的桶数组。在分配之后， 我们将每一个元素都初始化为一个空桶， 接着将该数组（及其大小） 存入哈希表的主结构之中。这对于首次向表中插入记录是 OK 的， 而且也就是首次为桶数组分配的时候。但如果我们已经有了一份， 又需要扩容呢？</p>
 <p>想起我们之前做动态数组的时候， 我们可以直接用 <code>realloc()</code>， 让 C 标准库替我们把所有元素复制过去。这在哈希表上行不通。别忘了， 我们要为每一条记录根据其键对数组大小取模来挑选桶。这意味着当数组大小改变之后， 那些记录可能会落入不同的桶里。</p>
 <p>那些新桶可能会有新的冲突需要处理。于是， 最简单的做法就是从零开始按照每一条记录应有的新位置重新构建整张表。</p>
-<div class="codehilite"><pre class="insert-before">
-    entries[i].value = NIL_VAL;
+<div class="codehilite"><pre class="insert-before">    entries[i].value = NIL_VAL;
   }
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>adjustCapacity</em>()</div>
@@ -561,27 +502,22 @@ in <em>adjustCapacity</em>()</div>
 
 <p>我们从旧数组的头开始逐桶遍历。一旦发现一个非空桶， 我们便将那条记录插入到新数组中。我们使用 <code>findEntry()</code>， 传入的是<em>新</em>数组——而不是当前存于 Table 中的那个。（这便是为什么 <code>findEntry()</code> 接受的是直接指向 Entry 数组的指针， 而不是整个 <code>Table</code> 结构。这样， 我们便可以在将它们存入结构之前就传入新的数组与大小。）</p>
 <p>完成之后， 我们便可以释放旧数组的内存。</p>
-<div class="codehilite"><pre class="insert-before">
-    dest-&gt;value = entry-&gt;value;
+<div class="codehilite"><pre class="insert-before">    dest-&gt;value = entry-&gt;value;
   }
 
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>adjustCapacity</em>()</div>
-<pre class="insert">
-  <span class="a">FREE_ARRAY</span>(<span class="t">Entry</span>, <span class="i">table</span>-&gt;<span class="i">entries</span>, <span class="i">table</span>-&gt;<span class="i">capacity</span>);
-</pre><pre class="insert-after">
-  table-&gt;entries = entries;
+<pre class="insert">  <span class="a">FREE_ARRAY</span>(<span class="t">Entry</span>, <span class="i">table</span>-&gt;<span class="i">entries</span>, <span class="i">table</span>-&gt;<span class="i">capacity</span>);
+</pre><pre class="insert-after">  table-&gt;entries = entries;
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>adjustCapacity</em>()</div>
 
 <p>有了这一切， 我们便有了一张想装多少便装多少的哈希表。它能处理覆写已存在的键， 也会随数据增长而自动扩容， 以维持所期待的装载因子。</p>
 <p>趁着手热， 我们顺便再添一个用于将一张哈希表的所有条目复制到另一张的辅助函数。</p>
-<div class="codehilite"><pre class="insert-before">
-bool tableSet(Table* table, ObjString* key, Value value);
+<div class="codehilite"><pre class="insert-before">bool tableSet(Table* table, ObjString* key, Value value);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>tableSet</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">tableAddAll</span>(<span class="t">Table</span>* <span class="i">from</span>, <span class="t">Table</span>* <span class="i">to</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">tableAddAll</span>(<span class="t">Table</span>* <span class="i">from</span>, <span class="t">Table</span>* <span class="i">to</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -591,8 +527,7 @@ add after <em>tableSet</em>()</div>
 <p>我们要等到很久之后才会用上这个， 到那时候我们会需要支持方法继承。不过既然眼下正忙着哈希表的事， 顺手把它实现了也不错。</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableSet</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">tableAddAll</span>(<span class="t">Table</span>* <span class="i">from</span>, <span class="t">Table</span>* <span class="i">to</span>) {
+<pre><span class="t">void</span> <span class="i">tableAddAll</span>(<span class="t">Table</span>* <span class="i">from</span>, <span class="t">Table</span>* <span class="i">to</span>) {
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">from</span>-&gt;<span class="i">capacity</span>; <span class="i">i</span>++) {
     <span class="t">Entry</span>* <span class="i">entry</span> = &amp;<span class="i">from</span>-&gt;<span class="i">entries</span>[<span class="i">i</span>];
     <span class="k">if</span> (<span class="i">entry</span>-&gt;<span class="i">key</span> != <span class="a">NULL</span>) {
@@ -604,16 +539,13 @@ add after <em>tableSet</em>()</div>
 <div class="source-file-narrow"><em>table.c</em>, add after <em>tableSet</em>()</div>
 
 <p>这有什么好说的。它遍历源哈希表的桶数组。一旦发现一个非空桶， 它便用我们之前定义的 <code>tableSet()</code>函数将这条记录添加到目标表中。</p>
-<h3><a href="#取出值" name="取出值"><small>20&#8202;.&#8202;4&#8202;.&#8202;4</small>取出值</a></h3>
+<h3><a href="#取出值" id="取出值"><small>20&#8202;.&#8202;4&#8202;.&#8202;4</small>取出值</a></h3>
 <p>如今我们的哈希表中已经装满了东西， 是时候开始把它们取出来了。给定一个键， 我们可以通过这个函数找出其对应的值（若有的话）：</p>
-<div class="codehilite"><pre class="insert-before">
-void freeTable(Table* table);
+<div class="codehilite"><pre class="insert-before">void freeTable(Table* table);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>freeTable</em>()</div>
-<pre class="insert">
-<span class="t">bool</span> <span class="i">tableGet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span>* <span class="i">value</span>);
-</pre><pre class="insert-after">
-bool tableSet(Table* table, ObjString* key, Value value);
+<pre class="insert"><span class="t">bool</span> <span class="i">tableGet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span>* <span class="i">value</span>);
+</pre><pre class="insert-after">bool tableSet(Table* table, ObjString* key, Value value);
 </pre></div>
 <div class="source-file-narrow"><em>table.h</em>, add after <em>freeTable</em>()</div>
 
@@ -621,8 +553,7 @@ bool tableSet(Table* table, ObjString* key, Value value);
 <p>由于 <code>findEntry()</code> 已经做了那些苦差， 实现便不难看。</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>findEntry</em>()</div>
-<pre>
-<span class="t">bool</span> <span class="i">tableGet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span>* <span class="i">value</span>) {
+<pre><span class="t">bool</span> <span class="i">tableGet</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>, <span class="t">Value</span>* <span class="i">value</span>) {
   <span class="k">if</span> (<span class="i">table</span>-&gt;<span class="i">count</span> == <span class="n">0</span>) <span class="k">return</span> <span class="k">false</span>;
 
   <span class="t">Entry</span>* <span class="i">entry</span> = <span class="i">findEntry</span>(<span class="i">table</span>-&gt;<span class="i">entries</span>, <span class="i">table</span>-&gt;<span class="i">capacity</span>, <span class="i">key</span>);
@@ -635,21 +566,18 @@ add after <em>findEntry</em>()</div>
 <div class="source-file-narrow"><em>table.c</em>, add after <em>findEntry</em>()</div>
 
 <p>如果该表完全为空， 我们必然找不到这条记录， 于是先检查一下这一点。这并不只是一处优化—— 它也保证了我们不会在数组为 <code>NULL</code> 的情况下尝试访问桶数组。否则， 我们就把这苦差交给 <code>findEntry()</code>。它返回一个指向某桶的指针。如果这个桶为空（我们通过其键为 <code>NULL</code>来检测）， 那么我们并未找到与所查键相匹配的 Entry。若 <code>findEntry()</code> 返回的是一个非空 Entry， 那便是我们所找的。我们将该 Entry 的值复制到输出参数中， 调用方便可以拿到了。小菜一碟。</p>
-<h3><a href="#删除条目" name="删除条目"><small>20&#8202;.&#8202;4&#8202;.&#8202;5</small>删除条目</a></h3>
+<h3><a href="#删除条目" id="删除条目"><small>20&#8202;.&#8202;4&#8202;.&#8202;5</small>删除条目</a></h3>
 <p>一张功能齐备的哈希表还需要支持一项基本操作：删除条目。如果你可以添加东西， 显然就应该可以 <em>撤 * 回</em> 它们吧？但你会意外地发现， 有多少关于哈希表的教程居然省略了这一点。</p>
 <p>我本可以也走那条路。事实上， 在 clox 中， 我们只在 VM 中一个极其边角的情形下才用上了删除。但如果你想真正弄明白如何完整实现一张哈希表， 这一点似乎很重要。我能理解他们想跳过这一节的心情。如我们即将看到的， 从使用 <span name="delete"> 开放</span> 寻址的哈希表中删除是有点棘手的。</p>
 <aside name="delete">
 <p>对于链地址法， 删除就如同从链表中删去一个节点那般简单。</p>
 </aside>
 <p>至少声明部分是简单的。</p>
-<div class="codehilite"><pre class="insert-before">
-bool tableSet(Table* table, ObjString* key, Value value);
+<div class="codehilite"><pre class="insert-before">bool tableSet(Table* table, ObjString* key, Value value);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>tableSet</em>()</div>
-<pre class="insert">
-<span class="t">bool</span> <span class="i">tableDelete</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>);
-</pre><pre class="insert-after">
-void tableAddAll(Table* from, Table* to);
+<pre class="insert"><span class="t">bool</span> <span class="i">tableDelete</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>);
+</pre><pre class="insert-after">void tableAddAll(Table* from, Table* to);
 </pre></div>
 <div class="source-file-narrow"><em>table.h</em>, add after <em>tableSet</em>()</div>
 
@@ -662,8 +590,7 @@ void tableAddAll(Table* from, Table* to);
 <p>代码如此：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableSet</em>()</div>
-<pre>
-<span class="t">bool</span> <span class="i">tableDelete</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>) {
+<pre><span class="t">bool</span> <span class="i">tableDelete</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="t">ObjString</span>* <span class="i">key</span>) {
   <span class="k">if</span> (<span class="i">table</span>-&gt;<span class="i">count</span> == <span class="n">0</span>) <span class="k">return</span> <span class="k">false</span>;
 
   <span class="c">// Find the entry.</span>
@@ -683,14 +610,12 @@ add after <em>tableSet</em>()</div>
 </aside>
 <p>这就是删除一条记录所需做的全部。简单而高速。但其他操作也得能够正确地应对墓碑。一座墓碑是一种 &ldquo;半截子&rdquo; 的条目。它有一些已存在条目的特性， 也有一些空条目的特性。</p>
 <p>当我们沿一条探测序列查找之时， 若碰到一座墓碑， 我们记下它， 并继续向下。</p>
-<div class="codehilite"><pre class="insert-before">
-  for (;;) {
+<div class="codehilite"><pre class="insert-before">  for (;;) {
     Entry* entry = &amp;entries[index];
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>findEntry</em>()<br>
 replace 3 lines</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">entry</span>-&gt;<span class="i">key</span> == <span class="a">NULL</span>) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">entry</span>-&gt;<span class="i">key</span> == <span class="a">NULL</span>) {
       <span class="k">if</span> (<span class="a">IS_NIL</span>(<span class="i">entry</span>-&gt;<span class="i">value</span>)) {
         <span class="c">// Empty entry.</span>
         <span class="k">return</span> <span class="i">tombstone</span> != <span class="a">NULL</span> ? <span class="i">tombstone</span> : <span class="i">entry</span>;
@@ -709,15 +634,12 @@ replace 3 lines</div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>findEntry</em>(), replace 3 lines</div>
 
 <p>我们第一次经过一座墓碑时， 会将它存进这个局部变量之中：</p>
-<div class="codehilite"><pre class="insert-before">
-  uint32_t index = key-&gt;hash % capacity;
+<div class="codehilite"><pre class="insert-before">  uint32_t index = key-&gt;hash % capacity;
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>findEntry</em>()</div>
-<pre class="insert">
-  <span class="t">Entry</span>* <span class="i">tombstone</span> = <span class="a">NULL</span>;
+<pre class="insert">  <span class="t">Entry</span>* <span class="i">tombstone</span> = <span class="a">NULL</span>;
 
-</pre><pre class="insert-after">
-  for (;;) {
+</pre><pre class="insert-after">  for (;;) {
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>findEntry</em>()</div>
 
@@ -725,17 +647,15 @@ in <em>findEntry</em>()</div>
 <p>这种自动回收墓碑槽位的做法有助于减少那些在桶数组中浪费空间的墓碑数量。在典型的插入与删除并存的使用情景下， 墓碑数量会先增多一段， 之后往往便会趋于稳定。</p>
 <p>即使如此， 也没有什么保证能避免大量删除导致整桶数组都被墓碑占满的极端情形。在最坏的情况下， 我们可能会走到一个<em>没有</em>空桶可用的地步。这很糟， 因为别忘了， 保证 <code>findEntry()</code> 不会陷入无限循环的唯一前提就是我们最终能碰到一个空桶。</p>
 <p>于是我们得细致地考量墓碑与该表装载因子及扩容的交互。关键问题在于： 在计算装载因子之时， 我们应该将墓碑视为满桶， 还是空桶呢？</p>
-<h3><a href="#墓碑计数" name="墓碑计数"><small>20&#8202;.&#8202;4&#8202;.&#8202;6</small>墓碑计数</a></h3>
+<h3><a href="#墓碑计数" id="墓碑计数"><small>20&#8202;.&#8202;4&#8202;.&#8202;6</small>墓碑计数</a></h3>
 <p>若我们将墓碑视为满桶， 那么数组可能会比我们实际需要的还大—— 因为装载因子被人为地拔高了。有些墓碑可以被回收复用， 却没有被当作未占用来计算， 于是我们便会过早扩容。</p>
 <p>但若我们将墓碑视为空桶而 <em>不</em> 将其纳入装载因子， 便有可能走到<em>没有</em>任何真正空桶可以用作查找终止的地步。无限循环是一个比多几个额外数组槽位恶劣得多的问题， 于是对装载因子而言， 我们认为墓碑是满桶。</p>
 <p>这便是我们在之前那段代码中删除条目时并不递减计数的原因。计数不再是该哈希表中的条目数， 而是条目数加上墓碑数。这意味着， 我们只在插入的新条目进入一个完全为空的桶之时才会递增计数。</p>
-<div class="codehilite"><pre class="insert-before">
-  bool isNewKey = entry-&gt;key == NULL;
+<div class="codehilite"><pre class="insert-before">  bool isNewKey = entry-&gt;key == NULL;
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>tableSet</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">isNewKey</span> &amp;&amp; <span class="a">IS_NIL</span>(<span class="i">entry</span>-&gt;<span class="i">value</span>)) <span class="i">table</span>-&gt;<span class="i">count</span>++;
+<pre class="insert">  <span class="k">if</span> (<span class="i">isNewKey</span> &amp;&amp; <span class="a">IS_NIL</span>(<span class="i">entry</span>-&gt;<span class="i">value</span>)) <span class="i">table</span>-&gt;<span class="i">count</span>++;
 </pre><pre class="insert-after">
 
   entry-&gt;key = key;
@@ -744,27 +664,21 @@ replace 1 line</div>
 
 <p>如果我们正在用一座墓碑替换一条新条目， 那个桶已经被计入， 计数不会改变。</p>
 <p>当我们对桶数组进行扩容时， 我们会申请一份新桶数组， 将现有条目重新插入其中。在这个过程中， 我们 <em>不</em> 会将墓碑复制过去。它们在如今重新搭建探测序列的过程中不添任何价值， 反而会拖慢查找的速度。这意味着我们需要重新计算一下计数， 因为扩容过程中它可能会变。于是我们将其清零：</p>
-<div class="codehilite"><pre class="insert-before">
-  }
+<div class="codehilite"><pre class="insert-before">  }
 
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>adjustCapacity</em>()</div>
-<pre class="insert">
-  <span class="i">table</span>-&gt;<span class="i">count</span> = <span class="n">0</span>;
-</pre><pre class="insert-after">
-  for (int i = 0; i &lt; table-&gt;capacity; i++) {
+<pre class="insert">  <span class="i">table</span>-&gt;<span class="i">count</span> = <span class="n">0</span>;
+</pre><pre class="insert-after">  for (int i = 0; i &lt; table-&gt;capacity; i++) {
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>adjustCapacity</em>()</div>
 
 <p>接着， 每找到一条非墓碑的条目， 我们便递增它一次。</p>
-<div class="codehilite"><pre class="insert-before">
-    dest-&gt;value = entry-&gt;value;
+<div class="codehilite"><pre class="insert-before">    dest-&gt;value = entry-&gt;value;
 </pre><div class="source-file"><em>table.c</em><br>
 in <em>adjustCapacity</em>()</div>
-<pre class="insert">
-    <span class="i">table</span>-&gt;<span class="i">count</span>++;
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">table</span>-&gt;<span class="i">count</span>++;
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>table.c</em>, in <em>adjustCapacity</em>()</div>
 
@@ -772,7 +686,7 @@ in <em>adjustCapacity</em>()</div>
 <p>我觉得有趣的是， 为了支持删除条目所做的大部分工作其实落在 <code>findEntry()</code> 与 <code>adjustCapacity()</code> 两个函数中。真正执行删除的那段代码反而简单而高速。在实践中， 删除操作通常较少出现， 于是你大概会期望一张哈希表在删除函数里尽可能多地把活干完， 好让其他函数保持轻装， 以换取更高的速度。在我们这种墓碑路线下， 删除本身很快， 但查找会因此付出代价。</p>
 <p>我跑几轮小型基准试了不同的删除场景， 意外地发现墓碑整体上比那些把所需的工作全部放进删除函数、 去重新插入受影响的那些记录的做法还要快。</p>
 <p>但细想一下， 这并不是墓碑路线把完整删除一条记录的工作推给了其他操作， 而是它使删除变得 <em>懒惰</em> 了。一开始， 它只做最低限度的工作把那条记录变成了一座墓碑。这会导致后续的查找不得不跨过它， 从而付出性能代价。但与此同时， 它也让那座墓碑槽有可能被后续的插入回收复用。这种回收就是一种极其高效的避免重新排列所有受影响后续条目的方法。你基本上在探测序列的链条上回收了一节节点。这是一个精巧的把戏。</p>
-<h2><a href="#字符串驻留" name="字符串驻留"><small>20&#8202;.&#8202;5</small>字符串驻留</a></h2>
+<h2><a href="#字符串驻留" id="字符串驻留"><small>20&#8202;.&#8202;5</small>字符串驻留</a></h2>
 <p>我们现在手头有了一张大致能用的哈希表， 但它核心有一处致命的漏洞。同时， 我们也暂时没有派上任何用场。是时候一并解决这两件事， 顺便学一招解释器的经典手段了。</p>
 <p>这张哈希表不完美的原因在于： <code>findEntry()</code> 在检查已存在键是否匹配时， 使用的是 <code>==</code> 来比较两条字符串是否相等。那只在两条键是内存中完全相同的字符串时才返回 <em>true</em>。两份字符相同却各自存在的不同字符串本应被视为相等， 却因此而不被认为相等。</p>
 <p>记得我们在之前添加字符串的那章中， 为了让值相等具有正确的语义， 特意 <a href="strings.html#operations-on-strings">添加了逐字节比较的支持</a>。我们可以那样在 <code>findEntry()</code> 里干， 但 <span name="hash-collision">那很慢</span>。</p>
@@ -787,118 +701,92 @@ in <em>adjustCapacity</em>()</div>
 </aside>
 <p>按这样做， 你便知道每一段字符序列都在内存中仅有一份表示。这使得值相等变得浅显易见。如果两条字符串指向内存中同一位置， 它们显然是同一条字符串， 必定相等。而由于我们知道每条字符串都是独一无二的， 若两条字符串指向不同的地址， 它们必定是不同的字符串。</p>
 <p>于是， 指针相等便精确地匹配了值相等。这反过来又意味着， 我们既有的那个 <code>findEntry()</code> 里的 <code>==</code> 便做了正确的事儿。至少， 它会在我们驻留了所有字符串之后如此。为了可靠地去重所有字符串， VM 需要能够找到每一条已创建的字符串。我们通过给它一张哈希表来存放它们全部来做到这一点。</p>
-<div class="codehilite"><pre class="insert-before">
-  Value* stackTop;
+<div class="codehilite"><pre class="insert-before">  Value* stackTop;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">Table</span> <span class="i">strings</span>;
-</pre><pre class="insert-after">
-  Obj* objects;
+<pre class="insert">  <span class="t">Table</span> <span class="i">strings</span>;
+</pre><pre class="insert-after">  Obj* objects;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 
 <p>按惯例， 我们需要一个 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;chunk.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;chunk.h&quot;
 </pre><div class="source-file"><em>vm.h</em></div>
-<pre class="insert">
-<span class="a">#include &quot;table.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;value.h&quot;
+<pre class="insert"><span class="a">#include &quot;table.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;value.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em></div>
 
 <p>当我们拉起一台新 VM 时， 字符串表为空。</p>
-<div class="codehilite"><pre class="insert-before">
-  vm.objects = NULL;
+<div class="codehilite"><pre class="insert-before">  vm.objects = NULL;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
-<pre class="insert">
-  <span class="i">initTable</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">initTable</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
 
 <p>当我们关闭 VM 时， 我们收拾这张表使用过的那些资源。</p>
-<div class="codehilite"><pre class="insert-before">
-void freeVM() {
+<div class="codehilite"><pre class="insert-before">void freeVM() {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>freeVM</em>()</div>
-<pre class="insert">
-  <span class="i">freeTable</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>);
-</pre><pre class="insert-after">
-  freeObjects();
+<pre class="insert">  <span class="i">freeTable</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>);
+</pre><pre class="insert-after">  freeObjects();
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>freeVM</em>()</div>
 
 <p>某些语言有一种单独的类型或一个显式的步骤来驻留一条字符串。对 clox， 我们将自动驻留每一条字符串。这意味着每当我们创建一条新的、 独一无二的字符串， 我们都会将其添加到那张表中。</p>
-<div class="codehilite"><pre class="insert-before">
-  string-&gt;hash = hash;
+<div class="codehilite"><pre class="insert-before">  string-&gt;hash = hash;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>allocateString</em>()</div>
-<pre class="insert">
-  <span class="i">tableSet</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>, <span class="i">string</span>, <span class="a">NIL_VAL</span>);
-</pre><pre class="insert-after">
-  return string;
+<pre class="insert">  <span class="i">tableSet</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>, <span class="i">string</span>, <span class="a">NIL_VAL</span>);
+</pre><pre class="insert-after">  return string;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateString</em>()</div>
 
 <p>我们用这张表更像一个哈希 <em>集</em> 而不是哈希 <em>表</em>。键就是那些字符串， 也是我们唯一关心的东西， 于是我们对值只用 <code>nil</code>。</p>
 <p>这段假设该串是独一无二的便会将它添加到表中， 但我们还得在到达这儿之前实际地检查是否重复。我们在那些会调用 <code>allocateString()</code> 的高层函数里做这件事。这是其中一个：</p>
-<div class="codehilite"><pre class="insert-before">
-  uint32_t hash = hashString(chars, length);
+<div class="codehilite"><pre class="insert-before">  uint32_t hash = hashString(chars, length);
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>copyString</em>()</div>
-<pre class="insert">
-  <span class="t">ObjString</span>* <span class="i">interned</span> = <span class="i">tableFindString</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>, <span class="i">chars</span>, <span class="i">length</span>,
+<pre class="insert">  <span class="t">ObjString</span>* <span class="i">interned</span> = <span class="i">tableFindString</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>, <span class="i">chars</span>, <span class="i">length</span>,
                                         <span class="i">hash</span>);
   <span class="k">if</span> (<span class="i">interned</span> != <span class="a">NULL</span>) <span class="k">return</span> <span class="i">interned</span>;
 
-</pre><pre class="insert-after">
-  char* heapChars = ALLOCATE(char, length + 1);
+</pre><pre class="insert-after">  char* heapChars = ALLOCATE(char, length + 1);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>copyString</em>()</div>
 
 <p>在把一条字符串复制进一个新的 LoxString 之前， 我们先在字符串表中找一下。若找到了， 就不再&rdquo; 复製&ldquo;， 而是直接返回一个对该串的引用。否则， 我们落到下面去分配一条新字符串， 并将它存进字符串表。</p>
 <p>获取现有字符串所有权的路径有些不同。</p>
-<div class="codehilite"><pre class="insert-before">
-  uint32_t hash = hashString(chars, length);
+<div class="codehilite"><pre class="insert-before">  uint32_t hash = hashString(chars, length);
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>takeString</em>()</div>
-<pre class="insert">
-  <span class="t">ObjString</span>* <span class="i">interned</span> = <span class="i">tableFindString</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>, <span class="i">chars</span>, <span class="i">length</span>,
+<pre class="insert">  <span class="t">ObjString</span>* <span class="i">interned</span> = <span class="i">tableFindString</span>(&amp;<span class="i">vm</span>.<span class="i">strings</span>, <span class="i">chars</span>, <span class="i">length</span>,
                                         <span class="i">hash</span>);
   <span class="k">if</span> (<span class="i">interned</span> != <span class="a">NULL</span>) {
     <span class="a">FREE_ARRAY</span>(<span class="t">char</span>, <span class="i">chars</span>, <span class="i">length</span> + <span class="n">1</span>);
     <span class="k">return</span> <span class="i">interned</span>;
   }
 
-</pre><pre class="insert-after">
-  return allocateString(chars, length, hash);
+</pre><pre class="insert-after">  return allocateString(chars, length, hash);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>takeString</em>()</div>
 
 <p>同样， 我们先在字符串表中查找。若找到了， 在返回之前， 我们会释放传入的那份字符串所占用的内存。由于所有权已经转交给这个函数， 而我们不再需要那份重复的字符串， 自然应由我们来释放它。</p>
 <p>在我们到达那个需要去写的新函数之前， 还有一个 include 要处理。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;object.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;object.h&quot;
 </pre><div class="source-file"><em>object.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;table.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;value.h&quot;
+<pre class="insert"><span class="a">#include &quot;table.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;value.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em></div>
 
 <p>在该表中查找字符串时， 我们不能用那个正常的 <code>tableGet()</code> 函数， 因为那个函数会调用 <code>findEntry()</code>， 而 <code>findEntry()</code> 正好有我们现在试图修的那个重复字符串问题。取而代之， 我们使用这个新函数：</p>
-<div class="codehilite"><pre class="insert-before">
-void tableAddAll(Table* from, Table* to);
+<div class="codehilite"><pre class="insert-before">void tableAddAll(Table* from, Table* to);
 </pre><div class="source-file"><em>table.h</em><br>
 add after <em>tableAddAll</em>()</div>
-<pre class="insert">
-<span class="t">ObjString</span>* <span class="i">tableFindString</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">chars</span>,
+<pre class="insert"><span class="t">ObjString</span>* <span class="i">tableFindString</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">chars</span>,
                            <span class="t">int</span> <span class="i">length</span>, <span class="t">uint32_t</span> <span class="i">hash</span>);
 </pre><pre class="insert-after">
 
@@ -909,8 +797,7 @@ add after <em>tableAddAll</em>()</div>
 <p>实现如此：</p>
 <div class="codehilite"><div class="source-file"><em>table.c</em><br>
 add after <em>tableAddAll</em>()</div>
-<pre>
-<span class="t">ObjString</span>* <span class="i">tableFindString</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">chars</span>,
+<pre><span class="t">ObjString</span>* <span class="i">tableFindString</span>(<span class="t">Table</span>* <span class="i">table</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">chars</span>,
                            <span class="t">int</span> <span class="i">length</span>, <span class="t">uint32_t</span> <span class="i">hash</span>) {
   <span class="k">if</span> (<span class="i">table</span>-&gt;<span class="i">count</span> == <span class="n">0</span>) <span class="k">return</span> <span class="a">NULL</span>;
 
@@ -937,22 +824,19 @@ add after <em>tableAddAll</em>()</div>
 <p>其次， 在检查是否找到了键之时， 我们看的是那些实际的字符串。我们先检查它们是否具有匹配的长度与哈希值。那些都是很快的检查， 若不相等， 这些字符串必定不同。</p>
 <p>若碰上了哈希冲突， 我们便逐字符地对照。这是整款 VM 中唯一一处对字符串进行文本相等检查的地方。我们在此处去重字符串， 接着其余部分的 VM 便可以默认地以为： 内存地址不同的两条字符串一定具有不同的内容。</p>
 <p>事实上， 如今我们已驻留了所有字符串， 我们在字节码解释器中可以顺便利用这一点。当用户对两个对象进行 <code>==</code> 比较、 而这两个对象恰好都是字符串之时， 我们就不用再逐字节检查了。</p>
-<div class="codehilite"><pre class="insert-before">
-    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+<div class="codehilite"><pre class="insert-before">    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>valuesEqual</em>()<br>
 replace 7 lines</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">VAL_OBJ</span>:    <span class="k">return</span> <span class="a">AS_OBJ</span>(<span class="i">a</span>) == <span class="a">AS_OBJ</span>(<span class="i">b</span>);
-</pre><pre class="insert-after">
-    default:         return false; // Unreachable.
+<pre class="insert">    <span class="k">case</span> <span class="a">VAL_OBJ</span>:    <span class="k">return</span> <span class="a">AS_OBJ</span>(<span class="i">a</span>) == <span class="a">AS_OBJ</span>(<span class="i">b</span>);
+</pre><pre class="insert-after">    default:         return false; // Unreachable.
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>(), replace 7 lines</div>
 
 <p>我们在创建字符串时付出了一点开销去驻留它们。但作为回报， 字符串上的相等运算在运行时快了许多。有了这一切， 我们便有了一张功能齐备的哈希表， 随时可以用来追踪变量、 实例或任何其他可能冒出来的键/值对。</p>
 <p>同时， 我们也加快了字符串相等的测试。这对于用户对字符串使用 <code>==</code> 很有帮助。但对一门类 Lox 这样的动态类型语言而言， 这一点更为重要：方法调用与实例字段的查找都是按名字在运行时进行的。如果测试字符串是否相等的速度很慢， 那就意味着按名字查找方法的速度也慢。而在一门面向对象的语言中， <em>若</em> 那很慢， 便* 是* 一切都* 慢。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>20&#8202;.&#8202;6</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>20&#8202;.&#8202;6</small>挑战</a></h2>
 <ol>
 <li>
 <p>在 clox 中， 我们恰好只需要支持字符串类型的键， 于是我们构建的那张哈希表被硬编码为只接受这种键类型。若我们将哈希表作为一阶对象暴露给 Lox 用户， 那么支持不同类型的键便会很有用。</p>
@@ -975,7 +859,7 @@ replace 7 lines</div>
 <a href="global-variables.html" class="next">
   Next Chapter: &ldquo;Global Variables&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

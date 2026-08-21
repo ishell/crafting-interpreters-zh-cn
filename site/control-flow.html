@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Control Flow<small>9</small></a></h3>
 
 <ul>
@@ -56,7 +55,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="statements-and-state.html" title="Statements and State" class="prev">←</a>
 <a href="functions.html" title="Functions" class="next">→</a>
 </nav>
@@ -64,9 +63,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Control Flow<small>9</small></a></h3>
 
 <ul>
@@ -94,32 +92,14 @@
   <div class="number">9</div>
   <h1>Control Flow</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#控制流" name="控制流"><small>9&#8202;.&#8202;0</small>控制流</a></h1>
+<h1><a href="#控制流" id="控制流"><small>9&#8202;.&#8202;0</small>控制流</a></h1>
 <blockquote>
 <p>逻辑，正如威士忌一般，饮之过量，便会失去那原本的裨益。</p>
 <p><cite>邓萨尼勋爵</cite></p>
 </blockquote>
 <p>与<a href="statements-and-state.html">上一章</a>那场令人精疲力竭的马拉松相比，今天更像是一次轻快的雏菊田间漫步。但虽说工作来得轻松，回报却令人喜出望外。</p>
 <p>眼下，我们的解释器充其量不过是一台计算器。一段 Lox 程序在跑完之前所能完成的工作量是固定的。要想让它的运行时间翻倍，你只能把源代码也写长一倍。我们马上要来修正这一点。在本章中，我们的解释器将向着程序设计语言的&ldquo;大联盟&ldquo;迈出一大步：<em>图灵完备</em>。</p>
-<h2><a href="#图灵机（简述）" name="图灵机（简述）"><small>9&#8202;.&#8202;1</small>图灵机（简述）</a></h2>
+<h2><a href="#图灵机（简述）" id="图灵机（简述）"><small>9&#8202;.&#8202;1</small>图灵机（简述）</a></h2>
 <p>上世纪初，数学家们一头撞上了一连串令人困惑的<span name="paradox">悖论</span>，这让他们开始怀疑自己工作所赖以建立的那块根基是否稳固。为了应对这场<a href="https://en.wikipedia.org/wiki/Foundations_of_mathematics#Foundational_crisis">危机</a>，他们回到了一切的起点。从寥寥几条公理、逻辑与集合论出发，他们希望能够将数学重建在一片坚不可摧的基石之上。</p>
 <aside name="paradox">
 <p>其中最著名的便是<a href="https://en.wikipedia.org/wiki/Russell%27s_paradox"><strong>罗素悖论</strong></a>。起初，集合论允许你定义任意一种集合——只要你能用英语描述出来，它便是合法的。数学家们天生偏爱自指，集合之中自然又可以包含集合。于是罗素——这个不按常理出牌的家伙——抛出了这么一句：</p>
@@ -142,7 +122,7 @@
 <aside name="memory">
 <p>第三条我们其实也<strong>差不多</strong>达成了。你可以创建并拼接任意大小的字符串，从而能够<strong>存储</strong>任意量的内存。但我们目前尚无法访问字符串的各个部分。</p>
 </aside>
-<h2><a href="#条件执行" name="条件执行"><small>9&#8202;.&#8202;2</small>条件执行</a></h2>
+<h2><a href="#条件执行" id="条件执行"><small>9&#8202;.&#8202;2</small>条件执行</a></h2>
 <p>历史课讲够了，让我们来给语言加点料。我们大致可以将控制流分为两种：</p>
 <ul>
 <li>
@@ -158,8 +138,7 @@
 </aside>
 <p>为求简洁，Lox 并不设条件运算符，所以让我们把 <code>if</code> 语句这枚钉子敲上去。我们为语句文法新增一条产生式。</p>
 <p><span name="semicolon"></span></p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">ifStmt</span>
                | <span class="i">printStmt</span>
                | <span class="i">block</span> ;
@@ -171,15 +150,12 @@
 <p>规则中那些未被引号括起的分号，乃是文法元语法的一部分，而非 Lox 的语法。块的末尾并不带分号，<code>if</code> 语句的末尾也不带，除非那条 then 或 else 语句本身恰好是一条以分号结尾的语句。</p>
 </aside>
 <p>一条 <code>if</code> 语句由一个表达式充当条件，其后跟随一条待执行的语句——当条件为真值时便会执行。可选地，它还可以带有一个 <code>else</code> 关键字以及另一条语句——当条件为假值时便会执行。这个<span name="if-ast">语法树节点</span>为上述三块内容各设有一个字段。</p>
-<div class="codehilite"><pre class="insert-before">
-      &quot;Expression : Expr expression&quot;,
+<div class="codehilite"><pre class="insert-before">      &quot;Expression : Expr expression&quot;,
 </pre><div class="source-file"><em>tool/GenerateAst.java</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-      <span class="s">&quot;If         : Expr condition, Stmt thenBranch,&quot;</span> +
+<pre class="insert">      <span class="s">&quot;If         : Expr condition, Stmt thenBranch,&quot;</span> +
                   <span class="s">&quot; Stmt elseBranch&quot;</span>,
-</pre><pre class="insert-after">
-      &quot;Print      : Expr expression&quot;,
+</pre><pre class="insert-after">      &quot;Print      : Expr expression&quot;,
 </pre></div>
 <div class="source-file-narrow"><em>tool/GenerateAst.java</em>, in <em>main</em>()</div>
 
@@ -187,22 +163,18 @@ in <em>main</em>()</div>
 <p>新节点的生成代码收录于<a href="appendix-ii.html#if-statement">附录 II</a>。</p>
 </aside>
 <p>与其他语句一样，语法分析器凭借前置的 <code>if</code> 关键字来识别一条 <code>if</code> 语句。</p>
-<div class="codehilite"><pre class="insert-before">
-  private Stmt statement() {
+<div class="codehilite"><pre class="insert-before">  private Stmt statement() {
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">match</span>(<span class="i">IF</span>)) <span class="k">return</span> <span class="i">ifStatement</span>();
-</pre><pre class="insert-after">
-    if (match(PRINT)) return printStatement();
+<pre class="insert">    <span class="k">if</span> (<span class="i">match</span>(<span class="i">IF</span>)) <span class="k">return</span> <span class="i">ifStatement</span>();
+</pre><pre class="insert-after">    if (match(PRINT)) return printStatement();
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>statement</em>()</div>
 
 <p>当它识别出之后，便会调用下面这个新方法来解析剩余部分：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>statement</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Stmt</span> <span class="i">ifStatement</span>() {
+<pre>  <span class="k">private</span> <span class="t">Stmt</span> <span class="i">ifStatement</span>() {
     <span class="i">consume</span>(<span class="i">LEFT_PAREN</span>, <span class="s">&quot;Expect &#39;(&#39; after &#39;if&#39;.&quot;</span>);
     <span class="t">Expr</span> <span class="i">condition</span> = <span class="i">expression</span>();
     <span class="i">consume</span>(<span class="i">RIGHT_PAREN</span>, <span class="s">&quot;Expect &#39;)&#39; after if condition.&quot;</span>);<span name="parens"> </span>
@@ -224,8 +196,7 @@ add after <em>statement</em>()</div>
 </aside>
 <p>如常，解析代码紧贴文法规则。它通过查找前置的 <code>else</code> 关键字来检测是否存在 else 子句。若不存在，则语法树中的 <code>elseBranch</code> 字段为 <code>null</code>。</p>
 <p>那个看似无害的可选 else，事实上却为我们的文法打开了一道歧义之门。考虑下面这段：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">first</span>) <span class="k">if</span> (<span class="i">second</span>) <span class="i">whenTrue</span>(); <span class="k">else</span> <span class="i">whenFalse</span>();
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">first</span>) <span class="k">if</span> (<span class="i">second</span>) <span class="i">whenTrue</span>(); <span class="k">else</span> <span class="i">whenFalse</span>();
 </pre></div>
 <p>谜题来了：那个 else 子句究竟归属于哪一条 <code>if</code> 语句？这不仅仅是一个关乎我们如何书写文法的理论问题。它实际上会影响代码的执行方式：</p>
 <ul>
@@ -243,8 +214,7 @@ add after <em>statement</em>()</div>
 <p>语法在手，我们便准备妥当，只待去解释。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>visitExpressionStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitIfStmt</span>(<span class="t">Stmt</span>.<span class="t">If</span> <span class="i">stmt</span>) {
     <span class="k">if</span> (<span class="i">isTruthy</span>(<span class="i">evaluate</span>(<span class="i">stmt</span>.<span class="i">condition</span>))) {
       <span class="i">execute</span>(<span class="i">stmt</span>.<span class="i">thenBranch</span>);
@@ -258,19 +228,17 @@ add after <em>visitExpressionStmt</em>()</div>
 
 <p>解释器的实现乃是 Java 同名代码的一层薄薄封装。它对条件进行求值。若为真值，便执行 then 分支。否则，若存在 else 分支，便执行之。</p>
 <p>若你拿这段代码与我们先前所实现过的那些语法处理方式作一番比较，便会发现，使控制流得以与众不同的那一部分，便是那个 Java 的 <code>if</code> 语句。我们先前实现过的大多数语法树都<strong>总是</strong>会对其子树求值。而此处，我们<strong>可能</strong>不会对那条 then 或 else 语句求值。倘若其中之一带有副作用，那么<strong>不</strong>对其求值这一选择便会成为用户可感知的现象。</p>
-<h2><a href="#逻辑运算符" name="逻辑运算符"><small>9&#8202;.&#8202;3</small>逻辑运算符</a></h2>
+<h2><a href="#逻辑运算符" id="逻辑运算符"><small>9&#8202;.&#8202;3</small>逻辑运算符</a></h2>
 <p>既然我们没有条件运算符，你大概会以为分支这部分已经讲完了，但其实并未。由于没有了三元运算符的缘故，还有另外两种运算符从技术上讲也属于控制流构件——它们便是逻辑运算符 <code>and</code> 与 <code>or</code>。</p>
 <p>这两位与其它的二元运算符迥异，因为它们会<strong>短路求值</strong>。一旦在求值左操作数之后，我们已然能够知晓整个逻辑表达式的结果，那就<strong>不必</strong>再去对右操作数求值了。举例而言：</p>
-<div class="codehilite"><pre>
-<span class="k">false</span> <span class="k">and</span> <span class="i">sideEffect</span>();
+<div class="codehilite"><pre><span class="k">false</span> <span class="k">and</span> <span class="i">sideEffect</span>();
 </pre></div>
 <p>对于一个 <code>and</code> 表达式，其结果若要为真值，则两个操作数必须皆为真值。我们只要在求值左侧的 <code>false</code> 操作数的那一刻，便已然看出结果不会是真值，因此便<strong>无需</strong>对 <code>sideEffect()</code> 进行求值，它被跳了过去。</p>
 <p>这便是我们彼时没有与其它二元运算符一道实现逻辑运算符的原因。如今，我们准备好了。这两个新运算符在优先级表中的位置偏低。与 C 中的 <code>||</code> 与 <code>&amp;&amp;</code> 类似，它们各自拥有<span name="logical">自己的</span>优先级，其中 <code>or</code> 低于 <code>and</code>。我们将它们安插在 <code>assignment</code> 与 <code>equality</code> 之间。</p>
 <aside name="logical">
 <p>我一直很好奇，为什么它们不像那些比较运算符或相等性运算符那样共享同一优先级。</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="i">expression</span>     → <span class="i">assignment</span> ;
+<div class="codehilite"><pre><span class="i">expression</span>     → <span class="i">assignment</span> ;
 <span class="i">assignment</span>     → <span class="t">IDENTIFIER</span> <span class="s">&quot;=&quot;</span> <span class="i">assignment</span>
                | <span class="i">logic_or</span> ;
 <span class="i">logic_or</span>       → <span class="i">logic_and</span> ( <span class="s">&quot;or&quot;</span> <span class="i">logic_and</span> )* ;
@@ -281,14 +249,11 @@ add after <em>visitExpressionStmt</em>()</div>
 <p>它们的<strong>语法</strong>与短路求值毫无瓜葛；那是语义层面的考量。</p>
 </aside>
 <p>我们本可以对这两个新表达式复用既有的 Expr.Binary 类——毕竟它们的字段完全相同。但那样一来，<code>visitBinaryExpr()</code> 便不得不去检查运算符究竟是哪种逻辑运算符，并采用一条不同的代码路径来处理短路求值。我个人觉得为它们定义一个<span name="logical-ast">全新的类</span>，让它们各自拥有自己的 visit 方法，会更为清爽。</p>
-<div class="codehilite"><pre class="insert-before">
-      &quot;Literal  : Object value&quot;,
+<div class="codehilite"><pre class="insert-before">      &quot;Literal  : Object value&quot;,
 </pre><div class="source-file"><em>tool/GenerateAst.java</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-      <span class="s">&quot;Logical  : Expr left, Token operator, Expr right&quot;</span>,
-</pre><pre class="insert-after">
-      &quot;Unary    : Token operator, Expr right&quot;,
+<pre class="insert">      <span class="s">&quot;Logical  : Expr left, Token operator, Expr right&quot;</span>,
+</pre><pre class="insert-after">      &quot;Unary    : Token operator, Expr right&quot;,
 </pre></div>
 <div class="source-file-narrow"><em>tool/GenerateAst.java</em>, in <em>main</em>()</div>
 
@@ -296,13 +261,11 @@ in <em>main</em>()</div>
 <p>新节点的生成代码收录于<a href="appendix-ii.html#logical-expression">附录 II</a>。</p>
 </aside>
 <p>要将这些新表达式织入语法分析器，我们首先需要修改赋值表达式那条解析代码，让它去调用 <code>or()</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-  private Expr assignment() {
+<div class="codehilite"><pre class="insert-before">  private Expr assignment() {
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>assignment</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">or</span>();
+<pre class="insert">    <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">or</span>();
 </pre><pre class="insert-after">
 
     if (match(EQUAL)) {
@@ -312,8 +275,7 @@ replace 1 line</div>
 <p>用于解析一连串 <code>or</code> 表达式的代码，与其它二元运算符的处理方式如出一辙。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>assignment</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">or</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">or</span>() {
     <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">and</span>();
 
     <span class="k">while</span> (<span class="i">match</span>(<span class="i">OR</span>)) {
@@ -330,8 +292,7 @@ add after <em>assignment</em>()</div>
 <p>它的操作数则属于更高一级的优先级——即那条新的 <code>and</code> 表达式。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>or</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">and</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">and</span>() {
     <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">equality</span>();
 
     <span class="k">while</span> (<span class="i">match</span>(<span class="i">AND</span>)) {
@@ -348,8 +309,7 @@ add after <em>or</em>()</div>
 <p>后者又调用 <code>equality()</code> 来解析其操作数。至此，表达式语法分析器的全貌便重新闭合了起来。我们已准备好去解释。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>visitLiteralExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Object</span> <span class="i">visitLogicalExpr</span>(<span class="t">Expr</span>.<span class="t">Logical</span> <span class="i">expr</span>) {
     <span class="t">Object</span> <span class="i">left</span> = <span class="i">evaluate</span>(<span class="i">expr</span>.<span class="i">left</span>);
 
@@ -367,16 +327,14 @@ add after <em>visitLiteralExpr</em>()</div>
 <p>若你拿这段代码与<a href="evaluating-expressions.html">前几章</a>中那个 <code>visitBinaryExpr()</code> 方法作一番对比，便能一眼看出差别所在。此处，我们先对左操作数求值。我们观察其值，以判断是否可以短路。若不行——唯有此时——我们才去对右操作数求值。</p>
 <p>另一个有趣之处在于，我们究竟应当返回怎样的实际值。由于 Lox 是动态类型的，我们允许任意类型的操作数，并用真值性来判定每一操作数的含义。我们对结果也作同样的推导。逻辑运算符并不<strong>承诺</strong>字面上返回 <code>true</code> 或 <code>false</code>，它仅仅保证会返回一个具有恰当真值性的值。</p>
 <p>所幸，我们手边便有着真值性恰如其分的值——也就是各个操作数自身的结果。所以我们便直接用上它们。例如：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="s">&quot;hi&quot;</span> <span class="k">or</span> <span class="n">2</span>; <span class="c">// &quot;hi&quot;。</span>
+<div class="codehilite"><pre><span class="k">print</span> <span class="s">&quot;hi&quot;</span> <span class="k">or</span> <span class="n">2</span>; <span class="c">// &quot;hi&quot;。</span>
 <span class="k">print</span> <span class="k">nil</span> <span class="k">or</span> <span class="s">&quot;yes&quot;</span>; <span class="c">// &quot;yes&quot;。</span>
 </pre></div>
 <p>第一行中，<code>"hi"</code> 为真值，因此 <code>or</code> 短路求值并将其原样返回。第二行中，<code>"yes"</code> 为假值，因此它会对第二个操作数求值并将其返回，<code>"yes"</code>。</p>
 <p>至此，Lox 中所有的分支原语便都已悉数介绍完毕。我们准备就绪，可以&ldquo;向前&ldquo;跳到循环部分了。你听出来我做了什么吗？<em>向前。跳。</em> Get it? 这就好比是在影射……唉，算了。</p>
-<h2><a href="#while-循环" name="while-循环"><small>9&#8202;.&#8202;4</small>while 循环</a></h2>
+<h2><a href="#while-循环" id="while-循环"><small>9&#8202;.&#8202;4</small>while 循环</a></h2>
 <p>Lox 设有两种循环控制流语句——<code>while</code> 与 <code>for</code>。<code>while</code> 循环更为简单，我们便从那里入手。它的文法与 C 中一模一样。</p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">ifStmt</span>
                | <span class="i">printStmt</span>
                | <span class="i">whileStmt</span>
@@ -385,17 +343,13 @@ add after <em>visitLiteralExpr</em>()</div>
 <span class="i">whileStmt</span>      → <span class="s">&quot;while&quot;</span> <span class="s">&quot;(&quot;</span> <span class="i">expression</span> <span class="s">&quot;)&quot;</span> <span class="i">statement</span> ;
 </pre></div>
 <p>我们在 statement 规则中再添一个分支，使其指向新设的 <code>while</code> 规则。它由一个 <code>while</code> 关键字、一个被括号包裹的条件表达式、以及循环体所对应的那条语句构成。这条新文法规则会得到一个<span name="while-ast">语法树节点</span>。</p>
-<div class="codehilite"><pre class="insert-before">
-      &quot;Print      : Expr expression&quot;,
-</pre><pre class="insert-before">
-      <span class="s">&quot;Var        : Token name, Expr initializer&quot;</span><span class="insert-comma">,</span>
+<div class="codehilite"><pre class="insert-before">      &quot;Print      : Expr expression&quot;,
+</pre><pre class="insert-before">      <span class="s">&quot;Var        : Token name, Expr initializer&quot;</span><span class="insert-comma">,</span>
 </pre><div class="source-file"><em>tool/GenerateAst.java</em><br>
 in <em>main</em>()<br>
 add <em>&ldquo;,&rdquo;</em> to previous line</div>
-<pre class="insert">
-      <span class="s">&quot;While      : Expr condition, Stmt body&quot;</span>
-</pre><pre class="insert-after">
-    ));
+<pre class="insert">      <span class="s">&quot;While      : Expr condition, Stmt body&quot;</span>
+</pre><pre class="insert-after">    ));
 </pre></div>
 <div class="source-file-narrow"><em>tool/GenerateAst.java</em>, in <em>main</em>(), add <em>&ldquo;,&rdquo;</em> to previous line</div>
 
@@ -404,22 +358,18 @@ add <em>&ldquo;,&rdquo;</em> to previous line</div>
 </aside>
 <p>该节点存储了条件与循环体。在这里，你便能看出将表达式与语句各自拆分为两套类继承体系所带来的好处——字段声明清清楚楚地表明：条件是一个表达式，而循环体则是一条语句。</p>
 <p>在语法分析器中，我们沿用 <code>if</code> 语句那套流程。首先，我们在 <code>statement()</code> 中再添一个分支，以检测并匹配那个前置的关键字。</p>
-<div class="codehilite"><pre class="insert-before">
-    if (match(PRINT)) return printStatement();
+<div class="codehilite"><pre class="insert-before">    if (match(PRINT)) return printStatement();
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">match</span>(<span class="i">WHILE</span>)) <span class="k">return</span> <span class="i">whileStatement</span>();
-</pre><pre class="insert-after">
-    if (match(LEFT_BRACE)) return new Stmt.Block(block());
+<pre class="insert">    <span class="k">if</span> (<span class="i">match</span>(<span class="i">WHILE</span>)) <span class="k">return</span> <span class="i">whileStatement</span>();
+</pre><pre class="insert-after">    if (match(LEFT_BRACE)) return new Stmt.Block(block());
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>statement</em>()</div>
 
 <p>该分支将真正的工作委托给下面这个方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>varDeclaration</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Stmt</span> <span class="i">whileStatement</span>() {
+<pre>  <span class="k">private</span> <span class="t">Stmt</span> <span class="i">whileStatement</span>() {
     <span class="i">consume</span>(<span class="i">LEFT_PAREN</span>, <span class="s">&quot;Expect &#39;(&#39; after &#39;while&#39;.&quot;</span>);
     <span class="t">Expr</span> <span class="i">condition</span> = <span class="i">expression</span>();
     <span class="i">consume</span>(<span class="i">RIGHT_PAREN</span>, <span class="s">&quot;Expect &#39;)&#39; after condition.&quot;</span>);
@@ -433,8 +383,7 @@ add after <em>varDeclaration</em>()</div>
 <p>文法再简单不过，这段代码便是它向 Java 的一次直接翻译。说到直接翻译成 Java，下面便是如何执行这套新语法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>visitVarStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitWhileStmt</span>(<span class="t">Stmt</span>.<span class="t">While</span> <span class="i">stmt</span>) {
     <span class="k">while</span> (<span class="i">isTruthy</span>(<span class="i">evaluate</span>(<span class="i">stmt</span>.<span class="i">condition</span>))) {
       <span class="i">execute</span>(<span class="i">stmt</span>.<span class="i">body</span>);
@@ -445,14 +394,12 @@ add after <em>visitVarStmt</em>()</div>
 <div class="source-file-narrow"><em>lox/Interpreter.java</em>, add after <em>visitVarStmt</em>()</div>
 
 <p>与 <code>if</code> 语句的 visit 方法类似，这个 visitor 也借用了与之对应的 Java 特性。该方法并不复杂，却使 Lox 变得强大得多。我们终于可以写出一个运行时间<strong>不再</strong>严格受源代码长度限制的程序了。</p>
-<h2><a href="#for-循环" name="for-循环"><small>9&#8202;.&#8202;5</small>for 循环</a></h2>
+<h2><a href="#for-循环" id="for-循环"><small>9&#8202;.&#8202;5</small>for 循环</a></h2>
 <p>我们已经来到了最后一种控制流构件——<span name="for">老派</span>C 风格 <code>for</code> 循环。大概不需要我来提醒你，它长这样：</p>
-<div class="codehilite"><pre>
-<span class="k">for</span> (<span class="k">var</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="n">10</span>; <span class="i">i</span> = <span class="i">i</span> + <span class="n">1</span>) <span class="k">print</span> <span class="i">i</span>;
+<div class="codehilite"><pre><span class="k">for</span> (<span class="k">var</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="n">10</span>; <span class="i">i</span> = <span class="i">i</span> + <span class="n">1</span>) <span class="k">print</span> <span class="i">i</span>;
 </pre></div>
 <p>若用文法来表述，便是：</p>
-<div class="codehilite"><pre>
-<span class="i">statement</span>      → <span class="i">exprStmt</span>
+<div class="codehilite"><pre><span class="i">statement</span>      → <span class="i">exprStmt</span>
                | <span class="i">forStmt</span>
                | <span class="i">ifStmt</span>
                | <span class="i">printStmt</span>
@@ -480,14 +427,13 @@ add after <em>visitVarStmt</em>()</div>
 </li>
 </ol>
 <p>这三个子句中的任何一个皆可被省略。紧跟作为结尾的右括号之后，便是循环体所对应的那条语句——通常是一个块。</p>
-<h3><a href="#脱糖" name="脱糖"><small>9&#8202;.&#8202;5&#8202;.&#8202;1</small>脱糖</a></h3>
+<h3><a href="#脱糖" id="脱糖"><small>9&#8202;.&#8202;5&#8202;.&#8202;1</small>脱糖</a></h3>
 <p>这套机制着实不少，但请留意，它们中的任何一项都未做任何凭借既有语句便无法达成的事情。若 <code>for</code> 循环不支持初始化器子句，你完全可以将那条初始化表达式摆在 <code>for</code> 语句之前。若不支持增量子句，你同样可以自行将那条增量表达式摆在循环体的末尾。</p>
 <p>换言之，Lox 并<strong>非</strong>非有 <code>for</code> 循环不可——它只不过是让某些常见的代码模式写起来更惬意罢了。这类特性有个名字——<span name="sugar"><strong>语法糖</strong></span>。举个例子，前述那条 <code>for</code> 循环可以被改写成如下形式：</p>
 <aside name="sugar">
 <p>这一妙趣横生的措辞由 Peter J. Landin 于 1964 年所创，借以形容某些由 ALGOL 等语言所提供的优美表达式形式，不过是撒在更为基本——但想必也较为乏味——的 λ 演算之上的一层甜味调料。</p><img class="above" src="image/control-flow/sugar.png" alt="一勺多一点的糖。" />
 </aside>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">i</span> = <span class="n">0</span>;
   <span class="k">while</span> (<span class="i">i</span> &lt; <span class="n">10</span>) {
     <span class="k">print</span> <span class="i">i</span>;
@@ -501,33 +447,26 @@ add after <em>visitVarStmt</em>()</div>
 <p>唉，我多么希望这个被广泛接受的术语是&ldquo;焦糖化&ldquo;啊。既然你都已经打了一个比方，为何不把它贯彻到底呢？</p>
 </aside>
 <p>我们打算将 <code>for</code> 循环脱糖为 <code>while</code> 循环以及若干其他语句——那些解释器已然能够应对的语句。在我们这款简易的解释器中，脱糖这一手段所节省的工作其实相当有限，但它给了我一个向你引介这一技巧的由头。因此，与前几次那些语句不同，我们<strong>不会</strong>新增一个语法树节点。取而代之，我们直接奔赴解析环节。首先，添上一段我们即将用到的 import。</p>
-<div class="codehilite"><pre class="insert-before">
-import java.util.ArrayList;
+<div class="codehilite"><pre class="insert-before">import java.util.ArrayList;
 </pre><div class="source-file"><em>lox/Parser.java</em></div>
-<pre class="insert">
-<span class="k">import</span> <span class="i">java.util.Arrays</span>;
-</pre><pre class="insert-after">
-import java.util.List;
+<pre class="insert"><span class="k">import</span> <span class="i">java.util.Arrays</span>;
+</pre><pre class="insert-after">import java.util.List;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em></div>
 
 <p>与所有语句一样，我们通过匹配其关键字来开启对 <code>for</code> 循环的解析。</p>
-<div class="codehilite"><pre class="insert-before">
-  private Stmt statement() {
+<div class="codehilite"><pre class="insert-before">  private Stmt statement() {
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">match</span>(<span class="i">FOR</span>)) <span class="k">return</span> <span class="i">forStatement</span>();
-</pre><pre class="insert-after">
-    if (match(IF)) return ifStatement();
+<pre class="insert">    <span class="k">if</span> (<span class="i">match</span>(<span class="i">FOR</span>)) <span class="k">return</span> <span class="i">forStatement</span>();
+</pre><pre class="insert-after">    if (match(IF)) return ifStatement();
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>statement</em>()</div>
 
 <p>接下来才是真正有趣之处。脱糖将在这里发生，因此我们将以一段一段搭建的方式来构建这个方法，先从诸子句之前那个开括号开始。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>statement</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Stmt</span> <span class="i">forStatement</span>() {
+<pre>  <span class="k">private</span> <span class="t">Stmt</span> <span class="i">forStatement</span>() {
     <span class="i">consume</span>(<span class="i">LEFT_PAREN</span>, <span class="s">&quot;Expect &#39;(&#39; after &#39;for&#39;.&quot;</span>);
 
     <span class="c">// More here...</span>
@@ -536,14 +475,12 @@ add after <em>statement</em>()</div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, add after <em>statement</em>()</div>
 
 <p>紧随其后的第一个子句，便是初始化器。</p>
-<div class="codehilite"><pre class="insert-before">
-    consume(LEFT_PAREN, &quot;Expect '(' after 'for'.&quot;);
+<div class="codehilite"><pre class="insert-before">    consume(LEFT_PAREN, &quot;Expect '(' after 'for'.&quot;);
 
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="t">Stmt</span> <span class="i">initializer</span>;
+<pre class="insert">    <span class="t">Stmt</span> <span class="i">initializer</span>;
     <span class="k">if</span> (<span class="i">match</span>(<span class="i">SEMICOLON</span>)) {
       <span class="i">initializer</span> = <span class="k">null</span>;
     } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="i">VAR</span>)) {
@@ -551,8 +488,7 @@ replace 1 line</div>
     } <span class="k">else</span> {
       <span class="i">initializer</span> = <span class="i">expressionStatement</span>();
     }
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>(), replace 1 line</div>
 
@@ -561,8 +497,7 @@ replace 1 line</div>
 <p>在前一章中，我曾说过我们可以将表达式与语句的语法树拆分为两套独立的类继承体系，因为文法中并不存在某个既允许表达式又允许语句的位置。看来这话并没有<strong>完全</strong>说对。</p>
 </aside>
 <p>紧接着出场的是条件。</p>
-<div class="codehilite"><pre class="insert-before">
-      initializer = expressionStatement();
+<div class="codehilite"><pre class="insert-before">      initializer = expressionStatement();
     }
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()</div>
@@ -573,14 +508,12 @@ in <em>forStatement</em>()</div>
       <span class="i">condition</span> = <span class="i">expression</span>();
     }
     <span class="i">consume</span>(<span class="i">SEMICOLON</span>, <span class="s">&quot;Expect &#39;;&#39; after loop condition.&quot;</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
 <p>同样的，我们去查看一个分号，以判断该子句是否已被省略。最后一个子句则是增量。</p>
-<div class="codehilite"><pre class="insert-before">
-    consume(SEMICOLON, &quot;Expect ';' after loop condition.&quot;);
+<div class="codehilite"><pre class="insert-before">    consume(SEMICOLON, &quot;Expect ';' after loop condition.&quot;);
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()</div>
 <pre class="insert">
@@ -590,8 +523,7 @@ in <em>forStatement</em>()</div>
       <span class="i">increment</span> = <span class="i">expression</span>();
     }
     <span class="i">consume</span>(<span class="i">RIGHT_PAREN</span>, <span class="s">&quot;Expect &#39;)&#39; after for clauses.&quot;</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
@@ -599,75 +531,62 @@ in <em>forStatement</em>()</div>
 <aside name="body">
 <p>就我觉得这听起来多少有些阴森么？&ldquo;剩下的……便是那具<strong>循环体</strong>&ldquo;。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-    consume(RIGHT_PAREN, &quot;Expect ')' after for clauses.&quot;);
+<div class="codehilite"><pre class="insert-before">    consume(RIGHT_PAREN, &quot;Expect ')' after for clauses.&quot;);
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()</div>
-<pre class="insert">
-    <span class="t">Stmt</span> <span class="i">body</span> = <span class="i">statement</span>();
+<pre class="insert">    <span class="t">Stmt</span> <span class="i">body</span> = <span class="i">statement</span>();
 
     <span class="k">return</span> <span class="i">body</span>;
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
 <p>至此，我们已经将 <code>for</code> 循环的各个组成部分悉数解析完毕，相应的 AST 节点已然栖身于若干个 Java 局部变量之中。脱糖便是在此处粉墨登场。我们将这几块东西拾掇起来，用以合成能够表达 <code>for</code> 循环语义的语法树节点——正如我先前为你手工脱糖的那个例子所示。</p>
 <p>倘若我们按逆序行事，代码会简洁一些，所以我们从增量子句入手。</p>
-<div class="codehilite"><pre class="insert-before">
-    Stmt body = statement();
+<div class="codehilite"><pre class="insert-before">    Stmt body = statement();
 
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">increment</span> != <span class="k">null</span>) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">increment</span> != <span class="k">null</span>) {
       <span class="i">body</span> = <span class="k">new</span> <span class="t">Stmt</span>.<span class="t">Block</span>(
           <span class="t">Arrays</span>.<span class="i">asList</span>(
               <span class="i">body</span>,
               <span class="k">new</span> <span class="t">Stmt</span>.<span class="t">Expression</span>(<span class="i">increment</span>)));
     }
 
-</pre><pre class="insert-after">
-    return body;
+</pre><pre class="insert-after">    return body;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
 <p>若存在增量子句，它便会在每一轮迭代的循环体之后被执行。我们通过将循环体替换为一个小小的块来达到此目的——该块内含原本的循环体，紧随其后的是一条用于对增量进行求值的表达式语句。</p>
-<div class="codehilite"><pre class="insert-before">
-    }
+<div class="codehilite"><pre class="insert-before">    }
 
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">condition</span> == <span class="k">null</span>) <span class="i">condition</span> = <span class="k">new</span> <span class="t">Expr</span>.<span class="t">Literal</span>(<span class="k">true</span>);
+<pre class="insert">    <span class="k">if</span> (<span class="i">condition</span> == <span class="k">null</span>) <span class="i">condition</span> = <span class="k">new</span> <span class="t">Expr</span>.<span class="t">Literal</span>(<span class="k">true</span>);
     <span class="i">body</span> = <span class="k">new</span> <span class="t">Stmt</span>.<span class="t">While</span>(<span class="i">condition</span>, <span class="i">body</span>);
 
-</pre><pre class="insert-after">
-    return body;
+</pre><pre class="insert-after">    return body;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
 <p>随后，我们将条件与循环体拾掇起来，借由一个原初的 <code>while</code> 循环来构建循环结构。若条件已被省略，我们便硬塞上一个 <code>true</code>，以构成一个无穷循环。</p>
-<div class="codehilite"><pre class="insert-before">
-    body = new Stmt.While(condition, body);
+<div class="codehilite"><pre class="insert-before">    body = new Stmt.While(condition, body);
 
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 in <em>forStatement</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">initializer</span> != <span class="k">null</span>) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">initializer</span> != <span class="k">null</span>) {
       <span class="i">body</span> = <span class="k">new</span> <span class="t">Stmt</span>.<span class="t">Block</span>(<span class="t">Arrays</span>.<span class="i">asList</span>(<span class="i">initializer</span>, <span class="i">body</span>));
     }
 
-</pre><pre class="insert-after">
-    return body;
+</pre><pre class="insert-after">    return body;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
 <p>最后，若存在初始化器，它会在整个循环开始之前先行执行一次。我们又一次通过将整条语句替换为一个块来达成目的——该块先执行初始化器，再执行循环。</p>
 <p>至此，我们的解释器已然支持 C 风格的 <code>for</code> 循环，而我们却<strong>无需</strong>改动 Interpreter 类。因为我们已经将之脱糖为解释器已然懂得如何访问的那些节点，所以无须再做更多的工作。</p>
 <p>Lox 终于强大到足以让我们乐上一阵子了。下面这段小程序会打印斐波那契数列的前 21 项：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="n">0</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="n">0</span>;
 <span class="k">var</span> <span class="i">temp</span>;
 
 <span class="k">for</span> (<span class="k">var</span> <span class="i">b</span> = <span class="n">1</span>; <span class="i">a</span> &lt; <span class="n">10000</span>; <span class="i">b</span> = <span class="i">temp</span> + <span class="i">b</span>) {
@@ -677,7 +596,7 @@ in <em>forStatement</em>()</div>
 }
 </pre></div>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>9&#8202;.&#8202;6</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>9&#8202;.&#8202;6</small>挑战</a></h2>
 <ol>
 <li>
 <p>几章之后，当 Lox 支持头等函数与动态分派时，从技术上讲我们便<strong>不再需要</strong>语言内置的分支语句。请展示如何借助这些机制来实现条件执行。并请举出一门采用此技巧来构建其控制流的语言。</p>
@@ -692,7 +611,7 @@ in <em>forStatement</em>()</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：撒入语法糖" name="设计笔记：撒入语法糖"><small>9&#8202;.&#8202;7</small>设计笔记：撒入语法糖</a></h2>
+<h2><a href="#设计笔记：撒入语法糖" id="设计笔记：撒入语法糖"><small>9&#8202;.&#8202;7</small>设计笔记：撒入语法糖</a></h2>
 <p>当你设计自己的语言时，你便要决定往文法里撒入多少语法糖。你是要做一款无糖的健康食品——每一种语义操作都恰好对应一个语法单元？还是要做一款奢华的甜点——每一种行为都各有十种表达方式？成功的语言在这条连续光谱上各有其所居。</p>
 <p>处于极端<strong>苦</strong>那一端的，是那些语法被精简到近乎苛刻的语言，诸如 Lisp、Forth 与 Smalltalk。Lisp 的拥趸们常以自豪的口吻宣称，他们的语言&ldquo;没有语法&ldquo;；而 Smalltalk 玩家则骄傲地展示，他们能将整套文法塞进一张索引卡片之中。这一族群秉持的理念是：<em>语言</em>本身并不需要语法糖。其所提供的极简语法与语义已然足够强大，足令库代码能够表现得仿佛它本就是语言的一部分一般。</p>
 <p>靠近它们的，是 C、Lua 与 Go 这一类语言。它们追求的是简洁明了，而非极简主义。其中某些语言——比如 Go——刻意回避了语法糖，也回避了前一类语言所具有的那种语法可扩展性。它们希望语法能够为语义让路，因此它们专注于让文法与库二者皆保持简洁。代码应当<strong>清晰明了</strong>，甚于<strong>优美</strong>。</p>
@@ -707,7 +626,7 @@ in <em>forStatement</em>()</div>
 <a href="functions.html" class="next">
   Next Chapter: &ldquo;Functions&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

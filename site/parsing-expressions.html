@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Parsing Expressions<small>6</small></a></h3>
 
 <ul>
@@ -55,7 +54,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="representing-code.html" title="Representing Code" class="prev">←</a>
 <a href="evaluating-expressions.html" title="Evaluating Expressions" class="next">→</a>
 </nav>
@@ -63,9 +62,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Parsing Expressions<small>6</small></a></h3>
 
 <ul>
@@ -92,25 +90,7 @@
   <div class="number">6</div>
   <h1>Parsing Expressions</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#解析表达式" name="解析表达式"><small>6&#8202;.&#8202;0</small>解析表达式</a></h1>
+<h1><a href="#解析表达式" id="解析表达式"><small>6&#8202;.&#8202;0</small>解析表达式</a></h1>
 <blockquote>
 <p>即便是君王，也得受语法的辖制。</p>
 <p><cite>莫里哀</cite></p>
@@ -130,12 +110,11 @@
 <p>这些先驱们设计出一些语言——老实说他们甚至都拿不准该如何为它们编写编译器——随后便埋头苦干，发明了解析与编译技术，使得这些崭新而又庞大的语言能够在那些古老而微小的机器上跑起来。</p>
 <p>经典的编译器教科书读起来就像是这些英雄及其工具的谄媚式圣徒传记。<em>《编译原理》</em>（<em>Compilers: Principles, Techniques, and Tools</em>）的封面上，便赫然画着一条被屠的龙——龙身上赫然写着&ldquo;编译器设计的复杂性&ldquo;——而被骑士的剑与盾——剑与盾上分别印着&ldquo;LALR parser generator&rdquo;与&ldquo;syntax directed translation&rdquo;——所斩杀。他们可真是不吝笔墨。</p>
 <p>些许的自我褒扬自然无可厚非，但事实却是：要为现代的机器敲出一款高质量的语法分析器，你根本不需要了解其中的大多数门道。一如既往，我鼓励你拓宽自己的知识面，日后择机补上这一课，但本书便不再陈列那座奖杯柜了。</p>
-<h2><a href="#歧义与解析游戏" name="歧义与解析游戏"><small>6&#8202;.&#8202;1</small>歧义与解析游戏</a></h2>
+<h2><a href="#歧义与解析游戏" id="歧义与解析游戏"><small>6&#8202;.&#8202;1</small>歧义与解析游戏</a></h2>
 <p>在上一章里，我曾说过，你可以像玩一场游戏一般去&ldquo;玩&ldquo;上下文无关文法，从而<strong>生成</strong>出字符串。语法分析器玩的则是这场游戏的逆过程。给定一段字符串——一串词法单元——我们便将这些词法单元一一映射到文法中的终结符，以弄清究竟哪些规则<strong>有可能</strong>生成出这段字符串来。</p>
 <p>&ldquo;有可能&ldquo;这一措辞颇为耐人寻味。完全有可能构造出一种<strong>有歧义</strong>的文法——对于同一段字符串，不同的产生式选取方式可以殊途同归。当你使用文法去<strong>生成</strong>字符串时，这倒也没什么大不了的；只要你最终拿到了字符串，谁在乎你是如何走到这一步的呢？</p>
 <p>而在解析时，歧义便意味着语法分析器可能会误解用户的代码。我们在解析的过程中，不仅要弄清楚这段字符串是否为合法的 Lox 代码，还要追踪究竟哪些规则与哪些部分相对应，从而知晓每一个词法单元各自归属于语言的哪一部分。下面便是我们在上一章中拼凑出来的那条 Lox 表达式文法：</p>
-<div class="codehilite"><pre>
-<span class="i">expression</span>     → <span class="i">literal</span>
+<div class="codehilite"><pre><span class="i">expression</span>     → <span class="i">literal</span>
                | <span class="i">unary</span>
                | <span class="i">binary</span>
                | <span class="i">grouping</span> ;
@@ -172,20 +151,16 @@
 </li>
 <li>
 <p><strong>结合性</strong>则决定了在一连串<strong>相同</strong>运算符的表达式中，哪一个运算符会先行求值。当一个运算符为<strong>左结合</strong>（可以想象为&ldquo;自左向右&ldquo;）时，位于左侧的运算符会先于位于右侧的运算符求值。由于 <code>-</code> 是左结合的，下面这个表达式：</p>
-<div class="codehilite"><pre>
-<span class="n">5</span> - <span class="n">3</span> - <span class="n">1</span>
+<div class="codehilite"><pre><span class="n">5</span> - <span class="n">3</span> - <span class="n">1</span>
 </pre></div>
 <p>等价于：</p>
-<div class="codehilite"><pre>
-(<span class="n">5</span> - <span class="n">3</span>) - <span class="n">1</span>
+<div class="codehilite"><pre>(<span class="n">5</span> - <span class="n">3</span>) - <span class="n">1</span>
 </pre></div>
 <p>赋值则不然，它属于<strong>右结合</strong>。下面这段代码：</p>
-<div class="codehilite"><pre>
-<span class="i">a</span> = <span class="i">b</span> = <span class="i">c</span>
+<div class="codehilite"><pre><span class="i">a</span> = <span class="i">b</span> = <span class="i">c</span>
 </pre></div>
 <p>等价于：</p>
-<div class="codehilite"><pre>
-<span class="i">a</span> = (<span class="i">b</span> = <span class="i">c</span>)
+<div class="codehilite"><pre><span class="i">a</span> = (<span class="i">b</span> = <span class="i">c</span>)
 </pre></div>
 </li>
 </ul>
@@ -232,8 +207,7 @@
 </table>
 <p>眼下，这条文法将所有种类的表达式一股脑儿塞进了同一条 <code>expression</code> 规则之中。这同一条规则又被用作了操作数的非终结符——这便意味着，无论优先级规则是否允许，文法都会接受任意种类的表达式作为子表达式。</p>
 <p>我们通过对文法进行<span name="massage">分层</span>来解决这一问题。我们为每一个优先级层级分别定义一条独立的规则。</p>
-<div class="codehilite"><pre>
-<span class="i">expression</span>     → ...
+<div class="codehilite"><pre><span class="i">expression</span>     → ...
 <span class="i">equality</span>       → ...
 <span class="i">comparison</span>     → ...
 <span class="i">term</span>           → ...
@@ -250,47 +224,39 @@
 <p>我们本可以去掉 <code>expression</code>，转而在其它含有 expression 的规则中直接使用 <code>equality</code>，但保留 <code>expression</code> 能让其它规则读起来更顺眼一些。</p>
 <p>此外，在后续章节中，当我们扩展文法以囊括赋值与逻辑运算符时，我们只需改动 <code>expression</code> 的产生式，而不必去碰其它每一条含有 expression 的规则。</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="i">expression</span>     → <span class="i">equality</span>
+<div class="codehilite"><pre><span class="i">expression</span>     → <span class="i">equality</span>
 </pre></div>
 <p>到了优先级表的另一端，一级表达式包含了所有的字面量与括号表达式。</p>
-<div class="codehilite"><pre>
-<span class="i">primary</span>        → <span class="t">NUMBER</span> | <span class="t">STRING</span> | <span class="s">&quot;true&quot;</span> | <span class="s">&quot;false&quot;</span> | <span class="s">&quot;nil&quot;</span>
+<div class="codehilite"><pre><span class="i">primary</span>        → <span class="t">NUMBER</span> | <span class="t">STRING</span> | <span class="s">&quot;true&quot;</span> | <span class="s">&quot;false&quot;</span> | <span class="s">&quot;nil&quot;</span>
                | <span class="s">&quot;(&quot;</span> <span class="i">expression</span> <span class="s">&quot;)&quot;</span> ;
 </pre></div>
 <p>一元表达式以一个一元运算符打头，其后跟着操作数。由于一元运算符可以嵌套——<code>!!true</code> 虽然古怪但确为合法表达式——操作数本身又可以是一元运算符。一条递归规则可以漂亮地处理这种情况。</p>
-<div class="codehilite"><pre>
-<span class="i">unary</span>          → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> ) <span class="i">unary</span> ;
+<div class="codehilite"><pre><span class="i">unary</span>          → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> ) <span class="i">unary</span> ;
 </pre></div>
 <p>但这条规则有一个问题：它永远不会终止。</p>
 <p>记住，每一条规则都须匹配<strong>该层级或更高层级</strong>的表达式，因此我们同样需要让它能够匹配一级表达式。</p>
-<div class="codehilite"><pre>
-<span class="i">unary</span>          → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> ) <span class="i">unary</span>
+<div class="codehilite"><pre><span class="i">unary</span>          → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> ) <span class="i">unary</span>
                | <span class="i">primary</span> ;
 </pre></div>
 <p>这样便没问题了。</p>
 <p>剩下的规则统统都是二元运算符。我们先从乘法与除法的规则入手。下面是一个初次尝试：</p>
-<div class="codehilite"><pre>
-<span class="i">factor</span>         → <span class="i">factor</span> ( <span class="s">&quot;/&quot;</span> | <span class="s">&quot;*&quot;</span> ) <span class="i">unary</span>
+<div class="codehilite"><pre><span class="i">factor</span>         → <span class="i">factor</span> ( <span class="s">&quot;/&quot;</span> | <span class="s">&quot;*&quot;</span> ) <span class="i">unary</span>
                | <span class="i">unary</span> ;
 </pre></div>
 <p>该规则通过递归来匹配左侧的操作数。这使得该规则能够匹配形如 <code>1 * 2 / 3</code> 这样一连串的乘法与除法表达式。将递归性的产生式置于左侧、将 <code>unary</code> 置于右侧，便使这条规则成为了<span name="mult">左结合</span>且无歧义的。</p>
 <aside name="mult">
 <p>原则而言，将乘法视作左结合还是右结合其实都无关紧要——无论如何都能得到相同的结果。可惜的是，在精度有限的现实世界中，舍入与溢出会使得结合性对连续乘法运算的结果产生影响。试看：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="n">0.1</span> * (<span class="n">0.2</span> * <span class="n">0.3</span>);
+<div class="codehilite"><pre><span class="k">print</span> <span class="n">0.1</span> * (<span class="n">0.2</span> * <span class="n">0.3</span>);
 <span class="k">print</span> (<span class="n">0.1</span> * <span class="n">0.2</span>) * <span class="n">0.3</span>;
 </pre></div>
 <p>在诸如 Lox 这类采用 <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format">IEEE 754</a> 双精度浮点数的语言中，前者求值为 <code>0.006</code>，而后者则给出 <code>0.006000000000000001</code>。有时，这细微的差别也会牵动大局。<a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html">这篇文章</a> 是不错的学习起点。</p>
 </aside>
 <p>这一切都没有错，但由于规则右部的第一个符号与该规则的左部完全相同，这一产生式是<strong>左递归</strong>的。某些解析技术——包括我们即将采用的那一种——会在左递归面前栽跟头。（别处的递归则无此虞，比如我们在 <code>unary</code> 中以及 <code>primary</code> 中为括号表达式设立的间接递归，都不构成问题。）</p>
 <p>能够定义出描述同一语言的文法有很多种。对某门特定语言的建模选择，部分关乎个人品味，部分则是出于务实考量。这条规则虽然正确，但对于我们打算采用的解析方式而言却并非最优。与其使用一条左递归规则，不如换用另一种：</p>
-<div class="codehilite"><pre>
-<span class="i">factor</span>         → <span class="i">unary</span> ( ( <span class="s">&quot;/&quot;</span> | <span class="s">&quot;*&quot;</span> ) <span class="i">unary</span> )* ;
+<div class="codehilite"><pre><span class="i">factor</span>         → <span class="i">unary</span> ( ( <span class="s">&quot;/&quot;</span> | <span class="s">&quot;*&quot;</span> ) <span class="i">unary</span> )* ;
 </pre></div>
 <p>我们将因子表达式定义为一段由乘法与除法组成的扁平<strong>序列</strong>。这与前一条规则所匹配的语法相同，但与我们即将编写的用以解析 Lox 的代码更为契合。对所有其他二元运算符的优先级层级，我们也采用同样的结构，从而得到如下这条完整的表达式文法：</p>
-<div class="codehilite"><pre>
-<span class="i">expression</span>     → <span class="i">equality</span> ;
+<div class="codehilite"><pre><span class="i">expression</span>     → <span class="i">equality</span> ;
 <span class="i">equality</span>       → <span class="i">comparison</span> ( ( <span class="s">&quot;!=&quot;</span> | <span class="s">&quot;==&quot;</span> ) <span class="i">comparison</span> )* ;
 <span class="i">comparison</span>     → <span class="i">term</span> ( ( <span class="s">&quot;&gt;&quot;</span> | <span class="s">&quot;&gt;=&quot;</span> | <span class="s">&quot;&lt;&quot;</span> | <span class="s">&quot;&lt;=&quot;</span> ) <span class="i">term</span> )* ;
 <span class="i">term</span>           → <span class="i">factor</span> ( ( <span class="s">&quot;-&quot;</span> | <span class="s">&quot;+&quot;</span> ) <span class="i">factor</span> )* ;
@@ -301,7 +267,7 @@
                | <span class="s">&quot;(&quot;</span> <span class="i">expression</span> <span class="s">&quot;)&quot;</span> ;
 </pre></div>
 <p>这条文法虽说比之前那条更为繁复，但作为回报，我们已然将之前那条文法的歧义扫除殆尽。它恰恰是我们用以打造一款语法分析器所必需的东西。</p>
-<h2><a href="#递归下降解析" name="递归下降解析"><small>6&#8202;.&#8202;2</small>递归下降解析</a></h2>
+<h2><a href="#递归下降解析" id="递归下降解析"><small>6&#8202;.&#8202;2</small>递归下降解析</a></h2>
 <p>解析技术的大家族中，有着种种名字大多以&ldquo;L&rdquo;和&ldquo;R&rdquo;组合而成的成员——<a href="https://en.wikipedia.org/wiki/LL_parser">LL(k)</a>、<a href="https://en.wikipedia.org/wiki/LR_parser">LR(1)</a>、<a href="https://en.wikipedia.org/wiki/LALR_parser">LALR</a>——再加上一些更为光怪陆离的异兽，诸如<a href="https://en.wikipedia.org/wiki/Parser_combinator">语法分析器组合子</a>、<a href="https://en.wikipedia.org/wiki/Earley_parser">Earley 解析器</a>、<a href="https://en.wikipedia.org/wiki/Shunting-yard_algorithm">调度场算法</a>以及<a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">Packrat 解析</a>。对我们这第一款解释器而言，有一种技术便已绰绰有余：<strong>递归下降</strong>。</p>
 <p>递归下降是构造语法分析器最简明的方式，且无需借助 Yacc、Bison 或 ANTLR 这般复杂的语法分析器生成工具。你所需要的，仅仅是直截了当的手写代码。不过，可别被它的简洁所迷惑。递归下降语法分析器既快、又稳，且能支持复杂的错误处理。事实上，GCC、V8（Chrome 中的 JavaScript 虚拟机）、Roslyn（用 C# 编写的 C# 编译器）以及众多其它赫赫有名的工业级语言实现，采用的都是递归下降。它确实很赞。</p>
 <p>递归下降被视为一种<strong>自顶向下</strong>（top-down）语法分析器，因为它从最顶层或者说最外层的文法规则（这里是 <code>expression</code>）启程，逐步深入嵌套的子表达式，最终抵达语法树的叶节点。这与 LR 这类自底向上的语法分析器形成了鲜明对比——后者从一级表达式起步，再将它们逐级组合成越来越大的语法块。</p>
@@ -325,12 +291,11 @@
 </tbody>
 </table>
 <p>之所以称之为&ldquo;递归&ldquo;下降，是因为当某条文法规则——直接或间接地——引用了它自身时，这便对应于一次递归的函数调用。</p>
-<h3><a href="#语法分析器类" name="语法分析器类"><small>6&#8202;.&#8202;2&#8202;.&#8202;1</small>语法分析器类</a></h3>
+<h3><a href="#语法分析器类" id="语法分析器类"><small>6&#8202;.&#8202;2&#8202;.&#8202;1</small>语法分析器类</a></h3>
 <p>每一条文法规则都会化作这个新类中的一个方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 create new file</div>
-<pre>
-<span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
+<pre><span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
 
 <span class="k">import</span> <span class="i">java.util.List</span>;
 
@@ -351,8 +316,7 @@ create new file</div>
 <p>接下来，我们将径直穿越整条表达式文法，并将每一条规则都翻译为 Java 代码。第一条规则 <code>expression</code> 只是简单地向 <code>equality</code> 规则展开，所以比较直白。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>Parser</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">expression</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">expression</span>() {
     <span class="k">return</span> <span class="i">equality</span>();
   }
 </pre></div>
@@ -363,14 +327,12 @@ add after <em>Parser</em>()</div>
 <p>这便是左递归会对递归下降构成麻烦的原因。一条左递归规则所对应的函数会立即调用其自身，而其自身又会再调用其自身，如此往复，直到语法分析器撞上栈溢出而一命呜呼。</p>
 </aside>
 <p><code>equality</code> 规则要稍稍复杂一些。</p>
-<div class="codehilite"><pre>
-<span class="i">equality</span>       → <span class="i">comparison</span> ( ( <span class="s">&quot;!=&quot;</span> | <span class="s">&quot;==&quot;</span> ) <span class="i">comparison</span> )* ;
+<div class="codehilite"><pre><span class="i">equality</span>       → <span class="i">comparison</span> ( ( <span class="s">&quot;!=&quot;</span> | <span class="s">&quot;==&quot;</span> ) <span class="i">comparison</span> )* ;
 </pre></div>
 <p>翻译为 Java，便是：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>expression</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">equality</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">equality</span>() {
     <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">comparison</span>();
 
     <span class="k">while</span> (<span class="i">match</span>(<span class="i">BANG_EQUAL</span>, <span class="i">EQUAL_EQUAL</span>)) {
@@ -388,8 +350,7 @@ add after <em>expression</em>()</div>
 <p>随后，规则中的那个 <code>( ... )*</code> 循环便映射为一个 <code>while</code> 循环。我们需要知道何时应当退出该循环。我们看到，在规则体内部，我们必须先找到一个 <code>!=</code> 或 <code>==</code> 词法单元。因此，倘若我们<strong>没有</strong>遇到其中之一，那么我们必定已经走完了那一长串相等性运算符。我们用一个便捷的 <code>match()</code> 方法来表达这一判定。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>equality</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">boolean</span> <span class="i">match</span>(<span class="t">TokenType</span>... <span class="i">types</span>) {
+<pre>  <span class="k">private</span> <span class="t">boolean</span> <span class="i">match</span>(<span class="t">TokenType</span>... <span class="i">types</span>) {
     <span class="k">for</span> (<span class="t">TokenType</span> <span class="i">type</span> : <span class="i">types</span>) {
       <span class="k">if</span> (<span class="i">check</span>(<span class="i">type</span>)) {
         <span class="i">advance</span>();
@@ -406,8 +367,7 @@ add after <em>equality</em>()</div>
 <p><code>check()</code> 方法会在当前词法单元属于所给定的类型时返回 <code>true</code>。与 <code>match()</code> 不同，它绝不消耗该词法单元，只是瞧上一眼。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>match</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">boolean</span> <span class="i">check</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
+<pre>  <span class="k">private</span> <span class="t">boolean</span> <span class="i">check</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
     <span class="k">if</span> (<span class="i">isAtEnd</span>()) <span class="k">return</span> <span class="k">false</span>;
     <span class="k">return</span> <span class="i">peek</span>().<span class="i">type</span> == <span class="i">type</span>;
   }
@@ -417,8 +377,7 @@ add after <em>match</em>()</div>
 <p><code>advance()</code> 方法消耗当前词法单元并将其返回，类似于我们扫描器中同名方法逐字符爬行的样子。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>check</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Token</span> <span class="i">advance</span>() {
+<pre>  <span class="k">private</span> <span class="t">Token</span> <span class="i">advance</span>() {
     <span class="k">if</span> (!<span class="i">isAtEnd</span>()) <span class="i">current</span>++;
     <span class="k">return</span> <span class="i">previous</span>();
   }
@@ -428,8 +387,7 @@ add after <em>check</em>()</div>
 <p>这些方法最终都落到了寥寥几个基础运算之上。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>advance</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">boolean</span> <span class="i">isAtEnd</span>() {
+<pre>  <span class="k">private</span> <span class="t">boolean</span> <span class="i">isAtEnd</span>() {
     <span class="k">return</span> <span class="i">peek</span>().<span class="i">type</span> == <span class="i">EOF</span>;
   }
 
@@ -452,14 +410,12 @@ add after <em>advance</em>()</div>
 </aside>
 <p>一旦语法分析器撞上一个并非相等性运算符的词法单元，便会从循环中脱出。最终，它将该表达式返回。请注意：倘若语法分析器始终未曾遇到相等性运算符，那么它便永远不会进入循环。在这种情况下，<code>equality()</code> 方法实际上只是调用了 <code>comparison()</code> 并将其返回值原样返回。换言之，该方法既能匹配一个相等性运算符，<strong>也能匹配任何优先级更高者</strong>。</p>
 <p>接下来轮到下一条规则了——</p>
-<div class="codehilite"><pre>
-<span class="i">comparison</span>     → <span class="i">term</span> ( ( <span class="s">&quot;&gt;&quot;</span> | <span class="s">&quot;&gt;=&quot;</span> | <span class="s">&quot;&lt;&quot;</span> | <span class="s">&quot;&lt;=&quot;</span> ) <span class="i">term</span> )* ;
+<div class="codehilite"><pre><span class="i">comparison</span>     → <span class="i">term</span> ( ( <span class="s">&quot;&gt;&quot;</span> | <span class="s">&quot;&gt;=&quot;</span> | <span class="s">&quot;&lt;&quot;</span> | <span class="s">&quot;&lt;=&quot;</span> ) <span class="i">term</span> )* ;
 </pre></div>
 <p>翻译为 Java：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>equality</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">comparison</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">comparison</span>() {
     <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">term</span>();
 
     <span class="k">while</span> (<span class="i">match</span>(<span class="i">GREATER</span>, <span class="i">GREATER_EQUAL</span>, <span class="i">LESS</span>, <span class="i">LESS_EQUAL</span>)) {
@@ -480,8 +436,7 @@ add after <em>equality</em>()</div>
 </aside>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>comparison</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">term</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">term</span>() {
     <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">factor</span>();
 
     <span class="k">while</span> (<span class="i">match</span>(<span class="i">MINUS</span>, <span class="i">PLUS</span>)) {
@@ -498,8 +453,7 @@ add after <em>comparison</em>()</div>
 <p>最后出场的是乘法与除法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>term</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">factor</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">factor</span>() {
     <span class="t">Expr</span> <span class="i">expr</span> = <span class="i">unary</span>();
 
     <span class="k">while</span> (<span class="i">match</span>(<span class="i">SLASH</span>, <span class="i">STAR</span>)) {
@@ -514,15 +468,13 @@ add after <em>term</em>()</div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, add after <em>term</em>()</div>
 
 <p>至此，所有的二元运算符便都已悉数解析完毕——且具有正确的优先级与结合性。我们正在沿着优先级层级一路攀爬，眼下已抵达一元运算符。</p>
-<div class="codehilite"><pre>
-<span class="i">unary</span>          → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> ) <span class="i">unary</span>
+<div class="codehilite"><pre><span class="i">unary</span>          → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> ) <span class="i">unary</span>
                | <span class="i">primary</span> ;
 </pre></div>
 <p>对应的代码稍有不同。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>factor</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">unary</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">unary</span>() {
     <span class="k">if</span> (<span class="i">match</span>(<span class="i">BANG</span>, <span class="i">MINUS</span>)) {
       <span class="t">Token</span> <span class="i">operator</span> = <span class="i">previous</span>();
       <span class="t">Expr</span> <span class="i">right</span> = <span class="i">unary</span>();
@@ -539,15 +491,13 @@ add after <em>factor</em>()</div>
 <p>语法分析器会向前窥探即将到来的词法单元，以决定如何进行解析——这一事实将递归下降归入了<strong>预测式语法分析器</strong>（predictive parser）的阵营。</p>
 </aside>
 <p>否则，我们便必定已经抵达了最高优先级——一级表达式。</p>
-<div class="codehilite"><pre>
-<span class="i">primary</span>        → <span class="t">NUMBER</span> | <span class="t">STRING</span> | <span class="s">&quot;true&quot;</span> | <span class="s">&quot;false&quot;</span> | <span class="s">&quot;nil&quot;</span>
+<div class="codehilite"><pre><span class="i">primary</span>        → <span class="t">NUMBER</span> | <span class="t">STRING</span> | <span class="s">&quot;true&quot;</span> | <span class="s">&quot;false&quot;</span> | <span class="s">&quot;nil&quot;</span>
                | <span class="s">&quot;(&quot;</span> <span class="i">expression</span> <span class="s">&quot;)&quot;</span> ;
 </pre></div>
 <p>规则中的大多数情形都仅涉及单个终结符，因此解析起来十分直白。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>unary</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Expr</span> <span class="i">primary</span>() {
+<pre>  <span class="k">private</span> <span class="t">Expr</span> <span class="i">primary</span>() {
     <span class="k">if</span> (<span class="i">match</span>(<span class="i">FALSE</span>)) <span class="k">return</span> <span class="k">new</span> <span class="t">Expr</span>.<span class="t">Literal</span>(<span class="k">false</span>);
     <span class="k">if</span> (<span class="i">match</span>(<span class="i">TRUE</span>)) <span class="k">return</span> <span class="k">new</span> <span class="t">Expr</span>.<span class="t">Literal</span>(<span class="k">true</span>);
     <span class="k">if</span> (<span class="i">match</span>(<span class="i">NIL</span>)) <span class="k">return</span> <span class="k">new</span> <span class="t">Expr</span>.<span class="t">Literal</span>(<span class="k">null</span>);
@@ -566,7 +516,7 @@ add after <em>unary</em>()</div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, add after <em>unary</em>()</div>
 
 <p>真正有意思的分支是处理括号的那个。在我们匹配上开括号 <code>(</code> 并解析完其内部的表达式之后，我们必须<strong>找到一个</strong> <code>)</code> 词法单元。否则，便是一个错误。</p>
-<h2><a href="#语法错误" name="语法错误"><small>6&#8202;.&#8202;3</small>语法错误</a></h2>
+<h2><a href="#语法错误" id="语法错误"><small>6&#8202;.&#8202;3</small>语法错误</a></h2>
 <p>一款语法分析器实则肩负着两项工作：</p>
 <ol>
 <li>给定一串合法的词法单元序列，产出一棵与之对应的语法树。</li>
@@ -606,18 +556,17 @@ add after <em>unary</em>()</div>
 <p>你肯定想去按它一按。</p><img src="image/parsing-expressions/panic.png" alt="一枚锃亮的硕大'PANIC'按钮。" />
 </aside>
 <p>时至今日，当语法分析器在你尚未敲完代码时便已解析完毕，这个问题便不那么突出了。简单、快速地完成错误恢复，便足堪大任。</p>
-<h3><a href="#紧急模式错误恢复" name="紧急模式错误恢复"><small>6&#8202;.&#8202;3&#8202;.&#8202;1</small>紧急模式错误恢复</a></h3>
+<h3><a href="#紧急模式错误恢复" id="紧急模式错误恢复"><small>6&#8202;.&#8202;3&#8202;.&#8202;1</small>紧急模式错误恢复</a></h3>
 <p>在所有那些旧日里被设计出来的恢复技术中，最经得住时间考验的那一种——其名字多少有些骇人——叫做<span name="panic"><strong>紧急模式</strong></span>（panic mode）。语法分析器一旦检测到错误，便会进入紧急模式。它心知肚明，至少有一个词法单元在当前所处的——那一摞层层堆叠的文法产生式的——状态之下是不合情理的。</p>
 <p>在它能够重归解析之前，它需要先让自己的状态与那一串即将到来的词法单元对齐——使得下一个词法单元<strong>确实</strong>能够与正在解析的规则相匹配。这一过程便叫做<strong>同步</strong>（synchronization）。</p>
 <p>为此，我们会在文法中挑选某一条规则作为同步点的标记。语法分析器通过跳出任何嵌套的产生式，直到折返回该条规则，从而修正其自身的解析状态。随后，它会丢弃词法单元，直至抵达一个能够出现在该规则当前所处位置上的词法单元，从而完成对词法单元流的同步。</p>
 <p>那些被丢弃的词法单元中所潜藏的任何其他真实语法错误，都不会再被报告；但这同时也意味着，那些由初始错误所引发的、本属误报的级联错误也不会再被<strong>错误地</strong>报告出来——这是一笔相当划算的买卖。</p>
 <p>在文法中实施同步的传统位置，是语句与语句之间的交界处。我们眼下还没有语句，所以在本章中我们并不会真正实施同步；但我们会把相应的机制安置妥当，以备日后之用。</p>
-<h3><a href="#进入紧急模式" name="进入紧急模式"><small>6&#8202;.&#8202;3&#8202;.&#8202;2</small>进入紧急模式</a></h3>
+<h3><a href="#进入紧急模式" id="进入紧急模式"><small>6&#8202;.&#8202;3&#8202;.&#8202;2</small>进入紧急模式</a></h3>
 <p>在我们绕道去谈错误恢复之前，我们正写到用以解析括号表达式的代码。在解析完括号内的表达式之后，语法分析器会通过调用 <code>consume()</code> 来寻找那个作为结尾的 <code>)</code>。下面便是这个方法——终于轮到它登场了：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>match</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Token</span> <span class="i">consume</span>(<span class="t">TokenType</span> <span class="i">type</span>, <span class="t">String</span> <span class="i">message</span>) {
+<pre>  <span class="k">private</span> <span class="t">Token</span> <span class="i">consume</span>(<span class="t">TokenType</span> <span class="i">type</span>, <span class="t">String</span> <span class="i">message</span>) {
     <span class="k">if</span> (<span class="i">check</span>(<span class="i">type</span>)) <span class="k">return</span> <span class="i">advance</span>();
 
     <span class="k">throw</span> <span class="i">error</span>(<span class="i">peek</span>(), <span class="i">message</span>);
@@ -628,8 +577,7 @@ add after <em>match</em>()</div>
 <p>它与 <code>match()</code> 颇为相似：它同样会检查下一个词法单元是否属于所期望的类型。若是，则消耗该词法单元，一切顺风顺水。若碰上的是另一个词法单元，那便是我们撞上了错误。我们通过调用如下方法来报告它：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>previous</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">ParseError</span> <span class="i">error</span>(<span class="t">Token</span> <span class="i">token</span>, <span class="t">String</span> <span class="i">message</span>) {
+<pre>  <span class="k">private</span> <span class="t">ParseError</span> <span class="i">error</span>(<span class="t">Token</span> <span class="i">token</span>, <span class="t">String</span> <span class="i">message</span>) {
     <span class="t">Lox</span>.<span class="i">error</span>(<span class="i">token</span>, <span class="i">message</span>);
     <span class="k">return</span> <span class="k">new</span> <span class="t">ParseError</span>();
   }
@@ -639,8 +587,7 @@ add after <em>previous</em>()</div>
 <p>首先，它会通过调用：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Lox.java</em><br>
 add after <em>report</em>()</div>
-<pre>
-  <span class="k">static</span> <span class="t">void</span> <span class="i">error</span>(<span class="t">Token</span> <span class="i">token</span>, <span class="t">String</span> <span class="i">message</span>) {
+<pre>  <span class="k">static</span> <span class="t">void</span> <span class="i">error</span>(<span class="t">Token</span> <span class="i">token</span>, <span class="t">String</span> <span class="i">message</span>) {
     <span class="k">if</span> (<span class="i">token</span>.<span class="i">type</span> == <span class="t">TokenType</span>.<span class="i">EOF</span>) {
       <span class="i">report</span>(<span class="i">token</span>.<span class="i">line</span>, <span class="s">&quot; at end&quot;</span>, <span class="i">message</span>);
     } <span class="k">else</span> {
@@ -652,15 +599,12 @@ add after <em>report</em>()</div>
 
 <p>将错误展示给用户。这会在所给定的词法单元处报告一个错误，同时展示该词法单元的位置及其自身。由于我们在整个解释器中都会借助词法单元来追踪代码中的位置，这一方法日后必将大显身手。</p>
 <p>在报告完错误之后，用户便已得知自己的疏漏。但语法分析器接下来又当如何？折返回 <code>error()</code> 中，我们创建并返回一个 ParseError，这是如下这个新类的一个实例：</p>
-<div class="codehilite"><pre class="insert-before">
-class Parser {
+<div class="codehilite"><pre class="insert-before">class Parser {
 </pre><div class="source-file"><em>lox/Parser.java</em><br>
 nest inside class <em>Parser</em></div>
-<pre class="insert">
-  <span class="k">private</span> <span class="k">static</span> <span class="k">class</span> <span class="t">ParseError</span> <span class="k">extends</span> <span class="t">RuntimeException</span> {}
+<pre class="insert">  <span class="k">private</span> <span class="k">static</span> <span class="k">class</span> <span class="t">ParseError</span> <span class="k">extends</span> <span class="t">RuntimeException</span> {}
 
-</pre><pre class="insert-after">
-  private final List&lt;Token&gt; tokens;
+</pre><pre class="insert-after">  private final List&lt;Token&gt; tokens;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, nest inside class <em>Parser</em></div>
 
@@ -669,15 +613,14 @@ nest inside class <em>Parser</em></div>
 <aside name="production">
 <p>另一种处理常见语法错误的手段是借助<strong>错误产生式</strong>（error production）。你向文法中增添一条能够<strong>成功</strong>匹配那段<strong>错误</strong>语法的规则。语法分析器可以安全地将其解析出来，但随后再将其作为错误加以报告，而不是产出一棵语法树。</p>
 <p>例如，某些语言拥有一元 <code>+</code> 运算符，譬如 <code>+123</code>，但 Lox 并不支持。与其在语法分析器意外撞上一元 <code>+</code> 时茫然无措，我们不如将一元规则扩展为允许接受它：</p>
-<div class="codehilite"><pre>
-<span class="i">unary</span> → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> | <span class="s">&quot;+&quot;</span> ) <span class="i">unary</span>
+<div class="codehilite"><pre><span class="i">unary</span> → ( <span class="s">&quot;!&quot;</span> | <span class="s">&quot;-&quot;</span> | <span class="s">&quot;+&quot;</span> ) <span class="i">unary</span>
       | <span class="i">primary</span> ;
 </pre></div>
 <p>这样一来，语法分析器便能在不进入紧急模式、也不使自身陷入某种诡异状态的前提下，将那个 <code>+</code> 消耗掉。</p>
 <p>错误产生式之所以好用，是因为身为语法分析器的作者，你<strong>清楚</strong>这段代码错在何处，也清楚用户<strong>很可能</strong>想要做什么。这便意味着你能够给出一条更为贴心的错误消息，帮助用户重回正轨——比如：&ldquo;不支持一元 &lsquo;+&rsquo; 表达式。&ldquo;成熟的语法分析器往往会像藤壶一般日积月累地攒下越来越多的错误产生式，因为它们能够帮助用户纠正那些常见的疏漏。</p>
 </aside>
 <p>不过在我们这里，这个语法错误已严重到足以让我们想要进入紧急模式并执行同步。丢弃词法单元并不算难，但我们要如何同步语法分析器自身那一份状态呢？</p>
-<h3><a href="#同步一个递归下降语法分析器" name="同步一个递归下降语法分析器"><small>6&#8202;.&#8202;3&#8202;.&#8202;3</small>同步一个递归下降语法分析器</a></h3>
+<h3><a href="#同步一个递归下降语法分析器" id="同步一个递归下降语法分析器"><small>6&#8202;.&#8202;3&#8202;.&#8202;3</small>同步一个递归下降语法分析器</a></h3>
 <p>对于递归下降而言，语法分析器的状态——它正处于哪些规则的解析之中——并非显式地存储在某些字段里。取而代之的是，我们借助 Java 自身的调用栈来追踪语法分析器的动向。每一条正处于解析过程中的规则，都对应着栈上的一个调用帧。为了重置这一状态，我们需要清空那些调用帧。</p>
 <p>在 Java 中，最自然的做法便是异常。当我们想要同步时，便<strong>抛出</strong>那个 ParseError 对象。在我们所要同步到的那条文法规则所对应的方法的高层调用栈上，我们会将其<strong>捕获</strong>。由于我们将同步点设在语句的交界处，我们将在那里捕获这个异常。异常被捕获之后，语法分析器便已处于正确的状态。剩下的，便只剩对词法单元流的同步了。</p>
 <p>我们希望丢弃词法单元，直到恰好抵达下一条语句的开头。这个边界相当容易辨认——这恰恰是我们当初选择它作为同步点的主要原因之一。在分号<strong>之后</strong>，我们<strong>大概</strong>已经结束了某条语句。大多数语句都以某个关键字打头——<code>for</code>、<code>if</code>、<code>return</code>、<code>var</code> 等等。当<strong>下一个</strong>词法单元是其中之一时，我们<strong>大概</strong>就要开始一条新的语句了。</p>
@@ -687,8 +630,7 @@ nest inside class <em>Parser</em></div>
 <p>下面这个方法将上述逻辑封装了起来：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>error</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">synchronize</span>() {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">synchronize</span>() {
     <span class="i">advance</span>();
 
     <span class="k">while</span> (!<span class="i">isAtEnd</span>()) {
@@ -714,10 +656,9 @@ add after <em>error</em>()</div>
 
 <p>它会丢弃词法单元，直至自认为已找到一条语句的边界。在捕获到一个 ParseError 之后，我们便会调用这个方法，然后便有望重新回到同步状态。当它运行良好之时，我们便已丢弃了那些原本很可能引发级联错误的词法单元，如此一来，我们便可以从下一条语句开始，继续解析文件的剩余部分。</p>
 <p>可惜，我们暂时还无法亲眼见证这个方法的实际效果——我们毕竟还没有语句。这事<a href="statements-and-state.html">几章之后</a>我们便会讲到。眼下，如果错误发生，我们便会进入紧急模式并一路展开到最顶层，从而停止解析。鉴于我们眼下只能解析单一表达式，这倒也没什么大不了的。</p>
-<h2><a href="#把语法分析器接入系统" name="把语法分析器接入系统"><small>6&#8202;.&#8202;4</small>把语法分析器接入系统</a></h2>
+<h2><a href="#把语法分析器接入系统" id="把语法分析器接入系统"><small>6&#8202;.&#8202;4</small>把语法分析器接入系统</a></h2>
 <p>至此，表达式解析的工作已几近完工。还有一处地方需要我们再添加一点错误处理。当语法分析器沿着每条文法规则所对应的解析方法一路下沉时，它终将抵达 <code>primary()</code>。倘若其中的所有分支都不匹配，那便意味着我们脚下所踩的，是一个无法作为表达式开头的词法单元。我们同样需要对这个错误加以处理。</p>
-<div class="codehilite"><pre class="insert-before">
-    if (match(LEFT_PAREN)) {
+<div class="codehilite"><pre class="insert-before">    if (match(LEFT_PAREN)) {
       Expr expr = expression();
       consume(RIGHT_PAREN, &quot;Expect ')' after expression.&quot;);
       return new Expr.Grouping(expr);
@@ -727,16 +668,14 @@ in <em>primary</em>()</div>
 <pre class="insert">
 
     <span class="k">throw</span> <span class="i">error</span>(<span class="i">peek</span>(), <span class="s">&quot;Expect expression.&quot;</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>primary</em>()</div>
 
 <p>至此，语法分析器里剩下的，便唯独缺少一个用以启动整个流程的入口方法。这个方法，自然而然地，被命名为 <code>parse()</code>。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
 add after <em>Parser</em>()</div>
-<pre>
-  <span class="t">Expr</span> <span class="i">parse</span>() {
+<pre>  <span class="t">Expr</span> <span class="i">parse</span>() {
     <span class="k">try</span> {
       <span class="k">return</span> <span class="i">expression</span>();
     } <span class="k">catch</span> (<span class="t">ParseError</span> <span class="i">error</span>) {
@@ -750,21 +689,18 @@ add after <em>Parser</em>()</div>
 <p>当语法错误确实发生时，这个方法会返回 <code>null</code>。这并无大碍。语法分析器只承诺不会在面对非法语法时崩溃或陷入死循环，却并未承诺<strong>在发现错误时仍能返回一棵可用的语法树</strong>。一旦语法分析器报告了一个错误，<code>hadError</code> 便会被置位，后续的阶段也都会被跳过。</p>
 <p>最后，我们可以将我们崭新的语法分析器接入到主 Lox 类中，亲手试一试。眼下我们还没有解释器，所以暂时只能将一段字符串解析为语法树，再借助<a href="representing-code.html#a-not-very-pretty-printer">上一章</a>中的 AstPrinter 类将其展示出来。</p>
 <p>将原本用来打印扫描所得词法单元的那段旧代码删掉，换成下面这段：</p>
-<div class="codehilite"><pre class="insert-before">
-    List&lt;Token&gt; tokens = scanner.scanTokens();
+<div class="codehilite"><pre class="insert-before">    List&lt;Token&gt; tokens = scanner.scanTokens();
 </pre><div class="source-file"><em>lox/Lox.java</em><br>
 in <em>run</em>()<br>
 replace 5 lines</div>
-<pre class="insert">
-    <span class="t">Parser</span> <span class="i">parser</span> = <span class="k">new</span> <span class="t">Parser</span>(<span class="i">tokens</span>);
+<pre class="insert">    <span class="t">Parser</span> <span class="i">parser</span> = <span class="k">new</span> <span class="t">Parser</span>(<span class="i">tokens</span>);
     <span class="t">Expr</span> <span class="i">expression</span> = <span class="i">parser</span>.<span class="i">parse</span>();
 
     <span class="c">// Stop if there was a syntax error.</span>
     <span class="k">if</span> (<span class="i">hadError</span>) <span class="k">return</span>;
 
     <span class="t">System</span>.<span class="i">out</span>.<span class="i">println</span>(<span class="k">new</span> <span class="t">AstPrinter</span>().<span class="i">print</span>(<span class="i">expression</span>));
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, in <em>run</em>(), replace 5 lines</div>
 
@@ -775,7 +711,7 @@ replace 5 lines</div>
 </aside>
 <p>启动解释器，输入几条表达式试试。它处理优先级与结合性的方式是否如你所愿？区区不到 200 行代码，便能做到这般地步，实在不赖。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>6&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>6&#8202;.&#8202;5</small>挑战</a></h2>
 <ol>
 <li>
 <p>在 C 语言中，代码块是一种语句形式，它允许你将一连串语句塞进原本只期望出现一条语句的位置。<a href="https://en.wikipedia.org/wiki/Comma_operator">逗号运算符</a>则是表达式层面的一种类似语法。一连串以逗号分隔的表达式，可以出现在原本只期望出现单一表达式的地方（除了函数调用的参数列表内部）。在运行时，逗号运算符会对左侧操作数求值并丢弃其结果。然后，它会对右侧操作数求值，并将其结果返回。</p>
@@ -790,10 +726,9 @@ replace 5 lines</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：逻辑与历史" name="设计笔记：逻辑与历史"><small>6&#8202;.&#8202;6</small>设计笔记：逻辑与历史</a></h2>
+<h2><a href="#设计笔记：逻辑与历史" id="设计笔记：逻辑与历史"><small>6&#8202;.&#8202;6</small>设计笔记：逻辑与历史</a></h2>
 <p>假设我们决定为 Lox 添上一对按位运算符 <code>&amp;</code> 与 <code>|</code>。那么，它们究竟应当被放在优先级层级的哪一档呢？C 语言——以及大多数沿袭 C 之路的语言——将它们放在 <code>==</code> 之下。这被广泛视为一个错误，因为这意味着那些常见的运算——譬如检测一个标志位——都不得不借助一对括号：</p>
-<div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span> == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 错。</span>
+<div class="codehilite"><pre><span class="k">if</span> (<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span> == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 错。</span>
 <span class="k">if</span> ((<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span>) == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 对。</span>
 </pre></div>
 <p>我们究竟要不要破一破 C 语言的成规，将按位运算符在优先级层级中抬得更高一些？对于这个问题，我们可以采取以下两种策略中的一种。</p>
@@ -811,7 +746,7 @@ replace 5 lines</div>
 <a href="evaluating-expressions.html" class="next">
   Next Chapter: &ldquo;Evaluating Expressions&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Appendix II<small>A2</small></a></h3>
 
 <ul>
@@ -50,16 +49,15 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="appendix-i.html" title="Appendix I" class="prev">←</a>
 </nav>
 
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Appendix II<small>A2</small></a></h3>
 
 <ul>
@@ -81,24 +79,6 @@
   <div class="number">A2</div>
   <h1>Appendix II</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
 <!--
 For your edification, here is the code produced by [the little script
 we built][generator] to automate generating the syntax tree classes for jlox.
@@ -106,7 +86,7 @@ we built][generator] to automate generating the syntax tree classes for jlox.
 <p>供你参考，下面是我们为 jlox 自动生成语法树类而写的<a href="representing-code.html#metaprogramming-the-trees">那个小脚本</a>所产出的代码。</p><!--
 -- Expressions
 -->
-<h2><a href="#表达式" name="表达式"><small>A2&#8202;.&#8202;1</small>表达式</a></h2><!--
+<h2><a href="#表达式" id="表达式"><small>A2&#8202;.&#8202;1</small>表达式</a></h2><!--
 Expressions are the first syntax tree nodes we see, introduced in "[Representing
 Code](representing-code.html)". The main Expr class defines the visitor
 interface used to dispatch against the specific expression types, and contains
@@ -115,8 +95,7 @@ the other expression subclasses as nested classes.
 <p>表达式是我们见到的第一批语法树节点，在「<a href="representing-code.html">表示代码</a>」一章引入。主类 <code>Expr</code> 定义了用来按具体表达式类型分派的访问者接口，并把其它表达式子类作为嵌套类收在里面。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 create new file</div>
-<pre>
-<span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
+<pre><span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
 
 <span class="k">import</span> <span class="i">java.util.List</span>;
 
@@ -145,15 +124,14 @@ create new file</div>
 <!--
 -- Assign expression
 -->
-<h3><a href="#赋值表达式" name="赋值表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;1</small>赋值表达式</a></h3><!--
+<h3><a href="#赋值表达式" id="赋值表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;1</small>赋值表达式</a></h3><!--
 Variable assignment is introduced in "[Statements and
 State](statements-and-state.html#assignment)".
 -->
 <p>变量赋值在「<a href="statements-and-state.html#assignment">语句与状态</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Assign</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Assign</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Assign</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">Expr</span> <span class="i">value</span>) {
       <span class="k">this</span>.<span class="i">name</span> = <span class="i">name</span>;
       <span class="k">this</span>.<span class="i">value</span> = <span class="i">value</span>;
@@ -172,15 +150,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Binary expression
 -->
-<h3><a href="#二元表达式" name="二元表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;2</small>二元表达式</a></h3><!--
+<h3><a href="#二元表达式" id="二元表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;2</small>二元表达式</a></h3><!--
 Binary operators are introduced in "[Representing
 Code](representing-code.html)".
 -->
 <p>二元运算符在「<a href="representing-code.html">表示代码</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Binary</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Binary</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Binary</span>(<span class="t">Expr</span> <span class="i">left</span>, <span class="t">Token</span> <span class="i">operator</span>, <span class="t">Expr</span> <span class="i">right</span>) {
       <span class="k">this</span>.<span class="i">left</span> = <span class="i">left</span>;
       <span class="k">this</span>.<span class="i">operator</span> = <span class="i">operator</span>;
@@ -201,15 +178,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Call expression
 -->
-<h3><a href="#调用表达式" name="调用表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;3</small>调用表达式</a></h3><!--
+<h3><a href="#调用表达式" id="调用表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;3</small>调用表达式</a></h3><!--
 Function call expressions are introduced in
 "[Functions](functions.html#function-calls)".
 -->
 <p>函数调用表达式在「<a href="functions.html#function-calls">函数</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Call</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Call</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Call</span>(<span class="t">Expr</span> <span class="i">callee</span>, <span class="t">Token</span> <span class="i">paren</span>, <span class="t">List</span>&lt;<span class="t">Expr</span>&gt; <span class="i">arguments</span>) {
       <span class="k">this</span>.<span class="i">callee</span> = <span class="i">callee</span>;
       <span class="k">this</span>.<span class="i">paren</span> = <span class="i">paren</span>;
@@ -230,15 +206,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Get expression
 -->
-<h3><a href="#取值表达式" name="取值表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;4</small>取值表达式</a></h3><!--
+<h3><a href="#取值表达式" id="取值表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;4</small>取值表达式</a></h3><!--
 Property access, or "get" expressions are introduced in
 "[Classes](classes.html#properties-on-instances)".
 -->
 <p>属性访问，也就是 “get” 表达式，在「<a href="classes.html#properties-on-instances">类</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Get</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Get</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Get</span>(<span class="t">Expr</span> <span class="i">object</span>, <span class="t">Token</span> <span class="i">name</span>) {
       <span class="k">this</span>.<span class="i">object</span> = <span class="i">object</span>;
       <span class="k">this</span>.<span class="i">name</span> = <span class="i">name</span>;
@@ -257,15 +232,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Grouping expression
 -->
-<h3><a href="#分组表达式" name="分组表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;5</small>分组表达式</a></h3><!--
+<h3><a href="#分组表达式" id="分组表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;5</small>分组表达式</a></h3><!--
 Using parentheses to group expressions is introduced in "[Representing
 Code](representing-code.html)".
 -->
 <p>用括号给表达式分组，在「<a href="representing-code.html">表示代码</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Grouping</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Grouping</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Grouping</span>(<span class="t">Expr</span> <span class="i">expression</span>) {
       <span class="k">this</span>.<span class="i">expression</span> = <span class="i">expression</span>;
     }
@@ -282,15 +256,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Literal expression
 -->
-<h3><a href="#字面量表达式" name="字面量表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;6</small>字面量表达式</a></h3><!--
+<h3><a href="#字面量表达式" id="字面量表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;6</small>字面量表达式</a></h3><!--
 Literal value expressions are introduced in "[Representing
 Code](representing-code.html)".
 -->
 <p>字面量值表达式在「<a href="representing-code.html">表示代码</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Literal</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Literal</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Literal</span>(<span class="t">Object</span> <span class="i">value</span>) {
       <span class="k">this</span>.<span class="i">value</span> = <span class="i">value</span>;
     }
@@ -307,15 +280,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Logical expression
 -->
-<h3><a href="#逻辑表达式" name="逻辑表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;7</small>逻辑表达式</a></h3><!--
+<h3><a href="#逻辑表达式" id="逻辑表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;7</small>逻辑表达式</a></h3><!--
 The logical `and` and `or` operators are introduced in "[Control
 Flow](control-flow.html#logical-operators)".
 -->
 <p>逻辑运算符 <code>and</code> 与 <code>or</code> 在「<a href="control-flow.html#logical-operators">控制流</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Logical</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Logical</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Logical</span>(<span class="t">Expr</span> <span class="i">left</span>, <span class="t">Token</span> <span class="i">operator</span>, <span class="t">Expr</span> <span class="i">right</span>) {
       <span class="k">this</span>.<span class="i">left</span> = <span class="i">left</span>;
       <span class="k">this</span>.<span class="i">operator</span> = <span class="i">operator</span>;
@@ -336,15 +308,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Set expression
 -->
-<h3><a href="#置值表达式" name="置值表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;8</small>置值表达式</a></h3><!--
+<h3><a href="#置值表达式" id="置值表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;8</small>置值表达式</a></h3><!--
 Property assignment, or "set" expressions are introduced in
 "[Classes](classes.html#properties-on-instances)".
 -->
 <p>属性赋值，也就是 “set” 表达式，在「<a href="classes.html#properties-on-instances">类</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Set</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Set</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Set</span>(<span class="t">Expr</span> <span class="i">object</span>, <span class="t">Token</span> <span class="i">name</span>, <span class="t">Expr</span> <span class="i">value</span>) {
       <span class="k">this</span>.<span class="i">object</span> = <span class="i">object</span>;
       <span class="k">this</span>.<span class="i">name</span> = <span class="i">name</span>;
@@ -365,15 +336,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Super expression
 -->
-<h3><a href="#super-表达式" name="super-表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;9</small>Super 表达式</a></h3><!--
+<h3><a href="#super-表达式" id="super-表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;9</small>Super 表达式</a></h3><!--
 The `super` expression is introduced in
 "[Inheritance](inheritance.html#calling-superclass-methods)".
 -->
 <p><code>super</code> 表达式在「<a href="inheritance.html#calling-superclass-methods">继承</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Super</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Super</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Super</span>(<span class="t">Token</span> <span class="i">keyword</span>, <span class="t">Token</span> <span class="i">method</span>) {
       <span class="k">this</span>.<span class="i">keyword</span> = <span class="i">keyword</span>;
       <span class="k">this</span>.<span class="i">method</span> = <span class="i">method</span>;
@@ -392,14 +362,13 @@ nest inside class <em>Expr</em></div>
 <!--
 -- This expression
 -->
-<h3><a href="#this-表达式" name="this-表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;10</small>This 表达式</a></h3><!--
+<h3><a href="#this-表达式" id="this-表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;10</small>This 表达式</a></h3><!--
 The `this` expression is introduced in "[Classes](classes.html#this)".
 -->
 <p><code>this</code> 表达式在「<a href="classes.html#this">类</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">This</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">This</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">This</span>(<span class="t">Token</span> <span class="i">keyword</span>) {
       <span class="k">this</span>.<span class="i">keyword</span> = <span class="i">keyword</span>;
     }
@@ -416,14 +385,13 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Unary expression
 -->
-<h3><a href="#一元表达式" name="一元表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;11</small>一元表达式</a></h3><!--
+<h3><a href="#一元表达式" id="一元表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;11</small>一元表达式</a></h3><!--
 Unary operators are introduced in "[Representing Code](representing-code.html)".
 -->
 <p>一元运算符在「<a href="representing-code.html">表示代码</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Unary</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Unary</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Unary</span>(<span class="t">Token</span> <span class="i">operator</span>, <span class="t">Expr</span> <span class="i">right</span>) {
       <span class="k">this</span>.<span class="i">operator</span> = <span class="i">operator</span>;
       <span class="k">this</span>.<span class="i">right</span> = <span class="i">right</span>;
@@ -442,15 +410,14 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Variable expression
 -->
-<h3><a href="#变量表达式" name="变量表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;12</small>变量表达式</a></h3><!--
+<h3><a href="#变量表达式" id="变量表达式"><small>A2&#8202;.&#8202;1&#8202;.&#8202;12</small>变量表达式</a></h3><!--
 Variable access expressions are introduced in "[Statements and
 State](statements-and-state.html#variable-syntax)".
 -->
 <p>变量访问表达式在「<a href="statements-and-state.html#variable-syntax">语句与状态</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Expr.java</em><br>
 nest inside class <em>Expr</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Variable</span> <span class="k">extends</span> <span class="t">Expr</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Variable</span> <span class="k">extends</span> <span class="t">Expr</span> {
     <span class="t">Variable</span>(<span class="t">Token</span> <span class="i">name</span>) {
       <span class="k">this</span>.<span class="i">name</span> = <span class="i">name</span>;
     }
@@ -467,7 +434,7 @@ nest inside class <em>Expr</em></div>
 <!--
 -- Statements
 -->
-<h2><a href="#语句" name="语句"><small>A2&#8202;.&#8202;2</small>语句</a></h2><!--
+<h2><a href="#语句" id="语句"><small>A2&#8202;.&#8202;2</small>语句</a></h2><!--
 Statements form a second hierarchy of syntax tree nodes independent of
 expressions. We add the first couple of them in "[Statements and
 State](statements-and-state.html)".
@@ -475,8 +442,7 @@ State](statements-and-state.html)".
 <p>语句构成独立于表达式的第二套语法树节点层级。我们在「<a href="statements-and-state.html">语句与状态</a>」里先加入其中前几种。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 create new file</div>
-<pre>
-<span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
+<pre><span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
 
 <span class="k">import</span> <span class="i">java.util.List</span>;
 
@@ -502,15 +468,14 @@ create new file</div>
 <!--
 -- Block statement
 -->
-<h3><a href="#块语句" name="块语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;1</small>块语句</a></h3><!--
+<h3><a href="#块语句" id="块语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;1</small>块语句</a></h3><!--
 The curly-braced block statement that defines a local scope is introduced in
 "[Statements and State](statements-and-state.html#block-syntax-and-semantics)".
 -->
 <p>用花括号界定局部作用域的块语句，在「<a href="statements-and-state.html#block-syntax-and-semantics">语句与状态</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Block</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Block</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Block</span>(<span class="t">List</span>&lt;<span class="t">Stmt</span>&gt; <span class="i">statements</span>) {
       <span class="k">this</span>.<span class="i">statements</span> = <span class="i">statements</span>;
     }
@@ -527,15 +492,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- Class statement
 -->
-<h3><a href="#类语句" name="类语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;2</small>类语句</a></h3><!--
-Class declaration is introduced in, unsurprisingly,
+<h3><a href="#类语句" id="类语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;2</small>类语句</a></h3><!--
+Class declarations are introduced in, unsurprisingly,
 "[Classes](classes.html#class-declarations)".
 -->
 <p>类声明——不出所料——在「<a href="classes.html#class-declarations">类</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Class</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Class</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Class</span>(<span class="t">Token</span> <span class="i">name</span>,
           <span class="t">Expr</span>.<span class="t">Variable</span> <span class="i">superclass</span>,
           <span class="t">List</span>&lt;<span class="t">Stmt</span>.<span class="t">Function</span>&gt; <span class="i">methods</span>) {
@@ -558,15 +522,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- Expression statement
 -->
-<h3><a href="#表达式语句" name="表达式语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;3</small>表达式语句</a></h3><!--
+<h3><a href="#表达式语句" id="表达式语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;3</small>表达式语句</a></h3><!--
 The expression statement is introduced in "[Statements and
 State](statements-and-state.html#statements)".
 -->
 <p>表达式语句在「<a href="statements-and-state.html#statements">语句与状态</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Expression</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Expression</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Expression</span>(<span class="t">Expr</span> <span class="i">expression</span>) {
       <span class="k">this</span>.<span class="i">expression</span> = <span class="i">expression</span>;
     }
@@ -583,15 +546,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- Function statement
 -->
-<h3><a href="#函数语句" name="函数语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;4</small>函数语句</a></h3><!--
+<h3><a href="#函数语句" id="函数语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;4</small>函数语句</a></h3><!--
 Function declarations are introduced in, you guessed it,
 "[Functions](functions.html#function-declarations)".
 -->
 <p>函数声明——你猜对了——在「<a href="functions.html#function-declarations">函数</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Function</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Function</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Function</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">List</span>&lt;<span class="t">Token</span>&gt; <span class="i">params</span>, <span class="t">List</span>&lt;<span class="t">Stmt</span>&gt; <span class="i">body</span>) {
       <span class="k">this</span>.<span class="i">name</span> = <span class="i">name</span>;
       <span class="k">this</span>.<span class="i">params</span> = <span class="i">params</span>;
@@ -612,15 +574,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- If statement
 -->
-<h3><a href="#if-语句" name="if-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;5</small>If 语句</a></h3><!--
+<h3><a href="#if-语句" id="if-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;5</small>If 语句</a></h3><!--
 The `if` statement is introduced in "[Control
 Flow](control-flow.html#conditional-execution)".
 -->
 <p><code>if</code> 语句在「<a href="control-flow.html#conditional-execution">控制流</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">If</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">If</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">If</span>(<span class="t">Expr</span> <span class="i">condition</span>, <span class="t">Stmt</span> <span class="i">thenBranch</span>, <span class="t">Stmt</span> <span class="i">elseBranch</span>) {
       <span class="k">this</span>.<span class="i">condition</span> = <span class="i">condition</span>;
       <span class="k">this</span>.<span class="i">thenBranch</span> = <span class="i">thenBranch</span>;
@@ -641,15 +602,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- Print statement
 -->
-<h3><a href="#print-语句" name="print-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;6</small>Print 语句</a></h3><!--
+<h3><a href="#print-语句" id="print-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;6</small>Print 语句</a></h3><!--
 The `print` statement is introduced in "[Statements and
 State](statements-and-state.html#statements)".
 -->
 <p><code>print</code> 语句在「<a href="statements-and-state.html#statements">语句与状态</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Print</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Print</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Print</span>(<span class="t">Expr</span> <span class="i">expression</span>) {
       <span class="k">this</span>.<span class="i">expression</span> = <span class="i">expression</span>;
     }
@@ -666,15 +626,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- Return statement
 -->
-<h3><a href="#return-语句" name="return-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;7</small>Return 语句</a></h3><!--
+<h3><a href="#return-语句" id="return-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;7</small>Return 语句</a></h3><!--
 You need a function to return from, so `return` statements are introduced in
 "[Functions](functions.html#return-statements)".
 -->
 <p>要有函数才能从中返回，所以 <code>return</code> 语句在「<a href="functions.html#return-statements">函数</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Return</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Return</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Return</span>(<span class="t">Token</span> <span class="i">keyword</span>, <span class="t">Expr</span> <span class="i">value</span>) {
       <span class="k">this</span>.<span class="i">keyword</span> = <span class="i">keyword</span>;
       <span class="k">this</span>.<span class="i">value</span> = <span class="i">value</span>;
@@ -693,15 +652,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- Variable statement
 -->
-<h3><a href="#变量语句" name="变量语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;8</small>变量语句</a></h3><!--
+<h3><a href="#变量语句" id="变量语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;8</small>变量语句</a></h3><!--
 Variable declarations are introduced in "[Statements and
 State](statements-and-state.html#variable-syntax)".
 -->
 <p>变量声明在「<a href="statements-and-state.html#variable-syntax">语句与状态</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">Var</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">Var</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">Var</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">Expr</span> <span class="i">initializer</span>) {
       <span class="k">this</span>.<span class="i">name</span> = <span class="i">name</span>;
       <span class="k">this</span>.<span class="i">initializer</span> = <span class="i">initializer</span>;
@@ -720,15 +678,14 @@ nest inside class <em>Stmt</em></div>
 <!--
 -- While statement
 -->
-<h3><a href="#while-语句" name="while-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;9</small>While 语句</a></h3><!--
+<h3><a href="#while-语句" id="while-语句"><small>A2&#8202;.&#8202;2&#8202;.&#8202;9</small>While 语句</a></h3><!--
 The `while` statement is introduced in "[Control
 Flow](control-flow.html#while-loops)".
 -->
 <p><code>while</code> 语句在「<a href="control-flow.html#while-loops">控制流</a>」一章引入。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Stmt.java</em><br>
 nest inside class <em>Stmt</em></div>
-<pre>
-  <span class="k">static</span> <span class="k">class</span> <span class="t">While</span> <span class="k">extends</span> <span class="t">Stmt</span> {
+<pre>  <span class="k">static</span> <span class="k">class</span> <span class="t">While</span> <span class="k">extends</span> <span class="t">Stmt</span> {
     <span class="t">While</span>(<span class="t">Expr</span> <span class="i">condition</span>, <span class="t">Stmt</span> <span class="i">body</span>) {
       <span class="k">this</span>.<span class="i">condition</span> = <span class="i">condition</span>;
       <span class="k">this</span>.<span class="i">body</span> = <span class="i">body</span>;
@@ -747,7 +704,7 @@ nest inside class <em>Stmt</em></div>
 
 
 <footer>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

@@ -44,7 +44,11 @@ understand a program's performance just by thinking real hard. Those days are
 long gone, separated from the present by microcode, cache lines, branch
 prediction, deep compiler pipelines, and mammoth instruction sets. We like to
 pretend C is a "low-level" language, but the stack of technology between
-`printf("Hello, world!");` and a greeting appearing on screen is now miles tall.
+```c
+printf("Hello, world!");
+```
+
+and a greeting appearing on screen is now perilously tall.
 -->
 计算早期有那么一段时光：熟练的程序员能把整台硬件架构与编译器流水线装进脑子里，光靠使劲想就能理解程序的性能。那些日子早已远去，中间隔着微码、缓存行、分支预测、深邃的编译器流水线，以及庞大的指令集。我们喜欢假装 C 是“低级”语言，可从 `printf("Hello, world!");` 到屏幕上出现问候，技术栈如今已高得吓人。
 

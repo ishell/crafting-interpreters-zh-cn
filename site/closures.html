@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Closures<small>25</small></a></h3>
 
 <ul>
@@ -55,7 +54,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="calls-and-functions.html" title="Calls and Functions" class="prev">←</a>
 <a href="garbage-collection.html" title="Garbage Collection" class="next">→</a>
 </nav>
@@ -63,9 +62,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Closures<small>25</small></a></h3>
 
 <ul>
@@ -92,25 +90,7 @@
   <div class="number">25</div>
   <h1>Closures</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#闭包" name="闭包"><small>25&#8202;.&#8202;0</small>闭包</a></h1><!--
+<h1><a href="#闭包" id="闭包"><small>25&#8202;.&#8202;0</small>闭包</a></h1><!--
 > As the man said, for every complex problem there's a simple solution, and it's
 > wrong.
 >
@@ -126,8 +106,7 @@ variables, which are their own breed of animal, a function has no way to
 reference a variable declared outside of its own body.
 -->
 <p>多亏<a href="calls-and-functions.html">上一章</a>的辛勤劳作，我们已有一台能跑函数的虚拟机。它所缺的，是闭包。除了全局变量——那是另一路物种——函数没法引用声明在自身函数体之外的变量。</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;global&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;global&quot;</span>;
 <span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;outer&quot;</span>;
   <span class="k">fun</span> <span class="i">inner</span>() {
@@ -148,8 +127,7 @@ semantics -- variables are discarded in the reverse order that they are created.
 But with closures, that's only *mostly* true.
 -->
 <p>这个问题在 clox 里比在 jlox 里更棘手，因为我们的字节码虚拟机把局部变量放在栈上。我们用栈，是因为我声称局部变量具有栈语义——变量按创建的相反顺序被丢弃。但有了闭包，这话就只是<em>大体</em>成立。</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">makeClosure</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">makeClosure</span>() {
   <span class="k">var</span> <span class="i">local</span> = <span class="s">&quot;local&quot;</span>;
   <span class="k">fun</span> <span class="i">closure</span>() {
     <span class="k">print</span> <span class="i">local</span>;
@@ -216,7 +194,7 @@ I'll try to introduce the concepts in stages.
 <p>我这里讲解的技巧，来自 Lua 虚拟机的设计。它快、省内存，而且用相对不多的代码就能实现。更令人印象深刻的是，它自然地契合 clox 与 Lua 都采用的单遍编译器。不过它也有些曲折——所有碎片在你脑子里咔哒一声拼齐，可能得花点时间。我们一步一步搭，我会尽量分阶段引入概念。</p><!--
 -- Closure Objects
 -->
-<h2><a href="#闭包对象" name="闭包对象"><small>25&#8202;.&#8202;1</small>闭包对象</a></h2><!--
+<h2><a href="#闭包对象" id="闭包对象"><small>25&#8202;.&#8202;1</small>闭包对象</a></h2><!--
 Our VM represents functions at runtime using ObjFunction. These objects are
 created by the front end during compilation. At runtime, all the VM does is load
 the function object from a constant table and bind it to a name. There is no
@@ -237,8 +215,7 @@ constants used in the body. Once we introduce closures, though, that
 representation is no longer sufficient. Take a gander at:
 -->
 <p>这说得通，因为构成函数的全部数据在编译期就已知：从函数体编译出的那块字节码，以及函数体里用到的常量。可一旦引入闭包，这种表示就不够用了。瞧瞧这个：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">makeClosure</span>(<span class="i">value</span>) {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">makeClosure</span>(<span class="i">value</span>) {
   <span class="k">fun</span> <span class="i">closure</span>() {
     <span class="k">print</span> <span class="i">value</span>;
   }
@@ -252,7 +229,7 @@ representation is no longer sufficient. Take a gander at:
 </pre></div><!--
 The `makeClosure()` function defines and returns a function. We call it twice
 and get two closures back. They are created by the same nested function
-declaration `closure`, but close over different values. When we call the two
+declaration, `closure`, but close over different values. When we call the two
 closures, each prints a different string. That implies we need some runtime
 representation for a closure that captures the local variables surrounding the
 function as they exist when the function declaration is *executed*, not just
@@ -285,8 +262,7 @@ function we're calling is an ObjClosure. That new struct starts out like this:
 <p>我们会把每个函数都包进 ObjClosure，即便它其实并不关闭、也不捕获任何外围局部变量。这有点浪费，却能简化虚拟机——我们可以始终假定正在调用的函数是 ObjClosure。那个新结构体起步长这样：</p>
 <div class="codehilite"><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjString</em></div>
-<pre>
-<span class="k">typedef</span> <span class="k">struct</span> {
+<pre><span class="k">typedef</span> <span class="k">struct</span> {
   <span class="t">Obj</span> <span class="i">obj</span>;
   <span class="t">ObjFunction</span>* <span class="i">function</span>;
 } <span class="t">ObjClosure</span>;
@@ -298,15 +274,12 @@ header stuff. Grinding through the usual ceremony for adding a new object type
 to clox, we declare a C function to create a new closure.
 -->
 <p>眼下它只是指向一个 ObjFunction，并加上必要的对象头那一套。走完给 clox 加新对象类型的惯常仪式，我们声明一个用来创建新闭包的 C 函数。</p>
-<div class="codehilite"><pre class="insert-before">
-} ObjClosure;
+<div class="codehilite"><pre class="insert-before">} ObjClosure;
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjClosure</em></div>
-<pre class="insert">
-<span class="t">ObjClosure</span>* <span class="i">newClosure</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>);
-</pre><pre class="insert-after">
-ObjFunction* newFunction();
+<pre class="insert"><span class="t">ObjClosure</span>* <span class="i">newClosure</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>);
+</pre><pre class="insert-after">ObjFunction* newFunction();
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjClosure</em></div>
 <!--
@@ -315,8 +288,7 @@ Then we implement it here:
 <p>然后在这边实现它：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>allocateObject</em>()</div>
-<pre>
-<span class="t">ObjClosure</span>* <span class="i">newClosure</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>) {
+<pre><span class="t">ObjClosure</span>* <span class="i">newClosure</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>) {
   <span class="t">ObjClosure</span>* <span class="i">closure</span> = <span class="a">ALLOCATE_OBJ</span>(<span class="t">ObjClosure</span>, <span class="a">OBJ_CLOSURE</span>);
   <span class="i">closure</span>-&gt;<span class="i">function</span> = <span class="i">function</span>;
   <span class="k">return</span> <span class="i">closure</span>;
@@ -328,31 +300,25 @@ It takes a pointer to the ObjFunction it wraps. It also initializes the type
 field to a new type.
 -->
 <p>它接受指向所包装的 ObjFunction 的指针，并把类型字段初始化成一个新类型。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef enum {
+<div class="codehilite"><pre class="insert-before">typedef enum {
 </pre><div class="source-file"><em>object.h</em><br>
 in enum <em>ObjType</em></div>
-<pre class="insert">
-  <span class="a">OBJ_CLOSURE</span>,
-</pre><pre class="insert-after">
-  OBJ_FUNCTION,
+<pre class="insert">  <span class="a">OBJ_CLOSURE</span>,
+</pre><pre class="insert-after">  OBJ_FUNCTION,
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in enum <em>ObjType</em></div>
 <!--
 And when we're done with a closure, we release its memory.
 -->
 <p>用完一个闭包后，释放它的内存。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (object-&gt;type) {
+<div class="codehilite"><pre class="insert-before">  switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>: {
       <span class="a">FREE</span>(<span class="t">ObjClosure</span>, <span class="i">object</span>);
       <span class="k">break</span>;
     }
-</pre><pre class="insert-after">
-    case OBJ_FUNCTION: {
+</pre><pre class="insert-after">    case OBJ_FUNCTION: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -375,44 +341,35 @@ macros. Maybe that would be a little too meta.
 -->
 <p>或许我该再定义一个宏，好让生成这些宏更轻松。不过那样也许有点太 meta 了。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
+<div class="codehilite"><pre class="insert-before">#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
 
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_CLOSURE(value)      isObjType(value, OBJ_CLOSURE)</span>
-</pre><pre class="insert-after">
-#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
+<pre class="insert"><span class="a">#define IS_CLOSURE(value)      isObjType(value, OBJ_CLOSURE)</span>
+</pre><pre class="insert-after">#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
 And to cast a value:
 -->
 <p>以及把值转型：</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
+<div class="codehilite"><pre class="insert-before">#define IS_STRING(value)       isObjType(value, OBJ_STRING)
 
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_CLOSURE(value)      ((ObjClosure*)AS_OBJ(value))</span>
-</pre><pre class="insert-after">
-#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
+<pre class="insert"><span class="a">#define AS_CLOSURE(value)      ((ObjClosure*)AS_OBJ(value))</span>
+</pre><pre class="insert-after">#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
 Closures are first-class objects, so you can print them.
 -->
 <p>闭包是一等对象，所以你可以打印它们。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (OBJ_TYPE(value)) {
+<div class="codehilite"><pre class="insert-before">  switch (OBJ_TYPE(value)) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>printObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>:
       <span class="i">printFunction</span>(<span class="a">AS_CLOSURE</span>(<span class="i">value</span>)-&gt;<span class="i">function</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_FUNCTION:
+</pre><pre class="insert-after">    case OBJ_FUNCTION:
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>printObject</em>()</div>
 <!--
@@ -424,22 +381,19 @@ closures.
 <p>它们显示出来和 ObjFunction 一模一样。从用户角度看，ObjFunction 与 ObjClosure 的差别纯粹是隐藏的实现细节。搞定这些之后，我们便有了一个能用、却还空荡荡的闭包表示。</p><!--
 -- Compiling to closure objects
 -->
-<h3><a href="#编译为闭包对象" name="编译为闭包对象"><small>25&#8202;.&#8202;1&#8202;.&#8202;1</small>编译为闭包对象</a></h3><!--
+<h3><a href="#编译为闭包对象" id="编译为闭包对象"><small>25&#8202;.&#8202;1&#8202;.&#8202;1</small>编译为闭包对象</a></h3><!--
 We have closure objects, but our VM never creates them. The next step is getting
 the compiler to emit instructions to tell the runtime when to create a new
 ObjClosure to wrap a given ObjFunction. This happens right at the end of a
 function declaration.
 -->
 <p>我们有了闭包对象，可虚拟机从不创建它们。下一步是让编译器发出指令，告诉运行时何时该创建一个新的 ObjClosure 来包装给定的 ObjFunction。这发生在函数声明的正末尾。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjFunction* function = endCompiler();
+<div class="codehilite"><pre class="insert-before">  ObjFunction* function = endCompiler();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>function</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="i">emitBytes</span>(<span class="a">OP_CLOSURE</span>, <span class="i">makeConstant</span>(<span class="a">OBJ_VAL</span>(<span class="i">function</span>)));
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">emitBytes</span>(<span class="a">OP_CLOSURE</span>, <span class="i">makeConstant</span>(<span class="a">OBJ_VAL</span>(<span class="i">function</span>)));
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>function</em>(), replace 1 line</div>
 <!--
@@ -448,14 +402,11 @@ instruction to load the compiled function from the surrounding function's
 constant table and push it onto the stack. Now we have a new instruction.
 -->
 <p>以前，函数声明最终的字节码是一条单独的 <code>OP_CONSTANT</code> 指令，从外围函数的常量表里加载已编译的函数，并压入栈。现在我们有了一条新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_CALL,
+<div class="codehilite"><pre class="insert-before">  OP_CALL,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_CLOSURE</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_CLOSURE</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
@@ -468,13 +419,11 @@ First, let's be diligent VM hackers and slot in disassembler support for the
 instruction.
 -->
 <p>首先，做个勤勉的虚拟机黑客，给这条指令装上反汇编支持。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_CALL:
+<div class="codehilite"><pre class="insert-before">    case OP_CALL:
       return byteInstruction(&quot;OP_CALL&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_CLOSURE</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_CLOSURE</span>: {
       <span class="i">offset</span>++;
       <span class="t">uint8_t</span> <span class="i">constant</span> = <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span>++];
       <span class="i">printf</span>(<span class="s">&quot;%-16s %4d &quot;</span>, <span class="s">&quot;OP_CLOSURE&quot;</span>, <span class="i">constant</span>);
@@ -482,8 +431,7 @@ in <em>disassembleInstruction</em>()</div>
       <span class="i">printf</span>(<span class="s">&quot;</span><span class="e">\n</span><span class="s">&quot;</span>);
       <span class="k">return</span> <span class="i">offset</span>;
     }
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -495,26 +443,23 @@ we'll be adding to it. This code here anticipates that future.
 <p>这儿发生的事，比我们在反汇编器里通常见到的多。到本章末尾你会发现，<code>OP_CLOSURE</code> 是一条相当不寻常的指令。眼下它还直截了当——只有一个单字节操作数——但我们还会往上面加东西。这里的代码是在为那未来铺垫。</p><!--
 -- Interpreting function declarations
 -->
-<h3><a href="#解释函数声明" name="解释函数声明"><small>25&#8202;.&#8202;1&#8202;.&#8202;2</small>解释函数声明</a></h3><!--
+<h3><a href="#解释函数声明" id="解释函数声明"><small>25&#8202;.&#8202;1&#8202;.&#8202;2</small>解释函数声明</a></h3><!--
 Most of the work we need to do is in the runtime. We have to handle the new
 instruction, naturally. But we also need to touch every piece of code in the VM
 that works with ObjFunction and change it to use ObjClosure instead -- function
 calls, call frames, etc. We'll start with the instruction, though.
 -->
 <p>我们要做的大部分工作在运行时。当然得处理新指令。但我们还得触碰虚拟机里所有和 ObjFunction 打交道的代码，改成用 ObjClosure——函数调用、调用帧，等等。不过先从指令开始。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_CLOSURE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_CLOSURE</span>: {
         <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="a">AS_FUNCTION</span>(<span class="a">READ_CONSTANT</span>());
         <span class="t">ObjClosure</span>* <span class="i">closure</span> = <span class="i">newClosure</span>(<span class="i">function</span>);
         <span class="i">push</span>(<span class="a">OBJ_VAL</span>(<span class="i">closure</span>));
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -526,16 +471,13 @@ function in a new ObjClosure and push the result onto the stack.
 Once you have a closure, you'll eventually want to call it.
 -->
 <p>有了闭包，你终究会想调用它。</p>
-<div class="codehilite"><pre class="insert-before">
-    switch (OBJ_TYPE(callee)) {
+<div class="codehilite"><pre class="insert-before">    switch (OBJ_TYPE(callee)) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>callValue</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>:
+<pre class="insert">      <span class="k">case</span> <span class="a">OBJ_CLOSURE</span>:
         <span class="k">return</span> <span class="i">call</span>(<span class="a">AS_CLOSURE</span>(<span class="i">callee</span>), <span class="i">argCount</span>);
-</pre><pre class="insert-after">
-      case OBJ_NATIVE: {
+</pre><pre class="insert-after">      case OBJ_NATIVE: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>callValue</em>(), replace 2 lines</div>
 <!--
@@ -560,10 +502,8 @@ are over in that function. First, we update its signature.
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 function <em>call</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">bool</span> <span class="i">call</span>(<span class="t">ObjClosure</span>* <span class="i">closure</span>, <span class="t">int</span> <span class="i">argCount</span>) {
-</pre><pre class="insert-after">
-  if (argCount != function-&gt;arity) {
+<pre class="insert"><span class="k">static</span> <span class="t">bool</span> <span class="i">call</span>(<span class="t">ObjClosure</span>* <span class="i">closure</span>, <span class="t">int</span> <span class="i">argCount</span>) {
+</pre><pre class="insert-after">  if (argCount != function-&gt;arity) {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, function <em>call</em>(), replace 1 line</div>
 <!--
@@ -572,17 +512,14 @@ handle the fact that we've introduced a layer of indirection. We start with the
 arity checking:
 -->
 <p>然后，在函数体里，凡是引用了函数的地方都要修好，以应付我们引入的那一层间接。先从 arity 检查开始：</p>
-<div class="codehilite"><pre class="insert-before">
-static bool call(ObjClosure* closure, int argCount) {
+<div class="codehilite"><pre class="insert-before">static bool call(ObjClosure* closure, int argCount) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>call</em>()<br>
 replace 3 lines</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">argCount</span> != <span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">arity</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">argCount</span> != <span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">arity</span>) {
     <span class="i">runtimeError</span>(<span class="s">&quot;Expected %d arguments but got %d.&quot;</span>,
         <span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">arity</span>, <span class="i">argCount</span>);
-</pre><pre class="insert-after">
-    return false;
+</pre><pre class="insert-after">    return false;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>call</em>(), replace 3 lines</div>
 <!--
@@ -592,31 +529,25 @@ store the closure in the CallFrame and get the bytecode pointer from the
 closure's function.
 -->
 <p>唯一的变化是解开闭包以到达底层函数。接下来 <code>call()</code> 要做的是创建新的 CallFrame。我们改那段代码，把闭包存进 CallFrame，并从闭包的函数里取得字节码指针。</p>
-<div class="codehilite"><pre class="insert-before">
-  CallFrame* frame = &amp;vm.frames[vm.frameCount++];
+<div class="codehilite"><pre class="insert-before">  CallFrame* frame = &amp;vm.frames[vm.frameCount++];
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>call</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="i">frame</span>-&gt;<span class="i">closure</span> = <span class="i">closure</span>;
+<pre class="insert">  <span class="i">frame</span>-&gt;<span class="i">closure</span> = <span class="i">closure</span>;
   <span class="i">frame</span>-&gt;<span class="i">ip</span> = <span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">code</span>;
-</pre><pre class="insert-after">
-  frame-&gt;slots = vm.stackTop - argCount - 1;
+</pre><pre class="insert-after">  frame-&gt;slots = vm.stackTop - argCount - 1;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>call</em>(), replace 2 lines</div>
 <!--
 This necessitates changing the declaration of CallFrame too.
 -->
 <p>这也迫使我们改动 CallFrame 的声明。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>CallFrame</em><br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">ObjClosure</span>* <span class="i">closure</span>;
-</pre><pre class="insert-after">
-  uint8_t* ip;
+<pre class="insert">  <span class="t">ObjClosure</span>* <span class="i">closure</span>;
+</pre><pre class="insert-after">  uint8_t* ip;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>CallFrame</em>, replace 1 line</div>
 <!--
@@ -625,14 +556,12 @@ accessed CallFrame's function needs to use a closure instead. First, the macro
 for reading a constant from the current function's constant table:
 -->
 <p>那一改又牵出几处连锁变化。虚拟机里凡访问 CallFrame 的 function 的地方，都要改用闭包。首先是从当前函数常量表读常量的宏：</p>
-<div class="codehilite"><pre class="insert-before">
-    (uint16_t)((frame-&gt;ip[-2] &lt;&lt; 8) | frame-&gt;ip[-1]))
+<div class="codehilite"><pre class="insert-before">    (uint16_t)((frame-&gt;ip[-2] &lt;&lt; 8) | frame-&gt;ip[-1]))
 
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-<span class="a">#define READ_CONSTANT() \</span>
+<pre class="insert"><span class="a">#define READ_CONSTANT() \</span>
 <span class="a">    (frame-&gt;closure-&gt;function-&gt;chunk.constants.values[READ_BYTE()])</span>
 </pre><pre class="insert-after">
 
@@ -644,31 +573,25 @@ When `DEBUG_TRACE_EXECUTION` is enabled, it needs to get to the chunk from the
 closure.
 -->
 <p>启用 <code>DEBUG_TRACE_EXECUTION</code> 时，它需要从闭包拿到 chunk。</p>
-<div class="codehilite"><pre class="insert-before">
-    printf(&quot;\n&quot;);
+<div class="codehilite"><pre class="insert-before">    printf(&quot;\n&quot;);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-    <span class="i">disassembleInstruction</span>(&amp;<span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>,
+<pre class="insert">    <span class="i">disassembleInstruction</span>(&amp;<span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>,
         (<span class="t">int</span>)(<span class="i">frame</span>-&gt;<span class="i">ip</span> - <span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">code</span>));
-</pre><pre class="insert-after">
-#endif
+</pre><pre class="insert-after">#endif
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 2 lines</div>
 <!--
 Likewise when reporting a runtime error:
 -->
 <p>报告运行时错误时同理：</p>
-<div class="codehilite"><pre class="insert-before">
-    CallFrame* frame = &amp;vm.frames[i];
+<div class="codehilite"><pre class="insert-before">    CallFrame* frame = &amp;vm.frames[i];
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>runtimeError</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">function</span>;
-</pre><pre class="insert-after">
-    size_t instruction = frame-&gt;ip - function-&gt;chunk.code - 1;
+<pre class="insert">    <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">function</span>;
+</pre><pre class="insert-after">    size_t instruction = frame-&gt;ip - function-&gt;chunk.code - 1;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>runtimeError</em>(), replace 1 line</div>
 <!--
@@ -676,13 +599,11 @@ Almost there. The last piece is the blob of code that sets up the very first
 CallFrame to begin executing the top-level code for a Lox script.
 -->
 <p>快到了。最后一块是设置最初那个 CallFrame、开始执行 Lox 脚本顶层代码的那坨代码。</p>
-<div class="codehilite"><pre class="insert-before">
-  push(OBJ_VAL(function));
+<div class="codehilite"><pre class="insert-before">  push(OBJ_VAL(function));
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>interpret</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="t">ObjClosure</span>* <span class="i">closure</span> = <span class="i">newClosure</span>(<span class="i">function</span>);
+<pre class="insert">  <span class="t">ObjClosure</span>* <span class="i">closure</span> = <span class="i">newClosure</span>(<span class="i">function</span>);
   <span class="i">pop</span>();
   <span class="i">push</span>(<span class="a">OBJ_VAL</span>(<span class="i">closure</span>));
   <span class="i">call</span>(<span class="i">closure</span>, <span class="n">0</span>);
@@ -718,7 +639,7 @@ ready to make these closures actually *do* something.
 <p>我们又回到了一个能工作的解释器。<em>用户</em>看不出任何差别，但编译器现在会生成代码，告诉虚拟机为每个函数声明创建一个闭包。虚拟机每执行一次函数声明，就把 ObjFunction 包进一个新的 ObjClosure。虚拟机其余部分现在处理这些漂浮的 ObjClosure。无聊的部分清掉了。现在，我们准备好让这些闭包真正<em>干点事</em>。</p><!--
 -- Upvalues
 -->
-<h2><a href="#上值（upvalue）" name="上值（upvalue）"><small>25&#8202;.&#8202;2</small>上值（upvalue）</a></h2><!--
+<h2><a href="#上值（upvalue）" id="上值（upvalue）"><small>25&#8202;.&#8202;2</small>上值（upvalue）</a></h2><!--
 Our existing instructions for reading and writing local variables are limited to
 a single function's stack window. Locals from a surrounding function are outside
 of the inner function's window. We're going to need some new instructions.
@@ -742,8 +663,7 @@ that restriction we chose in our implementation makes things harder. Take a look
 at this example:
 -->
 <p>若 clox 没有单遍编译器，这会是个不错的方案。但我们在实现里选的那条限制，把事情弄难了。看看这个例子：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="n">1</span>;    <span class="c">// (1)</span>
   <span class="i">x</span> = <span class="n">2</span>;        <span class="c">// (2)</span>
   <span class="k">fun</span> <span class="i">inner</span>() { <span class="c">// (3)</span>
@@ -777,8 +697,7 @@ them up to "capture" the surrounding local variables that the closure needs.
 For example, if we throw this program at clox,
 -->
 <p>比方说，若把这个程序扔给 clox，</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span> = <span class="n">3</span>;
   <span class="k">fun</span> <span class="i">f</span>() {
     <span class="k">print</span> <span class="i">a</span>;
@@ -797,7 +716,7 @@ But before we get to all that, let's focus on compiling captured variables.
 <p>这看上去或许铺天盖地，但别怕——我们会一路拆开。要紧的是：上值充当所需的那层间接，好让被捕获的局部变量即便离开栈，仍能被找到。不过在进入那一切之前，先专注于编译被捕获的变量。</p><!--
 -- Compiling upvalues
 -->
-<h3><a href="#编译上值" name="编译上值"><small>25&#8202;.&#8202;2&#8202;.&#8202;1</small>编译上值</a></h3><!--
+<h3><a href="#编译上值" id="编译上值"><small>25&#8202;.&#8202;2&#8202;.&#8202;1</small>编译上值</a></h3><!--
 As usual, we want to do as much work as possible during compilation to keep
 execution simple and fast. Since local variables are lexically scoped in Lox, we
 have enough knowledge at compile time to resolve which surrounding local
@@ -815,18 +734,15 @@ The first change, then, is inserting a resolution step for those outer local
 scopes.
 -->
 <p>目前，编译器解析标识符时，从最内到最外走当前函数的块作用域。若在该函数里找不到变量，就假定它一定是全局的。我们不考虑外围函数的局部作用域——它们直接被跳过。那么第一处改动，就是为那些外层局部作用域插入一步解析。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (arg != -1) {
+<div class="codehilite"><pre class="insert-before">  if (arg != -1) {
     getOp = OP_GET_LOCAL;
     setOp = OP_SET_LOCAL;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>namedVariable</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> ((<span class="i">arg</span> = <span class="i">resolveUpvalue</span>(<span class="i">current</span>, &amp;<span class="i">name</span>)) != -<span class="n">1</span>) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> ((<span class="i">arg</span> = <span class="i">resolveUpvalue</span>(<span class="i">current</span>, &amp;<span class="i">name</span>)) != -<span class="n">1</span>) {
     <span class="i">getOp</span> = <span class="a">OP_GET_UPVALUE</span>;
     <span class="i">setOp</span> = <span class="a">OP_SET_UPVALUE</span>;
-</pre><pre class="insert-after">
-  } else {
+</pre><pre class="insert-after">  } else {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>namedVariable</em>()</div>
 <!--
@@ -837,15 +753,12 @@ to indicate the variable wasn't found. If it was found, we use these two new
 instructions for reading or writing to the variable through its upvalue:
 -->
 <p>这个新的 <code>resolveUpvalue()</code> 函数在任意外围函数里查找声明的局部变量。若找到，就返回该变量的“上值下标”。（后文再讲那是什么意思。）否则返回 -1，表示没找到。若找到了，我们用这两条新指令，经由其上值读写该变量：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_SET_GLOBAL,
+<div class="codehilite"><pre class="insert-before">  OP_SET_GLOBAL,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_GET_UPVALUE</span>,
+<pre class="insert">  <span class="a">OP_GET_UPVALUE</span>,
   <span class="a">OP_SET_UPVALUE</span>,
-</pre><pre class="insert-after">
-  OP_EQUAL,
+</pre><pre class="insert-after">  OP_EQUAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
@@ -856,8 +769,7 @@ identifier.
 <p>我们大致是自上而下实现的，所以很快会展示它们在运行时如何工作。眼下要聚焦的，是编译器究竟如何解析标识符。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>resolveLocal</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">resolveUpvalue</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">Token</span>* <span class="i">name</span>) {
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">resolveUpvalue</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">Token</span>* <span class="i">name</span>) {
   <span class="k">if</span> (<span class="i">compiler</span>-&gt;<span class="i">enclosing</span> == <span class="a">NULL</span>) <span class="k">return</span> -<span class="n">1</span>;
 
   <span class="t">int</span> <span class="i">local</span> = <span class="i">resolveLocal</span>(<span class="i">compiler</span>-&gt;<span class="i">enclosing</span>, <span class="i">name</span>);
@@ -891,8 +803,7 @@ Otherwise, we try to resolve the identifier as a *local* variable in the
 function. For example:
 -->
 <p>否则，我们试着在<em>外围</em>编译器里把它解析为<em>局部</em>变量。换句话说，就在当前函数外侧找它。例如：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="n">1</span>;
   <span class="k">fun</span> <span class="i">inner</span>() {
     <span class="k">print</span> <span class="i">x</span>; <span class="c">// (1)</span>
@@ -909,8 +820,7 @@ created here:
 <p>编译 <code>(1)</code> 处的标识符表达式时，<code>resolveUpvalue()</code> 在 <code>outer()</code> 里查找声明的局部变量 <code>x</code>。若找到——像本例这样——我们就成功解析了变量。我们创建一个上值，好让内层函数能经由它访问该变量。上值在这里创建：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>resolveLocal</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">addUpvalue</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">uint8_t</span> <span class="i">index</span>,
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">addUpvalue</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">uint8_t</span> <span class="i">index</span>,
                       <span class="t">bool</span> <span class="i">isLocal</span>) {
   <span class="t">int</span> <span class="i">upvalueCount</span> = <span class="i">compiler</span>-&gt;<span class="i">function</span>-&gt;<span class="i">upvalueCount</span>;
   <span class="i">compiler</span>-&gt;<span class="i">upvalues</span>[<span class="i">upvalueCount</span>].<span class="i">isLocal</span> = <span class="i">isLocal</span>;
@@ -956,8 +866,7 @@ new upvalue, we first check to see if the function already has an upvalue that
 closes over that variable.
 -->
 <p>这就是解析上值的基本想法，但函数还没完全烤熟。闭包可能多次引用外围函数里的同一个变量。那种情况下，我们不想浪费时间和内存，为每个标识符表达式各造一个上值。要修好这点，在添加新上值之前，先检查函数是否已有关闭该变量的上值。</p>
-<div class="codehilite"><pre class="insert-before">
-  int upvalueCount = compiler-&gt;function-&gt;upvalueCount;
+<div class="codehilite"><pre class="insert-before">  int upvalueCount = compiler-&gt;function-&gt;upvalueCount;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>addUpvalue</em>()</div>
 <pre class="insert">
@@ -969,8 +878,7 @@ in <em>addUpvalue</em>()</div>
     }
   }
 
-</pre><pre class="insert-after">
-  compiler-&gt;upvalues[upvalueCount].isLocal = isLocal;
+</pre><pre class="insert-after">  compiler-&gt;upvalues[upvalueCount].isLocal = isLocal;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>addUpvalue</em>()</div>
 <!--
@@ -983,14 +891,11 @@ These two functions access and modify a bunch of new state, so let's define
 that. First, we add the upvalue count to ObjFunction.
 -->
 <p>这两个函数访问并修改一堆新状态，所以来定义它们。首先，把上值计数加到 ObjFunction。</p>
-<div class="codehilite"><pre class="insert-before">
-  int arity;
+<div class="codehilite"><pre class="insert-before">  int arity;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>ObjFunction</em></div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">upvalueCount</span>;
-</pre><pre class="insert-after">
-  Chunk chunk;
+<pre class="insert">  <span class="t">int</span> <span class="i">upvalueCount</span>;
+</pre><pre class="insert-after">  Chunk chunk;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>ObjFunction</em></div>
 <!--
@@ -998,28 +903,22 @@ We're conscientious C programmers, so we zero-initialize that when an
 ObjFunction is first allocated.
 -->
 <p>我们是尽职的 C 程序员，所以 ObjFunction 首次分配时把它零初始化。</p>
-<div class="codehilite"><pre class="insert-before">
-  function-&gt;arity = 0;
+<div class="codehilite"><pre class="insert-before">  function-&gt;arity = 0;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>newFunction</em>()</div>
-<pre class="insert">
-  <span class="i">function</span>-&gt;<span class="i">upvalueCount</span> = <span class="n">0</span>;
-</pre><pre class="insert-after">
-  function-&gt;name = NULL;
+<pre class="insert">  <span class="i">function</span>-&gt;<span class="i">upvalueCount</span> = <span class="n">0</span>;
+</pre><pre class="insert-after">  function-&gt;name = NULL;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>newFunction</em>()</div>
 <!--
 In the compiler, we add a field for the upvalue array.
 -->
 <p>在编译器里，我们为上值数组加一个字段。</p>
-<div class="codehilite"><pre class="insert-before">
-  int localCount;
+<div class="codehilite"><pre class="insert-before">  int localCount;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in struct <em>Compiler</em></div>
-<pre class="insert">
-  <span class="t">Upvalue</span> <span class="i">upvalues</span>[<span class="a">UINT8_COUNT</span>];
-</pre><pre class="insert-after">
-  int scopeDepth;
+<pre class="insert">  <span class="t">Upvalue</span> <span class="i">upvalues</span>[<span class="a">UINT8_COUNT</span>];
+</pre><pre class="insert-after">  int scopeDepth;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Compiler</em></div>
 <!--
@@ -1031,22 +930,19 @@ array that large. We also need to make sure the compiler doesn't overflow that
 limit.
 -->
 <p>为简单起见，我给了它固定大小。<code>OP_GET_UPVALUE</code> 和 <code>OP_SET_UPVALUE</code> 用单字节操作数编码上值下标，因此函数能有多少上值——能关闭多少个不同变量——是有上限的。有了那上限，我们负担得起那么大的静态数组。还得确保编译器不会溢出那个限制。</p>
-<div class="codehilite"><pre class="insert-before">
-    if (upvalue-&gt;index == index &amp;&amp; upvalue-&gt;isLocal == isLocal) {
+<div class="codehilite"><pre class="insert-before">    if (upvalue-&gt;index == index &amp;&amp; upvalue-&gt;isLocal == isLocal) {
       return i;
     }
   }
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>addUpvalue</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">upvalueCount</span> == <span class="a">UINT8_COUNT</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">upvalueCount</span> == <span class="a">UINT8_COUNT</span>) {
     <span class="i">error</span>(<span class="s">&quot;Too many closure variables in function.&quot;</span>);
     <span class="k">return</span> <span class="n">0</span>;
   }
 
-</pre><pre class="insert-after">
-  compiler-&gt;upvalues[upvalueCount].isLocal = isLocal;
+</pre><pre class="insert-after">  compiler-&gt;upvalues[upvalueCount].isLocal = isLocal;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>addUpvalue</em>()</div>
 <!--
@@ -1055,8 +951,7 @@ Finally, the Upvalue struct type itself.
 <p>最后，是 Upvalue 结构体类型本身。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after struct <em>Local</em></div>
-<pre>
-<span class="k">typedef</span> <span class="k">struct</span> {
+<pre><span class="k">typedef</span> <span class="k">struct</span> {
   <span class="t">uint8_t</span> <span class="i">index</span>;
   <span class="t">bool</span> <span class="i">isLocal</span>;
 } <span class="t">Upvalue</span>;
@@ -1069,14 +964,13 @@ The `index` field stores which local slot the upvalue is capturing. The
 <p><code>index</code> 字段存放上值正在捕获哪个局部槽。<code>isLocal</code> 字段值得单独一节，下一节就讲。</p><!--
 -- Flattening upvalues
 -->
-<h3><a href="#展平上值" name="展平上值"><small>25&#8202;.&#8202;2&#8202;.&#8202;2</small>展平上值</a></h3><!--
+<h3><a href="#展平上值" id="展平上值"><small>25&#8202;.&#8202;2&#8202;.&#8202;2</small>展平上值</a></h3><!--
 In the example I showed before, the closure is accessing a variable declared in
 the immediately enclosing function. Lox also supports accessing local variables
 declared in *any* enclosing scope, as in:
 -->
 <p>在我先前展示的例子里，闭包访问的是紧邻外围函数里声明的变量。Lox 也支持访问声明在<em>任意</em>外围作用域里的局部变量，比如：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="n">1</span>;
   <span class="k">fun</span> <span class="i">middle</span>() {
     <span class="k">fun</span> <span class="i">inner</span>() {
@@ -1100,8 +994,7 @@ perverse imagination than you.
 -->
 <p>若你在编程语言上干得够久，就会练出一手精细本事：造出这种技术上合法、却很可能绊倒想象力没你那么邪门的人写出的实现的古怪程序。</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;value&quot;</span>;
   <span class="k">fun</span> <span class="i">middle</span>() {
     <span class="k">fun</span> <span class="i">inner</span>() {
@@ -1179,21 +1072,18 @@ executes.
 In order to implement this, `resolveUpvalue()` becomes recursive.
 -->
 <p>要实现这一点，<code>resolveUpvalue()</code> 变成递归的。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (local != -1) {
+<div class="codehilite"><pre class="insert-before">  if (local != -1) {
     return addUpvalue(compiler, (uint8_t)local, true);
   }
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>resolveUpvalue</em>()</div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">upvalue</span> = <span class="i">resolveUpvalue</span>(<span class="i">compiler</span>-&gt;<span class="i">enclosing</span>, <span class="i">name</span>);
+<pre class="insert">  <span class="t">int</span> <span class="i">upvalue</span> = <span class="i">resolveUpvalue</span>(<span class="i">compiler</span>-&gt;<span class="i">enclosing</span>, <span class="i">name</span>);
   <span class="k">if</span> (<span class="i">upvalue</span> != -<span class="n">1</span>) {
     <span class="k">return</span> <span class="i">addUpvalue</span>(<span class="i">compiler</span>, (<span class="t">uint8_t</span>)<span class="i">upvalue</span>, <span class="k">false</span>);
   }
 
-</pre><pre class="insert-after">
-  return -1;
+</pre><pre class="insert-after">  return -1;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>resolveUpvalue</em>()</div>
 <!--
@@ -1260,8 +1150,7 @@ emit bytecode which creates a closure at runtime that captures all of the
 correct variables.
 -->
 <p>等编译器走到函数声明末尾时，每个变量引用都已解析为局部、上值或全局。每个上值进而可能捕获外围函数的局部变量，或在传递闭包的情形下捕获一个上值。我们终于有足够数据，发出在运行时创建闭包、并捕获全部正确变量的字节码。</p>
-<div class="codehilite"><pre class="insert-before">
-  emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
+<div class="codehilite"><pre class="insert-before">  emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>function</em>()</div>
 <pre class="insert">
@@ -1270,8 +1159,7 @@ in <em>function</em>()</div>
     <span class="i">emitByte</span>(<span class="i">compiler</span>.<span class="i">upvalues</span>[<span class="i">i</span>].<span class="i">isLocal</span> ? <span class="n">1</span> : <span class="n">0</span>);
     <span class="i">emitByte</span>(<span class="i">compiler</span>.<span class="i">upvalues</span>[<span class="i">i</span>].<span class="i">index</span>);
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>function</em>()</div>
 <!--
@@ -1287,8 +1175,7 @@ This odd encoding means we need some bespoke support in the disassembly code
 for `OP_CLOSURE`.
 -->
 <p>这古怪的编码意味着，我们需要在 <code>OP_CLOSURE</code> 的反汇编代码里做些定制支持。</p>
-<div class="codehilite"><pre class="insert-before">
-      printf(&quot;\n&quot;);
+<div class="codehilite"><pre class="insert-before">      printf(&quot;\n&quot;);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
 <pre class="insert">
@@ -1302,16 +1189,14 @@ in <em>disassembleInstruction</em>()</div>
                <span class="i">offset</span> - <span class="n">2</span>, <span class="i">isLocal</span> ? <span class="s">&quot;local&quot;</span> : <span class="s">&quot;upvalue&quot;</span>, <span class="i">index</span>);
       }
 
-</pre><pre class="insert-after">
-      return offset;
+</pre><pre class="insert-after">      return offset;
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
 For example, take this script:
 -->
 <p>比方说，看这个脚本：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">a</span> = <span class="n">1</span>;
   <span class="k">var</span> <span class="i">b</span> = <span class="n">2</span>;
   <span class="k">fun</span> <span class="i">middle</span>() {
@@ -1336,18 +1221,15 @@ prints this:
 We have two other, simpler instructions to add disassembler support for.
 -->
 <p>还有另外两条更简单的指令要加反汇编支持。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_SET_GLOBAL:
+<div class="codehilite"><pre class="insert-before">    case OP_SET_GLOBAL:
       return constantInstruction(&quot;OP_SET_GLOBAL&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_GET_UPVALUE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_GET_UPVALUE</span>:
       <span class="k">return</span> <span class="i">byteInstruction</span>(<span class="s">&quot;OP_GET_UPVALUE&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_SET_UPVALUE</span>:
       <span class="k">return</span> <span class="i">byteInstruction</span>(<span class="s">&quot;OP_SET_UPVALUE&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_EQUAL:
+</pre><pre class="insert-after">    case OP_EQUAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1355,13 +1237,10 @@ These both have a single-byte operand, so there's nothing exciting going on. We
 do need to add an include so the debug module can get to `AS_FUNCTION()`.
 -->
 <p>这两条都有单字节操作数，没什么刺激的。我们倒是需要加一条 include，好让 debug 模块能用到 <code>AS_FUNCTION()</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;debug.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;debug.h&quot;
 </pre><div class="source-file"><em>debug.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;object.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;value.h&quot;
+<pre class="insert"><span class="a">#include &quot;object.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;value.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em></div>
 <!--
@@ -1373,7 +1252,7 @@ side of the VM and get things running.
 <p>如此，编译器就到了我们想要的位置。对每个函数声明，它输出一条 <code>OP_CLOSURE</code> 指令，后跟一串操作数字节对，对应运行时需要捕获的每个上值。该跳到虚拟机那一侧，把事情跑起来了。</p><!--
 -- Upvalue Objects
 -->
-<h2><a href="#上值对象" name="上值对象"><small>25&#8202;.&#8202;3</small>上值对象</a></h2><!--
+<h2><a href="#上值对象" id="上值对象"><small>25&#8202;.&#8202;3</small>上值对象</a></h2><!--
 Each `OP_CLOSURE` instruction is now followed by the series of bytes that
 specify the upvalues the ObjClosure should own. Before we process those
 operands, we need a runtime representation for upvalues.
@@ -1381,8 +1260,7 @@ operands, we need a runtime representation for upvalues.
 <p>每条 <code>OP_CLOSURE</code> 指令现在后面跟着一串字节，指明 ObjClosure 应拥有的上值。在处理那些操作数之前，我们需要上值的运行时表示。</p>
 <div class="codehilite"><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjString</em></div>
-<pre>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="t">ObjUpvalue</span> {
+<pre><span class="k">typedef</span> <span class="k">struct</span> <span class="t">ObjUpvalue</span> {
   <span class="t">Obj</span> <span class="i">obj</span>;
   <span class="t">Value</span>* <span class="i">location</span>;
 } <span class="t">ObjUpvalue</span>;
@@ -1404,8 +1282,7 @@ that when we assign to the variable the upvalue captures, we're assigning to the
 actual variable, not a copy. For example:
 -->
 <p>因此，我们的运行时上值结构是带着典型 Obj 头字段的 ObjUpvalue。其后是 <code>location</code> 字段，指向被关闭的变量。注意这是指向 Value 的<em>指针</em>，不是 Value 本身。它是对<em>变量</em>的引用，不是对<em>值</em>的引用。这很重要，因为这意味着给上值捕获的变量赋值时，我们赋的是真正的那个变量，而不是一份拷贝。例如：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;before&quot;</span>;
   <span class="k">fun</span> <span class="i">inner</span>() {
     <span class="i">x</span> = <span class="s">&quot;assigned&quot;</span>;
@@ -1423,14 +1300,11 @@ Because upvalues are objects, we've got all the usual object machinery, starting
 with a constructor-like function:
 -->
 <p>因为上值是对象，我们有全套惯常的对象机制，从类似构造函数的函数开始：</p>
-<div class="codehilite"><pre class="insert-before">
-ObjString* copyString(const char* chars, int length);
+<div class="codehilite"><pre class="insert-before">ObjString* copyString(const char* chars, int length);
 </pre><div class="source-file"><em>object.h</em><br>
 add after <em>copyString</em>()</div>
-<pre class="insert">
-<span class="t">ObjUpvalue</span>* <span class="i">newUpvalue</span>(<span class="t">Value</span>* <span class="i">slot</span>);
-</pre><pre class="insert-after">
-void printObject(Value value);
+<pre class="insert"><span class="t">ObjUpvalue</span>* <span class="i">newUpvalue</span>(<span class="t">Value</span>* <span class="i">slot</span>);
+</pre><pre class="insert-after">void printObject(Value value);
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after <em>copyString</em>()</div>
 <!--
@@ -1440,8 +1314,7 @@ the implementation:
 <p>它接受被关闭变量所在槽的地址。实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>copyString</em>()</div>
-<pre>
-<span class="t">ObjUpvalue</span>* <span class="i">newUpvalue</span>(<span class="t">Value</span>* <span class="i">slot</span>) {
+<pre><span class="t">ObjUpvalue</span>* <span class="i">newUpvalue</span>(<span class="t">Value</span>* <span class="i">slot</span>) {
   <span class="t">ObjUpvalue</span>* <span class="i">upvalue</span> = <span class="a">ALLOCATE_OBJ</span>(<span class="t">ObjUpvalue</span>, <span class="a">OBJ_UPVALUE</span>);
   <span class="i">upvalue</span>-&gt;<span class="i">location</span> = <span class="i">slot</span>;
   <span class="k">return</span> <span class="i">upvalue</span>;
@@ -1453,32 +1326,26 @@ We simply initialize the object and store the pointer. That requires a new
 object type.
 -->
 <p>我们只是初始化对象并存储指针。这需要一个新的对象类型。</p>
-<div class="codehilite"><pre class="insert-before">
-  OBJ_STRING,
+<div class="codehilite"><pre class="insert-before">  OBJ_STRING,
 </pre><div class="source-file"><em>object.h</em><br>
 in enum <em>ObjType</em></div>
-<pre class="insert">
-  <span class="a">OBJ_UPVALUE</span>
-</pre><pre class="insert-after">
-} ObjType;
+<pre class="insert">  <span class="a">OBJ_UPVALUE</span>
+</pre><pre class="insert-after">} ObjType;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in enum <em>ObjType</em></div>
 <!--
 And on the back side, a destructor-like function:
 -->
 <p>背面则是类似析构的函数：</p>
-<div class="codehilite"><pre class="insert-before">
-      FREE(ObjString, object);
+<div class="codehilite"><pre class="insert-before">      FREE(ObjString, object);
       break;
     }
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_UPVALUE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_UPVALUE</span>:
       <span class="a">FREE</span>(<span class="t">ObjUpvalue</span>, <span class="i">object</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -1490,18 +1357,15 @@ itself.
 And, finally, to print:
 -->
 <p>最后，是打印：</p>
-<div class="codehilite"><pre class="insert-before">
-    case OBJ_STRING:
+<div class="codehilite"><pre class="insert-before">    case OBJ_STRING:
       printf(&quot;%s&quot;, AS_CSTRING(value));
       break;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>printObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_UPVALUE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_UPVALUE</span>:
       <span class="i">printf</span>(<span class="s">&quot;upvalue&quot;</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>printObject</em>()</div>
 <!--
@@ -1514,20 +1378,17 @@ unhandled switch case, so here we are.
 <p>打印对最终用户没什么用。上值之所以是对象，只是为了利用虚拟机的内存管理。它们不是 Lox 用户能在程序里直接访问的一等值。所以这段代码其实永远不会执行……但它能让编译器别因为未处理的 switch 分支冲我们嚷嚷，于是就这样吧。</p><!--
 -- Upvalues in closures
 -->
-<h3><a href="#闭包中的上值" name="闭包中的上值"><small>25&#8202;.&#8202;3&#8202;.&#8202;1</small>闭包中的上值</a></h3><!--
+<h3><a href="#闭包中的上值" id="闭包中的上值"><small>25&#8202;.&#8202;3&#8202;.&#8202;1</small>闭包中的上值</a></h3><!--
 When I first introduced upvalues, I said each closure has an array of them.
 We've finally worked our way back to implementing that.
 -->
 <p>我最初介绍上值时说过，每个闭包都有一个上值数组。我们终于绕回来实现它了。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjFunction* function;
+<div class="codehilite"><pre class="insert-before">  ObjFunction* function;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>ObjClosure</em></div>
-<pre class="insert">
-  <span class="t">ObjUpvalue</span>** <span class="i">upvalues</span>;
+<pre class="insert">  <span class="t">ObjUpvalue</span>** <span class="i">upvalues</span>;
   <span class="t">int</span> <span class="i">upvalueCount</span>;
-</pre><pre class="insert-after">
-} ObjClosure;
+</pre><pre class="insert-after">} ObjClosure;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>ObjClosure</em></div>
 <!--
@@ -1550,19 +1411,16 @@ When we create an ObjClosure, we allocate an upvalue array of the proper size,
 which we determined at compile time and stored in the ObjFunction.
 -->
 <p>创建 ObjClosure 时，我们按合适大小分配上值数组——那大小在编译期就定好了，存在 ObjFunction 里。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjClosure* newClosure(ObjFunction* function) {
+<div class="codehilite"><pre class="insert-before">ObjClosure* newClosure(ObjFunction* function) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>newClosure</em>()</div>
-<pre class="insert">
-  <span class="t">ObjUpvalue</span>** <span class="i">upvalues</span> = <span class="a">ALLOCATE</span>(<span class="t">ObjUpvalue</span>*,
+<pre class="insert">  <span class="t">ObjUpvalue</span>** <span class="i">upvalues</span> = <span class="a">ALLOCATE</span>(<span class="t">ObjUpvalue</span>*,
                                    <span class="i">function</span>-&gt;<span class="i">upvalueCount</span>);
   <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">function</span>-&gt;<span class="i">upvalueCount</span>; <span class="i">i</span>++) {
     <span class="i">upvalues</span>[<span class="i">i</span>] = <span class="a">NULL</span>;
   }
 
-</pre><pre class="insert-after">
-  ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+</pre><pre class="insert-after">  ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>newClosure</em>()</div>
 <!--
@@ -1576,31 +1434,25 @@ Then we store the array in the new closure, as well as copy the count over from
 the ObjFunction.
 -->
 <p>然后我们把数组存进新闭包，并把计数从 ObjFunction 拷过来。</p>
-<div class="codehilite"><pre class="insert-before">
-  closure-&gt;function = function;
+<div class="codehilite"><pre class="insert-before">  closure-&gt;function = function;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>newClosure</em>()</div>
-<pre class="insert">
-  <span class="i">closure</span>-&gt;<span class="i">upvalues</span> = <span class="i">upvalues</span>;
+<pre class="insert">  <span class="i">closure</span>-&gt;<span class="i">upvalues</span> = <span class="i">upvalues</span>;
   <span class="i">closure</span>-&gt;<span class="i">upvalueCount</span> = <span class="i">function</span>-&gt;<span class="i">upvalueCount</span>;
-</pre><pre class="insert-after">
-  return closure;
+</pre><pre class="insert-after">  return closure;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>newClosure</em>()</div>
 <!--
 When we free an ObjClosure, we also free the upvalue array.
 -->
 <p>释放 ObjClosure 时，我们也释放上值数组。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OBJ_CLOSURE: {
+<div class="codehilite"><pre class="insert-before">    case OBJ_CLOSURE: {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-      <span class="t">ObjClosure</span>* <span class="i">closure</span> = (<span class="t">ObjClosure</span>*)<span class="i">object</span>;
+<pre class="insert">      <span class="t">ObjClosure</span>* <span class="i">closure</span> = (<span class="t">ObjClosure</span>*)<span class="i">object</span>;
       <span class="a">FREE_ARRAY</span>(<span class="t">ObjUpvalue</span>*, <span class="i">closure</span>-&gt;<span class="i">upvalues</span>,
                  <span class="i">closure</span>-&gt;<span class="i">upvalueCount</span>);
-</pre><pre class="insert-after">
-      FREE(ObjClosure, object);
+</pre><pre class="insert-after">      FREE(ObjClosure, object);
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -1613,12 +1465,10 @@ This is where we walk through all of the operands after `OP_CLOSURE` to see what
 kind of upvalue each slot captures.
 -->
 <p>我们在解释器创建闭包时填充上值数组。这里我们遍历 <code>OP_CLOSURE</code> 后面的全部操作数，看每个槽捕获的是哪种上值。</p>
-<div class="codehilite"><pre class="insert-before">
-        push(OBJ_VAL(closure));
+<div class="codehilite"><pre class="insert-before">        push(OBJ_VAL(closure));
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-        <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">closure</span>-&gt;<span class="i">upvalueCount</span>; <span class="i">i</span>++) {
+<pre class="insert">        <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">closure</span>-&gt;<span class="i">upvalueCount</span>; <span class="i">i</span>++) {
           <span class="t">uint8_t</span> <span class="i">isLocal</span> = <span class="a">READ_BYTE</span>();
           <span class="t">uint8_t</span> <span class="i">index</span> = <span class="a">READ_BYTE</span>();
           <span class="k">if</span> (<span class="i">isLocal</span>) {
@@ -1628,8 +1478,7 @@ in <em>run</em>()</div>
             <span class="i">closure</span>-&gt;<span class="i">upvalues</span>[<span class="i">i</span>] = <span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">upvalues</span>[<span class="i">index</span>];
           }
         }
-</pre><pre class="insert-after">
-        break;
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1658,8 +1507,7 @@ here:
 <p>关闭局部变量更有意思。大部分工作在另一个函数里发生，但我们先算好要传给它的参数。我们需要拿到被捕获局部变量在外围函数栈窗口中那个槽的指针。那窗口从 <code>frame-&gt;slots</code> 开始，指向零号槽。加上 <code>index</code> 就偏移到我们想捕获的局部槽。我们把那指针传到这里：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>callValue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">ObjUpvalue</span>* <span class="i">captureUpvalue</span>(<span class="t">Value</span>* <span class="i">local</span>) {
+<pre><span class="k">static</span> <span class="t">ObjUpvalue</span>* <span class="i">captureUpvalue</span>(<span class="t">Value</span>* <span class="i">local</span>) {
   <span class="t">ObjUpvalue</span>* <span class="i">createdUpvalue</span> = <span class="i">newUpvalue</span>(<span class="i">local</span>);
   <span class="k">return</span> <span class="i">createdUpvalue</span>;
 }
@@ -1682,18 +1530,15 @@ With that in hand, we can implement the instructions that work with those
 upvalues.
 -->
 <p>有了这些，我们就能实现与那些上值打交道的指令。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_GET_UPVALUE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_GET_UPVALUE</span>: {
         <span class="t">uint8_t</span> <span class="i">slot</span> = <span class="a">READ_BYTE</span>();
         <span class="i">push</span>(*<span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">upvalues</span>[<span class="i">slot</span>]-&gt;<span class="i">location</span>);
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_EQUAL: {
+</pre><pre class="insert-after">      case OP_EQUAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1702,18 +1547,15 @@ look up the corresponding upvalue and dereference its location pointer to read
 the value in that slot. Setting a variable is similar.
 -->
 <p>操作数是当前函数上值数组中的下标。于是我们只需查找对应上值，解引用其 location 指针，读出那个槽里的值。设置变量与此类似。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_SET_UPVALUE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_SET_UPVALUE</span>: {
         <span class="t">uint8_t</span> <span class="i">slot</span> = <span class="a">READ_BYTE</span>();
         *<span class="i">frame</span>-&gt;<span class="i">closure</span>-&gt;<span class="i">upvalues</span>[<span class="i">slot</span>]-&gt;<span class="i">location</span> = <span class="i">peek</span>(<span class="n">0</span>);
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_EQUAL: {
+</pre><pre class="insert-after">      case OP_EQUAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1737,8 +1579,7 @@ This is a milestone. As long as all of the variables remain on the stack, we
 have working closures. Try this:
 -->
 <p>这是一个里程碑。只要所有变量仍留在栈上，我们就有能工作的闭包。试试这个：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;outside&quot;</span>;
   <span class="k">fun</span> <span class="i">inner</span>() {
     <span class="k">print</span> <span class="i">x</span>;
@@ -1752,14 +1593,13 @@ Run this, and it correctly prints "outside".
 <p>跑起来，它正确地打印 <code>"outside"</code>。</p><!--
 -- Closed Upvalues
 -->
-<h2><a href="#已关闭的上值" name="已关闭的上值"><small>25&#8202;.&#8202;4</small>已关闭的上值</a></h2><!--
+<h2><a href="#已关闭的上值" id="已关闭的上值"><small>25&#8202;.&#8202;4</small>已关闭的上值</a></h2><!--
 Of course, a key feature of closures is that they hold on to the variable as
 long as needed, even after the function that declares the variable has returned.
 Here's another example that *should* work:
 -->
 <p>当然，闭包的一个关键特性是：它们按需抓住变量不放，即便声明该变量的函数已经返回。这儿是另一个<em>应当</em>能工作的例子：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">outer</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">outer</span>() {
   <span class="k">var</span> <span class="i">x</span> = <span class="s">&quot;outside&quot;</span>;
   <span class="k">fun</span> <span class="i">inner</span>() {
     <span class="k">print</span> <span class="i">x</span>;
@@ -1781,7 +1621,7 @@ the chapter does that.
 <p>但若你现在就跑……谁知道它会干什么？运行时，它最终会从一个已经不再装着被关闭变量的栈槽里读。如我提过几次的，问题的症结在于：闭包里的变量没有栈语义。这意味着，声明它们的函数返回时，我们得把它们从栈上抬走。本章最后这一节就干这事。</p><!--
 -- Values and variables
 -->
-<h3><a href="#值与变量" name="值与变量"><small>25&#8202;.&#8202;4&#8202;.&#8202;1</small>值与变量</a></h3><!--
+<h3><a href="#值与变量" id="值与变量"><small>25&#8202;.&#8202;4&#8202;.&#8202;1</small>值与变量</a></h3><!--
 Before we get to writing code, I want to dig into an important semantic point.
 Does a closure close over a *value* or a *variable?* This isn't purely an <span
 name="academic">academic</span> question. I'm not just splitting hairs.
@@ -1793,8 +1633,7 @@ If Lox didn't allow assignment, it *would* be an academic question.
 -->
 <p>若 Lox 不允许赋值，那<em>就会</em>是个学究问题。</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">globalSet</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">globalSet</span>;
 <span class="k">var</span> <span class="i">globalGet</span>;
 
 <span class="k">fun</span> <span class="i">main</span>() {
@@ -1848,7 +1687,7 @@ closures see the change.
 <p>到底是哪一种？对 Lox 以及我知道的大多数带闭包的语言，答案是后者。闭包捕获变量。你可以想成它们捕获的是<em>值所住的那个地方</em>。处理已不在栈上的被关闭变量时，这一点要记牢。变量移到堆上时，我们需要确保所有捕获该变量的闭包都保留对其<em>唯一</em>新位置的引用。这样，变量被修改时，所有闭包都能看见变化。</p><!--
 -- Closing upvalues
 -->
-<h3><a href="#关闭上值" name="关闭上值"><small>25&#8202;.&#8202;4&#8202;.&#8202;2</small>关闭上值</a></h3><!--
+<h3><a href="#关闭上值" id="关闭上值"><small>25&#8202;.&#8202;4&#8202;.&#8202;2</small>关闭上值</a></h3><!--
 We know that local variables always start out on the stack. This is faster, and
 lets our single-pass compiler emit code before it discovers the variable has
 been captured. We also know that closed-over variables need to move to the heap
@@ -1923,14 +1762,11 @@ tracking inside the existing Local struct so that we can tell if a given local
 is captured by a closure.
 -->
 <p>换句话说，编译器维护着从上值到它们所捕获的局部变量的指针，却没有反向的。所以我们首先要在现有的 Local 结构里加些额外追踪，好判断某个给定局部是否被闭包捕获。</p>
-<div class="codehilite"><pre class="insert-before">
-  int depth;
+<div class="codehilite"><pre class="insert-before">  int depth;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in struct <em>Local</em></div>
-<pre class="insert">
-  <span class="t">bool</span> <span class="i">isCaptured</span>;
-</pre><pre class="insert-after">
-} Local;
+<pre class="insert">  <span class="t">bool</span> <span class="i">isCaptured</span>;
+</pre><pre class="insert-after">} Local;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Local</em></div>
 <!--
@@ -1938,14 +1774,11 @@ This field is `true` if the local is captured by any later nested function
 declaration. Initially, all locals are not captured.
 -->
 <p>若该局部被任何后续嵌套函数声明捕获，这字段为 <code>true</code>。起初，所有局部都未被捕获。</p>
-<div class="codehilite"><pre class="insert-before">
-  local-&gt;depth = -1;
+<div class="codehilite"><pre class="insert-before">  local-&gt;depth = -1;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>addLocal</em>()</div>
-<pre class="insert">
-  <span class="i">local</span>-&gt;<span class="i">isCaptured</span> = <span class="k">false</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">local</span>-&gt;<span class="i">isCaptured</span> = <span class="k">false</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>addLocal</em>()</div>
 <!--
@@ -1959,14 +1792,11 @@ variable. Just building some anticipation here.
 -->
 <p>本书后面，用户<em>将</em>能够捕获这个变量。这儿先埋点期待。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  local-&gt;depth = 0;
+<div class="codehilite"><pre class="insert-before">  local-&gt;depth = 0;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>initCompiler</em>()</div>
-<pre class="insert">
-  <span class="i">local</span>-&gt;<span class="i">isCaptured</span> = <span class="k">false</span>;
-</pre><pre class="insert-after">
-  local-&gt;name.start = &quot;&quot;;
+<pre class="insert">  <span class="i">local</span>-&gt;<span class="i">isCaptured</span> = <span class="k">false</span>;
+</pre><pre class="insert-after">  local-&gt;name.start = &quot;&quot;;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>initCompiler</em>()</div>
 <!--
@@ -1974,14 +1804,11 @@ When resolving an identifier, if we end up creating an upvalue for a local
 variable, we mark it as captured.
 -->
 <p>解析标识符时，若最终为某个局部变量创建了上值，就把它标为已捕获。</p>
-<div class="codehilite"><pre class="insert-before">
-  if (local != -1) {
+<div class="codehilite"><pre class="insert-before">  if (local != -1) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>resolveUpvalue</em>()</div>
-<pre class="insert">
-    <span class="i">compiler</span>-&gt;<span class="i">enclosing</span>-&gt;<span class="i">locals</span>[<span class="i">local</span>].<span class="i">isCaptured</span> = <span class="k">true</span>;
-</pre><pre class="insert-after">
-    return addUpvalue(compiler, (uint8_t)local, true);
+<pre class="insert">    <span class="i">compiler</span>-&gt;<span class="i">enclosing</span>-&gt;<span class="i">locals</span>[<span class="i">local</span>].<span class="i">isCaptured</span> = <span class="k">true</span>;
+</pre><pre class="insert-after">    return addUpvalue(compiler, (uint8_t)local, true);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>resolveUpvalue</em>()</div>
 <!--
@@ -1990,21 +1817,18 @@ slots for the locals, we can tell which ones need to get hoisted onto the heap.
 We'll use a new instruction for that.
 -->
 <p>现在，在块作用域末尾、编译器发出代码释放局部变量的栈槽时，我们能分辨哪些需要抬到堆上。我们用一条新指令干这事。</p>
-<div class="codehilite"><pre class="insert-before">
-  while (current-&gt;localCount &gt; 0 &amp;&amp;
+<div class="codehilite"><pre class="insert-before">  while (current-&gt;localCount &gt; 0 &amp;&amp;
          current-&gt;locals[current-&gt;localCount - 1].depth &gt;
             current-&gt;scopeDepth) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endScope</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">locals</span>[<span class="i">current</span>-&gt;<span class="i">localCount</span> - <span class="n">1</span>].<span class="i">isCaptured</span>) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">locals</span>[<span class="i">current</span>-&gt;<span class="i">localCount</span> - <span class="n">1</span>].<span class="i">isCaptured</span>) {
       <span class="i">emitByte</span>(<span class="a">OP_CLOSE_UPVALUE</span>);
     } <span class="k">else</span> {
       <span class="i">emitByte</span>(<span class="a">OP_POP</span>);
     }
-</pre><pre class="insert-after">
-    current-&gt;localCount--;
+</pre><pre class="insert-after">    current-&gt;localCount--;
   }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endScope</em>(), replace 1 line</div>
@@ -2014,29 +1838,23 @@ right on top of the stack at the point that this instruction executes. We
 declare the instruction.
 -->
 <p>这条指令不需要操作数。我们知道执行该指令时，变量总在栈顶。我们声明这条指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_CLOSURE,
+<div class="codehilite"><pre class="insert-before">  OP_CLOSURE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_CLOSE_UPVALUE</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_CLOSE_UPVALUE</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 And add trivial disassembler support for it:
 -->
 <p>并给它加上琐碎的反汇编支持：</p>
-<div class="codehilite"><pre class="insert-before">
-    }
+<div class="codehilite"><pre class="insert-before">    }
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_CLOSE_UPVALUE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_CLOSE_UPVALUE</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_CLOSE_UPVALUE&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -2050,7 +1868,7 @@ entirely on the stack just as they did before.
 <p>好极了。现在生成的字节码精确地告诉运行时，每个被捕获的局部变量何时必须移到堆上。更好的是，它只对<em>确实</em>被闭包使用、需要这特殊待遇的局部这么做。这符合我们总的性能目标：用户只为用到的功能付账。不被闭包使用的变量，仍完全在栈上生灭，一如既往。</p><!--
 -- Tracking open upvalues
 -->
-<h3><a href="#追踪开放的上值" name="追踪开放的上值"><small>25&#8202;.&#8202;4&#8202;.&#8202;3</small>追踪开放的上值</a></h3><!--
+<h3><a href="#追踪开放的上值" id="追踪开放的上值"><small>25&#8202;.&#8202;4&#8202;.&#8202;3</small>追踪开放的上值</a></h3><!--
 Let's move over to the runtime side. Before we can interpret `OP_CLOSE_UPVALUE`
 instructions, we have an issue to resolve. Earlier, when I talked about whether
 closures capture variables or values, I said it was important that if multiple
@@ -2114,14 +1932,11 @@ the ObjUpvalue struct ourselves, the easiest implementation is an intrusive list
 that puts the next pointer right inside the ObjUpvalue struct itself.
 -->
 <p>维护有序列表需要高效地在中间插入元素。这暗示用链表而不是动态数组。既然 ObjUpvalue 结构是我们自己定义的，最容易的实现是侵入式链表，把 next 指针直接放进 ObjUpvalue 结构体本身。</p>
-<div class="codehilite"><pre class="insert-before">
-  Value* location;
+<div class="codehilite"><pre class="insert-before">  Value* location;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>ObjUpvalue</em></div>
-<pre class="insert">
-  <span class="k">struct</span> <span class="t">ObjUpvalue</span>* <span class="i">next</span>;
-</pre><pre class="insert-after">
-} ObjUpvalue;
+<pre class="insert">  <span class="k">struct</span> <span class="t">ObjUpvalue</span>* <span class="i">next</span>;
+</pre><pre class="insert-after">} ObjUpvalue;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>ObjUpvalue</em></div>
 <!--
@@ -2129,42 +1944,33 @@ When we allocate an upvalue, it is not attached to any list yet so the link is
 `NULL`.
 -->
 <p>分配上值时，它尚未挂到任何列表上，所以链接是 <code>NULL</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-  upvalue-&gt;location = slot;
+<div class="codehilite"><pre class="insert-before">  upvalue-&gt;location = slot;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>newUpvalue</em>()</div>
-<pre class="insert">
-  <span class="i">upvalue</span>-&gt;<span class="i">next</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-  return upvalue;
+<pre class="insert">  <span class="i">upvalue</span>-&gt;<span class="i">next</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">  return upvalue;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>newUpvalue</em>()</div>
 <!--
 The VM owns the list, so the head pointer goes right inside the main VM struct.
 -->
 <p>列表归虚拟机所有，所以头指针就放在主 VM 结构体里。</p>
-<div class="codehilite"><pre class="insert-before">
-  Table strings;
+<div class="codehilite"><pre class="insert-before">  Table strings;
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em></div>
-<pre class="insert">
-  <span class="t">ObjUpvalue</span>* <span class="i">openUpvalues</span>;
-</pre><pre class="insert-after">
-  Obj* objects;
+<pre class="insert">  <span class="t">ObjUpvalue</span>* <span class="i">openUpvalues</span>;
+</pre><pre class="insert-after">  Obj* objects;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 <!--
 The list starts out empty.
 -->
 <p>列表起初为空。</p>
-<div class="codehilite"><pre class="insert-before">
-  vm.frameCount = 0;
+<div class="codehilite"><pre class="insert-before">  vm.frameCount = 0;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>resetStack</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">openUpvalues</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">vm</span>.<span class="i">openUpvalues</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>resetStack</em>()</div>
 <!--
@@ -2173,8 +1979,7 @@ to the next open upvalue that references a local variable farther down the
 stack. This script, for example,
 -->
 <p>从虚拟机指向的第一个上值开始，每个开放上值指向下一个引用更靠下栈上局部变量的开放上值。例如这个脚本，</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span> = <span class="n">1</span>;
   <span class="k">fun</span> <span class="i">f</span>() {
     <span class="k">print</span> <span class="i">a</span>;
@@ -2196,12 +2001,10 @@ Whenever we close over a local variable, before creating a new upvalue, we look
 for an existing one in the list.
 -->
 <p>每当关闭一个局部变量时，在创建新上值之前，我们先在列表里找有没有已有的。</p>
-<div class="codehilite"><pre class="insert-before">
-static ObjUpvalue* captureUpvalue(Value* local) {
+<div class="codehilite"><pre class="insert-before">static ObjUpvalue* captureUpvalue(Value* local) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>captureUpvalue</em>()</div>
-<pre class="insert">
-  <span class="t">ObjUpvalue</span>* <span class="i">prevUpvalue</span> = <span class="a">NULL</span>;
+<pre class="insert">  <span class="t">ObjUpvalue</span>* <span class="i">prevUpvalue</span> = <span class="a">NULL</span>;
   <span class="t">ObjUpvalue</span>* <span class="i">upvalue</span> = <span class="i">vm</span>.<span class="i">openUpvalues</span>;
   <span class="k">while</span> (<span class="i">upvalue</span> != <span class="a">NULL</span> &amp;&amp; <span class="i">upvalue</span>-&gt;<span class="i">location</span> &gt; <span class="i">local</span>) {
     <span class="i">prevUpvalue</span> = <span class="i">upvalue</span>;
@@ -2212,8 +2015,7 @@ in <em>captureUpvalue</em>()</div>
     <span class="k">return</span> <span class="i">upvalue</span>;
   }
 
-</pre><pre class="insert-after">
-  ObjUpvalue* createdUpvalue = newUpvalue(local);
+</pre><pre class="insert-after">  ObjUpvalue* createdUpvalue = newUpvalue(local);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>captureUpvalue</em>()</div>
 <!--
@@ -2261,12 +2063,10 @@ In the first case, we're done and we've returned. Otherwise, we create a new
 upvalue for our local slot and insert it into the list at the right location.
 -->
 <p>第一种情形下，我们做完并已返回。否则，为我们的局部槽创建一个新上值，并在正确位置插入列表。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjUpvalue* createdUpvalue = newUpvalue(local);
+<div class="codehilite"><pre class="insert-before">  ObjUpvalue* createdUpvalue = newUpvalue(local);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>captureUpvalue</em>()</div>
-<pre class="insert">
-  <span class="i">createdUpvalue</span>-&gt;<span class="i">next</span> = <span class="i">upvalue</span>;
+<pre class="insert">  <span class="i">createdUpvalue</span>-&gt;<span class="i">next</span> = <span class="i">upvalue</span>;
 
   <span class="k">if</span> (<span class="i">prevUpvalue</span> == <span class="a">NULL</span>) {
     <span class="i">vm</span>.<span class="i">openUpvalues</span> = <span class="i">createdUpvalue</span>;
@@ -2274,8 +2074,7 @@ in <em>captureUpvalue</em>()</div>
     <span class="i">prevUpvalue</span>-&gt;<span class="i">next</span> = <span class="i">createdUpvalue</span>;
   }
 
-</pre><pre class="insert-after">
-  return createdUpvalue;
+</pre><pre class="insert-after">  return createdUpvalue;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>captureUpvalue</em>()</div>
 <!--
@@ -2312,23 +2111,20 @@ stack now.
 <p>有了这个更新后的函数，虚拟机现在确保任意给定局部槽永远只有一个 ObjUpvalue。若两个闭包捕获同一变量，它们会得到同一个上值。我们准备好把那些上值移出栈了。</p><!--
 -- Closing upvalues at runtime
 -->
-<h3><a href="#在运行时关闭上值" name="在运行时关闭上值"><small>25&#8202;.&#8202;4&#8202;.&#8202;4</small>在运行时关闭上值</a></h3><!--
+<h3><a href="#在运行时关闭上值" id="在运行时关闭上值"><small>25&#8202;.&#8202;4&#8202;.&#8202;4</small>在运行时关闭上值</a></h3><!--
 The compiler helpfully emits an `OP_CLOSE_UPVALUE` instruction to tell the VM
 exactly when a local variable should be hoisted onto the heap. Executing that
 instruction is the interpreter's responsibility.
 -->
 <p>编译器体贴地发出 <code>OP_CLOSE_UPVALUE</code> 指令，精确告诉虚拟机何时该把局部变量抬到堆上。执行那条指令是解释器的责任。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_CLOSE_UPVALUE</span>:
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_CLOSE_UPVALUE</span>:
         <span class="i">closeUpvalues</span>(<span class="i">vm</span>.<span class="i">stackTop</span> - <span class="n">1</span>);
         <span class="i">pop</span>();
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -2344,8 +2140,7 @@ The fun stuff happens here:
 <p>好玩的部分在这里：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>captureUpvalue</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">closeUpvalues</span>(<span class="t">Value</span>* <span class="i">last</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">closeUpvalues</span>(<span class="t">Value</span>* <span class="i">last</span>) {
   <span class="k">while</span> (<span class="i">vm</span>.<span class="i">openUpvalues</span> != <span class="a">NULL</span> &amp;&amp;
          <span class="i">vm</span>.<span class="i">openUpvalues</span>-&gt;<span class="i">location</span> &gt;= <span class="i">last</span>) {
     <span class="t">ObjUpvalue</span>* <span class="i">upvalue</span> = <span class="i">vm</span>.<span class="i">openUpvalues</span>;
@@ -2393,14 +2188,11 @@ interpreted at all. That keeps them simple, which in turn keeps them fast. We do
 need to add the new field to ObjUpvalue, though.
 -->
 <p>我们完全不必改 <code>OP_GET_UPVALUE</code> 和 <code>OP_SET_UPVALUE</code> 的解释方式。这让它们保持简单，进而保持快速。不过我们确实需要给 ObjUpvalue 加上新字段。</p>
-<div class="codehilite"><pre class="insert-before">
-  Value* location;
+<div class="codehilite"><pre class="insert-before">  Value* location;
 </pre><div class="source-file"><em>object.h</em><br>
 in struct <em>ObjUpvalue</em></div>
-<pre class="insert">
-  <span class="t">Value</span> <span class="i">closed</span>;
-</pre><pre class="insert-after">
-  struct ObjUpvalue* next;
+<pre class="insert">  <span class="t">Value</span> <span class="i">closed</span>;
+</pre><pre class="insert-after">  struct ObjUpvalue* next;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>ObjUpvalue</em></div>
 <!--
@@ -2408,14 +2200,11 @@ And we should zero it out when we create an ObjUpvalue so there's no
 uninitialized memory floating around.
 -->
 <p>创建 ObjUpvalue 时应把它清零，好让未初始化的内存别到处飘。</p>
-<div class="codehilite"><pre class="insert-before">
-  ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+<div class="codehilite"><pre class="insert-before">  ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>newUpvalue</em>()</div>
-<pre class="insert">
-  <span class="i">upvalue</span>-&gt;<span class="i">closed</span> = <span class="a">NIL_VAL</span>;
-</pre><pre class="insert-after">
-  upvalue-&gt;location = slot;
+<pre class="insert">  <span class="i">upvalue</span>-&gt;<span class="i">closed</span> = <span class="a">NIL_VAL</span>;
+</pre><pre class="insert-after">  upvalue-&gt;location = slot;
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>newUpvalue</em>()</div>
 <!--
@@ -2440,14 +2229,11 @@ function returns, we call that same helper and pass in the first stack slot
 owned by the function.
 -->
 <p>这就是 <code>closeUpvalues()</code> 接受栈槽指针的原因。函数返回时，我们调用同一个辅助函数，传入该函数拥有的第一个栈槽。</p>
-<div class="codehilite"><pre class="insert-before">
-        Value result = pop();
+<div class="codehilite"><pre class="insert-before">        Value result = pop();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-        <span class="i">closeUpvalues</span>(<span class="i">frame</span>-&gt;<span class="i">slots</span>);
-</pre><pre class="insert-after">
-        vm.frameCount--;
+<pre class="insert">        <span class="i">closeUpvalues</span>(<span class="i">frame</span>-&gt;<span class="i">slots</span>);
+</pre><pre class="insert-after">        vm.frameCount--;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -2496,7 +2282,7 @@ memory so that we can free some of those objects when they're no longer needed.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>25&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>25&#8202;.&#8202;5</small>挑战</a></h2><!--
 1.  Wrapping every ObjFunction in an ObjClosure introduces a level of
     indirection that has a performance cost. That cost isn't necessary for
     functions that do not close over any variables, but it does let the runtime
@@ -2558,15 +2344,14 @@ memory so that we can free some of those objects when they're no longer needed.
 <div class="design-note"><!--
 -- Design Note: Closing Over the Loop Variable
 -->
-<h2><a href="#设计笔记：关闭循环变量" name="设计笔记：关闭循环变量"><small>25&#8202;.&#8202;6</small>设计笔记：关闭循环变量</a></h2><!--
+<h2><a href="#设计笔记：关闭循环变量" id="设计笔记：关闭循环变量"><small>25&#8202;.&#8202;6</small>设计笔记：关闭循环变量</a></h2><!--
 Closures capture variables. When two closures capture the same variable, they
 share a reference to the same underlying storage location. This fact is visible
 when new values are assigned to the variable. Obviously, if two closures capture
 *different* variables, there is no sharing.
 -->
 <p>闭包捕获变量。当两个闭包捕获同一变量时，它们共享对同一底层存储位置的引用。给变量赋新值时，这一事实就看得见。显然，若两个闭包捕获的是<em>不同</em>变量，就没有共享。</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">globalOne</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">globalOne</span>;
 <span class="k">var</span> <span class="i">globalTwo</span>;
 
 <span class="k">fun</span> <span class="i">main</span>() {
@@ -2595,8 +2380,7 @@ This prints "one" then "two". In this example, it's pretty clear that the two
 `a` variables are different. But it's not always so obvious. Consider:
 -->
 <p>这会打印 <code>"one"</code> 然后 <code>"two"</code>。在这个例子里，两个 <code>a</code> 变量显然不同。但并不总是这么显而易见。想想：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">globalOne</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">globalOne</span>;
 <span class="k">var</span> <span class="i">globalTwo</span>;
 
 <span class="k">fun</span> <span class="i">main</span>() {
@@ -2631,8 +2415,7 @@ The script here is strange and contrived, but this does show up in real code
 in languages that aren't as minimal as clox. Here's a JavaScript example:
 -->
 <p>这儿的脚本古怪而刻意，但在不像 clox 那么极简的语言里，这确实会出现在真实代码中。这儿是一个 JavaScript 例子：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">closures</span> = [];
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">closures</span> = [];
 <span class="k">for</span> (<span class="k">var</span> <span class="i">i</span> = <span class="n">1</span>; <span class="i">i</span> &lt;= <span class="n">2</span>; <span class="i">i</span>++) {
   <span class="i">closures</span>.<span class="i">push</span>(<span class="k">function</span> () { <span class="i">console</span>.<span class="i">log</span>(<span class="i">i</span>); });
 }
@@ -2659,8 +2442,7 @@ using `var` are implicitly *hoisted* to the surrounding function or top-level
 scope. It's as if you really wrote this:
 -->
 <p>若你熟悉 JavaScript，大概知道用 <code>var</code> 声明的变量会隐式<em>提升</em>到外围函数或顶层作用域。就好像你其实写的是：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">closures</span> = [];
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">closures</span> = [];
 <span class="k">var</span> <span class="i">i</span>;
 <span class="k">for</span> (<span class="i">i</span> = <span class="n">1</span>; <span class="i">i</span> &lt;= <span class="n">2</span>; <span class="i">i</span>++) {
   <span class="i">closures</span>.<span class="i">push</span>(<span class="k">function</span> () { <span class="i">console</span>.<span class="i">log</span>(<span class="i">i</span>); });
@@ -2673,8 +2455,7 @@ At that point, it's clearer that there is only a single `i`. Now consider if
 you change the program to use the newer `let` keyword:
 -->
 <p>到这一步，更清楚只有一个 <code>i</code> 了。现在想想，若把程序改成用较新的 <code>let</code> 关键字：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">closures</span> = [];
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">closures</span> = [];
 <span class="k">for</span> (<span class="k">let</span> <span class="i">i</span> = <span class="n">1</span>; <span class="i">i</span> &lt;= <span class="n">2</span>; <span class="i">i</span>++) {
   <span class="i">closures</span>.<span class="i">push</span>(<span class="k">function</span> () { <span class="i">console</span>.<span class="i">log</span>(<span class="i">i</span>); });
 }
@@ -2691,8 +2472,7 @@ and mutating an existing variable, not creating a new one.
 Let's try some other languages. Here's Python:
 -->
 <p>再试试别的语言。这儿是 Python：</p>
-<div class="codehilite"><pre>
-<span class="i">closures</span> = []
+<div class="codehilite"><pre><span class="i">closures</span> = []
 <span class="k">for</span> <span class="i">i</span> <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, <span class="n">3</span>):
   <span class="i">closures</span>.<span class="i">append</span>(<span class="k">lambda</span>: <span class="k">print</span>(<span class="i">i</span>))
 
@@ -2710,8 +2490,7 @@ What about Ruby? Ruby has two typical ways to iterate numerically. Here's the
 classic imperative style:
 -->
 <p>那 Ruby 呢？Ruby 有两种典型的数值迭代方式。这儿是经典的命令式风格：</p>
-<div class="codehilite"><pre>
-<span class="i">closures</span> = []
+<div class="codehilite"><pre><span class="i">closures</span> = []
 <span class="k">for</span> <span class="i">i</span> <span class="k">in</span> <span class="n">1</span>..<span class="n">2</span> <span class="k">do</span>
   <span class="i">closures</span> &lt;&lt; <span class="k">lambda</span> { <span class="i">puts</span> <span class="i">i</span> }
 <span class="k">end</span>
@@ -2723,8 +2502,7 @@ This, like Python, prints "2" twice. But the more idiomatic Ruby style is using
 a higher-order `each()` method on range objects:
 -->
 <p>这和 Python 一样，打印两次 <code>"2"</code>。但更地道的 Ruby 风格是在 range 对象上用高阶的 <code>each()</code> 方法：</p>
-<div class="codehilite"><pre>
-<span class="i">closures</span> = []
+<div class="codehilite"><pre><span class="i">closures</span> = []
 (<span class="n">1</span>..<span class="n">2</span>).<span class="i">each</span> <span class="k">do</span> |<span class="i">i</span>|
   <span class="i">closures</span> &lt;&lt; <span class="k">lambda</span> { <span class="i">puts</span> <span class="i">i</span> }
 <span class="k">end</span>
@@ -2779,7 +2557,7 @@ think about it, though.
 <a href="garbage-collection.html" class="next">
   Next Chapter: &ldquo;Garbage Collection&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

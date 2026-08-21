@@ -14,10 +14,13 @@ you!
 
 | 章节 | 进度 |
 | :--- | :--- |
+| Dedication | ✔️ |
+| Acknowledgements | ✔️ |
 | Part I. Welcome | ✔️ |
 | 1. Introduction | ✔️ |
 | 2. A Map of the Territory | ✔️ |
 | 3. The Lox Language | ✔️ |
+| Part II. A Tree-Walk Interpreter | ✔️ |
 | 4. Scanning | ✔️ |
 | 5. Representing Code | ✔️ |
 | 6. Parsing Expressions | ✔️ |
@@ -28,6 +31,7 @@ you!
 | 11. Resolving and Binding | ✔️ |
 | 12. Classes | ✔️ |
 | 13. Inheritance | ✔️ |
+| Part III. A Bytecode Virtual Machine | ✔️ |
 | 14. Chunks of Bytecode | ✔️ |
 | 15. A Virtual Machine | ✔️ |
 | 16. Scanning on Demand | ✔️ |
@@ -36,10 +40,21 @@ you!
 | 19. Strings | ✔️ |
 | 20. Hash Tables | ✔️ |
 | 21. Global Variables | ✔️ |
-| 22. Local Variables | ... |
-| ... | ... |
+| 22. Local Variables | ✔️ |
+| 23. Jumping Back and Forth | ✔️ |
+| 24. Calls and Functions | ✔️ |
+| 25. Closures | ✔️ |
+| 26. Garbage Collection | ✔️ |
+| 27. Classes and Instances | ✔️ |
+| 28. Methods and Initializers | ✔️ |
+| 29. Superclasses | ✔️ |
+| 30. Optimization | ✔️ |
+| Backmatter | ✔️ |
+| A1. Appendix I | ✔️ |
+| A2. Appendix II | ✔️ |
+| Contents / 导航页眉等站点壳子 | … |
 
-> 表：翻译进度表
+> 表：翻译进度表（已对齐 munificent 定稿：去掉 WIP 横幅、补献辞/致谢与勘误；目录页英文标题等 UI 壳子仍待中文化）
 
 # 翻译术语表
 

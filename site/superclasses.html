@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Superclasses<small>29</small></a></h3>
 
 <ul>
@@ -54,7 +53,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="methods-and-initializers.html" title="Methods and Initializers" class="prev">←</a>
 <a href="optimization.html" title="Optimization" class="next">→</a>
 </nav>
@@ -62,9 +61,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Superclasses<small>29</small></a></h3>
 
 <ul>
@@ -90,25 +88,7 @@
   <div class="number">29</div>
   <h1>Superclasses</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#超类" name="超类"><small>29&#8202;.&#8202;0</small>超类</a></h1><!--
+<h1><a href="#超类" id="超类"><small>29&#8202;.&#8202;0</small>超类</a></h1><!--
 > You can choose your friends but you sho' can't choose your family, an' they're
 > still kin to you no matter whether you acknowledge &rsquo;em or not, and it
 > makes you look right silly when you don't.
@@ -143,13 +123,12 @@ much faster, way of handling inherited method calls this time around.
 <p>本章有些材料会让你想起 jlox。我们解析 super 调用的方式大体相同，只不过透过 clox 在栈上存状态的更复杂机制来看。但这一次，处理继承方法调用的方式完全不同——也快得多。</p><!--
 -- Inheriting Methods
 -->
-<h2><a href="#继承方法" name="继承方法"><small>29&#8202;.&#8202;1</small>继承方法</a></h2><!--
+<h2><a href="#继承方法" id="继承方法"><small>29&#8202;.&#8202;1</small>继承方法</a></h2><!--
 We'll kick things off with method inheritance since it's the simpler piece. To
 refresh your memory, Lox inheritance syntax looks like this:
 -->
 <p>我们从方法继承开场，因为它更简单。温习一下，Lox 的继承语法长这样：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Doughnut</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Doughnut</span> {
   <span class="i">cook</span>() {
     <span class="k">print</span> <span class="s">&quot;Dunk in the fryer.&quot;</span>;
   }
@@ -166,21 +145,18 @@ inherit the `cook()` method. I don't know why I'm belaboring this. You know how
 inheritance works. Let's start compiling the new syntax.
 -->
 <p>这里，Cruller 类继承自 Doughnut，于是 Cruller 的实例也继承 <code>cook()</code> 方法。我也不知道为什么要啰嗦这些。你知道继承怎么工作。咱们开始编译新语法吧。</p>
-<div class="codehilite"><pre class="insert-before">
-  currentClass = &amp;classCompiler;
+<div class="codehilite"><pre class="insert-before">  currentClass = &amp;classCompiler;
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LESS</span>)) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LESS</span>)) {
     <span class="i">consume</span>(<span class="a">TOKEN_IDENTIFIER</span>, <span class="s">&quot;Expect superclass name.&quot;</span>);
     <span class="i">variable</span>(<span class="k">false</span>);
     <span class="i">namedVariable</span>(<span class="i">className</span>, <span class="k">false</span>);
     <span class="i">emitByte</span>(<span class="a">OP_INHERIT</span>);
   }
 
-</pre><pre class="insert-after">
-  namedVariable(className, false);
+</pre><pre class="insert-after">  namedVariable(className, false);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -202,8 +178,7 @@ existing class and applies the effect of inheritance to it.
 In the previous example, when the compiler works through this bit of syntax:
 -->
 <p>在先前的例子里，编译器处理到这段语法时：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Cruller</span> &lt; <span class="t">Doughnut</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Cruller</span> &lt; <span class="t">Doughnut</span> {
 </pre></div><!--
 The result is this bytecode:
 -->
@@ -212,8 +187,7 @@ Before we implement the new `OP_INHERIT` instruction, we have an edge case to
 detect.
 -->
 <p>在实现新的 <code>OP_INHERIT</code> 指令之前，还有一个边界情况要检测。</p>
-<div class="codehilite"><pre class="insert-before">
-    variable(false);
+<div class="codehilite"><pre class="insert-before">    variable(false);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
 <pre class="insert">
@@ -222,8 +196,7 @@ in <em>classDeclaration</em>()</div>
       <span class="i">error</span>(<span class="s">&quot;A class can&#39;t inherit from itself.&quot;</span>);
     }
 
-</pre><pre class="insert-after">
-    namedVariable(className, false);
+</pre><pre class="insert-after">    namedVariable(className, false);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -241,18 +214,15 @@ anything *useful*, but I don't think it would cause a crash or infinite loop.
 </aside><!--
 -- Executing inheritance
 -->
-<h3><a href="#执行继承" name="执行继承"><small>29&#8202;.&#8202;1&#8202;.&#8202;1</small>执行继承</a></h3><!--
+<h3><a href="#执行继承" id="执行继承"><small>29&#8202;.&#8202;1&#8202;.&#8202;1</small>执行继承</a></h3><!--
 Now onto the new instruction.
 -->
 <p>现在轮到新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_CLASS,
+<div class="codehilite"><pre class="insert-before">  OP_CLASS,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_INHERIT</span>,
-</pre><pre class="insert-after">
-  OP_METHOD
+<pre class="insert">  <span class="a">OP_INHERIT</span>,
+</pre><pre class="insert-after">  OP_METHOD
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
@@ -260,27 +230,22 @@ There are no operands to worry about. The two values we need -- superclass and
 subclass -- are both found on the stack. That means disassembling is easy.
 -->
 <p>没有操作数要操心。我们需要的两个值——超类与子类——都在栈上。所以反汇编很容易。</p>
-<div class="codehilite"><pre class="insert-before">
-      return constantInstruction(&quot;OP_CLASS&quot;, chunk, offset);
+<div class="codehilite"><pre class="insert-before">      return constantInstruction(&quot;OP_CLASS&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_INHERIT</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_INHERIT</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_INHERIT&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_METHOD:
+</pre><pre class="insert-after">    case OP_METHOD:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
 The interpreter is where the action happens.
 -->
 <p>真正干活的是解释器。</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_INHERIT</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_INHERIT</span>: {
         <span class="t">Value</span> <span class="i">superclass</span> = <span class="i">peek</span>(<span class="n">1</span>);
         <span class="t">ObjClass</span>* <span class="i">subclass</span> = <span class="a">AS_CLASS</span>(<span class="i">peek</span>(<span class="n">0</span>));
         <span class="i">tableAddAll</span>(&amp;<span class="a">AS_CLASS</span>(<span class="i">superclass</span>)-&gt;<span class="i">methods</span>,
@@ -288,8 +253,7 @@ in <em>run</em>()</div>
         <span class="i">pop</span>(); <span class="c">// Subclass.</span>
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_METHOD:
+</pre><pre class="insert-after">      case OP_METHOD:
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -368,14 +332,13 @@ overwrite those inherited entries in the table.
 <p>那方法覆盖呢？把超类方法复制进子类方法表，不会和子类自己的方法撞车吗？幸运的是，不会。我们在创建子类的 <code>OP_CLASS</code> 之后、任何方法声明与 <code>OP_METHOD</code> 指令编译之前发出 <code>OP_INHERIT</code>。向下复制超类方法时，子类的方法表还是空的。子类覆盖的任何方法，都会覆盖表里那些继承来的条目。</p><!--
 -- Invalid superclasses
 -->
-<h3><a href="#无效的超类" name="无效的超类"><small>29&#8202;.&#8202;1&#8202;.&#8202;2</small>无效的超类</a></h3><!--
+<h3><a href="#无效的超类" id="无效的超类"><small>29&#8202;.&#8202;1&#8202;.&#8202;2</small>无效的超类</a></h3><!--
 Our implementation is simple and fast, which is just the way I like my VM code.
 But it's not robust. Nothing prevents a user from inheriting from an object that
 isn't a class at all:
 -->
 <p>我们的实现简单又快——正是我喜欢的虚拟机代码风格。但它还不稳健。没有什么能阻止用户从一个根本不是类的对象继承：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="t">NotClass</span> = <span class="s">&quot;So not a class&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="t">NotClass</span> = <span class="s">&quot;So not a class&quot;</span>;
 <span class="k">class</span> <span class="t">OhNo</span> &lt; <span class="t">NotClass</span> {}
 </pre></div><!--
 Obviously, no self-respecting programmer would write that, but we have to guard
@@ -383,18 +346,15 @@ against potential Lox users who have no self respect. A simple runtime check
 fixes that.
 -->
 <p>显然，有自尊心的程序员不会写那种东西，但我们得防备那些可能没有自尊心的 Lox 用户。一个简单的运行时检查就能搞定。</p>
-<div class="codehilite"><pre class="insert-before">
-        Value superclass = peek(1);
+<div class="codehilite"><pre class="insert-before">        Value superclass = peek(1);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-        <span class="k">if</span> (!<span class="a">IS_CLASS</span>(<span class="i">superclass</span>)) {
+<pre class="insert">        <span class="k">if</span> (!<span class="a">IS_CLASS</span>(<span class="i">superclass</span>)) {
           <span class="i">runtimeError</span>(<span class="s">&quot;Superclass must be a class.&quot;</span>);
           <span class="k">return</span> <span class="a">INTERPRET_RUNTIME_ERROR</span>;
         }
 
-</pre><pre class="insert-after">
-        ObjClass* subclass = AS_CLASS(peek(0));
+</pre><pre class="insert-after">        ObjClass* subclass = AS_CLASS(peek(0));
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -405,7 +365,7 @@ and their code.
 <p>若从超类子句里那个标识符加载出的值不是 ObjClass，我们就报告运行时错误，好让用户知道我们对他们及其代码怎么看。</p><!--
 -- Storing Superclasses
 -->
-<h2><a href="#存储超类" name="存储超类"><small>29&#8202;.&#8202;2</small>存储超类</a></h2><!--
+<h2><a href="#存储超类" id="存储超类"><small>29&#8202;.&#8202;2</small>存储超类</a></h2><!--
 Did you notice that when we added method inheritance, we didn't actually add any
 reference from a subclass to its superclass? After we copy the inherited methods
 over, we forget the superclass entirely. We don't need to keep a handle on the
@@ -429,8 +389,7 @@ Back in the halcyon days of jlox, I showed you [this tricky example][example] to
 explain the way super calls are dispatched:
 -->
 <p>在 jlox 的美好旧日里，我给你看过<a href="inheritance.html#semantics">这个棘手例子</a>，用来解释 super 调用如何分派：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">A</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">A</span> {
   <span class="i">method</span>() {
     <span class="k">print</span> <span class="s">&quot;A method&quot;</span>;
   }
@@ -466,8 +425,7 @@ Environment structure we used for all lexical scopes. Almost as if the
 interpreter saw the above program like this:
 -->
 <p>这意味着 super 调用并不基于运行时实例动态解析。用来查找方法的超类，是调用发生位置的静态——近乎词法——属性。给 jlox 加继承时，我们利用了这点静态性：把超类存进与所有词法作用域共用的 Environment 结构。几乎像是解释器把上面的程序看成这样：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">A</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">A</span> {
   <span class="i">method</span>() {
     <span class="k">print</span> <span class="s">&quot;A method&quot;</span>;
   }
@@ -502,24 +460,21 @@ the same.
 <p>clox 走同一条路。差别在于：不是 jlox 堆上分配的 Environment 类，而是字节码虚拟机的值栈与上值系统。机械装置略有不同，整体效果一样。</p><!--
 -- A superclass local variable
 -->
-<h3><a href="#超类局部变量" name="超类局部变量"><small>29&#8202;.&#8202;2&#8202;.&#8202;1</small>超类局部变量</a></h3><!--
+<h3><a href="#超类局部变量" id="超类局部变量"><small>29&#8202;.&#8202;2&#8202;.&#8202;1</small>超类局部变量</a></h3><!--
 Our compiler already emits code to load the superclass onto the stack. Instead
 of leaving that slot as a temporary, we create a new scope and make it a local
 variable.
 -->
 <p>编译器已经会发出把超类加载到栈上的代码。我们不把那个槽位留作临时量，而是新建一个作用域，让它成为局部变量。</p>
-<div class="codehilite"><pre class="insert-before">
-    }
+<div class="codehilite"><pre class="insert-before">    }
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-    <span class="i">beginScope</span>();
+<pre class="insert">    <span class="i">beginScope</span>();
     <span class="i">addLocal</span>(<span class="i">syntheticToken</span>(<span class="s">&quot;super&quot;</span>));
     <span class="i">defineVariable</span>(<span class="n">0</span>);
 
-</pre><pre class="insert-after">
-    namedVariable(className, false);
+</pre><pre class="insert-after">    namedVariable(className, false);
     emitByte(OP_INHERIT);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
@@ -544,8 +499,7 @@ name="constant">constant</span> string.
 <p>差别在于：编译 <code>this</code> 表达式时，手头碰巧有个词素是 <code>"this"</code> 的记号。这里没那么走运。于是我们加一个小辅助函数，为给定的<span name="constant">常量</span>字符串创建合成记号。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>variable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Token</span> <span class="i">syntheticToken</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">text</span>) {
+<pre><span class="k">static</span> <span class="t">Token</span> <span class="i">syntheticToken</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">text</span>) {
   <span class="t">Token</span> <span class="i">token</span>;
   <span class="i">token</span>.<span class="i">start</span> = <span class="i">text</span>;
   <span class="i">token</span>.<span class="i">length</span> = (<span class="t">int</span>)<span class="i">strlen</span>(<span class="i">text</span>);
@@ -566,8 +520,7 @@ fine.
 Since we opened a local scope for the superclass variable, we need to close it.
 -->
 <p>既然为超类变量打开了局部作用域，就得关上它。</p>
-<div class="codehilite"><pre class="insert-before">
-  emitByte(OP_POP);
+<div class="codehilite"><pre class="insert-before">  emitByte(OP_POP);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
 <pre class="insert">
@@ -594,43 +547,34 @@ surrounding class is a subclass or not. So we may as well give our future selves
 a hand and store this fact as a field in the ClassCompiler now.
 -->
 <p>为跟踪这一点，可以在 <code>classDeclaration()</code> 里声明一个小局部变量。但很快，编译器里的其他函数也需要知道外围类是不是子类。所以不妨现在就帮未来的自己一把：把这事实存成 ClassCompiler 的一个字段。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct ClassCompiler {
+<div class="codehilite"><pre class="insert-before">typedef struct ClassCompiler {
   struct ClassCompiler* enclosing;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in struct <em>ClassCompiler</em></div>
-<pre class="insert">
-  <span class="t">bool</span> <span class="i">hasSuperclass</span>;
-</pre><pre class="insert-after">
-} ClassCompiler;
+<pre class="insert">  <span class="t">bool</span> <span class="i">hasSuperclass</span>;
+</pre><pre class="insert-after">} ClassCompiler;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>ClassCompiler</em></div>
 <!--
 When we first initialize a ClassCompiler, we assume it is not a subclass.
 -->
 <p>初次初始化 ClassCompiler 时，我们假定它不是子类。</p>
-<div class="codehilite"><pre class="insert-before">
-  ClassCompiler classCompiler;
+<div class="codehilite"><pre class="insert-before">  ClassCompiler classCompiler;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-  <span class="i">classCompiler</span>.<span class="i">hasSuperclass</span> = <span class="k">false</span>;
-</pre><pre class="insert-after">
-  classCompiler.enclosing = currentClass;
+<pre class="insert">  <span class="i">classCompiler</span>.<span class="i">hasSuperclass</span> = <span class="k">false</span>;
+</pre><pre class="insert-after">  classCompiler.enclosing = currentClass;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
 Then, if we see a superclass clause, we know we are compiling a subclass.
 -->
 <p>然后，若看到超类子句，就知道我们在编译一个子类。</p>
-<div class="codehilite"><pre class="insert-before">
-    emitByte(OP_INHERIT);
+<div class="codehilite"><pre class="insert-before">    emitByte(OP_INHERIT);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>classDeclaration</em>()</div>
-<pre class="insert">
-    <span class="i">classCompiler</span>.<span class="i">hasSuperclass</span> = <span class="k">true</span>;
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">classCompiler</span>.<span class="i">hasSuperclass</span> = <span class="k">true</span>;
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>classDeclaration</em>()</div>
 <!--
@@ -644,7 +588,7 @@ method.
 <p>这套机械装置给了我们运行时机制：在子类的任意方法里访问外围子类的超类对象——只需发出加载名为 <code>"super"</code> 的变量的代码。该变量是方法体之外的局部量，但已有的上值支持让虚拟机能在方法体内部、甚至嵌在该方法里的函数中捕获它。</p><!--
 -- Super Calls
 -->
-<h2><a href="#超类调用" name="超类调用"><small>29&#8202;.&#8202;3</small>超类调用</a></h2><!--
+<h2><a href="#超类调用" id="超类调用"><small>29&#8202;.&#8202;3</small>超类调用</a></h2><!--
 With that runtime support in place, we are ready to implement super calls. As
 usual, we go front to back, starting with the new syntax. A super call <span
 name="last">begins</span>, naturally enough, with the `super` keyword.
@@ -655,14 +599,11 @@ This is it, friend. The very last entry you'll add to the parsing table.
 -->
 <p>就是它了，朋友。你往解析表里加的最后一项。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_SUPER</span>]         = {<span class="i">super_</span>,   <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_SUPER</span>]         = {<span class="i">super_</span>,   <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 <!--
@@ -672,8 +613,7 @@ parsing function which starts off like so:
 <p>当表达式解析器落到 <code>super</code> 记号上，控制跳到一个新的解析函数，开头如下：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>syntheticToken</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">super_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">super_</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
   <span class="i">consume</span>(<span class="a">TOKEN_DOT</span>, <span class="s">&quot;Expect &#39;.&#39; after &#39;super&#39;.&quot;</span>);
   <span class="i">consume</span>(<span class="a">TOKEN_IDENTIFIER</span>, <span class="s">&quot;Expect superclass method name.&quot;</span>);
   <span class="t">uint8_t</span> <span class="i">name</span> = <span class="i">identifierConstant</span>(&amp;<span class="i">parser</span>.<span class="i">previous</span>);
@@ -695,8 +635,7 @@ object would it evaluate to?
 -->
 <p>假想问题：若光秃秃的 <code>super</code> 记号<em>是</em>一个表达式，它会求值成什么样的对象？</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">A</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">A</span> {
   <span class="i">method</span>() {
     <span class="k">print</span> <span class="s">&quot;A&quot;</span>;
   }
@@ -720,8 +659,7 @@ in the constant table just like we do for property access expressions.
 Here is what the compiler does after consuming those tokens:
 -->
 <p>消费完那些记号后，编译器做这些事：</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t name = identifierConstant(&amp;parser.previous);
+<div class="codehilite"><pre class="insert-before">  uint8_t name = identifierConstant(&amp;parser.previous);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>super_</em>()</div>
 <pre class="insert">
@@ -729,8 +667,7 @@ in <em>super_</em>()</div>
   <span class="i">namedVariable</span>(<span class="i">syntheticToken</span>(<span class="s">&quot;this&quot;</span>), <span class="k">false</span>);
   <span class="i">namedVariable</span>(<span class="i">syntheticToken</span>(<span class="s">&quot;super&quot;</span>), <span class="k">false</span>);
   <span class="i">emitBytes</span>(<span class="a">OP_GET_SUPER</span>, <span class="i">name</span>);
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>super_</em>()</div>
 <!--
@@ -747,8 +684,7 @@ constant table index of the method name. That's a lot to hold in your head. To
 make it tangible, consider this example program:
 -->
 <p>最后，我们发出一条新的 <code>OP_GET_SUPER</code> 指令，操作数是方法名在常量表中的索引。要记在脑子里的东西不少。为了更具体，看看这个示例程序：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Doughnut</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Doughnut</span> {
   <span class="i">cook</span>() {
     <span class="k">print</span> <span class="s">&quot;Dunk in the fryer.&quot;</span>;
     <span class="k">this</span>.<span class="i">finish</span>(<span class="s">&quot;sprinkles&quot;</span>);
@@ -802,19 +738,16 @@ interpreter. But before we do, the compiler has some errors it is responsible
 for reporting.
 -->
 <p>我们几乎可以在解释器里实现新的 <code>OP_GET_SUPER</code> 了。但在此之前，编译器还有一些它负责报告的错误。</p>
-<div class="codehilite"><pre class="insert-before">
-static void super_(bool canAssign) {
+<div class="codehilite"><pre class="insert-before">static void super_(bool canAssign) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>super_</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">currentClass</span> == <span class="a">NULL</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">currentClass</span> == <span class="a">NULL</span>) {
     <span class="i">error</span>(<span class="s">&quot;Can&#39;t use &#39;super&#39; outside of a class.&quot;</span>);
   } <span class="k">else</span> <span class="k">if</span> (!<span class="i">currentClass</span>-&gt;<span class="i">hasSuperclass</span>) {
     <span class="i">error</span>(<span class="s">&quot;Can&#39;t use &#39;super&#39; in a class with no superclass.&quot;</span>);
   }
 
-</pre><pre class="insert-after">
-  consume(TOKEN_DOT, &quot;Expect '.' after 'super'.&quot;);
+</pre><pre class="insert-after">  consume(TOKEN_DOT, &quot;Expect '.' after 'super'.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>super_</em>()</div>
 <!--
@@ -826,35 +759,29 @@ that's `NULL` or points to a class with no superclass, we report those errors.
 <p>super 调用只在方法体里（或嵌在方法里的函数里）有意义，且只在有超类的类的方法里。我们用 <code>currentClass</code> 的值检测这两种情况。若它是 <code>NULL</code>，或指向没有超类的类，就报告那些错误。</p><!--
 -- Executing super accesses
 -->
-<h3><a href="#执行-super-访问" name="执行-super-访问"><small>29&#8202;.&#8202;3&#8202;.&#8202;1</small>执行 super 访问</a></h3><!--
+<h3><a href="#执行-super-访问" id="执行-super-访问"><small>29&#8202;.&#8202;3&#8202;.&#8202;1</small>执行 super 访问</a></h3><!--
 Assuming the user didn't put a `super` expression where it's not allowed, their
 code passes from the compiler over to the runtime. We've got ourselves a new
 instruction.
 -->
 <p>假定用户没有把 <code>super</code> 表达式放在不允许的地方，他们的代码就从编译器交到运行时。我们有了一条新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_SET_PROPERTY,
+<div class="codehilite"><pre class="insert-before">  OP_SET_PROPERTY,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_GET_SUPER</span>,
-</pre><pre class="insert-after">
-  OP_EQUAL,
+<pre class="insert">  <span class="a">OP_GET_SUPER</span>,
+</pre><pre class="insert-after">  OP_EQUAL,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 We disassemble it like other opcodes that take a constant table index operand.
 -->
 <p>我们像其他带常量表索引操作数的操作码一样反汇编它。</p>
-<div class="codehilite"><pre class="insert-before">
-      return constantInstruction(&quot;OP_SET_PROPERTY&quot;, chunk, offset);
+<div class="codehilite"><pre class="insert-before">      return constantInstruction(&quot;OP_SET_PROPERTY&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_GET_SUPER</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_GET_SUPER</span>:
       <span class="k">return</span> <span class="i">constantInstruction</span>(<span class="s">&quot;OP_GET_SUPER&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_EQUAL:
+</pre><pre class="insert-after">    case OP_EQUAL:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -862,12 +789,10 @@ You might anticipate something harder, but interpreting the new instruction is
 similar to executing a normal property access.
 -->
 <p>你或许以为会更难，但解释这条新指令与执行普通属性访问相似。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_GET_SUPER</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_GET_SUPER</span>: {
         <span class="t">ObjString</span>* <span class="i">name</span> = <span class="a">READ_STRING</span>();
         <span class="t">ObjClass</span>* <span class="i">superclass</span> = <span class="a">AS_CLASS</span>(<span class="i">pop</span>());
 
@@ -876,8 +801,7 @@ in <em>run</em>()</div>
         }
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_EQUAL: {
+</pre><pre class="insert-after">      case OP_EQUAL: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -922,7 +846,7 @@ fields *could* be inherited, and we would need to check for them here.
 </aside><!--
 -- Faster super calls
 -->
-<h3><a href="#更快的超类调用" name="更快的超类调用"><small>29&#8202;.&#8202;3&#8202;.&#8202;2</small>更快的超类调用</a></h3><!--
+<h3><a href="#更快的超类调用" id="更快的超类调用"><small>29&#8202;.&#8202;3&#8202;.&#8202;2</small>更快的超类调用</a></h3><!--
 We have superclass method accesses working now. And since the returned object is
 an ObjBoundMethod that you can then invoke, we've got super *calls* working too.
 Just like last chapter, we've reached a point where our VM has the complete,
@@ -945,13 +869,11 @@ same optimization we did for method calls. Take out the two lines of code that
 load the superclass and emit `OP_GET_SUPER`, and replace them with this:
 -->
 <p>若编译器在超类方法名后看到左括号，当然能自己回答这个问题，于是我们照方法调用那一套做同样的优化。拿掉加载超类并发出 <code>OP_GET_SUPER</code> 的那两行，换成这些：</p>
-<div class="codehilite"><pre class="insert-before">
-  namedVariable(syntheticToken(&quot;this&quot;), false);
+<div class="codehilite"><pre class="insert-before">  namedVariable(syntheticToken(&quot;this&quot;), false);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>super_</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LEFT_PAREN</span>)) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_LEFT_PAREN</span>)) {
     <span class="t">uint8_t</span> <span class="i">argCount</span> = <span class="i">argumentList</span>();
     <span class="i">namedVariable</span>(<span class="i">syntheticToken</span>(<span class="s">&quot;super&quot;</span>), <span class="k">false</span>);
     <span class="i">emitBytes</span>(<span class="a">OP_SUPER_INVOKE</span>, <span class="i">name</span>);
@@ -960,8 +882,7 @@ replace 2 lines</div>
     <span class="i">namedVariable</span>(<span class="i">syntheticToken</span>(<span class="s">&quot;super&quot;</span>), <span class="k">false</span>);
     <span class="i">emitBytes</span>(<span class="a">OP_GET_SUPER</span>, <span class="i">name</span>);
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>super_</em>(), replace 2 lines</div>
 <!--
@@ -986,29 +907,23 @@ super access like we did before and emit an `OP_GET_SUPER`.
 Drifting down the compilation pipeline, our first stop is a new instruction.
 -->
 <p>顺着编译流水线往下漂，第一站是一条新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_INVOKE,
+<div class="codehilite"><pre class="insert-before">  OP_INVOKE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_SUPER_INVOKE</span>,
-</pre><pre class="insert-after">
-  OP_CLOSURE,
+<pre class="insert">  <span class="a">OP_SUPER_INVOKE</span>,
+</pre><pre class="insert-after">  OP_CLOSURE,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 And just past that, its disassembler support.
 -->
 <p>紧接着是它的反汇编支持。</p>
-<div class="codehilite"><pre class="insert-before">
-      return invokeInstruction(&quot;OP_INVOKE&quot;, chunk, offset);
+<div class="codehilite"><pre class="insert-before">      return invokeInstruction(&quot;OP_INVOKE&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_SUPER_INVOKE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_SUPER_INVOKE</span>:
       <span class="k">return</span> <span class="i">invokeInstruction</span>(<span class="s">&quot;OP_SUPER_INVOKE&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_CLOSURE: {
+</pre><pre class="insert-after">    case OP_CLOSURE: {
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1017,13 +932,11 @@ we reuse the same helper to disassemble it. Finally, the pipeline dumps us into
 the interpreter.
 -->
 <p>超类调用指令与 <code>OP_INVOKE</code> 有同一套操作数，所以我们复用同一个辅助函数来反汇编。最后，流水线把我们扔进解释器。</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
       }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_SUPER_INVOKE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_SUPER_INVOKE</span>: {
         <span class="t">ObjString</span>* <span class="i">method</span> = <span class="a">READ_STRING</span>();
         <span class="t">int</span> <span class="i">argCount</span> = <span class="a">READ_BYTE</span>();
         <span class="t">ObjClass</span>* <span class="i">superclass</span> = <span class="a">AS_CLASS</span>(<span class="i">pop</span>());
@@ -1033,8 +946,7 @@ in <em>run</em>()</div>
         <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_CLOSURE: {
+</pre><pre class="insert-after">      case OP_CLOSURE: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1073,7 +985,7 @@ CallFrame pointer, so we refresh `frame`.
 <p>我们把超类、方法名和参数个数传给已有的 <code>invokeFromClass()</code>。该函数在给定类上查找给定方法，并尝试以给定元数创建对它的调用。若找不到方法，返回 <code>false</code>，我们退出解释器。否则，<code>invokeFromClass()</code> 为方法的闭包往调用栈压入一个新的 CallFrame。这会使解释器缓存的 CallFrame 指针失效，所以我们刷新 <code>frame</code>。</p><!--
 -- A Complete Virtual Machine
 -->
-<h2><a href="#完整的虚拟机" name="完整的虚拟机"><small>29&#8202;.&#8202;4</small>完整的虚拟机</a></h2><!--
+<h2><a href="#完整的虚拟机" id="完整的虚拟机"><small>29&#8202;.&#8202;4</small>完整的虚拟机</a></h2><!--
 Take a look back at what we've created. By my count, we wrote around 2,500 lines
 of fairly clean, straightforward C. That little program contains a complete
 implementation of the -- quite high-level! -- Lox language, with a whole
@@ -1108,7 +1020,7 @@ squeeze even more perf out. If that sounds fun, [keep reading][opt]...
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>29&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>29&#8202;.&#8202;5</small>挑战</a></h2><!--
 1.  A tenet of object-oriented programming is that a class should ensure new
     objects are in a valid state. In Lox, that means defining an initializer
     that populates the instance's fields. Inheritance complicates invariants
@@ -1223,8 +1135,7 @@ squeeze even more perf out. If that sounds fun, [keep reading][opt]...
 </li>
 </ul>
 <p>例如：</p>
-<div class="codehilite"><pre>
-<span class="k">class</span> <span class="t">Doughnut</span> {
+<div class="codehilite"><pre><span class="k">class</span> <span class="t">Doughnut</span> {
   <span class="i">cook</span>() {
     <span class="k">print</span> <span class="s">&quot;Fry until golden brown.&quot;</span>;
     <span class="i">inner</span>();
@@ -1254,7 +1165,7 @@ Place in a nice box.
 <a href="optimization.html" class="next">
   Next Chapter: &ldquo;Optimization&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

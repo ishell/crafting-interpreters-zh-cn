@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Types of Values<small>18</small></a></h3>
 
 <ul>
@@ -54,7 +53,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="compiling-expressions.html" title="Compiling Expressions" class="prev">←</a>
 <a href="strings.html" title="Strings" class="next">→</a>
 </nav>
@@ -62,9 +61,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Types of Values<small>18</small></a></h3>
 
 <ul>
@@ -90,25 +88,7 @@
   <div class="number">18</div>
   <h1>Types of Values</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#值的类型" name="值的类型"><small>18&#8202;.&#8202;0</small>值的类型</a></h1>
+<h1><a href="#值的类型" id="值的类型"><small>18&#8202;.&#8202;0</small>值的类型</a></h1>
 <blockquote>
 <p>当你是一头小脑袋的熊，而你在思考一些事情时，你有时会发现，一件在你心里看似&ldquo;很事情&ldquo;的事情，等它跑到光天化日之下、被别人审视一番之后，竟是全然不同的。</p>
 <p><cite>A. A. 米尔恩，<em>《小熊维尼》</em></cite></p>
@@ -119,7 +99,7 @@
 <p>在静态类型与动态类型之外， 还有第三种： 单一类型（unityped）。 在那种范式里， 所有变量都拥有同一种类型， 通常是一个机器寄存器整数。当下独一类型的语言并不常见， 但某些 Forth 以及 BCPL——那门启发了 C 的语言—— 是这样运作的。</p>
 <p>至于此时此刻，clox 就是独一类型的。</p>
 </aside>
-<h2><a href="#标签联合" name="标签联合"><small>18&#8202;.&#8202;1</small>标签联合</a></h2>
+<h2><a href="#标签联合" id="标签联合"><small>18&#8202;.&#8202;1</small>标签联合</a></h2>
 <p>在 C 里写代码的好处是， 我们可以从比特一级起手构建自己的数据结构。坏处则是， 我们必须这么做。C 在编译时给你的现成东西并不多， 运行时更少。就 C 而言， 这整个宇宙不过是一片未经分化的字节数组。 至少要拿出多少字节作何用、 它们代表什么， 都得由我们来决定。</p>
 <p>为了挑选一种值表示法， 我们需要回答两个关键问题：</p>
 <ol>
@@ -132,19 +112,16 @@
 </ol>
 <p>既然我们不但是在设计这门语言， 而且还要亲手去打造它， 那么在回答这两个问题的同时， 我们还得时刻把实现者那个永恒的追求记在心头： 将这些信息尽可能高效地塞进尽可能少的比特里。</p>
 <p>这些年来， 语言黑客们想出了种种巧妙的方法， 尽可能地把上述信息塞进少量比特之中。 眼下， 我们从最简单、 最经典的解决方案开始： <strong>标签联合</strong>（tagged union）。 一个值含两部分： 一个表示类型的 &rdquo; 标签&ldquo;， 外加一个用于装真正值的载荷。 为了存储值的类型， 我们为 VM 所支持的每一种值各自定义一个枚举。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 
 </pre><div class="source-file"><em>value.h</em></div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">enum</span> {
+<pre class="insert"><span class="k">typedef</span> <span class="k">enum</span> {
   <span class="a">VAL_BOOL</span>,
   <span class="a">VAL_NIL</span>,<span name="user-types"> </span>
   <span class="a">VAL_NUMBER</span>,
 } <span class="t">ValueType</span>;
 
-</pre><pre class="insert-after">
-typedef double Value;
+</pre><pre class="insert-after">typedef double Value;
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 
@@ -162,14 +139,12 @@ typedef double Value;
 <p>用联合根据不同类型来解释同一组比特， 乃是 C 的精髓之一。 它开启了种种精明的优化， 让你可以按各种方式对内存的每一字节切切剁剁—— 这是那些内存安全型语言所不允许的。 但它同时也野蛮地不安全， 若你不小心， 它会笑眯眯地把你的手指齐根锯断。</p>
 </aside>
 <p>就如 &rdquo; 标签联合&rdquo; 这个名词所暗示的那样， 我们的新值表示将这两部分合并进了一个结构体之中。</p>
-<div class="codehilite"><pre class="insert-before">
-} ValueType;
+<div class="codehilite"><pre class="insert-before">} ValueType;
 
 </pre><div class="source-file"><em>value.h</em><br>
 add after enum <em>ValueType</em><br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">struct</span> {
+<pre class="insert"><span class="k">typedef</span> <span class="k">struct</span> {
   <span class="t">ValueType</span> <span class="i">type</span>;
   <span class="k">union</span> {
     <span class="t">bool</span> <span class="i">boolean</span>;
@@ -191,12 +166,11 @@ typedef struct {
 <p>我们本可以把标签字段移到联合之后， 但那也无济于事。无论何时我们创建一份 Values 数组—— 那也是我们大多数 Values 的使用场景——C 编译器都会在每一份 Value 之间插入同样的填充， 以使那些 <code>double</code> 对齐。</p>
 </aside>
 <p>于是我们的 Value 是 16 字节， 这看起来有些大。我们会 <a href="optimization.html"> 之后 </a> 再改善这一点。同时， 它们仍然小得足以在 C 栈上存放并以值传递。Lox 的语义允许如此操作， 因为眼下我们所支持的类型都是不可变的。假如你把一份含数 <code>3</code> 的 Value 的拷贝传给了某个函数， 我们大可不必担心调用方会看到该值被修改。你不能**&ldquo;改变&ldquo;** 3 的值的。三永远是三。</p>
-<h2><a href="#lox-值与-c-值" name="lox-值与-c-值"><small>18&#8202;.&#8202;2</small>Lox 值与 C 值</a></h2>
+<h2><a href="#lox-值与-c-值" id="lox-值与-c-值"><small>18&#8202;.&#8202;2</small>Lox 值与 C 值</a></h2>
 <p>这便是我们新的值表示法， 但事情还远未完毕。眼下，clox 的其他部分假设 Value 是 <code>double</code> 的一个别名。 我们的代码里有很多直接把一者转换为另一者的 <em>C</em> 强制转换。那些代码全都坏了。真糟。</p>
 <p>既然我们新的表示法下， 一个 Value 可以装有一个 <code>double</code>， 但 Value 并不等价于 <code>double</code>。从一者切到另一者之需经一道必要的转换步骤。我们需要翻一遍那些代码， 将这些转换插进去， 让 clox 再一次正常运作起来。</p>
 <p>我们将这些转换实现为几个宏， 一类一个宏。 首先将一个原生 C 值提升为一枚 clox 的 Value：</p>
-<div class="codehilite"><pre class="insert-before">
-} Value;
+<div class="codehilite"><pre class="insert-before">} Value;
 </pre><div class="source-file"><em>value.h</em><br>
 add after struct <em>Value</em></div>
 <pre class="insert">
@@ -211,8 +185,7 @@ typedef struct {
 <div class="source-file-narrow"><em>value.h</em>, add after struct <em>Value</em></div>
 
 <p>这些宏各自接受一个相应类型的 C 值， 产生一个 Value—— 它带有正确的类型标签并装有底层的值。 这些宏将静态类型的值提升到了 clox 的动态类型宇宙之中。 不过， 为了能够真正利用某个 Value 做点什么， 我们还需要将其拆箱， 取出其原始的 C 值回来。</p>
-<div class="codehilite"><pre class="insert-before">
-} Value;
+<div class="codehilite"><pre class="insert-before">} Value;
 </pre><div class="source-file"><em>value.h</em><br>
 add after struct <em>Value</em></div>
 <pre class="insert">
@@ -229,13 +202,11 @@ add after struct <em>Value</em></div>
 <p>这里没有 <code>AS_NIL</code> 宏， 因为 <code>nil</code> 只有一个值， 所以一枚类型为 <code>VAL_NIL</code> 的 Value 并不携带任何额外的数据。</p>
 </aside>
 <p><span name="as-null">这些</span>宏走的是反向：对一枚类型匹配的 Value，它们将其拆开并返回对应的原生 <em>C</em> 值。<em>“类型匹配”</em> 这一部分很重要！这些宏直接访问了联合字段。若我们做了类似这样的事：</p>
-<div class="codehilite"><pre>
-<span class="t">Value</span> <span class="i">value</span> = <span class="a">BOOL_VAL</span>(<span class="k">true</span>);
+<div class="codehilite"><pre><span class="t">Value</span> <span class="i">value</span> = <span class="a">BOOL_VAL</span>(<span class="k">true</span>);
 <span class="t">double</span> <span class="i">number</span> = <span class="a">AS_NUMBER</span>(<span class="i">value</span>);
 </pre></div>
 <p>那么我们可能会打开一道通向阴影国度的灼热传送门。除非我们确知 Value 装有相应类型的值， 否则这些 <code>AS_</code> 宏使用起来都不安全。为此， 我们再定义几个宏， 用于检查一个 Value 的类型。</p>
-<div class="codehilite"><pre class="insert-before">
-} Value;
+<div class="codehilite"><pre class="insert-before">} Value;
 </pre><div class="source-file"><em>value.h</em><br>
 add after struct <em>Value</em></div>
 <pre class="insert">
@@ -253,57 +224,47 @@ add after struct <em>Value</em></div>
 <aside name="universe"><img src="image/types-of-values/universe.png" alt=" 人间的 C 苍穹， 其上方是 Lox 的天堂。" />
 <p><code>*_VAL</code> 宏将一个 C 值提升至天上。<code>AS_</code> 宏则将其送回人间。</p>
 </aside>
-<h2><a href="#动态类型数字" name="动态类型数字"><small>18&#8202;.&#8202;3</small>动态类型数字</a></h2>
+<h2><a href="#动态类型数字" id="动态类型数字"><small>18&#8202;.&#8202;3</small>动态类型数字</a></h2>
 <p>我们已经有了自己的值表示法， 也有了在两边之间转换的工具。为了让 clox 再度正常运作起来， 剩下的事只是碾过那些代码， 修一修每一处数据跨过那道边界的地方。这是本书中那些并不那么激动人心的部分之一， 但我曾承诺要给你展示每一行必要的代码， 所以咱们就这样一步步走过来。</p>
 <p>我们首先创建的值是编译数字字面量时产生的那些常量。在将词素转换为 C 中的一个 <code>double</code> 之后， 我们只需简单地将其包入一枚 Value 再存进常量表即可。</p>
-<div class="codehilite"><pre class="insert-before">
-  double value = strtod(parser.previous.start, NULL);
+<div class="codehilite"><pre class="insert-before">  double value = strtod(parser.previous.start, NULL);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>number</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="i">emitConstant</span>(<span class="a">NUMBER_VAL</span>(<span class="i">value</span>));
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">emitConstant</span>(<span class="a">NUMBER_VAL</span>(<span class="i">value</span>));
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>number</em>(), replace 1 line</div>
 
 <p>在运行时那边， 我们有一个用于打印值的函数。</p>
-<div class="codehilite"><pre class="insert-before">
-void printValue(Value value) {
+<div class="codehilite"><pre class="insert-before">void printValue(Value value) {
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>printValue</em>()<br>
 replace 1 line</div>
-<pre class="insert">
- <span class="i">printf</span>(<span class="s">&quot;%g&quot;</span>, <span class="a">AS_NUMBER</span>(<span class="i">value</span>));
-</pre><pre class="insert-after">
-}
+<pre class="insert"> <span class="i">printf</span>(<span class="s">&quot;%g&quot;</span>, <span class="a">AS_NUMBER</span>(<span class="i">value</span>));
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>(), replace 1 line</div>
 
 <p>在我们将 Value 送入 <code>printf()</code> 之前， 我们先将其拆箱、 取出那个 double 值。我们很快便会回过头来扩展这个函数以容纳其他类型， 但先让已有的代码跑通再说。</p>
-<h3><a href="#一元取负与运行时错误" name="一元取负与运行时错误"><small>18&#8202;.&#8202;3&#8202;.&#8202;1</small>一元取负与运行时错误</a></h3>
+<h3><a href="#一元取负与运行时错误" id="一元取负与运行时错误"><small>18&#8202;.&#8202;3&#8202;.&#8202;1</small>一元取负与运行时错误</a></h3>
 <p>次简单的运算是一元取负。 它从栈顶弹出一个值， 对其取负， 再把结果推回栈中。既然我们现在已有其他类型的值， 我们不能再假设运算对象是一个数了。用户完全可以这么干：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> -<span class="k">false</span>; <span class="c">// 呃……</span>
+<div class="codehilite"><pre><span class="k">print</span> -<span class="k">false</span>; <span class="c">// 呃……</span>
 </pre></div>
 <p>我们需要从容地处理这一情形， 这意味着是时候祭出运行时错误了。在执行某一需要某特定类型的运算之前， 我们必须确保该 Value 确是该类型。</p>
 <p>对一元取负而言， 其检查长这样：</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_DIVIDE:   BINARY_OP(/); break;
+<div class="codehilite"><pre class="insert-before">      case OP_DIVIDE:   BINARY_OP(/); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_NEGATE</span>:
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_NEGATE</span>:
         <span class="k">if</span> (!<span class="a">IS_NUMBER</span>(<span class="i">peek</span>(<span class="n">0</span>))) {
           <span class="i">runtimeError</span>(<span class="s">&quot;Operand must be a number.&quot;</span>);
           <span class="k">return</span> <span class="a">INTERPRET_RUNTIME_ERROR</span>;
         }
         <span class="i">push</span>(<span class="a">NUMBER_VAL</span>(-<span class="a">AS_NUMBER</span>(<span class="i">pop</span>())));
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 
@@ -314,8 +275,7 @@ replace 1 line</div>
 <p>为了能够访问那枚 Value， 我们使用了一个新的小函数。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>pop</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Value</span> <span class="i">peek</span>(<span class="t">int</span> <span class="i">distance</span>) {
+<pre><span class="k">static</span> <span class="t">Value</span> <span class="i">peek</span>(<span class="t">int</span> <span class="i">distance</span>) {
   <span class="k">return</span> <span class="i">vm</span>.<span class="i">stackTop</span>[-<span class="n">1</span> - <span class="i">distance</span>];
 }
 </pre></div>
@@ -328,8 +288,7 @@ add after <em>pop</em>()</div>
 <p>我们通过一个新函数来报告这个运行时错误——这个函数在本书后面的章节里会被反复派上用场许多次。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>resetStack</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">runtimeError</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">format</span>, ...) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">runtimeError</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">format</span>, ...) {
   <span class="t">va_list</span> <span class="i">args</span>;
   <span class="i">va_start</span>(<span class="i">args</span>, <span class="i">format</span>);
   <span class="i">vfprintf</span>(<span class="i">stderr</span>, <span class="i">format</span>, <span class="i">args</span>);
@@ -357,24 +316,20 @@ add after <em>resetStack</em>()</div>
 <p>为了能够使用 <code>va_list</code> 与对其进行操作的那些宏， 我们需要引入一个标准头文件。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add to top of file</div>
-<pre class="insert">
-<span class="a">#include &lt;stdarg.h&gt;</span>
-</pre><pre class="insert-after">
-#include &lt;stdio.h&gt;
+<pre class="insert"><span class="a">#include &lt;stdarg.h&gt;</span>
+</pre><pre class="insert-after">#include &lt;stdio.h&gt;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, add to top of file</div>
 
 <p>有了这一步，我们的 VM 不仅能像之前那样在对数取负时做出正确的行为，而且还能从容地应对对其它类型的错误取负尝试——那些类型眼下虽还没有，却也照样要处理。</p>
-<h3><a href="#二元算术运算符" name="二元算术运算符"><small>18&#8202;.&#8202;3&#8202;.&#8202;2</small>二元算术运算符</a></h3>
+<h3><a href="#二元算术运算符" id="二元算术运算符"><small>18&#8202;.&#8202;3&#8202;.&#8202;2</small>二元算术运算符</a></h3>
 <p>眼下我们已经搭建好了运行时错误的机器，于是尽管元素更多，修二元运算符却更加轻松容易了一些。当下我们支持四个二元运算符： <code>+</code>、<code>-</code>、<code>*</code> 与 <code>/</code>。它们之间唯一的区别在于底层使用了哪个 C 运算符。为了将四者之间的共同部分压到最小， 我们在一个包装全部共性的宏里接受运算符标记作为参数。</p>
 <p>那个宏在<a href="a-virtual-machine.html#binary-operators"> 几章之前 </a> 看起来或许有些多余， 但当下便显出了回报。 它让我们可以在一个地方把所必须的类型检查与转换全都加上。</p>
-<div class="codehilite"><pre class="insert-before">
-#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
+<div class="codehilite"><pre class="insert-before">#define READ_CONSTANT() (vm.chunk-&gt;constants.values[READ_BYTE()])
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 6 lines</div>
-<pre class="insert">
-<span class="a">#define BINARY_OP(valueType, op) \</span>
+<pre class="insert"><span class="a">#define BINARY_OP(valueType, op) \</span>
 <span class="a">    do { \</span>
 <span class="a">      if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \</span>
 <span class="a">        runtimeError(&quot;Operands must be numbers.&quot;); \</span>
@@ -395,23 +350,20 @@ replace 6 lines</div>
 <aside name="macro">
 <p>你知道可以将宏作为参数传给另一个宏吗？ 现在你知道了！</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_ADD</span>:      <span class="a">BINARY_OP</span>(<span class="a">NUMBER_VAL</span>, +); <span class="k">break</span>;
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_ADD</span>:      <span class="a">BINARY_OP</span>(<span class="a">NUMBER_VAL</span>, +); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_SUBTRACT</span>: <span class="a">BINARY_OP</span>(<span class="a">NUMBER_VAL</span>, -); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_MULTIPLY</span>: <span class="a">BINARY_OP</span>(<span class="a">NUMBER_VAL</span>, *); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_DIVIDE</span>:   <span class="a">BINARY_OP</span>(<span class="a">NUMBER_VAL</span>, /); <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_NEGATE:
+</pre><pre class="insert-after">      case OP_NEGATE:
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 4 lines</div>
 
 <p>很快， 我们就会告诉你为什么我们将包装宏设为了一个参数。</p>
-<h2><a href="#两种新类型" name="两种新类型"><small>18&#8202;.&#8202;4</small>两种新类型</a></h2>
+<h2><a href="#两种新类型" id="两种新类型"><small>18&#8202;.&#8202;4</small>两种新类型</a></h2>
 <p><strong>所有</strong>现有的 clox 代码都再一次跑通了。终于， 到了为新的类型添砖加瓦的时候。我们手头已经有一款跑得动的数字计算器， 里面加了一堆毫无意义的防御性运行时类型检查。我们从内部已可表示其他类型， 但用户程序至今还找不到任何途径去亲手创建一枚别种类型的 Value。</p>
 <p>而如今， 我们将从零开始改变 这一切。这一次， 我们先为编译器添加对三个新字面量的支持： <code>true</code>、<code>false</code> 与 <code>nil</code>。这三者都非常简单， 于是我们打算一次性把它们全都搞定。</p>
 <p>对数字字面量而言， 我们曾面对过如此之多的可能值而不得不费点周折： 我们将那个字面量的值存进 chunk 的常量表中， 再发射一条字节码指令去简单地加载那个常量。对那些新类型我们本可以采用同样的做法。 比如说， 我们把 <code>true</code> 存进常量表， 再用一条 <code>OP_CONSTANT</code> 把它读出来。</p>
@@ -420,60 +372,47 @@ replace 4 lines</div>
 <p>我没有在开玩笑—— 为某些常量值设定专门的指令确实更快。一款字节码 VM 会将大量的执行时间花在读取与解码指令上。对某一段给定的行为需要的指令越少、 越简洁， 它跑得就越快。为常见运算设置短小的专用指令乃是一项经典优化。</p>
 <p>比如说，Java 字节码指令集为加载 0.0、1.0、2.0 以及 -1 到 5 之间的整数都设有专用指令。(由于大多数成熟的 JVM 眼下都会在执行之前将字节码 JIT 编译为机器码， 这最终沦为一项冗余的优化。）</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  OP_CONSTANT,
+<div class="codehilite"><pre class="insert-before">  OP_CONSTANT,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_NIL</span>,
+<pre class="insert">  <span class="a">OP_NIL</span>,
   <span class="a">OP_TRUE</span>,
   <span class="a">OP_FALSE</span>,
-</pre><pre class="insert-after">
-  OP_ADD,
+</pre><pre class="insert-after">  OP_ADD,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 
 <p>我们的扫描器已经将 <code>true</code>、<code>false</code> 与 <code>nil</code> 视作关键字了， 于是我们可以直接进入解析阶段。 凭着我们表驱动的 Pratt 解析器， 我们只需将解析函数插入到与那些关键字类型对应的行里便可。 我们在这三个槽位中都使用同一个函数。这里：</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_FALSE</span>]         = {<span class="i">literal</span>,  <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_FALSE</span>]         = {<span class="i">literal</span>,  <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
 <p>这里：</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_TRUE</span>]          = {<span class="i">literal</span>,  <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_TRUE</span>]          = {<span class="i">literal</span>,  <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
 <p>还有这里：</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_NIL</span>]           = {<span class="i">literal</span>,  <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_NIL</span>]           = {<span class="i">literal</span>,  <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
 <p>当解析器碰到前缀位置的 <code>false</code>、<code>nil</code> 或 <code>true</code> 时， 它会调用这个新的解析函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>binary</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">literal</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">literal</span>() {
   <span class="k">switch</span> (<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">type</span>) {
     <span class="k">case</span> <span class="a">TOKEN_FALSE</span>: <span class="i">emitByte</span>(<span class="a">OP_FALSE</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">TOKEN_NIL</span>: <span class="i">emitByte</span>(<span class="a">OP_NIL</span>); <span class="k">break</span>;
@@ -488,125 +427,101 @@ add after <em>binary</em>()</div>
 <aside name="switch">
 <p>我们本可以为每一个字面量各用一个独立的解析函数， 从而省下对 <code>switch</code> 的需要， 但那样的话对我来说似乎多余地啰嗦。这只是一个口味问题。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-      case OP_CONSTANT: {
+<div class="codehilite"><pre class="insert-before">      case OP_CONSTANT: {
         Value constant = READ_CONSTANT();
         push(constant);
         break;
       }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_NIL</span>: <span class="i">push</span>(<span class="a">NIL_VAL</span>); <span class="k">break</span>;
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_NIL</span>: <span class="i">push</span>(<span class="a">NIL_VAL</span>); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_TRUE</span>: <span class="i">push</span>(<span class="a">BOOL_VAL</span>(<span class="k">true</span>)); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_FALSE</span>: <span class="i">push</span>(<span class="a">BOOL_VAL</span>(<span class="k">false</span>)); <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
+</pre><pre class="insert-after">      case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>这再清楚不过了。每条指令各自召唤对应的值并将其推到栈上。我们也千万别忘了反汇编器。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_CONSTANT:
+<div class="codehilite"><pre class="insert-before">    case OP_CONSTANT:
       return constantInstruction(&quot;OP_CONSTANT&quot;, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_NIL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_NIL</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_NIL&quot;</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_TRUE</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_TRUE&quot;</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_FALSE</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_FALSE&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_ADD:
+</pre><pre class="insert-after">    case OP_ADD:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 
 <p>有了这一切， 我们便能运行一段足以震撼世界的程序了：</p>
-<div class="codehilite"><pre>
-<span class="k">true</span>
+<div class="codehilite"><pre><span class="k">true</span>
 </pre></div>
 <p>只不过当解释器尝试打印结果时， 它又崩了。我们还得扩展 <code>printValue()</code> 以容纳那些新类型：</p>
-<div class="codehilite"><pre class="insert-before">
-void printValue(Value value) {
+<div class="codehilite"><pre class="insert-before">void printValue(Value value) {
 </pre><div class="source-file"><em>value.c</em><br>
 in <em>printValue</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">switch</span> (<span class="i">value</span>.<span class="i">type</span>) {
+<pre class="insert">  <span class="k">switch</span> (<span class="i">value</span>.<span class="i">type</span>) {
     <span class="k">case</span> <span class="a">VAL_BOOL</span>:
       <span class="i">printf</span>(<span class="a">AS_BOOL</span>(<span class="i">value</span>) ? <span class="s">&quot;true&quot;</span> : <span class="s">&quot;false&quot;</span>);
       <span class="k">break</span>;
     <span class="k">case</span> <span class="a">VAL_NIL</span>: <span class="i">printf</span>(<span class="s">&quot;nil&quot;</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">VAL_NUMBER</span>: <span class="i">printf</span>(<span class="s">&quot;%g&quot;</span>, <span class="a">AS_NUMBER</span>(<span class="i">value</span>)); <span class="k">break</span>;
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>(), replace 1 line</div>
 
 <p>搞定了！现在我们有了几种新类型。只不过它们目前还不怎么有用。除了字面量之外， 你实际上不能对它们做任何事情。在很长一段时间里 <code>nil</code> 都不会派上用场， 但我们可以先拿布尔值去跑跑逻辑运算符。</p>
-<h3><a href="#逻辑非与假值" name="逻辑非与假值"><small>18&#8202;.&#8202;4&#8202;.&#8202;1</small>逻辑非与假值</a></h3>
+<h3><a href="#逻辑非与假值" id="逻辑非与假值"><small>18&#8202;.&#8202;4&#8202;.&#8202;1</small>逻辑非与假值</a></h3>
 <p>最简单的逻辑运算符是我们老朋友那个叹号朋友——一元取非运算符。</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> !<span class="k">true</span>; <span class="c">// &quot;false&quot;</span>
+<div class="codehilite"><pre><span class="k">print</span> !<span class="k">true</span>; <span class="c">// &quot;false&quot;</span>
 </pre></div>
 <p>这个新运算有一条新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_DIVIDE,
+<div class="codehilite"><pre class="insert-before">  OP_DIVIDE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_NOT</span>,
-</pre><pre class="insert-after">
-  OP_NEGATE,
+<pre class="insert">  <span class="a">OP_NOT</span>,
+</pre><pre class="insert-after">  OP_NEGATE,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 
 <p>我们可以复用之前为一元取负所写的 <code>unary()</code> 解析函数来编译一条取非表达式。我们只需将其插入到解析表中即可。</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_STAR]          = {NULL,     binary, PREC_FACTOR},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_STAR]          = {NULL,     binary, PREC_FACTOR},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_BANG</span>]          = {<span class="i">unary</span>,    <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
-</pre><pre class="insert-after">
-  [TOKEN_BANG_EQUAL]    = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_BANG</span>]          = {<span class="i">unary</span>,    <span class="a">NULL</span>,   <span class="a">PREC_NONE</span>},
+</pre><pre class="insert-after">  [TOKEN_BANG_EQUAL]    = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
 <p>由于我早知会这么干， 那个 <code>unary()</code> 函数本身已经有一个对 token 类型的 switch 用于选定该发射哪条字节码指令。我们只需再添一个 case 即可。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (operatorType) {
+<div class="codehilite"><pre class="insert-before">  switch (operatorType) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>unary</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">TOKEN_BANG</span>: <span class="i">emitByte</span>(<span class="a">OP_NOT</span>); <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+<pre class="insert">    <span class="k">case</span> <span class="a">TOKEN_BANG</span>: <span class="i">emitByte</span>(<span class="a">OP_NOT</span>); <span class="k">break</span>;
+</pre><pre class="insert-after">    case TOKEN_MINUS: emitByte(OP_NEGATE); break;
     default: return; // Unreachable.
   }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>unary</em>()</div>
 
 <p>前端到此为止。 咱们转战到 VM 去， 让这条指令化为现实。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
+<div class="codehilite"><pre class="insert-before">      case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_NOT</span>:
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_NOT</span>:
         <span class="i">push</span>(<span class="a">BOOL_VAL</span>(<span class="i">isFalsey</span>(<span class="i">pop</span>())));
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_NEGATE:
+</pre><pre class="insert-after">      case OP_NEGATE:
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>与之前的一元运算符一样， 它弹出那唯一的运算对象， 执行运算， 再将结果推入栈中。 而 — 与之前的那一次一样 —— 我们也必须考虑动态类型的问题。对 <code>true</code> 取逻辑非很简单， 但没什么能阻止一位调皮的程序员写出如此之作：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> !<span class="k">nil</span>;
+<div class="codehilite"><pre><span class="k">print</span> !<span class="k">nil</span>;
 </pre></div>
 <p>对一元取负我们把任何不是 <span name="negate">数字</span> 的值对其取负都视为错误。但 Lox，与大多数脚本语言一样，在 <code>!</code> 以及其他期待布尔的语境中更加宽容。对其它类型如何被对待的规则叫做&ldquo;假值性&ldquo;，我们这样来实现它：</p>
 <aside name="negate">
@@ -614,40 +529,33 @@ in <em>run</em>()</div>
 </aside>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>peek</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">isFalsey</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">isFalsey</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="k">return</span> <span class="a">IS_NIL</span>(<span class="i">value</span>) || (<span class="a">IS_BOOL</span>(<span class="i">value</span>) &amp;&amp; !<span class="a">AS_BOOL</span>(<span class="i">value</span>));
 }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, add after <em>peek</em>()</div>
 
 <p>Lox 沿袭了 Ruby 的做法：<code>nil</code> 与 <code>false</code> 是假值， 其他所有值都像 <code>true</code> 那般行事。我们已经有了一条新指令可以发射， 于是我们也需要能够在反汇编器中对其进行<strong>反汇编</strong>。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_DIVIDE:
+<div class="codehilite"><pre class="insert-before">    case OP_DIVIDE:
       return simpleInstruction(&quot;OP_DIVIDE&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_NOT</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_NOT</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_NOT&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_NEGATE:
+</pre><pre class="insert-after">    case OP_NEGATE:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 
-<h3><a href="#相等与比较运算符" name="相等与比较运算符"><small>18&#8202;.&#8202;4&#8202;.&#8202;2</small>相等与比较运算符</a></h3>
+<h3><a href="#相等与比较运算符" id="相等与比较运算符"><small>18&#8202;.&#8202;4&#8202;.&#8202;2</small>相等与比较运算符</a></h3>
 <p>这倒也不算太难。咱们趁热打铁， 一并把相等与比较运算符也一并扫掉： <code>==</code>、<code>!=</code>、<code>&lt;</code>、<code>&gt;</code>、<code>&lt;=</code> 与 <code>&gt;=</code>。这也就覆盖了所有返回布尔结果的运算符， 除了逻辑运算符 <code>and</code> 与 <code>or</code> 不计在内。 由于那些需要短路求值（ 基本上属于一点控制流范畴）， 我们眼下还不具备条件。</p>
 <p>这些运算符对应的新指令如下：</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_FALSE,
+<div class="codehilite"><pre class="insert-before">  OP_FALSE,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_EQUAL</span>,
+<pre class="insert">  <span class="a">OP_EQUAL</span>,
   <span class="a">OP_GREATER</span>,
   <span class="a">OP_LESS</span>,
-</pre><pre class="insert-after">
-  OP_ADD,
+</pre><pre class="insert-after">  OP_ADD,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 
@@ -659,86 +567,70 @@ in enum <em>OpCode</em></div>
 <p>在本书中， 我们不会纠缠于这些细节， 但在你真正实现某门语言的时候， 这些问题会变得很重要。</p>
 </aside>
 <p>在解析器那边， 我们确实有六个新的运算符要安入解析表之中。我们复用之前那个 <code>binary()</code> 解析函数。这里是 <code>!=</code> 对应的那一行：</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_BANG]          = {unary,    NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_BANG]          = {unary,    NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_BANG_EQUAL</span>]    = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_EQUALITY</span>},
-</pre><pre class="insert-after">
-  [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_BANG_EQUAL</span>]    = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_EQUALITY</span>},
+</pre><pre class="insert-after">  [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 1 line</div>
 
 <p>其余五个运算符在表中稍靠后几行。</p>
-<div class="codehilite"><pre class="insert-before">
-  [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
+<div class="codehilite"><pre class="insert-before">  [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
 replace 5 lines</div>
-<pre class="insert">
-  [<span class="a">TOKEN_EQUAL_EQUAL</span>]   = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_EQUALITY</span>},
+<pre class="insert">  [<span class="a">TOKEN_EQUAL_EQUAL</span>]   = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_EQUALITY</span>},
   [<span class="a">TOKEN_GREATER</span>]       = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_COMPARISON</span>},
   [<span class="a">TOKEN_GREATER_EQUAL</span>] = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_COMPARISON</span>},
   [<span class="a">TOKEN_LESS</span>]          = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_COMPARISON</span>},
   [<span class="a">TOKEN_LESS_EQUAL</span>]    = {<span class="a">NULL</span>,     <span class="i">binary</span>, <span class="a">PREC_COMPARISON</span>},
-</pre><pre class="insert-after">
-  [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
+</pre><pre class="insert-after">  [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, replace 5 lines</div>
 
 <p>在 <code>binary()</code> 内部， 我们已经有一个开关为每个 token 类型发射恰当字节码的代码了。我们为这六个新运算符添上各自的 case 即可。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (operatorType) {
+<div class="codehilite"><pre class="insert-before">  switch (operatorType) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>binary</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">TOKEN_BANG_EQUAL</span>:    <span class="i">emitBytes</span>(<span class="a">OP_EQUAL</span>, <span class="a">OP_NOT</span>); <span class="k">break</span>;
+<pre class="insert">    <span class="k">case</span> <span class="a">TOKEN_BANG_EQUAL</span>:    <span class="i">emitBytes</span>(<span class="a">OP_EQUAL</span>, <span class="a">OP_NOT</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">TOKEN_EQUAL_EQUAL</span>:   <span class="i">emitByte</span>(<span class="a">OP_EQUAL</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">TOKEN_GREATER</span>:       <span class="i">emitByte</span>(<span class="a">OP_GREATER</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">TOKEN_GREATER_EQUAL</span>: <span class="i">emitBytes</span>(<span class="a">OP_LESS</span>, <span class="a">OP_NOT</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">TOKEN_LESS</span>:          <span class="i">emitByte</span>(<span class="a">OP_LESS</span>); <span class="k">break</span>;
     <span class="k">case</span> <span class="a">TOKEN_LESS_EQUAL</span>:    <span class="i">emitBytes</span>(<span class="a">OP_GREATER</span>, <span class="a">OP_NOT</span>); <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case TOKEN_PLUS:          emitByte(OP_ADD); break;
+</pre><pre class="insert-after">    case TOKEN_PLUS:          emitByte(OP_ADD); break;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>binary</em>()</div>
 
 <p><code>==</code>、<code>&lt;</code> 与 <code>&gt;</code> 各发射一条指令。其余三个则发射一对： 一条用于求与其反向运算的指令， 接着一条 <code>OP_NOT</code> 用于将结果翻转。六个运算符， 只付出三条指令的代价！</p>
 <p>这意味着到了 VM 这边， 我们的工作更加轻松了。相等比较是其中最通用的一项运算。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_FALSE: push(BOOL_VAL(false)); break;
+<div class="codehilite"><pre class="insert-before">      case OP_FALSE: push(BOOL_VAL(false)); break;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_EQUAL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_EQUAL</span>: {
         <span class="t">Value</span> <span class="i">b</span> = <span class="i">pop</span>();
         <span class="t">Value</span> <span class="i">a</span> = <span class="i">pop</span>();
         <span class="i">push</span>(<span class="a">BOOL_VAL</span>(<span class="i">valuesEqual</span>(<span class="i">a</span>, <span class="i">b</span>)));
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
+</pre><pre class="insert-after">      case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>你可以对任意一对对象——甚至类型不同的对象——施行 <code>==</code> 运算。该运算足够复杂，值得抽取出一个独立的函数。那个函数总是返回一个 C <code>bool</code>， 所以我们可以安全地将结果包入一枚 <code>BOOL_VAL</code> 之中。这个函数针对的是 Values， 于是它栖身于 &ldquo;value&rdquo; 模块之中。</p>
-<div class="codehilite"><pre class="insert-before">
-} ValueArray;
+<div class="codehilite"><pre class="insert-before">} ValueArray;
 
 </pre><div class="source-file"><em>value.h</em><br>
 add after struct <em>ValueArray</em></div>
-<pre class="insert">
-<span class="t">bool</span> <span class="i">valuesEqual</span>(<span class="t">Value</span> <span class="i">a</span>, <span class="t">Value</span> <span class="i">b</span>);
-</pre><pre class="insert-after">
-void initValueArray(ValueArray* array);
+<pre class="insert"><span class="t">bool</span> <span class="i">valuesEqual</span>(<span class="t">Value</span> <span class="i">a</span>, <span class="t">Value</span> <span class="i">b</span>);
+</pre><pre class="insert-after">void initValueArray(ValueArray* array);
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em>, add after struct <em>ValueArray</em></div>
 
 <p>以下是其实现：</p>
 <div class="codehilite"><div class="source-file"><em>value.c</em><br>
 add after <em>printValue</em>()</div>
-<pre>
-<span class="t">bool</span> <span class="i">valuesEqual</span>(<span class="t">Value</span> <span class="i">a</span>, <span class="t">Value</span> <span class="i">b</span>) {
+<pre><span class="t">bool</span> <span class="i">valuesEqual</span>(<span class="t">Value</span> <span class="i">a</span>, <span class="t">Value</span> <span class="i">b</span>) {
   <span class="k">if</span> (<span class="i">a</span>.<span class="i">type</span> != <span class="i">b</span>.<span class="i">type</span>) <span class="k">return</span> <span class="k">false</span>;
   <span class="k">switch</span> (<span class="i">a</span>.<span class="i">type</span>) {
     <span class="k">case</span> <span class="a">VAL_BOOL</span>:   <span class="k">return</span> <span class="a">AS_BOOL</span>(<span class="i">a</span>) == <span class="a">AS_BOOL</span>(<span class="i">b</span>);
@@ -759,46 +651,39 @@ add after <em>printValue</em>()</div>
 <p>对于每一种值类型， 我们都有一条单独的 case 来负责比较值本身。鉴于那几个 case 如此相似， 你或许会奇怪为什么我们不直接对两枚 Value 结构体调用 <code>memcmp()</code> 一锤定音。问题在于 由于填充与各字段大小不一致， 一枚 Value 包含着许多未被使用的比特。C 对这些未使用的比特保留着什么一点都不做保证， 最终便可能使得两枚本应等价的 Value 在内存中实际不同。</p><img src="image/types-of-values/memcmp.png" alt=" 两枚等价 Value 的内存表示， 其中未使用的字节不同。" />
 <p><em>（你不会相信我是在弄明白这件事实之前吃了多少苦头。）</em></p>
 <p>无论如何， 当我们为 clox 添加更多类型时， 这个函数会因此长出新 case。眼下， 这三个便已足够。其他比较运算符更加简单因为它们只适用于数字。</p>
-<div class="codehilite"><pre class="insert-before">
-        push(BOOL_VAL(valuesEqual(a, b)));
+<div class="codehilite"><pre class="insert-before">        push(BOOL_VAL(valuesEqual(a, b)));
         break;
       }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_GREATER</span>:  <span class="a">BINARY_OP</span>(<span class="a">BOOL_VAL</span>, &gt;); <span class="k">break</span>;
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_GREATER</span>:  <span class="a">BINARY_OP</span>(<span class="a">BOOL_VAL</span>, &gt;); <span class="k">break</span>;
       <span class="k">case</span> <span class="a">OP_LESS</span>:     <span class="a">BINARY_OP</span>(<span class="a">BOOL_VAL</span>, &lt;); <span class="k">break</span>;
-</pre><pre class="insert-after">
-      case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
+</pre><pre class="insert-after">      case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 
 <p>我们之前曾扩展过 <code>BINARY_OP</code> 宏， 使其能够产出非数字类型的返回值。现在我们便派上了用场。我们传入 <code>BOOL_VAL</code>， 因为结果值的类型是布尔。除此之外， 它与加或减并无二致。</p>
 <p>一切照例， 本日咏叹调的尾音是为那些新指令添上反汇编的支持。</p>
-<div class="codehilite"><pre class="insert-before">
-    case OP_FALSE:
+<div class="codehilite"><pre class="insert-before">    case OP_FALSE:
       return simpleInstruction(&quot;OP_FALSE&quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_EQUAL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_EQUAL</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_EQUAL&quot;</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_GREATER</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_GREATER&quot;</span>, <span class="i">offset</span>);
     <span class="k">case</span> <span class="a">OP_LESS</span>:
       <span class="k">return</span> <span class="i">simpleInstruction</span>(<span class="s">&quot;OP_LESS&quot;</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_ADD:
+</pre><pre class="insert-after">    case OP_ADD:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 
 <p>有了这一切， 我们的数字计算器已经变成了更加贴近一款通用表达式求值器的东西。启动 clox 并输入这段吧：</p>
-<div class="codehilite"><pre>
-!(<span class="n">5</span> - <span class="n">4</span> &gt; <span class="n">3</span> * <span class="n">2</span> == !<span class="k">nil</span>)
+<div class="codehilite"><pre>!(<span class="n">5</span> - <span class="n">4</span> &gt; <span class="n">3</span> * <span class="n">2</span> == !<span class="k">nil</span>)
 </pre></div>
 <p>好吧， 我承认这或许不算最实用的表达式，<strong>但</strong>咱们确实在进步。我们还缺一种自己带字面量形式的内置类型：字符串。那些东西要复杂得多， 因为字符串的大小是可变的。这一微不足道的差别却牵引出如此宏大的影响， 以致于我们要为字符串专门 <a href="strings.html"> 再开一章 </a> 给它们单独叙述。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>18&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>18&#8202;.&#8202;5</small>挑战</a></h2>
 <ol>
 <li>
 <p>我们本可以进一步压缩二元运算符。还有哪些指令可以被删去， 而编译器如何应对那些 不再存在的指令？</p>
@@ -813,7 +698,7 @@ in <em>disassembleInstruction</em>()</div>
 <a href="strings.html" class="next">
   Next Chapter: &ldquo;Strings&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

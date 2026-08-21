@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Introduction<small>1</small></a></h3>
 
 <ul>
@@ -55,7 +54,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="welcome.html" title="Welcome" class="prev">←</a>
 <a href="a-map-of-the-territory.html" title="A Map of the Territory" class="next">→</a>
 </nav>
@@ -63,9 +62,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Introduction<small>1</small></a></h3>
 
 <ul>
@@ -92,25 +90,7 @@
   <div class="number">1</div>
   <h1>Introduction</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#序言" name="序言"><small>1&#8202;.&#8202;0</small>序言</a></h1><!--
+<h1><a href="#序言" id="序言"><small>1&#8202;.&#8202;0</small>序言</a></h1><!--
 > Fairy tales are more than true: not because they tell us that dragons exist,
 > but because they tell us that dragons can be beaten.
 >
@@ -182,7 +162,7 @@ adhered to this tangible substrate.
 <p>这也是我对你的期望。我希望你通过动手实操，对一门真正程序设计语言的诞生过程留下一个坚实的印象，如此一来，以后当你在阅读其他更具理论性的书籍著作时，这些概念将深深镌刻进你的大脑，使得你可以更加充分地理解它们。</p><!--
 -- Why Learn This Stuff?
 -->
-<h2><a href="#为什么要学习它？" name="为什么要学习它？"><small>1&#8202;.&#8202;1</small>为什么要学习它？</a></h2><!--
+<h2><a href="#为什么要学习它？" id="为什么要学习它？"><small>1&#8202;.&#8202;1</small>为什么要学习它？</a></h2><!--
 Every introduction to every compiler book seems to have this section. I don't
 know what it is about programming languages that causes such existential doubt.
 I don't think ornithology books worry about justifying their existence. They
@@ -201,7 +181,7 @@ justify. Fortunately, it isn't.
 <p>我敢肯定地说，你们中的大多数人创造出一门被广为使用的通用程序设计语言的可能性微乎其微，毕竟，即使把这个世界上被广为应用程序语言的设计者们都拉出来，还塞不满一辆大众巴士呢，如果学习编译原理的<strong>唯一</strong>理由就是要加入这群精英，创造出世界流行的程序设计语言，这无疑令人费解。幸运的是，事实并非如此。</p><!--
 --- Little languages are everywhere
 -->
-<h3><a href="#小众语言无处不在" name="小众语言无处不在"><small>1&#8202;.&#8202;1&#8202;.&#8202;1</small>小众语言无处不在</a></h3><!--
+<h3><a href="#小众语言无处不在" id="小众语言无处不在"><small>1&#8202;.&#8202;1&#8202;.&#8202;1</small>小众语言无处不在</a></h3><!--
 For every successful general-purpose language, there are a thousand successful
 niche ones. We used to call them "little languages", but inflation in the jargon
 economy led to the name "domain-specific languages". These are pidgins
@@ -229,7 +209,7 @@ needing to debug and maintain it and poke around in its guts.
 <p>但如果当现有的领域特定语言代码库无法满足你的需求时，你还是需要勉为其难地手写一枚解析器或者类似的工具以满足需求。即使你想要重用一些现有的代码，你也将不可避免地对其进行调试和维护，深入研究其原理。</p><!--
 --- Languages are great exercise
 -->
-<h3><a href="#着实锻炼编程技艺" name="着实锻炼编程技艺"><small>1&#8202;.&#8202;1&#8202;.&#8202;2</small>着实锻炼编程技艺</a></h3><!--
+<h3><a href="#着实锻炼编程技艺" id="着实锻炼编程技艺"><small>1&#8202;.&#8202;1&#8202;.&#8202;2</small>着实锻炼编程技艺</a></h3><!--
 Long distance runners sometimes train with weights strapped to their ankles or
 at high altitudes where the atmosphere is thin. When they later unburden
 themselves, the new relative ease of light limbs and oxygen-rich air enables
@@ -251,7 +231,7 @@ algorithms in your day job.
 <p>尽管我想努力向你传达，实现一枚程序语言解释器并不如你想象的那般困难，但实际上这仍是一个巨大的挑战。克服它，你会变得更加强大，在日常工作中，你也将更加聪明地运用算法与数据结构。</p><!--
 --- One more reason
 -->
-<h3><a href="#另一个原因" name="另一个原因"><small>1&#8202;.&#8202;1&#8202;.&#8202;3</small>另一个原因</a></h3><!--
+<h3><a href="#另一个原因" id="另一个原因"><small>1&#8202;.&#8202;1&#8202;.&#8202;3</small>另一个原因</a></h3><!--
 This last reason is hard for me to admit, because it's so close to my heart.
 Ever since I learned to program as a kid, I felt there was something magical
 about languages. When I first tapped out BASIC programs one key at a time I
@@ -298,7 +278,7 @@ And, who knows, maybe you *will* make the next great language. Someone has to.
 <p>说不定，下个知名程序设计语言的创造者就是你呢！</p><!--
 -- How the Book Is Organized
 -->
-<h2><a href="#本书是如何组织的" name="本书是如何组织的"><small>1&#8202;.&#8202;2</small>本书是如何组织的</a></h2><!--
+<h2><a href="#本书是如何组织的" id="本书是如何组织的"><small>1&#8202;.&#8202;2</small>本书是如何组织的</a></h2><!--
 This book is broken into three parts. You're reading the first one now. It's a
 couple of chapters to get you oriented, teach you some of the lingo that
 language hackers use, and introduce you to Lox, the language we'll be
@@ -324,7 +304,7 @@ delightful facets:
 <p>除了内容丰富、语句清晰的主体内容外，每个章节还会包含以下数个讨喜的部分：</p><!--
 --- The code
 -->
-<h3><a href="#代码" name="代码"><small>1&#8202;.&#8202;2&#8202;.&#8202;1</small>代码</a></h3><!--
+<h3><a href="#代码" id="代码"><small>1&#8202;.&#8202;2&#8202;.&#8202;1</small>代码</a></h3><!--
 We're about *crafting* interpreters, so this book contains real code. Every
 single line of code needed is included, and each snippet tells you where to
 insert it in your ever-growing implementation.
@@ -347,7 +327,7 @@ Yacc wasn't the first of its ilk, which is why it's named "Yacc" -- *Yet
 Another* Compiler-Compiler. A later similar tool is [Bison][], named as a pun on
 the pronunciation of Yacc like "yak".
 -->
-<p>Yacc 不是其同类产品中的第一个，这也是为什么它被命名为 Yacc 的原因：&ldquo;<em>Yet Another</em> Compiler-Compiler&rdquo;，在它之后还有<a href="https://en.wikipedia.org/wiki/GNU_bison">Bison</a>这样的工具诞生。Yacc 的发音类似于：&ldquo;yak（牦牛）&ldquo;。</p><img src="image/introduction/yak.png" alt="A yak."><!--
+<p>Yacc 不是其同类产品中的第一个，这也是为什么它被命名为 Yacc 的原因：&ldquo;<em>Yet Another</em> Compiler-Compiler&rdquo;，在它之后还有<a href="https://en.wikipedia.org/wiki/GNU_bison">Bison</a>这样的工具诞生。Yacc 的发音类似于：&ldquo;yak（牦牛）&ldquo;。</p><img src="image/introduction/yak.png" alt="A yak." /><!--
 If you find all of these little self-references and puns charming and fun,
 you'll fit right in here. If not, well, maybe the language nerd sense of humor
 is an acquired taste.
@@ -382,7 +362,7 @@ I want this book to age like XO brandy, not backyard hooch.
 <p>虽然书中包含了每一行需要实现的代码和对这些代码的解释，但我没有加入如何让解释器程序编译运行起来的步骤描述。这是因为我相信你有能力快速撰写一份 Makefile 或是使用 IDE 建立一个工程项目，从而让代码运行起来，相信我，这不是什么难事。而且，描述如何让程序编译执行的文字很快就会过时，新的代码工具层出不穷。我希望这本书能像白兰地酒那样，越老越醇香。</p><!--
 --- Snippets
 -->
-<h3><a href="#代码片段" name="代码片段"><small>1&#8202;.&#8202;2&#8202;.&#8202;2</small>代码片段</a></h3><!--
+<h3><a href="#代码片段" id="代码片段"><small>1&#8202;.&#8202;2&#8202;.&#8202;2</small>代码片段</a></h3><!--
 Since the book contains literally every line of code needed for the
 implementations, the snippets are quite precise. Also, because I try to keep the
 program in a runnable state even when major features are missing, sometimes we
@@ -416,7 +396,7 @@ lines that you need to remove and replace with the new snippet.
 <p>可以看到，在代码片段的中心位置，有需要添加的代码，这部分代码被着重显示。新增代码上下环绕几行颜色偏淡已经存在的上下文代码。侧边会有个简短提示，告诉你应在哪个文件的哪个位置插入代码。如果提示文字中有诸如“替换_行”的描述，这就表示你需要先移除此处的旧代码，再替换上代码片段中的新代码。</p><!--
 --- Asides
 -->
-<h3><a href="#旁注" name="旁注"><small>1&#8202;.&#8202;2&#8202;.&#8202;3</small>旁注</a></h3><!--
+<h3><a href="#旁注" id="旁注"><small>1&#8202;.&#8202;2&#8202;.&#8202;3</small>旁注</a></h3><!--
 <span name="joke">Asides</span> contain biographical sketches, historical
 background, references to related topics, and suggestions of other areas to
 explore. There's nothing that you *need* to know in them to understand later
@@ -432,7 +412,7 @@ drawings.
 </aside><!--
 --- Challenges
 -->
-<h3><a href="#挑战" name="挑战"><small>1&#8202;.&#8202;2&#8202;.&#8202;4</small>挑战</a></h3><!--
+<h3><a href="#挑战" id="挑战"><small>1&#8202;.&#8202;2&#8202;.&#8202;4</small>挑战</a></h3><!--
 Each chapter ends with a few exercises. Unlike textbook problem sets, which tend
 to review material you already covered, these are to help you learn *more* than
 what's in the chapter. They force you to step off the guided path and explore on
@@ -455,7 +435,7 @@ code. The later chapters assume your interpreter is in a pristine
 </aside><!--
 --- Design notes
 -->
-<h3><a href="#设计笔记" name="设计笔记"><small>1&#8202;.&#8202;2&#8202;.&#8202;5</small>设计笔记</a></h3><!--
+<h3><a href="#设计笔记" id="设计笔记"><small>1&#8202;.&#8202;2&#8202;.&#8202;5</small>设计笔记</a></h3><!--
 Most "programming language" books are strictly programming language
 *implementation* books. They rarely discuss how one might happen to *design* the
 language being implemented. Implementation is fun because it is so <span
@@ -494,7 +474,7 @@ aim.
 <p>上述的这些都是你的新语言能否成功的重要因素。我也希望你的语言能大获成功，所以在部分章节的结尾，我会留下“设计笔记”，一篇从程序语言使用者视角出发，探讨程序语言设计的小短文。当然，我个人并不是这方面的专家，写得不好也请别见怪，糊上一把盐吞下去吧，味道能好不少。如果我写的这些内容能够发人深思，那我的目的也就达到了。</p><!--
 -- The First Interpreter
 -->
-<h2><a href="#第一支解释器" name="第一支解释器"><small>1&#8202;.&#8202;3</small>第一支解释器</a></h2><!--
+<h2><a href="#第一支解释器" id="第一支解释器"><small>1&#8202;.&#8202;3</small>第一支解释器</a></h2><!--
 We'll write our first interpreter, jlox, in <span name="lang">Java</span>. The
 focus is on *concepts*. We'll write the simplest, cleanest code we can to
 correctly implement the semantics of the language. This will get us comfortable
@@ -543,7 +523,7 @@ compiler to compile future versions of itself, and you can discard the original
 one compiled from the other compiler. This is called **bootstrapping**, from
 the image of pulling yourself up by your own bootstraps.
 -->
-<p>当然在最开始的时候，你还不能用新语言自身去实现这门语言的编译器，因为语言编译器压根儿还没诞生呢。所以你选用其他已经实现的程序设计语言编写新语言编译器，一旦你得到了第一支新语言编译器程序，你就可以拿着它编译自身了。Go 语言是个很好的例子：最初版本 Go 语言的编译器使用 C 语言编写，再得到最初一版编译器后，我们就可以使用 Go 语言自身来开发 Go 语言的编译器了。这就是<strong>自举</strong>，听起来就像是一个人自己把自己给提了起来。</p><img src="image/introduction/bootstrap.png" alt="Fact: This is the primary mode of transportation of the American cowboy.">
+<p>当然在最开始的时候，你还不能用新语言自身去实现这门语言的编译器，因为语言编译器压根儿还没诞生呢。所以你选用其他已经实现的程序设计语言编写新语言编译器，一旦你得到了第一支新语言编译器程序，你就可以拿着它编译自身了。Go 语言是个很好的例子：最初版本 Go 语言的编译器使用 C 语言编写，再得到最初一版编译器后，我们就可以使用 Go 语言自身来开发 Go 语言的编译器了。这就是<strong>自举</strong>，听起来就像是一个人自己把自己给提了起来。</p><img src="image/introduction/bootstrap.png" alt="Fact: This is the primary mode of transportation of the American cowboy." />
 </aside><!--
 And, finally, Java is hugely popular. That means there's a good chance you
 already know it, so there's less for you to learn to get going in the book. If
@@ -561,7 +541,7 @@ how Java *itself* implements those things.
 <p>当你走完第二部分的全部内容时，我们即实现了一枚代码简单，可读性较高的 Lox 语言解释器。虽然这枚小解释器运行速度不快，但其对 Lox 各项语言功能的实现都是准确无误的。我们的解释器实现依赖了许多 Java 虚拟机（JVM）自身的运行时特性，那么自然我们也想对<em>虚拟机工作原理</em>一探究竟，由此就有了第二支我们要实现的解释器。</p><!--
 -- The Second Interpreter
 -->
-<h2><a href="#第二支解释器" name="第二支解释器"><small>1&#8202;.&#8202;4</small>第二支解释器</a></h2><!--
+<h2><a href="#第二支解释器" id="第二支解释器"><small>1&#8202;.&#8202;4</small>第二支解释器</a></h2><!--
 So in the next part, we start all over again, but this time in C. C is the
 perfect language for understanding how an implementation *really* works, all the
 way down to the bytes in memory and the code flowing through the CPU.
@@ -614,7 +594,7 @@ few thousand lines of code.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>1&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>1&#8202;.&#8202;5</small>挑战</a></h2><!--
 1.  There are at least six domain-specific languages used in the [little system
     I cobbled together][repo] to write and publish this book. What are they?
 -->
@@ -639,7 +619,7 @@ few thousand lines of code.
 <div class="design-note"><!--
 -- Design Note: What's in a Name?
 -->
-<h2><a href="#设计笔记：如何为一门新程序设计语言起名字？" name="设计笔记：如何为一门新程序设计语言起名字？"><small>1&#8202;.&#8202;6</small>设计笔记：如何为一门新程序设计语言起名字？</a></h2><!--
+<h2><a href="#设计笔记：如何为一门新程序设计语言起名字？" id="设计笔记：如何为一门新程序设计语言起名字？"><small>1&#8202;.&#8202;6</small>设计笔记：如何为一门新程序设计语言起名字？</a></h2><!--
 One of the hardest challenges in writing this book was coming up with a name for
 the language it implements. I went through *pages* of candidates before I found
 one that worked. As you'll discover on the first day you start building your own
@@ -694,7 +674,7 @@ unique token.
 <a href="a-map-of-the-territory.html" class="next">
   Next Chapter: &ldquo;A Map of the Territory&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

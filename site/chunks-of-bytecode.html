@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Chunks of Bytecode<small>14</small></a></h3>
 
 <ul>
@@ -57,7 +56,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="a-bytecode-virtual-machine.html" title="A Bytecode Virtual Machine" class="prev">←</a>
 <a href="a-virtual-machine.html" title="A Virtual Machine" class="next">→</a>
 </nav>
@@ -65,9 +64,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Chunks of Bytecode<small>14</small></a></h3>
 
 <ul>
@@ -96,25 +94,7 @@
   <div class="number">14</div>
   <h1>Chunks of Bytecode</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#字节码块" name="字节码块"><small>14&#8202;.&#8202;0</small>字节码块</a></h1>
+<h1><a href="#字节码块" id="字节码块"><small>14&#8202;.&#8202;0</small>字节码块</a></h1>
 <blockquote>
 <p>若你发现自己几乎把所有时间都花在了理论上，那就分出一些注意力给实践；它会改进你的理论。若你发现自己几乎把所有时间都花在了实践上，那就分出一些注意力给理论；它会改进你的实践。</p>
 <p><cite>高德纳</cite></p>
@@ -124,8 +104,7 @@
 <p>当然，我们这第二款解释器仍然倚赖于 C 标准库来完成诸如内存分配之类的基本工作，而 C 编译器也让我们免于纠缠目标机器码的细节——天晓得，那段机器码或许还要靠芯片上的微代码来实现。而 C 运行时又倚赖操作系统来分页内存。但我们总得<strong>在某个地方停一停</strong>，否则这本书就塞不进你的书架了。</p>
 </aside>
 <p>之所以 jlox 还不够用，一个更为根本的原因是它<strong>太慢了</strong>。树遍历解释器对于某些高层、声明式的语言来说足以胜任。但对于一门通用、命令式的语言——哪怕是像 Lox 这样的&ldquo;脚本&ldquo;语言——它也飞不起来。看看下面这段小小的脚本：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">fib</span>(<span class="i">n</span>) {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">fib</span>(<span class="i">n</span>) {
   <span class="k">if</span> (<span class="i">n</span> &lt; <span class="n">2</span>) <span class="k">return</span> <span class="i">n</span>;
   <span class="k">return</span> <span class="i">fib</span>(<span class="i">n</span> - <span class="n">1</span>) + <span class="i">fib</span>(<span class="i">n</span> - <span class="n">2</span>);<span name="fib"> </span>
 }
@@ -141,9 +120,9 @@
 <p>在我这台笔记本上，jlox 要执行这段代码要花大约 72 秒。一段等价的 C 程序只需半秒。我们这种动态类型的脚本语言，永远不可能快过那种静态类型、手动内存管理的语言，但我们也不必甘心<strong>两个数量级</strong>以上的差距。</p>
 <p>我们本可以拿着 jlox 跑在 profiler 之下，开始调优那些热点，但这也只能让我们走到这一步。它的执行模型——遍历 AST——从根本上就是错误的设计。你没办法把它精修到你想要的性能，正如你无法把一台 AMC Gremlin 改装成 SR-71 Blackbird 一样。</p>
 <p>我们需要重新思考核心模型。本章将引入这一模型——字节码——并开启我们新的解释器 clox。</p>
-<h2><a href="#字节码？" name="字节码？"><small>14&#8202;.&#8202;1</small>字节码？</a></h2>
+<h2><a href="#字节码？" id="字节码？"><small>14&#8202;.&#8202;1</small>字节码？</a></h2>
 <p>在工程领域，几乎没有什么选择是毫无权衡的。为了更好地理解我们为何选择字节码，我们来让它与几种替代方案一较高下。</p>
-<h3><a href="#为什么不走-ast？" name="为什么不走-ast？"><small>14&#8202;.&#8202;1&#8202;.&#8202;1</small>为什么不走 AST？</a></h3>
+<h3><a href="#为什么不走-ast？" id="为什么不走-ast？"><small>14&#8202;.&#8202;1&#8202;.&#8202;1</small>为什么不走 AST？</a></h3>
 <p>我们现有的解释器有几样拿得出手的优势：</p>
 <ul>
 <li>
@@ -170,7 +149,7 @@
 <p>即便那些对象在语法分析器第一次产出它们时，恰好是按顺序被分配的，那么经过几轮垃圾回收之后——垃圾回收可能会在内存中挪动对象——它们最终落在哪里，便无从知晓了。</p>
 </aside>
 <p>我们的 AST 遍历器还背负着接口分派与访问者模式之类的开销，但光是局部性问题，便足以让我们去追求一种更优的代码表示。</p>
-<h3><a href="#为什么不编译成本地代码？" name="为什么不编译成本地代码？"><small>14&#8202;.&#8202;1&#8202;.&#8202;2</small>为什么不编译成本地代码？</a></h3>
+<h3><a href="#为什么不编译成本地代码？" id="为什么不编译成本地代码？"><small>14&#8202;.&#8202;1&#8202;.&#8202;2</small>为什么不编译成本地代码？</a></h3>
 <p>若你想<strong>真</strong>跑得飞快，你便想把那些层层间接统统搬到一边。直抵金属。机器码。它<strong>听起来</strong>就很快。<strong>机器码</strong>。</p>
 <p>直接编译到目标芯片所支持的原生指令集，是那些最快的语言所采用的做法。目标原生代码，自打当年工程师们真的<span name="hand">亲手</span>用机器码写程序开始，便一直是效率最高的选项。</p>
 <aside name="hand">
@@ -184,7 +163,7 @@
 <p>情况也没有那么糟糕。一款架构良好的编译器可以让你跨不同架构共享前端与大部分中层优化 pass。主要是代码生成，以及围绕指令选择的一些具体细节，需要你为每一种架构从零写起。</p>
 <p><a href="https://llvm.org/">LLVM</a> 项目便开箱即用地为你提供了其中的相当一部分。倘若你的编译器输出 LLVM 自己的那种特殊中间语言，LLVM 便进一步将其编译为多种架构的原生代码。</p>
 </aside>
-<h3><a href="#什么是字节码？" name="什么是字节码？"><small>14&#8202;.&#8202;1&#8202;.&#8202;3</small>什么是字节码？</a></h3>
+<h3><a href="#什么是字节码？" id="什么是字节码？"><small>14&#8202;.&#8202;1&#8202;.&#8202;3</small>什么是字节码？</a></h3>
 <p>把这两点刻进你的脑子里。在一端，树遍历解释器简单、可移植，但慢。在另一端，原生代码复杂、平台相关，但快。字节码居于其间。它保留了树遍历器的可移植性——我们这本书里不会去与汇编代码打交道。它牺牲了<strong>一些</strong>简洁性以换取性能提升作为回报，但远不及完全走原生那条路的代价。</p>
 <p>从结构上看，字节码颇似机器码。它是一连串密集、线性的二进制指令。这让它开销低、且对缓存友好。然而，它又比任何一<strong>真实</strong>的芯片都更简单、更高级。（在许多字节码格式中，每条指令只有一个字节长，这就是&ldquo;字节码&ldquo;这一名字的由来。）</p>
 <p>想象一下，你正在为某种源语言编写一款原生编译器，而你被授予完全的自由，去定义一种<strong>最简单</strong>的目标架构。字节码便颇有几分那种意味。它是一种理想化的幻想指令集，让你这位编译器作者的生活更轻松。</p>
@@ -194,12 +173,11 @@
 </aside>
 <p>这便将带我们走向我们新的解释器 clox。我们将追随 Python、Ruby、Lua、OCaml、Erlang 等主流实现的脚步。在许多方面，我们的 VM 的设计将与上一款解释器的结构平行：</p><img src="image/chunks-of-bytecode/phases.png" alt="两款实现的阶段。jlox 是 Parser → Syntax Trees → Interpreter。clox 是 Compiler → Bytecode → Virtual Machine。" />
 <p>当然，我们不会按部就班地、按阶段顺序来实现。与我们上一款解释器一样，我们将在各章之间反复跳跃，一次添加一种语言特性。在本章中，我们将搭好整个应用程序的骨架，并创建存储与表示一段字节码所需的数据结构。</p>
-<h2><a href="#起步" name="起步"><small>14&#8202;.&#8202;2</small>起步</a></h2>
+<h2><a href="#起步" id="起步"><small>14&#8202;.&#8202;2</small>起步</a></h2>
 <p>还能从哪里开始呢？当然是 <code>main()</code>。打开你那趁手的文本编辑器，开始敲吧。</p>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &quot;common.h&quot;</span>
+<pre><span class="a">#include &quot;common.h&quot;</span>
 
 <span class="t">int</span> <span class="i">main</span>(<span class="t">int</span> <span class="i">argc</span>, <span class="k">const</span> <span class="t">char</span>* <span class="i">argv</span>[]) {
   <span class="k">return</span> <span class="n">0</span>;
@@ -210,8 +188,7 @@ create new file</div>
 <p>从这枚小小的种子，我们会长出整个 VM。既然 C 给我们提供的如此之少，我们首先需要花些时间培土。这部分有若干栽进这块头文件：</p>
 <div class="codehilite"><div class="source-file"><em>common.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_common_h</span>
+<pre><span class="a">#ifndef clox_common_h</span>
 <span class="a">#define clox_common_h</span>
 
 <span class="a">#include &lt;stdbool.h&gt;</span>
@@ -223,12 +200,11 @@ create new file</div>
 <div class="source-file-narrow"><em>common.h</em>, create new file</div>
 
 <p>这里是一些我们将在整款解释器中用到的类型与常量，此处就是一个收纳它们的便利之所。眼下，它装着迟暮的 <code>NULL</code>、<code>size_t</code>、还是很体面的 C99 布尔类型 <code>bool</code>，以及那些显式指定宽度的整数类型——<code>uint8_t</code> 等等。</p>
-<h2><a href="#指令块" name="指令块"><small>14&#8202;.&#8202;3</small>指令块</a></h2>
+<h2><a href="#指令块" id="指令块"><small>14&#8202;.&#8202;3</small>指令块</a></h2>
 <p>接下来，我们需要一个模块来定义我们的代码表示法。我一直用&ldquo;chunk&rdquo;（块）来指代字节码的序列，那就把这个模块正式命名为 Chunk。</p>
 <div class="codehilite"><div class="source-file"><em>chunk.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_chunk_h</span>
+<pre><span class="a">#ifndef clox_chunk_h</span>
 <span class="a">#define clox_chunk_h</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
@@ -238,8 +214,7 @@ create new file</div>
 <div class="source-file-narrow"><em>chunk.h</em>, create new file</div>
 
 <p>在我们的字节码格式中，每条指令有一个字节的<strong>操作码</strong>（<strong>operation code</strong>，<strong>opcode</strong>）。那个数字控制着我们正在处理的是哪一种指令——加、减、查变量，诸如此类。我们在这里定义它们：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>chunk.h</em></div>
 <pre class="insert">
 
@@ -253,10 +228,9 @@ create new file</div>
 <div class="source-file-narrow"><em>chunk.h</em></div>
 
 <p>眼下，我们先从单个指令 <code>OP_RETURN</code> 开始。当我们拥有全套装备的 VM 时，这条指令将意味着&ldquo;从当前函数返回&ldquo;。我承认它眼下并不怎么有用，但我们总得有个起点，而这是一条特别简单的指令，至于原因，稍后我们便会知道。</p>
-<h3><a href="#指令的动态数组" name="指令的动态数组"><small>14&#8202;.&#8202;3&#8202;.&#8202;1</small>指令的动态数组</a></h3>
+<h3><a href="#指令的动态数组" id="指令的动态数组"><small>14&#8202;.&#8202;3&#8202;.&#8202;1</small>指令的动态数组</a></h3>
 <p>字节码是一连串指令。最终，我们还会在指令之外存储一些其它数据，因此让我们直接创建一个结构体来容纳这一切。</p>
-<div class="codehilite"><pre class="insert-before">
-} OpCode;
+<div class="codehilite"><pre class="insert-before">} OpCode;
 </pre><div class="source-file"><em>chunk.h</em><br>
 add after enum <em>OpCode</em></div>
 <pre class="insert">
@@ -286,15 +260,12 @@ add after enum <em>OpCode</em></div>
 </li>
 </ul>
 <p>这些特性恰恰是 jlox 中我们披着 Java 的 ArrayList 类的外衣、一直在用的那些缘由。如今我们来到 C，便得自己动手滚一份出来。倘若你对动态数组有些生疏，它的思路颇为简单。除了数组本身，我们还维护两个数：数组中已<strong>分配</strong>的元素个数（&ldquo;capacity&rdquo;），以及那些已分配条目中<strong>实际被使用</strong>的数量（&ldquo;count&rdquo;）。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
 </pre><div class="source-file"><em>chunk.h</em><br>
 in struct <em>Chunk</em></div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">count</span>;
+<pre class="insert">  <span class="t">int</span> <span class="i">count</span>;
   <span class="t">int</span> <span class="i">capacity</span>;
-</pre><pre class="insert-after">
-  uint8_t* code;
+</pre><pre class="insert-after">  uint8_t* code;
 } Chunk;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in struct <em>Chunk</em></div>
@@ -329,8 +300,7 @@ in struct <em>Chunk</em></div>
 <p>要弄明白这是怎么回事，我们需要 <a href="https://en.wikipedia.org/wiki/Amortized_analysis"><strong>摊销分析</strong></a>。它告诉我们：只要我们按既有大小的一个固定倍数来扩容，那么当我们对一系列追加操作取平均时，每一次追加仍是 <em>O(1)</em>。</p>
 </aside>
 <p>我们的结构体已就绪，接下来让我们实现操作它的函数。C 没有构造函数，因此我们声明一个函数来初始化一个新的 chunk。</p>
-<div class="codehilite"><pre class="insert-before">
-} Chunk;
+<div class="codehilite"><pre class="insert-before">} Chunk;
 </pre><div class="source-file"><em>chunk.h</em><br>
 add after struct <em>Chunk</em></div>
 <pre class="insert">
@@ -345,8 +315,7 @@ add after struct <em>Chunk</em></div>
 <p>并如下实现之：</p>
 <div class="codehilite"><div class="source-file"><em>chunk.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdlib.h&gt;</span>
+<pre><span class="a">#include &lt;stdlib.h&gt;</span>
 
 <span class="a">#include &quot;chunk.h&quot;</span>
 
@@ -359,12 +328,10 @@ create new file</div>
 <div class="source-file-narrow"><em>chunk.c</em>, create new file</div>
 
 <p>动态数组起始时完全为空。我们甚至连一份裸数组都尚未分配。要向块的末尾追加一个字节，我们使用一个新的函数。</p>
-<div class="codehilite"><pre class="insert-before">
-void initChunk(Chunk* chunk);
+<div class="codehilite"><pre class="insert-before">void initChunk(Chunk* chunk);
 </pre><div class="source-file"><em>chunk.h</em><br>
 add after <em>initChunk</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -374,8 +341,7 @@ add after <em>initChunk</em>()</div>
 <p>这才是真正有趣之处发生的地方。</p>
 <div class="codehilite"><div class="source-file"><em>chunk.c</em><br>
 add after <em>initChunk</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>) {
+<pre><span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>) {
   <span class="k">if</span> (<span class="i">chunk</span>-&gt;<span class="i">capacity</span> &lt; <span class="i">chunk</span>-&gt;<span class="i">count</span> + <span class="n">1</span>) {
     <span class="t">int</span> <span class="i">oldCapacity</span> = <span class="i">chunk</span>-&gt;<span class="i">capacity</span>;
     <span class="i">chunk</span>-&gt;<span class="i">capacity</span> = <span class="a">GROW_CAPACITY</span>(<span class="i">oldCapacity</span>);
@@ -391,11 +357,9 @@ add after <em>initChunk</em>()</div>
 
 <p>我们首先要做的是看看当前数组是否还有新字节所需的容量。若没有，我们便需要先扩容数组以腾出空间。（在第一次写入时，数组为 <code>NULL</code>、<code>capacity</code> 为 0 的情形下，我们也会落入这一分支。）</p>
 <p>为了扩容数组，我们先算出新的 capacity，再将数组扩容到那个大小。这两件较低层次的内存操作皆被定义于一个新的模块之中。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;chunk.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;chunk.h&quot;
 </pre><div class="source-file"><em>chunk.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;memory.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;memory.h&quot;</span>
 </pre><pre class="insert-after">
 
 void initChunk(Chunk* chunk) {
@@ -405,8 +369,7 @@ void initChunk(Chunk* chunk) {
 <p>这就足以让我们起步了。</p>
 <div class="codehilite"><div class="source-file"><em>memory.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_memory_h</span>
+<pre><span class="a">#ifndef clox_memory_h</span>
 <span class="a">#define clox_memory_h</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
@@ -424,8 +387,7 @@ create new file</div>
 <p>本书里我有点随意地挑了 8 这个数字。多数动态数组实现都有这样一个最小阈值。挑选一个恰到好处的值，应当<strong>针对真实使用场景</strong>进行 profiling，看哪一个常量能在额外扩容与空间浪费之间达成最佳折中。</p>
 </aside>
 <p>一旦我们知晓所期望的 capacity，便可以使用 <code>GROW_ARRAY()</code> 创建或扩容数组到那个大小。</p>
-<div class="codehilite"><pre class="insert-before">
-#define GROW_CAPACITY(capacity) \
+<div class="codehilite"><pre class="insert-before">#define GROW_CAPACITY(capacity) \
     ((capacity) &lt; 8 ? 8 : (capacity) * 2)
 </pre><div class="source-file"><em>memory.h</em></div>
 <pre class="insert">
@@ -477,8 +439,7 @@ create new file</div>
 <p>这听起来像是需要处理一长串的情形，但实现起来却很简单：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdlib.h&gt;</span>
+<pre><span class="a">#include &lt;stdlib.h&gt;</span>
 
 <span class="a">#include &quot;memory.h&quot;</span>
 
@@ -498,14 +459,11 @@ create new file</div>
 <p>有趣的情形发生在 <code>oldSize</code> 与 <code>newSize</code> 都不为零时。这些参数告诉 <code>realloc()</code> 去调整既有内存块的大小。若新的大小比既有内存块小，那它便仅仅<strong>更新</strong>该块的大小，并把你给它的那个指针原样返回。若新的大小更大，那它会试图将既有内存块扩容。</p>
 <p>它<strong>只有</strong>在那块内存之后还<strong>没有</strong>被占用时才能这么做。若没有空间把那块内存扩容，<code>realloc()</code> 转而会去分配一份<strong>新的</strong>、所欲大小的内存块，将旧字节复制过去，释放旧块，然后返回指向新块的指针。记住，这恰恰是我们为动态数组所想要的行为。</p>
 <p>由于计算机终究是有限的物质团块，而非计算机科学理论所预设的那种完美的数学抽象，分配可能因为内存不足而失败，<code>realloc()</code> 会返回 <code>NULL</code>。我们应当对此加以处理。</p>
-<div class="codehilite"><pre class="insert-before">
-  void* result = realloc(pointer, newSize);
+<div class="codehilite"><pre class="insert-before">  void* result = realloc(pointer, newSize);
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>reallocate</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">result</span> == <span class="a">NULL</span>) <span class="i">exit</span>(<span class="n">1</span>);
-</pre><pre class="insert-after">
-  return result;
+<pre class="insert">  <span class="k">if</span> (<span class="i">result</span> == <span class="a">NULL</span>) <span class="i">exit</span>(<span class="n">1</span>);
+</pre><pre class="insert-after">  return result;
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>reallocate</em>()</div>
 
@@ -516,22 +474,18 @@ in <em>reallocate</em>()</div>
 <p>许多 <code>malloc()</code> 的实现，都将已分配大小存储于<strong>正好位于</strong>返回地址<strong>之前</strong>的位置。</p>
 </aside>
 <p>OK，我们已能创建新的 chunk，并向其中写入指令。是否大功告成？还没！别忘了，我们<strong>现在</strong>身处 C 语言的世界，而 C 要求我们<strong>亲自</strong>管理内存，所以这同时也意味着<strong>释放</strong>它。</p>
-<div class="codehilite"><pre class="insert-before">
-void initChunk(Chunk* chunk);
+<div class="codehilite"><pre class="insert-before">void initChunk(Chunk* chunk);
 </pre><div class="source-file"><em>chunk.h</em><br>
 add after <em>initChunk</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">freeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>);
-</pre><pre class="insert-after">
-void writeChunk(Chunk* chunk, uint8_t byte);
+<pre class="insert"><span class="t">void</span> <span class="i">freeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>);
+</pre><pre class="insert-after">void writeChunk(Chunk* chunk, uint8_t byte);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, add after <em>initChunk</em>()</div>
 
 <p>其实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>chunk.c</em><br>
 add after <em>initChunk</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">freeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>) {
+<pre><span class="t">void</span> <span class="i">freeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>) {
   <span class="a">FREE_ARRAY</span>(<span class="t">uint8_t</span>, <span class="i">chunk</span>-&gt;<span class="i">code</span>, <span class="i">chunk</span>-&gt;<span class="i">capacity</span>);
   <span class="i">initChunk</span>(<span class="i">chunk</span>);
 }
@@ -539,8 +493,7 @@ add after <em>initChunk</em>()</div>
 <div class="source-file-narrow"><em>chunk.c</em>, add after <em>initChunk</em>()</div>
 
 <p>我们释放所有内存，再调用 <code>initChunk()</code> 把各字段清零，使 chunk 处于一个良定义的空状态。要释放内存，我们再添一个宏。</p>
-<div class="codehilite"><pre class="insert-before">
-#define GROW_ARRAY(type, pointer, oldCount, newCount) \
+<div class="codehilite"><pre class="insert-before">#define GROW_ARRAY(type, pointer, oldCount, newCount) \
     (type*)reallocate(pointer, sizeof(type) * (oldCount), \
         sizeof(type) * (newCount))
 </pre><div class="source-file"><em>memory.h</em></div>
@@ -555,28 +508,23 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 <div class="source-file-narrow"><em>memory.h</em></div>
 
 <p>正如 <code>GROW_ARRAY()</code> 那样，这也是对一次 <code>reallocate()</code> 调用的封装。它通过传入 0 作为新大小来释放内存。我知道，这堆低层级的琐碎细节相当枯燥。别担心，我们将在后续章节里大量派上用场，并能在更高的抽象层次上编程。但在我们能够做到那一步之前，<strong>必须</strong>先打牢自个儿的地基。</p>
-<h2><a href="#反汇编块" name="反汇编块"><small>14&#8202;.&#8202;4</small>反汇编块</a></h2>
+<h2><a href="#反汇编块" id="反汇编块"><small>14&#8202;.&#8202;4</small>反汇编块</a></h2>
 <p>现在我们有了一个小巧的模块来创建字节码块。让我们试试手工构造一个示例 chunk 来练练手。</p>
-<div class="codehilite"><pre class="insert-before">
-int main(int argc, const char* argv[]) {
+<div class="codehilite"><pre class="insert-before">int main(int argc, const char* argv[]) {
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
-<pre class="insert">
-  <span class="t">Chunk</span> <span class="i">chunk</span>;
+<pre class="insert">  <span class="t">Chunk</span> <span class="i">chunk</span>;
   <span class="i">initChunk</span>(&amp;<span class="i">chunk</span>);
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_RETURN</span>);
   <span class="i">freeChunk</span>(&amp;<span class="i">chunk</span>);
-</pre><pre class="insert-after">
-  return 0;
+</pre><pre class="insert-after">  return 0;
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>()</div>
 
 <p>别忘了 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>main.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;chunk.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;chunk.h&quot;</span>
 </pre><pre class="insert-after">
 
 int main(int argc, const char* argv[]) {
@@ -590,16 +538,14 @@ int main(int argc, const char* argv[]) {
 <p>在 jlox 中，与之类似的工具是 <a href="representing-code.html#a-not-very-pretty-printer">AstPrinter 类</a>。</p>
 </aside>
 <p>在 <code>main()</code> 中，在我们创建完 chunk 之后，我们将其传给反汇编器。</p>
-<div class="codehilite"><pre class="insert-before">
-  initChunk(&amp;chunk);
+<div class="codehilite"><pre class="insert-before">  initChunk(&amp;chunk);
   writeChunk(&amp;chunk, OP_RETURN);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
 <pre class="insert">
 
   <span class="i">disassembleChunk</span>(&amp;<span class="i">chunk</span>, <span class="s">&quot;test chunk&quot;</span>);
-</pre><pre class="insert-after">
-  freeChunk(&amp;chunk);
+</pre><pre class="insert-after">  freeChunk(&amp;chunk);
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>()</div>
 
@@ -607,11 +553,9 @@ in <em>main</em>()</div>
 <aside name="module">
 <p>我保证你在后续章节中不会再创建这么多新文件。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;chunk.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;chunk.h&quot;
 </pre><div class="source-file"><em>main.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;debug.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;debug.h&quot;</span>
 </pre><pre class="insert-after">
 
 int main(int argc, const char* argv[]) {
@@ -621,8 +565,7 @@ int main(int argc, const char* argv[]) {
 <p>下面是那个头文件：</p>
 <div class="codehilite"><div class="source-file"><em>debug.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_debug_h</span>
+<pre><span class="a">#ifndef clox_debug_h</span>
 <span class="a">#define clox_debug_h</span>
 
 <span class="a">#include &quot;chunk.h&quot;</span>
@@ -638,8 +581,7 @@ create new file</div>
 <p>下面是实现文件的开头：</p>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre><span class="a">#include &lt;stdio.h&gt;</span>
 
 <span class="a">#include &quot;debug.h&quot;</span>
 
@@ -657,8 +599,7 @@ create new file</div>
 <p>这个 &ldquo;debug&rdquo; 模块的核心是这一函数：</p>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 add after <em>disassembleChunk</em>()</div>
-<pre>
-<span class="t">int</span> <span class="i">disassembleInstruction</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">int</span> <span class="i">offset</span>) {
+<pre><span class="t">int</span> <span class="i">disassembleInstruction</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">int</span> <span class="i">offset</span>) {
   <span class="i">printf</span>(<span class="s">&quot;%04d &quot;</span>, <span class="i">offset</span>);
 
   <span class="t">uint8_t</span> <span class="i">instruction</span> = <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span>];
@@ -680,8 +621,7 @@ add after <em>disassembleChunk</em>()</div>
 </aside>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 add after <em>disassembleChunk</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">simpleInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">int</span> <span class="i">offset</span>) {
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">simpleInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">int</span> <span class="i">offset</span>) {
   <span class="i">printf</span>(<span class="s">&quot;%s</span><span class="e">\n</span><span class="s">&quot;</span>, <span class="i">name</span>);
   <span class="k">return</span> <span class="i">offset</span> + <span class="n">1</span>;
 }
@@ -694,19 +634,17 @@ add after <em>disassembleChunk</em>()</div>
 0000 OP_RETURN
 </pre></div>
 <p>跑通了！这多少算是我们代码表示法的&ldquo;Hello, world!&rdquo;。我们可以创建一个 chunk、向其写入一条指令，然后再把它<strong>取出来</strong>。我们对二进制字节码的编码与解码都跑通了。</p>
-<h2><a href="#常量" name="常量"><small>14&#8202;.&#8202;5</small>常量</a></h2>
+<h2><a href="#常量" id="常量"><small>14&#8202;.&#8202;5</small>常量</a></h2>
 <p>既然我们已经有了一个粗糙的 chunk 表示，便让我们让它变得更有用一些。我们可以在 chunk 中存放<strong>代码</strong>，但<strong>数据</strong>呢？许多解释器所要处理的值是在运行时、由运算的结果所创建的。</p>
-<div class="codehilite"><pre>
-<span class="n">1</span> + <span class="n">2</span>;
+<div class="codehilite"><pre><span class="n">1</span> + <span class="n">2</span>;
 </pre></div>
 <p>值 3 在这里并没有出现于代码之中。然而，字面量 <code>1</code> 与 <code>2</code> 则存在。为了将这条语句编译为字节码，我们需要某种指令来表达&ldquo;产生一个常量&ldquo;，而那些字面量值需要在某处被存放在 chunk 之中。在 jlox 中，Expr.Literal AST 节点便承载了那个值。既然我们舍弃了语法树、换用了字节码，便需要换一种解法。</p>
-<h3><a href="#表示值" name="表示值"><small>14&#8202;.&#8202;5&#8202;.&#8202;1</small>表示值</a></h3>
+<h3><a href="#表示值" id="表示值"><small>14&#8202;.&#8202;5&#8202;.&#8202;1</small>表示值</a></h3>
 <p>本章我们<strong>尚未</strong>真正<strong>运行</strong>任何代码，但由于常量同时横跨解释器的静态与动态两面，它迫使我们<strong>至少</strong>略略思考一下，我们的 VM 究竟应当如何表示值。</p>
 <p>眼下，我们将尽可能从简——我们暂且只支持<strong>双精度</strong>浮点数。这一点日后显然会扩展，因此我们将设立一个新模块，为自己留出成长空间。</p>
 <div class="codehilite"><div class="source-file"><em>value.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_value_h</span>
+<pre><span class="a">#ifndef clox_value_h</span>
 <span class="a">#define clox_value_h</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
@@ -724,13 +662,12 @@ create new file</div>
 <aside name="immediate">
 <p>除了需要两类常量指令——一类用于立即数，一类用于常量表中的常量——立即数还迫使我们操心对齐、padding 与字节序。某些架构在试图将一个 4 字节整数塞入一个奇数地址时会不高兴。</p>
 </aside>
-<h3><a href="#值数组" name="值数组"><small>14&#8202;.&#8202;5&#8202;.&#8202;2</small>值数组</a></h3>
+<h3><a href="#值数组" id="值数组"><small>14&#8202;.&#8202;5&#8202;.&#8202;2</small>值数组</a></h3>
 <p>常量池是一组值。那条加载常量的指令按索引在那一组值中查找。与我们那块<span name="generic">字节码</span>数组一样，编译器在事先并不知道该数组需要多大。因此，我们又一次需要一份动态数组。由于 C 没有泛型数据结构，我们便再写一份动态数组——这次存的是 Value。</p>
 <aside name="generic">
 <p>每当我们需要一份<strong>不同类型</strong>的动态数组，便定义一份新的结构体与一组操作函数，这实在是一项苦差事。我们本可以拼凑一些预处理器宏来假装泛型，但对于 clox 来说那又杀鸡用了牛刀。我们不会再需要太多这样的东西。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-typedef double Value;
+<div class="codehilite"><pre class="insert-before">typedef double Value;
 </pre><div class="source-file"><em>value.h</em></div>
 <pre class="insert">
 
@@ -746,8 +683,7 @@ typedef double Value;
 <div class="source-file-narrow"><em>value.h</em></div>
 
 <p>正如 Chunk 中的字节码数组，这个结构体把一个指向数组的指针与该数组的已分配容量及使用中的元素个数搅在一起。我们同样需要那三件函数来操作值数组。</p>
-<div class="codehilite"><pre class="insert-before">
-} ValueArray;
+<div class="codehilite"><pre class="insert-before">} ValueArray;
 </pre><div class="source-file"><em>value.h</em><br>
 add after struct <em>ValueArray</em></div>
 <pre class="insert">
@@ -764,8 +700,7 @@ add after struct <em>ValueArray</em></div>
 <p>其实现也许会让你觉得眼熟。首先，创建一个新的：</p>
 <div class="codehilite"><div class="source-file"><em>value.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre><span class="a">#include &lt;stdio.h&gt;</span>
 
 <span class="a">#include &quot;memory.h&quot;</span>
 <span class="a">#include &quot;value.h&quot;</span>
@@ -784,8 +719,7 @@ create new file</div>
 </aside>
 <div class="codehilite"><div class="source-file"><em>value.c</em><br>
 add after <em>initValueArray</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">writeValueArray</span>(<span class="t">ValueArray</span>* <span class="i">array</span>, <span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">void</span> <span class="i">writeValueArray</span>(<span class="t">ValueArray</span>* <span class="i">array</span>, <span class="t">Value</span> <span class="i">value</span>) {
   <span class="k">if</span> (<span class="i">array</span>-&gt;<span class="i">capacity</span> &lt; <span class="i">array</span>-&gt;<span class="i">count</span> + <span class="n">1</span>) {
     <span class="t">int</span> <span class="i">oldCapacity</span> = <span class="i">array</span>-&gt;<span class="i">capacity</span>;
     <span class="i">array</span>-&gt;<span class="i">capacity</span> = <span class="a">GROW_CAPACITY</span>(<span class="i">oldCapacity</span>);
@@ -802,8 +736,7 @@ add after <em>initValueArray</em>()</div>
 <p>我们先前所写的那些内存管理宏的确让我们得以复用一部分字节码数组的逻辑，所以这里也不算太糟。最后，释放数组所占用的全部内存：</p>
 <div class="codehilite"><div class="source-file"><em>value.c</em><br>
 add after <em>writeValueArray</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">freeValueArray</span>(<span class="t">ValueArray</span>* <span class="i">array</span>) {
+<pre><span class="t">void</span> <span class="i">freeValueArray</span>(<span class="t">ValueArray</span>* <span class="i">array</span>) {
   <span class="a">FREE_ARRAY</span>(<span class="t">Value</span>, <span class="i">array</span>-&gt;<span class="i">values</span>, <span class="i">array</span>-&gt;<span class="i">capacity</span>);
   <span class="i">initValueArray</span>(<span class="i">array</span>);
 }
@@ -811,23 +744,18 @@ add after <em>writeValueArray</em>()</div>
 <div class="source-file-narrow"><em>value.c</em>, add after <em>writeValueArray</em>()</div>
 
 <p>既然我们有了可生长的值数组，我们便可以为 Chunk 添加一个，以存储该 chunk 的常量。</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t* code;
+<div class="codehilite"><pre class="insert-before">  uint8_t* code;
 </pre><div class="source-file"><em>chunk.h</em><br>
 in struct <em>Chunk</em></div>
-<pre class="insert">
-  <span class="t">ValueArray</span> <span class="i">constants</span>;
-</pre><pre class="insert-after">
-} Chunk;
+<pre class="insert">  <span class="t">ValueArray</span> <span class="i">constants</span>;
+</pre><pre class="insert-after">} Chunk;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in struct <em>Chunk</em></div>
 
 <p>别忘了 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>chunk.h</em></div>
-<pre class="insert">
-<span class="a">#include &quot;value.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;value.h&quot;</span>
 </pre><pre class="insert-after">
 
 typedef enum {
@@ -835,36 +763,28 @@ typedef enum {
 <div class="source-file-narrow"><em>chunk.h</em></div>
 
 <p>哎，C 语言，还有它那石器时代的模块化往事。我们方才说到哪儿了？哦对。当我们初始化一个新的 chunk 时，我们也要初始化它的常量列表。</p>
-<div class="codehilite"><pre class="insert-before">
-  chunk-&gt;code = NULL;
+<div class="codehilite"><pre class="insert-before">  chunk-&gt;code = NULL;
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>initChunk</em>()</div>
-<pre class="insert">
-  <span class="i">initValueArray</span>(&amp;<span class="i">chunk</span>-&gt;<span class="i">constants</span>);
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">initValueArray</span>(&amp;<span class="i">chunk</span>-&gt;<span class="i">constants</span>);
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>initChunk</em>()</div>
 
 <p>同样地，当释放 chunk 时，我们也要释放它的常量。</p>
-<div class="codehilite"><pre class="insert-before">
-  FREE_ARRAY(uint8_t, chunk-&gt;code, chunk-&gt;capacity);
+<div class="codehilite"><pre class="insert-before">  FREE_ARRAY(uint8_t, chunk-&gt;code, chunk-&gt;capacity);
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>freeChunk</em>()</div>
-<pre class="insert">
-  <span class="i">freeValueArray</span>(&amp;<span class="i">chunk</span>-&gt;<span class="i">constants</span>);
-</pre><pre class="insert-after">
-  initChunk(chunk);
+<pre class="insert">  <span class="i">freeValueArray</span>(&amp;<span class="i">chunk</span>-&gt;<span class="i">constants</span>);
+</pre><pre class="insert-after">  initChunk(chunk);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>freeChunk</em>()</div>
 
 <p>接下来，我们定义一个便利方法，向 chunk 添加一条新的常量。我们那位尚未动笔的编译器当然可以直接写入 Chunk 内部的常量数组——C 毕竟没有什么私有字段的玩意儿——但多写一个显式的函数终归清爽一些。</p>
-<div class="codehilite"><pre class="insert-before">
-void writeChunk(Chunk* chunk, uint8_t byte);
+<div class="codehilite"><pre class="insert-before">void writeChunk(Chunk* chunk, uint8_t byte);
 </pre><div class="source-file"><em>chunk.h</em><br>
 add after <em>writeChunk</em>()</div>
-<pre class="insert">
-<span class="t">int</span> <span class="i">addConstant</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">Value</span> <span class="i">value</span>);
+<pre class="insert"><span class="t">int</span> <span class="i">addConstant</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">Value</span> <span class="i">value</span>);
 </pre><pre class="insert-after">
 
 </pre></div>
@@ -873,8 +793,7 @@ add after <em>writeChunk</em>()</div>
 <p>然后我们实现它。</p>
 <div class="codehilite"><div class="source-file"><em>chunk.c</em><br>
 add after <em>writeChunk</em>()</div>
-<pre>
-<span class="t">int</span> <span class="i">addConstant</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">int</span> <span class="i">addConstant</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">Value</span> <span class="i">value</span>) {
   <span class="i">writeValueArray</span>(&amp;<span class="i">chunk</span>-&gt;<span class="i">constants</span>, <span class="i">value</span>);
   <span class="k">return</span> <span class="i">chunk</span>-&gt;<span class="i">constants</span>.<span class="i">count</span> - <span class="n">1</span>;
 }
@@ -882,21 +801,17 @@ add after <em>writeChunk</em>()</div>
 <div class="source-file-narrow"><em>chunk.c</em>, add after <em>writeChunk</em>()</div>
 
 <p>在添加完常量之后，我们返回该常量被追加的位置的索引，以便日后能定位到同一份常量。</p>
-<h3><a href="#常量指令" name="常量指令"><small>14&#8202;.&#8202;5&#8202;.&#8202;3</small>常量指令</a></h3>
+<h3><a href="#常量指令" id="常量指令"><small>14&#8202;.&#8202;5&#8202;.&#8202;3</small>常量指令</a></h3>
 <p>我们能够<strong>存储</strong>常量于 chunk 之中，但我们同样需要<strong>执行</strong>它们。在一段这样的代码中：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="n">1</span>;
+<div class="codehilite"><pre><span class="k">print</span> <span class="n">1</span>;
 <span class="k">print</span> <span class="n">2</span>;
 </pre></div>
 <p>所编译出的 chunk 不仅需要包含 1 与 2 这两个值，还需要知道<strong>何时</strong>产出它们，以便它们能够按正确的顺序被打印出来。因此，我们需要一条指令来产生某条特定的常量。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef enum {
+<div class="codehilite"><pre class="insert-before">typedef enum {
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_CONSTANT</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_CONSTANT</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 
@@ -910,8 +825,7 @@ in enum <em>OpCode</em></div>
 <p>字节码指令的操作数<strong>并</strong>不等同于传递给算术运算符的运算数。日后我们讲到表达式时你便会看到，算术运算数是分开追踪的。指令操作数是一个更底层的概念，用来修改字节码指令本身的行为。</p>
 </aside>
 <p>于此，<code>OP_CONSTANT</code> 带有一个单字节的操作数，它指定从 chunk 的常量数组中加载哪一条常量。鉴于我们眼下还没有编译器，我们便在我们的测试 chunk 中&ldquo;手工编译&ldquo;出一条指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  initChunk(&amp;chunk);
+<div class="codehilite"><pre class="insert-before">  initChunk(&amp;chunk);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()</div>
 <pre class="insert">
@@ -920,30 +834,25 @@ in <em>main</em>()</div>
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_CONSTANT</span>);
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="i">constant</span>);
 
-</pre><pre class="insert-after">
-  writeChunk(&amp;chunk, OP_RETURN);
+</pre><pre class="insert-after">  writeChunk(&amp;chunk, OP_RETURN);
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>()</div>
 
 <p>我们将常量值本身添加到 chunk 的常量池中。那会返回该常量在数组中的索引。然后我们写入常量指令，先写入它的操作码，再之后，我们写入那一个字节的常量索引操作数。请注意，<code>writeChunk()</code> 可以写入操作码或操作数。就那个函数而言，一律都是裸字节。</p>
 <p>倘若我们现在便跑一跑，反汇编器会朝我们吼起来，因为它不知道如何解码这条新指令。让我们修一修它。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (instruction) {
+<div class="codehilite"><pre class="insert-before">  switch (instruction) {
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_CONSTANT</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_CONSTANT</span>:
       <span class="k">return</span> <span class="i">constantInstruction</span>(<span class="s">&quot;OP_CONSTANT&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 
 <p>这条指令的指令格式有所不同，因此我们另写一个辅助函数来反汇编它。</p>
 <div class="codehilite"><div class="source-file"><em>debug.c</em><br>
 add after <em>disassembleChunk</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">int</span> <span class="i">constantInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>,
+<pre><span class="k">static</span> <span class="t">int</span> <span class="i">constantInstruction</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">Chunk</span>* <span class="i">chunk</span>,
                                <span class="t">int</span> <span class="i">offset</span>) {
   <span class="t">uint8_t</span> <span class="i">constant</span> = <span class="i">chunk</span>-&gt;<span class="i">code</span>[<span class="i">offset</span> + <span class="n">1</span>];
   <span class="i">printf</span>(<span class="s">&quot;%-16s %4d &#39;&quot;</span>, <span class="i">name</span>, <span class="i">constant</span>);
@@ -955,11 +864,9 @@ add after <em>disassembleChunk</em>()</div>
 
 <p>这里涉及的更多一些。与 <code>OP_RETURN</code> 一样，我们打印出操作码的名字。然后我们从 chunk 的下一字节中取出常量索引。我们打印那个索引，但对我们人类读者而言，那<strong>并不</strong>特别有用。因此我们也查找一下常量值本身——毕竟常量<strong>是</strong>在编译时便已确定的——并一并显示它的值。</p>
 <p>这需要某些工具来打印一个 clox 的 Value。那个函数将栖身于&ldquo;value&rdquo;模块，因此我们 include 它。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;debug.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;debug.h&quot;
 </pre><div class="source-file"><em>debug.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;value.h&quot;</span>
+<pre class="insert"><span class="a">#include &quot;value.h&quot;</span>
 </pre><pre class="insert-after">
 
 void disassembleChunk(Chunk* chunk, const char* name) {
@@ -967,12 +874,10 @@ void disassembleChunk(Chunk* chunk, const char* name) {
 <div class="source-file-narrow"><em>debug.c</em></div>
 
 <p>在那个头文件中，我们声明：</p>
-<div class="codehilite"><pre class="insert-before">
-void freeValueArray(ValueArray* array);
+<div class="codehilite"><pre class="insert-before">void freeValueArray(ValueArray* array);
 </pre><div class="source-file"><em>value.h</em><br>
 add after <em>freeValueArray</em>()</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">printValue</span>(<span class="t">Value</span> <span class="i">value</span>);
+<pre class="insert"><span class="t">void</span> <span class="i">printValue</span>(<span class="t">Value</span> <span class="i">value</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -982,8 +887,7 @@ add after <em>freeValueArray</em>()</div>
 <p>下面是一种实现：</p>
 <div class="codehilite"><div class="source-file"><em>value.c</em><br>
 add after <em>freeValueArray</em>()</div>
-<pre>
-<span class="t">void</span> <span class="i">printValue</span>(<span class="t">Value</span> <span class="i">value</span>) {
+<pre><span class="t">void</span> <span class="i">printValue</span>(<span class="t">Value</span> <span class="i">value</span>) {
   <span class="i">printf</span>(<span class="s">&quot;%g&quot;</span>, <span class="i">value</span>);
 }
 </pre></div>
@@ -991,19 +895,16 @@ add after <em>freeValueArray</em>()</div>
 
 <p>漂亮吧，对不对？不出所料，在 Lox 引入动态类型、值需要表示多种类型之后，这件事会变得更为复杂。</p>
 <p>回到 <code>constantInstruction()</code>，剩下的只剩返回值。</p>
-<div class="codehilite"><pre class="insert-before">
-  printf(&quot;'\n&quot;);
+<div class="codehilite"><pre class="insert-before">  printf(&quot;'\n&quot;);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>constantInstruction</em>()</div>
-<pre class="insert">
-  <span class="k">return</span> <span class="i">offset</span> + <span class="n">2</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="k">return</span> <span class="i">offset</span> + <span class="n">2</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>constantInstruction</em>()</div>
 
 <p>别忘了，<code>disassembleInstruction()</code> 同样会返回一个数字，告诉调用者<strong>下一条</strong>指令的起始 offset。<code>OP_RETURN</code> 只有一个字节，而 <code>OP_CONSTANT</code> 则有两个——一个用于操作码，一个用于操作数。</p>
-<h2><a href="#行信息" name="行信息"><small>14&#8202;.&#8202;6</small>行信息</a></h2>
+<h2><a href="#行信息" id="行信息"><small>14&#8202;.&#8202;6</small>行信息</a></h2>
 <p>chunk 几乎囊括了运行时所需的来自用户源代码的全部信息。想到我们能将 jlox 里所创建的那一整个语法树类家族，压缩为一份字节数组与一份常量数组，简直令人难以置信。我们还<strong>缺</strong>一份数据。我们需要它，哪怕用户希望永远也看不到它。</p>
 <p>当运行时错误发生时，我们向用户展示肇事源代码的行号。在 jlox 中，那些数字保存在 token 之中，而后者又存在 AST 节点里。既然我们如今抛弃了语法树、换上了字节码，便需要换一种解法。给定任意一条字节码指令，我们需要能够确定它<strong>源自</strong>用户源程序的哪一行。</p>
 <p>有许多聪明的编码方式可供选择。我采用了所能想到的<strong>最简单</strong><span name="side">不过</span> 的方法，即便它在内存上低效得令人脸红。在 chunk 中，我们存一份与字节码平行的整数数组。数组中的每一个数字，便是该字节码中所对应字节的行号。当运行时错误发生时，我们便在代码数组中以当前指令的 offset 为索引，查出对应的行号。</p>
@@ -1011,51 +912,39 @@ in <em>constantInstruction</em>()</div>
 <p>这种笨到家的编码方式<strong>倒是</strong>做对了一件事：它将行信息置于<strong>独立的</strong>数组，而非与字节码本身交织在一起。由于行信息仅在运行时错误发生时才会用到，我们<strong>不希望</strong>它出现在指令之间，霸占 CPU 缓存中的宝贵空间，并导致解释器在跳过去取它真正关心的操作码与操作数时引起更多缓存未命中。</p>
 </aside>
 <p>为实现这一点，我们向 Chunk 中再添加一个数组。</p>
-<div class="codehilite"><pre class="insert-before">
-  uint8_t* code;
+<div class="codehilite"><pre class="insert-before">  uint8_t* code;
 </pre><div class="source-file"><em>chunk.h</em><br>
 in struct <em>Chunk</em></div>
-<pre class="insert">
-  <span class="t">int</span>* <span class="i">lines</span>;
-</pre><pre class="insert-after">
-  ValueArray constants;
+<pre class="insert">  <span class="t">int</span>* <span class="i">lines</span>;
+</pre><pre class="insert-after">  ValueArray constants;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in struct <em>Chunk</em></div>
 
 <p>由于它与字节码数组是一一对应的，我们不需要单独的 count 或 capacity。每一次我们触及代码数组，便对行号数组做出对应的改动，先从初始化开始。</p>
-<div class="codehilite"><pre class="insert-before">
-  chunk-&gt;code = NULL;
+<div class="codehilite"><pre class="insert-before">  chunk-&gt;code = NULL;
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>initChunk</em>()</div>
-<pre class="insert">
-  <span class="i">chunk</span>-&gt;<span class="i">lines</span> = <span class="a">NULL</span>;
-</pre><pre class="insert-after">
-  initValueArray(&amp;chunk-&gt;constants);
+<pre class="insert">  <span class="i">chunk</span>-&gt;<span class="i">lines</span> = <span class="a">NULL</span>;
+</pre><pre class="insert-after">  initValueArray(&amp;chunk-&gt;constants);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>initChunk</em>()</div>
 
 <p>去分配亦同理：</p>
-<div class="codehilite"><pre class="insert-before">
-  FREE_ARRAY(uint8_t, chunk-&gt;code, chunk-&gt;capacity);
+<div class="codehilite"><pre class="insert-before">  FREE_ARRAY(uint8_t, chunk-&gt;code, chunk-&gt;capacity);
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>freeChunk</em>()</div>
-<pre class="insert">
-  <span class="a">FREE_ARRAY</span>(<span class="t">int</span>, <span class="i">chunk</span>-&gt;<span class="i">lines</span>, <span class="i">chunk</span>-&gt;<span class="i">capacity</span>);
-</pre><pre class="insert-after">
-  freeValueArray(&amp;chunk-&gt;constants);
+<pre class="insert">  <span class="a">FREE_ARRAY</span>(<span class="t">int</span>, <span class="i">chunk</span>-&gt;<span class="i">lines</span>, <span class="i">chunk</span>-&gt;<span class="i">capacity</span>);
+</pre><pre class="insert-after">  freeValueArray(&amp;chunk-&gt;constants);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>freeChunk</em>()</div>
 
 <p>当我们向 chunk 中写入一个字节的代码时，我们需要知道它<strong>源自</strong>哪一行源代码，因此我们在 <code>writeChunk()</code> 的声明中再添一个参数。</p>
-<div class="codehilite"><pre class="insert-before">
-void freeChunk(Chunk* chunk);
+<div class="codehilite"><pre class="insert-before">void freeChunk(Chunk* chunk);
 </pre><div class="source-file"><em>chunk.h</em><br>
 function <em>writeChunk</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>, <span class="t">int</span> <span class="i">line</span>);
-</pre><pre class="insert-after">
-int addConstant(Chunk* chunk, Value value);
+<pre class="insert"><span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>, <span class="t">int</span> <span class="i">line</span>);
+</pre><pre class="insert-after">int addConstant(Chunk* chunk, Value value);
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, function <em>writeChunk</em>(), replace 1 line</div>
 
@@ -1063,48 +952,38 @@ int addConstant(Chunk* chunk, Value value);
 <div class="codehilite"><div class="source-file"><em>chunk.c</em><br>
 function <em>writeChunk</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>, <span class="t">int</span> <span class="i">line</span>) {
-</pre><pre class="insert-after">
-  if (chunk-&gt;capacity &lt; chunk-&gt;count + 1) {
+<pre class="insert"><span class="t">void</span> <span class="i">writeChunk</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">uint8_t</span> <span class="i">byte</span>, <span class="t">int</span> <span class="i">line</span>) {
+</pre><pre class="insert-after">  if (chunk-&gt;capacity &lt; chunk-&gt;count + 1) {
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, function <em>writeChunk</em>(), replace 1 line</div>
 
 <p>当我们为代码数组分配或扩容时，我们对行信息数组也做同样的事。</p>
-<div class="codehilite"><pre class="insert-before">
-    chunk-&gt;code = GROW_ARRAY(uint8_t, chunk-&gt;code,
+<div class="codehilite"><pre class="insert-before">    chunk-&gt;code = GROW_ARRAY(uint8_t, chunk-&gt;code,
         oldCapacity, chunk-&gt;capacity);
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>writeChunk</em>()</div>
-<pre class="insert">
-    <span class="i">chunk</span>-&gt;<span class="i">lines</span> = <span class="a">GROW_ARRAY</span>(<span class="t">int</span>, <span class="i">chunk</span>-&gt;<span class="i">lines</span>,
+<pre class="insert">    <span class="i">chunk</span>-&gt;<span class="i">lines</span> = <span class="a">GROW_ARRAY</span>(<span class="t">int</span>, <span class="i">chunk</span>-&gt;<span class="i">lines</span>,
         <span class="i">oldCapacity</span>, <span class="i">chunk</span>-&gt;<span class="i">capacity</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>writeChunk</em>()</div>
 
 <p>最后，我们将行号存入数组。</p>
-<div class="codehilite"><pre class="insert-before">
-  chunk-&gt;code[chunk-&gt;count] = byte;
+<div class="codehilite"><pre class="insert-before">  chunk-&gt;code[chunk-&gt;count] = byte;
 </pre><div class="source-file"><em>chunk.c</em><br>
 in <em>writeChunk</em>()</div>
-<pre class="insert">
-  <span class="i">chunk</span>-&gt;<span class="i">lines</span>[<span class="i">chunk</span>-&gt;<span class="i">count</span>] = <span class="i">line</span>;
-</pre><pre class="insert-after">
-  chunk-&gt;count++;
+<pre class="insert">  <span class="i">chunk</span>-&gt;<span class="i">lines</span>[<span class="i">chunk</span>-&gt;<span class="i">count</span>] = <span class="i">line</span>;
+</pre><pre class="insert-after">  chunk-&gt;count++;
 </pre></div>
 <div class="source-file-narrow"><em>chunk.c</em>, in <em>writeChunk</em>()</div>
 
-<h3><a href="#反汇编行信息" name="反汇编行信息"><small>14&#8202;.&#8202;6&#8202;.&#8202;1</small>反汇编行信息</a></h3>
+<h3><a href="#反汇编行信息" id="反汇编行信息"><small>14&#8202;.&#8202;6&#8202;.&#8202;1</small>反汇编行信息</a></h3>
 <p>好了，让我们用我们那点——呃——手工拼凑的 chunk 来试试。首先，既然我们为 <code>writeChunk()</code> 添了一个新参数，我们便需要修一修那些调用，传一个——此刻无所谓——的行号进去。</p>
-<div class="codehilite"><pre class="insert-before">
-  int constant = addConstant(&amp;chunk, 1.2);
+<div class="codehilite"><pre class="insert-before">  int constant = addConstant(&amp;chunk, 1.2);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-  <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_CONSTANT</span>, <span class="n">123</span>);
+<pre class="insert">  <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_CONSTANT</span>, <span class="n">123</span>);
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="i">constant</span>, <span class="n">123</span>);
 
   <span class="i">writeChunk</span>(&amp;<span class="i">chunk</span>, <span class="a">OP_RETURN</span>, <span class="n">123</span>);
@@ -1116,13 +995,11 @@ replace 4 lines</div>
 
 <p>一旦我们拥有了一款真正的编译器，编译器自然会在解析过程中追踪当前行号，并将其传入。</p>
 <p>既然我们已为每一条指令备有行信息，我们便好好地利用它。在我们的反汇编器中，展示每一条指令<strong>编译自</strong>哪一行源代码，会很有帮助。当我们试图弄清某段字节码究竟想干什么时，这给了我们一种回溯到原始代码的方式。在打印出指令的 offset——即从 chunk 开头算起的字节数——之后，我们便显示其源代码行号。</p>
-<div class="codehilite"><pre class="insert-before">
-int disassembleInstruction(Chunk* chunk, int offset) {
+<div class="codehilite"><pre class="insert-before">int disassembleInstruction(Chunk* chunk, int offset) {
   printf(&quot;%04d &quot;, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">offset</span> &gt; <span class="n">0</span> &amp;&amp;
+<pre class="insert">  <span class="k">if</span> (<span class="i">offset</span> &gt; <span class="n">0</span> &amp;&amp;
       <span class="i">chunk</span>-&gt;<span class="i">lines</span>[<span class="i">offset</span>] == <span class="i">chunk</span>-&gt;<span class="i">lines</span>[<span class="i">offset</span> - <span class="n">1</span>]) {
     <span class="i">printf</span>(<span class="s">&quot;   | &quot;</span>);
   } <span class="k">else</span> {
@@ -1143,7 +1020,7 @@ in <em>disassembleInstruction</em>()</div>
 <p>在剩余的章节中，我们将用更多种类的指令来充实这一切。但基本的结构已然就位，我们眼下已拥有了在运行时<strong>完全</strong>表示一段可执行代码所需的一切。还记得我们在 jlox 中定义的那一整个 AST 类家族吗？在 clox 中，我们已将其压缩为三份数组：代码字节、常量值、以及用于调试的行信息。</p>
 <p>这种压缩，正是我们新的解释器会比 jlox 更快的关键所在。你可以把字节码视作对 AST 的一种紧凑序列化——为解释器在执行过程中按顺序反序列化它所<strong>需要</strong>的方式进行了高度优化。在<a href="a-virtual-machine.html">下一章</a>中，我们便会看到虚拟机究竟是如何做到这一点的。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>14&#8202;.&#8202;7</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>14&#8202;.&#8202;7</small>挑战</a></h2>
 <ol>
 <li>
 <p>我们对行信息的编码在内存上浪费得离谱。给定同一指令序列往往对应同一源代码行，一种自然的解决思路便是对行号进行类似<a href="https://en.wikipedia.org/wiki/Run-length_encoding">游程编码</a>的方式。</p>
@@ -1154,8 +1031,7 @@ in <em>disassembleInstruction</em>()</div>
 <p>因为 <code>OP_CONSTANT</code> 的操作数仅占一个字节，一个 chunk 至多只能拥有 256 份不同的常量。这数目太小，写真实代码的人难免会撞上这天花板。我们可以使用两个或更多字节来存放操作数，但那样会让<strong>每一条</strong>常量指令占用更多空间。大多数 chunk 不会需要那么多唯一常量，因此为了支撑罕见情形而牺牲常见情形下的空间与局部性，得不偿失。</p>
 <p>为了在两种相互竞争的目标之间求得平衡，许多指令集都提供多条指令来完成同一操作，只是操作数的尺寸各不相同。保留我们现有一条字节的 <code>OP_CONSTANT</code> 指令不动，再定义第二条 <code>OP_CONSTANT_LONG</code> 指令。它将操作数存为 24 位整数，这应当绰绰有余。</p>
 <p>实现下面这个函数：</p>
-<div class="codehilite"><pre>
-<span class="t">void</span> <span class="i">writeConstant</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">Value</span> <span class="i">value</span>, <span class="t">int</span> <span class="i">line</span>) {
+<div class="codehilite"><pre><span class="t">void</span> <span class="i">writeConstant</span>(<span class="t">Chunk</span>* <span class="i">chunk</span>, <span class="t">Value</span> <span class="i">value</span>, <span class="t">int</span> <span class="i">line</span>) {
   <span class="c">// Implement me...</span>
 }
 </pre></div>
@@ -1169,7 +1045,7 @@ in <em>disassembleInstruction</em>()</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：测试你的语言" name="设计笔记：测试你的语言"><small>14&#8202;.&#8202;8</small>设计笔记：测试你的语言</a></h2>
+<h2><a href="#设计笔记：测试你的语言" id="设计笔记：测试你的语言"><small>14&#8202;.&#8202;8</small>设计笔记：测试你的语言</a></h2>
 <p>我们快走到书本一半的位置了，可有一件事我们<strong>始终</strong>没谈，那就是<strong>测试</strong>你的语言实现。这<strong>并不</strong>意味着测试不重要。我<strong>再怎么</strong>强调拥有一套良好的、完备的测试套件对你的语言<strong>至关重要</strong>都不为过。</p>
 <p>我在写这本书的<strong>任何一个字</strong>之前，就为 Lox 写了一份<a href="https://github.com/munificent/craftinginterpreters/tree/master/test">测试套件</a>（欢迎你在自己的 Lox 实现上使用）。那些测试在我的实现中揪出了数不清的 bug。</p>
 <p>测试在所有软件中都很重要，但对于一门程序设计语言而言，它之所以尤为关键，至少有这么几条理由：</p>
@@ -1218,7 +1094,7 @@ in <em>disassembleInstruction</em>()</div>
 <a href="a-virtual-machine.html" class="next">
   Next Chapter: &ldquo;A Virtual Machine&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

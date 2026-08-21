@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Calls and Functions<small>24</small></a></h3>
 
 <ul>
@@ -59,7 +58,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="jumping-back-and-forth.html" title="Jumping Back and Forth" class="prev">←</a>
 <a href="closures.html" title="Closures" class="next">→</a>
 </nav>
@@ -67,9 +66,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Calls and Functions<small>24</small></a></h3>
 
 <ul>
@@ -100,25 +98,7 @@
   <div class="number">24</div>
   <h1>Calls and Functions</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#调用与函数" name="调用与函数"><small>24&#8202;.&#8202;0</small>调用与函数</a></h1><!--
+<h1><a href="#调用与函数" id="调用与函数"><small>24&#8202;.&#8202;0</small>调用与函数</a></h1><!--
 > Any problem in computer science can be solved with another level of
 > indirection. Except for the problem of too many layers of indirection.
 >
@@ -145,7 +125,7 @@ biological processes that produce "output" are a little less, ahem, decorous.
 </aside><!--
 -- Function Objects
 -->
-<h2><a href="#函数对象" name="函数对象"><small>24&#8202;.&#8202;1</small>函数对象</a></h2><!--
+<h2><a href="#函数对象" id="函数对象"><small>24&#8202;.&#8202;1</small>函数对象</a></h2><!--
 The most interesting structural change in the VM is around the stack. We already
 *have* a stack for local variables and temporaries, so we're partway there. But
 we have no notion of a *call* stack. Before we can make much progress, we'll
@@ -167,8 +147,7 @@ Chunk. We'll want some other metadata too, so let's go ahead and stuff it all in
 a struct now.
 -->
 <p>这大致就是编译到原生代码时的做法——最终得到一整坨紧实的机器码。但对我们的字节码虚拟机，可以做得稍稍高阶一点。我认为更干净的模型，是给每个函数各自一块 Chunk。我们还会想要一些别的元数据，所以现在就把它们一股脑塞进一个结构体吧。</p>
-<div class="codehilite"><pre class="insert-before">
-  struct Obj* next;
+<div class="codehilite"><pre class="insert-before">  struct Obj* next;
 };
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>Obj</em></div>
@@ -203,13 +182,10 @@ This is the first time the "object" module has needed to reference Chunk, so we
 get an include.
 -->
 <p>这是 “object” 模块第一次需要引用 Chunk，于是我们加一条 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#include &quot;chunk.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;value.h&quot;
+<pre class="insert"><span class="a">#include &quot;chunk.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;value.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
@@ -218,16 +194,13 @@ easier to work with in C. Sort of a poor man's object orientation. First, we'll
 declare a C function to create a new Lox function.
 -->
 <p>和字符串时一样，我们定义一些配件，好让 Lox 函数在 C 里更好用——有点穷人版面向对象的意思。首先，声明一个用来创建新 Lox 函数的 C 函数。</p>
-<div class="codehilite"><pre class="insert-before">
-  uint32_t hash;
+<div class="codehilite"><pre class="insert-before">  uint32_t hash;
 };
 
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjString</em></div>
-<pre class="insert">
-<span class="t">ObjFunction</span>* <span class="i">newFunction</span>();
-</pre><pre class="insert-after">
-ObjString* takeString(char* chars, int length);
+<pre class="insert"><span class="t">ObjFunction</span>* <span class="i">newFunction</span>();
+</pre><pre class="insert-after">ObjString* takeString(char* chars, int length);
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjString</em></div>
 <!--
@@ -236,8 +209,7 @@ The implementation is over here:
 <p>实现在这边：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>allocateObject</em>()</div>
-<pre>
-<span class="t">ObjFunction</span>* <span class="i">newFunction</span>() {
+<pre><span class="t">ObjFunction</span>* <span class="i">newFunction</span>() {
   <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="a">ALLOCATE_OBJ</span>(<span class="t">ObjFunction</span>, <span class="a">OBJ_FUNCTION</span>);
   <span class="i">function</span>-&gt;<span class="i">arity</span> = <span class="n">0</span>;
   <span class="i">function</span>-&gt;<span class="i">name</span> = <span class="a">NULL</span>;
@@ -257,14 +229,11 @@ code. That will get filled in later after the function is created.
 Since we have a new kind of object, we need a new object type in the enum.
 -->
 <p>既然有了一种新对象，枚举里就需要一个新的对象类型。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef enum {
+<div class="codehilite"><pre class="insert-before">typedef enum {
 </pre><div class="source-file"><em>object.h</em><br>
 in enum <em>ObjType</em></div>
-<pre class="insert">
-  <span class="a">OBJ_FUNCTION</span>,
-</pre><pre class="insert-after">
-  OBJ_STRING,
+<pre class="insert">  <span class="a">OBJ_FUNCTION</span>,
+</pre><pre class="insert-after">  OBJ_STRING,
 } ObjType;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in enum <em>ObjType</em></div>
@@ -273,19 +242,16 @@ When we're done with a function object, we must return the bits it borrowed back
 to the operating system.
 -->
 <p>用完一个函数对象后，必须把它借来的那些比特还给操作系统。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (object-&gt;type) {
+<div class="codehilite"><pre class="insert-before">  switch (object-&gt;type) {
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>: {
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>: {
       <span class="t">ObjFunction</span>* <span class="i">function</span> = (<span class="t">ObjFunction</span>*)<span class="i">object</span>;
       <span class="i">freeChunk</span>(&amp;<span class="i">function</span>-&gt;<span class="i">chunk</span>);
       <span class="a">FREE</span>(<span class="t">ObjFunction</span>, <span class="i">object</span>);
       <span class="k">break</span>;
     }
-</pre><pre class="insert-after">
-    case OBJ_STRING: {
+</pre><pre class="insert-after">    case OBJ_STRING: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -307,16 +273,13 @@ Lox lets you print any object, and functions are first-class objects, so we
 need to handle them too.
 -->
 <p>Lox 允许你打印任何对象，而函数是一等对象，所以我们也得处理它们。</p>
-<div class="codehilite"><pre class="insert-before">
-  switch (OBJ_TYPE(value)) {
+<div class="codehilite"><pre class="insert-before">  switch (OBJ_TYPE(value)) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>printObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>:
       <span class="i">printFunction</span>(<span class="a">AS_FUNCTION</span>(<span class="i">value</span>));
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_STRING:
+</pre><pre class="insert-after">    case OBJ_STRING:
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>printObject</em>()</div>
 <!--
@@ -325,8 +288,7 @@ This calls out to:
 <p>它转去调用：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>copyString</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">printFunction</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">printFunction</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>) {
   <span class="i">printf</span>(<span class="s">&quot;&lt;fn %s&gt;&quot;</span>, <span class="i">function</span>-&gt;<span class="i">name</span>-&gt;<span class="i">chars</span>);
 }
 </pre></div>
@@ -339,14 +301,11 @@ Finally, we have a couple of macros for converting values to functions. First,
 make sure your value actually *is* a function.
 -->
 <p>最后，还有几条宏用来把值转换成函数。首先，确认你的值<em>确实</em>是一个函数。</p>
-<div class="codehilite"><pre class="insert-before">
-#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
+<div class="codehilite"><pre class="insert-before">#define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
 
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)</span>
-</pre><pre class="insert-after">
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
+<pre class="insert"><span class="a">#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)</span>
+</pre><pre class="insert-after">#define IS_STRING(value)       isObjType(value, OBJ_STRING)
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
@@ -354,14 +313,11 @@ Assuming that evaluates to true, you can then safely cast the Value to an
 ObjFunction pointer using this:
 -->
 <p>若求值结果为真，就可以用这条宏安全地把 Value 转成 ObjFunction 指针：</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
+<div class="codehilite"><pre class="insert-before">#define IS_STRING(value)       isObjType(value, OBJ_STRING)
 
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))</span>
-</pre><pre class="insert-after">
-#define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
+<pre class="insert"><span class="a">#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))</span>
+</pre><pre class="insert-after">#define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
@@ -371,7 +327,7 @@ up now. You ready for something a little harder?
 <p>至此，我们的对象模型知道如何表示函数了。我觉得热身得差不多了。准备好来点更难的了吗？</p><!--
 -- Compiling to Function Objects
 -->
-<h2><a href="#编译为函数对象" name="编译为函数对象"><small>24&#8202;.&#8202;2</small>编译为函数对象</a></h2><!--
+<h2><a href="#编译为函数对象" id="编译为函数对象"><small>24&#8202;.&#8202;2</small>编译为函数对象</a></h2><!--
 Right now, our compiler assumes it is always compiling to one single chunk. With
 each function's code living in separate chunks, that gets more complex. When the
 compiler reaches a function declaration, it needs to emit code into the
@@ -401,16 +357,13 @@ Instead of pointing directly to a Chunk that the compiler writes to, it instead
 has a reference to the function object being built.
 -->
 <p>那么，在动手用户自定义函数之前，先做这番重组，以支撑那个隐式的顶层函数。从 Compiler 结构体开始：它不再直接指向编译器要写入的 Chunk，而是持有一份对正在构建的函数对象的引用。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in struct <em>Compiler</em></div>
-<pre class="insert">
-  <span class="t">ObjFunction</span>* <span class="i">function</span>;
+<pre class="insert">  <span class="t">ObjFunction</span>* <span class="i">function</span>;
   <span class="t">FunctionType</span> <span class="i">type</span>;
 
-</pre><pre class="insert-after">
-  Local locals[UINT8_COUNT];
+</pre><pre class="insert-after">  Local locals[UINT8_COUNT];
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in struct <em>Compiler</em></div>
 <!--
@@ -422,8 +375,7 @@ two places the distinction is meaningful. We'll get to one later.
 <p>我们还有一个小小的 FunctionType 枚举。它让编译器能分辨自己是在编译顶层代码，还是某个函数的函数体。编译器的大部分地方并不在意这一点——正因为如此，它才是个有用的抽象——但在一两处地方，这个区分意义重大。稍后我们会碰到其中一处。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after struct <em>Local</em></div>
-<pre>
-<span class="k">typedef</span> <span class="k">enum</span> {
+<pre><span class="k">typedef</span> <span class="k">enum</span> {
   <span class="a">TYPE_FUNCTION</span>,
   <span class="a">TYPE_SCRIPT</span>
 } <span class="t">FunctionType</span>;
@@ -444,8 +396,7 @@ code for the book before any of the text.
 -->
 <p>简直像我有一颗水晶球，能窥见未来，知道我们以后要改这段代码。其实呢，是因为我先写完了全书所有代码，才动手写正文。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-Compiler* current = NULL;
+<div class="codehilite"><pre class="insert-before">Compiler* current = NULL;
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after variable <em>current</em><br>
 replace 5 lines</div>
@@ -469,18 +420,16 @@ which is all we support right now -- of the user's program.
 <p>当前 chunk 始终是我们正在编译的那个函数所拥有的 chunk。接下来，得真正创建那个函数。从前，虚拟机传给编译器一块 Chunk，由编译器往里填代码；如今改为由编译器创建并返回一个函数，里面装着用户程序已编译好的顶层代码——眼下我们也就支持这一种。</p><!--
 -- Creating functions at compile time
 -->
-<h3><a href="#在编译期创建函数" name="在编译期创建函数"><small>24&#8202;.&#8202;2&#8202;.&#8202;1</small>在编译期创建函数</a></h3><!--
+<h3><a href="#在编译期创建函数" id="在编译期创建函数"><small>24&#8202;.&#8202;2&#8202;.&#8202;1</small>在编译期创建函数</a></h3><!--
 We start threading this through in `compile()`, which is the main entry point
 into the compiler.
 -->
 <p>我们从 <code>compile()</code> 开始把这套改动穿起来——它是进入编译器的主入口。</p>
-<div class="codehilite"><pre class="insert-before">
-  Compiler compiler;
+<div class="codehilite"><pre class="insert-before">  Compiler compiler;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="i">initCompiler</span>(&amp;<span class="i">compiler</span>, <span class="a">TYPE_SCRIPT</span>);
+<pre class="insert">  <span class="i">initCompiler</span>(&amp;<span class="i">compiler</span>, <span class="a">TYPE_SCRIPT</span>);
 </pre><pre class="insert-after">
 
   parser.hadError = false;
@@ -494,26 +443,21 @@ initialize the new Compiler fields.
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>initCompiler</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">void</span> <span class="i">initCompiler</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">FunctionType</span> <span class="i">type</span>) {
+<pre class="insert"><span class="k">static</span> <span class="t">void</span> <span class="i">initCompiler</span>(<span class="t">Compiler</span>* <span class="i">compiler</span>, <span class="t">FunctionType</span> <span class="i">type</span>) {
   <span class="i">compiler</span>-&gt;<span class="i">function</span> = <span class="a">NULL</span>;
   <span class="i">compiler</span>-&gt;<span class="i">type</span> = <span class="i">type</span>;
-</pre><pre class="insert-after">
-  compiler-&gt;localCount = 0;
+</pre><pre class="insert-after">  compiler-&gt;localCount = 0;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>initCompiler</em>(), replace 1 line</div>
 <!--
 Then we allocate a new function object to compile into.
 -->
 <p>然后分配一个新的函数对象，作为编译的目标。</p>
-<div class="codehilite"><pre class="insert-before">
-  compiler-&gt;scopeDepth = 0;
+<div class="codehilite"><pre class="insert-before">  compiler-&gt;scopeDepth = 0;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>initCompiler</em>()</div>
-<pre class="insert">
-  <span class="i">compiler</span>-&gt;<span class="i">function</span> = <span class="i">newFunction</span>();
-</pre><pre class="insert-after">
-  current = compiler;
+<pre class="insert">  <span class="i">compiler</span>-&gt;<span class="i">function</span> = <span class="i">newFunction</span>();
+</pre><pre class="insert-after">  current = compiler;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>initCompiler</em>()</div>
 
@@ -547,8 +491,7 @@ the story gets more complex.
 Here is another strange piece of code:
 -->
 <p>这里还有一段古怪的代码：</p>
-<div class="codehilite"><pre class="insert-before">
-  current = compiler;
+<div class="codehilite"><pre class="insert-before">  current = compiler;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>initCompiler</em>()</div>
 <pre class="insert">
@@ -557,8 +500,7 @@ in <em>initCompiler</em>()</div>
   <span class="i">local</span>-&gt;<span class="i">depth</span> = <span class="n">0</span>;
   <span class="i">local</span>-&gt;<span class="i">name</span>.<span class="i">start</span> = <span class="s">&quot;&quot;</span>;
   <span class="i">local</span>-&gt;<span class="i">name</span>.<span class="i">length</span> = <span class="n">0</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>initCompiler</em>()</div>
 <!--
@@ -576,10 +518,8 @@ end when we finish compiling some code.
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>endCompiler</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">static</span> <span class="t">ObjFunction</span>* <span class="i">endCompiler</span>() {
-</pre><pre class="insert-after">
-  emitReturn();
+<pre class="insert"><span class="k">static</span> <span class="t">ObjFunction</span>* <span class="i">endCompiler</span>() {
+</pre><pre class="insert-after">  emitReturn();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>endCompiler</em>(), replace 1 line</div>
 <!--
@@ -588,30 +528,25 @@ be written to. Now that the compiler creates the function object itself, we
 return that function. We grab it from the current compiler here:
 -->
 <p>从前，<code>interpret()</code> 调用编译器时，会传入一块要写入的 Chunk。如今编译器自己创建函数对象，我们就返回那个函数。从当前编译器里把它取出来：</p>
-<div class="codehilite"><pre class="insert-before">
-  emitReturn();
+<div class="codehilite"><pre class="insert-before">  emitReturn();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endCompiler</em>()</div>
-<pre class="insert">
-  <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">current</span>-&gt;<span class="i">function</span>;
+<pre class="insert">  <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">current</span>-&gt;<span class="i">function</span>;
 
-</pre><pre class="insert-after">
-#ifdef DEBUG_PRINT_CODE
+</pre><pre class="insert-after">#ifdef DEBUG_PRINT_CODE
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endCompiler</em>()</div>
 <!--
 And then return it to `compile()` like so:
 -->
 <p>然后像这样返回给 <code>compile()</code>：</p>
-<div class="codehilite"><pre class="insert-before">
-#endif
+<div class="codehilite"><pre class="insert-before">#endif
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endCompiler</em>()</div>
 <pre class="insert">
 
   <span class="k">return</span> <span class="i">function</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endCompiler</em>()</div>
 <!--
@@ -621,17 +556,14 @@ debug the compiler. We should fix that to keep working now that the generated
 chunk is wrapped in a function.
 -->
 <p>现在是个好时机，给这个函数再做一处微调。早些时候，我们加过一些诊断代码，让虚拟机转储反汇编后的字节码，以便调试编译器。既然生成的 chunk 已被包进函数里，这块也得修好，让它继续工作。</p>
-<div class="codehilite"><pre class="insert-before">
-#ifdef DEBUG_PRINT_CODE
+<div class="codehilite"><pre class="insert-before">#ifdef DEBUG_PRINT_CODE
   if (!parser.hadError) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endCompiler</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">disassembleChunk</span>(<span class="i">currentChunk</span>(), <span class="i">function</span>-&gt;<span class="i">name</span> != <span class="a">NULL</span>
+<pre class="insert">    <span class="i">disassembleChunk</span>(<span class="i">currentChunk</span>(), <span class="i">function</span>-&gt;<span class="i">name</span> != <span class="a">NULL</span>
         ? <span class="i">function</span>-&gt;<span class="i">name</span>-&gt;<span class="i">chars</span> : <span class="s">&quot;&lt;script&gt;&quot;</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 #endif
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endCompiler</em>(), replace 1 line</div>
@@ -642,17 +574,14 @@ does not, and we need to handle that gracefully even in our own diagnostic code.
 Speaking of which:
 -->
 <p>注意到这里检查函数名是否为 <code>NULL</code> 了吗？用户定义的函数有名字，但我们为顶层代码创建的那个隐式函数没有；即便在我们自己的诊断代码里，也得优雅地处理这一点。说到这个：</p>
-<div class="codehilite"><pre class="insert-before">
-static void printFunction(ObjFunction* function) {
+<div class="codehilite"><pre class="insert-before">static void printFunction(ObjFunction* function) {
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>printFunction</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">function</span>-&gt;<span class="i">name</span> == <span class="a">NULL</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">function</span>-&gt;<span class="i">name</span> == <span class="a">NULL</span>) {
     <span class="i">printf</span>(<span class="s">&quot;&lt;script&gt;&quot;</span>);
     <span class="k">return</span>;
   }
-</pre><pre class="insert-after">
-  printf(&quot;&lt;fn %s&gt;&quot;, function-&gt;name-&gt;chars);
+</pre><pre class="insert-after">  printf(&quot;&lt;fn %s&gt;&quot;, function-&gt;name-&gt;chars);
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>printFunction</em>()</div>
 <!--
@@ -670,14 +599,12 @@ segfault!
 Bumping up a level to `compile()`, we adjust its signature.
 -->
 <p>往上提一层到 <code>compile()</code>，我们调整它的签名。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;vm.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;vm.h&quot;
 
 </pre><div class="source-file"><em>compiler.h</em><br>
 function <em>compile</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="t">ObjFunction</span>* <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>);
+<pre class="insert"><span class="t">ObjFunction</span>* <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>);
 </pre><pre class="insert-after">
 
 #endif
@@ -691,10 +618,8 @@ implementation:
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 function <em>compile</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="t">ObjFunction</span>* <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>) {
-</pre><pre class="insert-after">
-  initScanner(source);
+<pre class="insert"><span class="t">ObjFunction</span>* <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>) {
+</pre><pre class="insert-after">  initScanner(source);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, function <em>compile</em>(), replace 1 line</div>
 <!--
@@ -702,19 +627,16 @@ Finally we get to some actual code. We change the very end of the function to
 this:
 -->
 <p>终于写到一点实际代码了。把函数的末尾改成这样：</p>
-<div class="codehilite"><pre class="insert-before">
-  while (!match(TOKEN_EOF)) {
+<div class="codehilite"><pre class="insert-before">  while (!match(TOKEN_EOF)) {
     declaration();
   }
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">endCompiler</span>();
+<pre class="insert">  <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">endCompiler</span>();
   <span class="k">return</span> <span class="i">parser</span>.<span class="i">hadError</span> ? <span class="a">NULL</span> : <span class="i">function</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>(), replace 2 lines</div>
 <!--
@@ -729,7 +651,7 @@ Eventually, we will update `interpret()` to handle the new declaration of
 <p>最终我们会更新 <code>interpret()</code> 以适配 <code>compile()</code> 的新声明，但先还有别的改动要做。</p><!--
 -- Call Frames
 -->
-<h2><a href="#调用帧" name="调用帧"><small>24&#8202;.&#8202;3</small>调用帧</a></h2><!--
+<h2><a href="#调用帧" id="调用帧"><small>24&#8202;.&#8202;3</small>调用帧</a></h2><!--
 It's time for a big conceptual leap. Before we can implement function
 declarations and calls, we need to get the VM ready to handle them. There are
 two main problems we need to worry about:
@@ -737,7 +659,7 @@ two main problems we need to worry about:
 <p>该迈出一大步概念上的飞跃了。在实现函数声明与调用之前，得先让虚拟机准备好处理它们。我们主要要操心两个问题：</p><!--
 -- Allocating local variables
 -->
-<h3><a href="#分配局部变量" name="分配局部变量"><small>24&#8202;.&#8202;3&#8202;.&#8202;1</small>分配局部变量</a></h3><!--
+<h3><a href="#分配局部变量" id="分配局部变量"><small>24&#8202;.&#8202;3&#8202;.&#8202;1</small>分配局部变量</a></h3><!--
 The compiler allocates stack slots for local variables. How should that work
 when the set of local variables in a program is distributed across multiple
 functions?
@@ -784,8 +706,7 @@ Fortunately for us, that's still true even when you add function calls into the
 mix. Here's an example:
 -->
 <p>我们的方案介于 Fortran 的静态分配与 jlox 的动态做法之间。虚拟机里的值栈，基于这样一个观察：局部变量和临时值按后进先出的方式行事。对我们来说幸运的是，即便掺进函数调用，这一点依然成立。来看个例子：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">first</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">first</span>() {
   <span class="k">var</span> <span class="i">a</span> = <span class="n">1</span>;
   <span class="i">second</span>();
   <span class="k">var</span> <span class="i">b</span> = <span class="n">2</span>;
@@ -823,8 +744,7 @@ others at compile time.
 -->
 <p>我说“想象”，是因为编译器其实算不出来。Lox 里函数是一等公民，我们无法在编译期确定哪些函数会调用哪些别的函数。</p>
 </aside>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">first</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">first</span>() {
   <span class="k">var</span> <span class="i">a</span> = <span class="n">1</span>;
   <span class="i">second</span>();
   <span class="k">var</span> <span class="i">b</span> = <span class="n">2</span>;
@@ -878,7 +798,7 @@ the VM determines the first stack slot where that function's variables begin.
 <p>这是我们需要跟踪的第一块数据。每次调用函数时，虚拟机确定该函数变量起始的第一个栈槽。</p><!--
 -- Return addresses
 -->
-<h3><a href="#返回地址" name="返回地址"><small>24&#8202;.&#8202;3&#8202;.&#8202;2</small>返回地址</a></h3><!--
+<h3><a href="#返回地址" id="返回地址"><small>24&#8202;.&#8202;3&#8202;.&#8202;2</small>返回地址</a></h3><!--
 Right now, the VM works its way through the instruction stream by incrementing
 the `ip` field. The only interesting behavior is around control flow
 instructions which offset the `ip` by larger amounts. *Calling* a function is
@@ -910,15 +830,14 @@ line between genius and madness is hair thin.
 </aside><!--
 -- The call stack
 -->
-<h3><a href="#调用栈" name="调用栈"><small>24&#8202;.&#8202;3&#8202;.&#8202;3</small>调用栈</a></h3><!--
+<h3><a href="#调用栈" id="调用栈"><small>24&#8202;.&#8202;3&#8202;.&#8202;3</small>调用栈</a></h3><!--
 So for each live function invocation -- each call that hasn't returned yet -- we
 need to track where on the stack that function's locals begin, and where the
 caller should resume. We'll put this, along with some other stuff, in a new
 struct.
 -->
 <p>因此，对每一次仍在进行的函数调用——每一次尚未返回的调用——我们都要跟踪该函数的局部变量在栈上从哪里开始，以及调用者应从哪里恢复。我们把这些连同别的一些东西，放进一个新结构体。</p>
-<div class="codehilite"><pre class="insert-before">
-#define STACK_MAX 256
+<div class="codehilite"><pre class="insert-before">#define STACK_MAX 256
 </pre><div class="source-file"><em>vm.h</em></div>
 <pre class="insert">
 
@@ -970,17 +889,14 @@ So over in the VM, we create an array of these CallFrame structs up front and
 treat it as a stack, like we do with the value array.
 -->
 <p>于是在虚拟机这边，我们预先创建这些 CallFrame 结构体的数组，并像值数组那样把它当作栈来用。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef struct {
+<div class="codehilite"><pre class="insert-before">typedef struct {
 </pre><div class="source-file"><em>vm.h</em><br>
 in struct <em>VM</em><br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="t">CallFrame</span> <span class="i">frames</span>[<span class="a">FRAMES_MAX</span>];
+<pre class="insert">  <span class="t">CallFrame</span> <span class="i">frames</span>[<span class="a">FRAMES_MAX</span>];
   <span class="t">int</span> <span class="i">frameCount</span>;
 
-</pre><pre class="insert-after">
-  Value stack[STACK_MAX];
+</pre><pre class="insert-after">  Value stack[STACK_MAX];
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em>, replace 2 lines</div>
 <!--
@@ -995,13 +911,11 @@ capacity is fixed. This means, as in many language implementations, there is a
 maximum call depth we can handle. For clox, it's defined here:
 -->
 <p>虚拟机里新的 <code>frameCount</code> 字段存放 CallFrame 栈当前的高度——即正在进行的函数调用个数。为保持 clox 简单，数组容量是固定的。这意味着，像许多语言实现一样，我们能处理的调用深度有上限。对 clox，它定义在这里：</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;value.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;value.h&quot;
 
 </pre><div class="source-file"><em>vm.h</em><br>
 replace 1 line</div>
-<pre class="insert">
-<span class="a">#define FRAMES_MAX 64</span>
+<pre class="insert"><span class="a">#define FRAMES_MAX 64</span>
 <span class="a">#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)</span>
 </pre><pre class="insert-after">
 
@@ -1021,29 +935,23 @@ this, but I'm trying to keep things simple.
 -->
 <p>若足够多的函数调用除了局部变量还用了足够多的临时值，栈仍有可能溢出。稳健的实现会防范这一点，但我尽量保持简单。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-  vm.stackTop = vm.stack;
+<div class="codehilite"><pre class="insert-before">  vm.stackTop = vm.stack;
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>resetStack</em>()</div>
-<pre class="insert">
-  <span class="i">vm</span>.<span class="i">frameCount</span> = <span class="n">0</span>;
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="i">vm</span>.<span class="i">frameCount</span> = <span class="n">0</span>;
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>resetStack</em>()</div>
 <!--
 The "vm.h" header needs access to ObjFunction, so we add an include.
 -->
 <p>“vm.h” 头文件需要访问 ObjFunction，于是我们加一条 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#define clox_vm_h
+<div class="codehilite"><pre class="insert-before">#define clox_vm_h
 
 </pre><div class="source-file"><em>vm.h</em><br>
 replace 1 line</div>
-<pre class="insert">
-<span class="a">#include &quot;object.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;table.h&quot;
+<pre class="insert"><span class="a">#include &quot;object.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;table.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, replace 1 line</div>
 <!--
@@ -1057,13 +965,11 @@ need to be updated to do so relative to the current CallFrame's `slots` field.
 We'll start at the top and plow through it.
 -->
 <p>我们从顶上开始，一路犁过去。</p>
-<div class="codehilite"><pre class="insert-before">
-static InterpretResult run() {
+<div class="codehilite"><pre class="insert-before">static InterpretResult run() {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-  <span class="t">CallFrame</span>* <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
+<pre class="insert">  <span class="t">CallFrame</span>* <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
 
 <span class="a">#define READ_BYTE() (*frame-&gt;ip++)</span>
 
@@ -1074,8 +980,7 @@ replace 4 lines</div>
 <span class="a">#define READ_CONSTANT() \</span>
 <span class="a">    (frame-&gt;function-&gt;chunk.constants.values[READ_BYTE()])</span>
 
-</pre><pre class="insert-after">
-#define READ_STRING() AS_STRING(READ_CONSTANT())
+</pre><pre class="insert-after">#define READ_STRING() AS_STRING(READ_CONSTANT())
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 4 lines</div>
 <!--
@@ -1097,16 +1002,13 @@ will do this, but there's a good chance it will.
 Now onto each instruction that needs a little tender loving care.
 -->
 <p>接下来是每条需要一点温柔呵护的指令。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_GET_LOCAL: {
+<div class="codehilite"><pre class="insert-before">      case OP_GET_LOCAL: {
         uint8_t slot = READ_BYTE();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-        <span class="i">push</span>(<span class="i">frame</span>-&gt;<span class="i">slots</span>[<span class="i">slot</span>]);
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="i">push</span>(<span class="i">frame</span>-&gt;<span class="i">slots</span>[<span class="i">slot</span>]);
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 <!--
@@ -1119,16 +1021,13 @@ accesses the given numbered slot relative to the beginning of that frame.
 Setting a local variable works the same way.
 -->
 <p>设置局部变量也是同一套路。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_SET_LOCAL: {
+<div class="codehilite"><pre class="insert-before">      case OP_SET_LOCAL: {
         uint8_t slot = READ_BYTE();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-        <span class="i">frame</span>-&gt;<span class="i">slots</span>[<span class="i">slot</span>] = <span class="i">peek</span>(<span class="n">0</span>);
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="i">frame</span>-&gt;<span class="i">slots</span>[<span class="i">slot</span>] = <span class="i">peek</span>(<span class="n">0</span>);
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 <!--
@@ -1136,48 +1035,39 @@ The jump instructions used to modify the VM's `ip` field. Now, they do the same
 for the current frame's `ip`.
 -->
 <p>跳转指令从前修改虚拟机的 <code>ip</code> 字段。如今它们对当前帧的 <code>ip</code> 做同样的事。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_JUMP: {
+<div class="codehilite"><pre class="insert-before">      case OP_JUMP: {
         uint16_t offset = READ_SHORT();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-        <span class="i">frame</span>-&gt;<span class="i">ip</span> += <span class="i">offset</span>;
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="i">frame</span>-&gt;<span class="i">ip</span> += <span class="i">offset</span>;
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 <!--
 Same with the conditional jump:
 -->
 <p>条件跳转也一样：</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_JUMP_IF_FALSE: {
+<div class="codehilite"><pre class="insert-before">      case OP_JUMP_IF_FALSE: {
         uint16_t offset = READ_SHORT();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-        <span class="k">if</span> (<span class="i">isFalsey</span>(<span class="i">peek</span>(<span class="n">0</span>))) <span class="i">frame</span>-&gt;<span class="i">ip</span> += <span class="i">offset</span>;
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="k">if</span> (<span class="i">isFalsey</span>(<span class="i">peek</span>(<span class="n">0</span>))) <span class="i">frame</span>-&gt;<span class="i">ip</span> += <span class="i">offset</span>;
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 <!--
 And our backward-jumping loop instruction:
 -->
 <p>还有我们那条向后跳的循环指令：</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_LOOP: {
+<div class="codehilite"><pre class="insert-before">      case OP_LOOP: {
         uint16_t offset = READ_SHORT();
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-        <span class="i">frame</span>-&gt;<span class="i">ip</span> -= <span class="i">offset</span>;
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="i">frame</span>-&gt;<span class="i">ip</span> -= <span class="i">offset</span>;
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 <!--
@@ -1185,16 +1075,13 @@ We have some diagnostic code that prints each instruction as it executes to help
 us debug our VM. That needs to work with the new structure too.
 -->
 <p>我们有一些诊断代码，在执行时打印每条指令，好帮我们调试虚拟机。它也得适配新结构。</p>
-<div class="codehilite"><pre class="insert-before">
-    printf(&quot;\n&quot;);
+<div class="codehilite"><pre class="insert-before">    printf(&quot;\n&quot;);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-    <span class="i">disassembleInstruction</span>(&amp;<span class="i">frame</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>,
+<pre class="insert">    <span class="i">disassembleInstruction</span>(&amp;<span class="i">frame</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>,
         (<span class="t">int</span>)(<span class="i">frame</span>-&gt;<span class="i">ip</span> - <span class="i">frame</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">code</span>));
-</pre><pre class="insert-after">
-#endif
+</pre><pre class="insert-after">#endif
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 2 lines</div>
 <!--
@@ -1207,13 +1094,11 @@ so didn't need to be touched. Next, we jump up a level to the code that calls
 `run()`.
 -->
 <p>其实没那么糟。大多数指令只用宏，所以不用动。接下来往上跳一层，到调用 <code>run()</code> 的代码。</p>
-<div class="codehilite"><pre class="insert-before">
-InterpretResult interpret(const char* source) {
+<div class="codehilite"><pre class="insert-before">InterpretResult interpret(const char* source) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>interpret</em>()<br>
 replace 10 lines</div>
-<pre class="insert">
-  <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">compile</span>(<span class="i">source</span>);
+<pre class="insert">  <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">compile</span>(<span class="i">source</span>);
   <span class="k">if</span> (<span class="i">function</span> == <span class="a">NULL</span>) <span class="k">return</span> <span class="a">INTERPRET_COMPILE_ERROR</span>;
 
   <span class="i">push</span>(<span class="a">OBJ_VAL</span>(<span class="i">function</span>));
@@ -1247,16 +1132,13 @@ used to free the hardcoded chunk. Now that the ObjFunction owns that code, we
 don't need to do that anymore, so the end of `interpret()` is simply this:
 -->
 <p>这就让解释器准备好开始执行代码了。从前结束后，虚拟机会释放那块硬编码的 chunk。如今 ObjFunction 拥有那段代码，我们不必再那么做，于是 <code>interpret()</code> 的末尾就简单地变成这样：</p>
-<div class="codehilite"><pre class="insert-before">
-  frame-&gt;slots = vm.stack;
+<div class="codehilite"><pre class="insert-before">  frame-&gt;slots = vm.stack;
 
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>interpret</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-  <span class="k">return</span> <span class="i">run</span>();
-</pre><pre class="insert-after">
-}
+<pre class="insert">  <span class="k">return</span> <span class="i">run</span>();
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>interpret</em>(), replace 4 lines</div>
 <!--
@@ -1264,18 +1146,15 @@ The last piece of code referring to the old VM fields is `runtimeError()`. We'll
 revisit that later in the chapter, but for now let's change it to this:
 -->
 <p>最后一处引用旧 VM 字段的代码是 <code>runtimeError()</code>。本章稍后还会再访它，眼下先改成这样：</p>
-<div class="codehilite"><pre class="insert-before">
-  fputs(&quot;\n&quot;, stderr);
+<div class="codehilite"><pre class="insert-before">  fputs(&quot;\n&quot;, stderr);
 
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>runtimeError</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-  <span class="t">CallFrame</span>* <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
+<pre class="insert">  <span class="t">CallFrame</span>* <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
   <span class="t">size_t</span> <span class="i">instruction</span> = <span class="i">frame</span>-&gt;<span class="i">ip</span> - <span class="i">frame</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">code</span> - <span class="n">1</span>;
   <span class="t">int</span> <span class="i">line</span> = <span class="i">frame</span>-&gt;<span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">lines</span>[<span class="i">instruction</span>];
-</pre><pre class="insert-after">
-  fprintf(stderr, &quot;[line %d] in script\n&quot;, line);
+</pre><pre class="insert-after">  fprintf(stderr, &quot;[line %d] in script\n&quot;, line);
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>runtimeError</em>(), replace 2 lines</div>
 <!--
@@ -1292,28 +1171,26 @@ infrastructure is there and ready for us now. Let's take advantage of it.
 <p>假定我们都做对了，clox 又回到可运行状态。启动它，它会……做和从前一模一样的事。我们还没加任何新特性，多少有点扫兴。但基础设施都已就位，等着我们用了。那就用起来吧。</p><!--
 -- Function Declarations
 -->
-<h2><a href="#函数声明" name="函数声明"><small>24&#8202;.&#8202;4</small>函数声明</a></h2><!--
+<h2><a href="#函数声明" id="函数声明"><small>24&#8202;.&#8202;4</small>函数声明</a></h2><!--
 Before we can do call expressions, we need something to call, so we'll do
 function declarations first. The <span name="fun">fun</span> starts with a
 keyword.
 -->
 <p>要做调用表达式，得先有东西可调，所以先做函数声明。这<span name="fun">好玩</span>的事从一个关键字开始。</p>
 <aside name="fun"><!--
-Yes, I *am* proud of myself for this dumb joke, thank you for asking.
+Yes, I am going to make a dumb joke about the `fun` keyword every time it
+comes up.
 -->
 <p>是的，我<em>确实</em>为这个蹩脚笑话感到自豪，谢谢你问。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-static void declaration() {
+<div class="codehilite"><pre class="insert-before">static void declaration() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>declaration</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_FUN</span>)) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_FUN</span>)) {
     <span class="i">funDeclaration</span>();
   } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_VAR</span>)) {
-</pre><pre class="insert-after">
-    varDeclaration();
+</pre><pre class="insert-after">    varDeclaration();
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>declaration</em>(), replace 1 line</div>
 <!--
@@ -1322,8 +1199,7 @@ That passes control to here:
 <p>控制流转到这里：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>block</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">funDeclaration</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">funDeclaration</span>() {
   <span class="t">uint8_t</span> <span class="i">global</span> = <span class="i">parseVariable</span>(<span class="s">&quot;Expect function name.&quot;</span>);
   <span class="i">markInitialized</span>();
   <span class="i">function</span>(<span class="a">TYPE_FUNCTION</span>);
@@ -1362,14 +1238,11 @@ be referenced inside the body without generating an error.
 We do need one check, though.
 -->
 <p>不过我们确实需要一处检查。</p>
-<div class="codehilite"><pre class="insert-before">
-static void markInitialized() {
+<div class="codehilite"><pre class="insert-before">static void markInitialized() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>markInitialized</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">scopeDepth</span> == <span class="n">0</span>) <span class="k">return</span>;
-</pre><pre class="insert-after">
-  current-&gt;locals[current-&gt;localCount - 1].depth =
+<pre class="insert">  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">scopeDepth</span> == <span class="n">0</span>) <span class="k">return</span>;
+</pre><pre class="insert-after">  current-&gt;locals[current-&gt;localCount - 1].depth =
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>markInitialized</em>()</div>
 <!--
@@ -1393,8 +1266,7 @@ incrementally, starting with this:
 <p>我把编译参数和函数体的代码拆出来，是因为稍后解析类里的方法声明时还会复用它。我们增量构建，从这段开始：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>block</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">function</span>(<span class="t">FunctionType</span> <span class="i">type</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">function</span>(<span class="t">FunctionType</span> <span class="i">type</span>) {
   <span class="t">Compiler</span> <span class="i">compiler</span>;
   <span class="i">initCompiler</span>(&amp;<span class="i">compiler</span>, <span class="i">type</span>);
   <span class="i">beginScope</span>();<span name="no-end-scope"> </span>
@@ -1425,7 +1297,7 @@ the rest of a block including the closing brace.
 <p>眼下先不管参数。我们解析一对空括号，再跟函数体。函数体以左花括号开头，我们在这里解析它。然后调用已有的 <code>block()</code>，它知道如何编译块的其余部分，包括右花括号。</p><!--
 -- A stack of compilers
 -->
-<h3><a href="#编译器栈" name="编译器栈"><small>24&#8202;.&#8202;4&#8202;.&#8202;1</small>编译器栈</a></h3><!--
+<h3><a href="#编译器栈" id="编译器栈"><small>24&#8202;.&#8202;4&#8202;.&#8202;1</small>编译器栈</a></h3><!--
 The interesting parts are the compiler stuff at the top and bottom. The Compiler
 struct stores data like which slots are owned by which local variables, how many
 blocks of nesting we're currently in, etc. All of that is specific to a single
@@ -1460,17 +1332,14 @@ a linked list. Each Compiler points back to the Compiler for the function that
 encloses it, all the way back to the root Compiler for the top-level code.
 -->
 <p>我们的修法是：把这一串嵌套的 Compiler 结构体当作栈。与虚拟机里的 Value 栈和 CallFrame 栈不同，我们不用数组，而用链表。每个 Compiler 回指包围它的那个函数的 Compiler，一路回到顶层代码的根 Compiler。</p>
-<div class="codehilite"><pre class="insert-before">
-} FunctionType;
+<div class="codehilite"><pre class="insert-before">} FunctionType;
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after enum <em>FunctionType</em><br>
 replace 1 line</div>
-<pre class="insert">
-<span class="k">typedef</span> <span class="k">struct</span> <span class="t">Compiler</span> {
+<pre class="insert"><span class="k">typedef</span> <span class="k">struct</span> <span class="t">Compiler</span> {
   <span class="k">struct</span> <span class="t">Compiler</span>* <span class="i">enclosing</span>;
-</pre><pre class="insert-after">
-  ObjFunction* function;
+</pre><pre class="insert-after">  ObjFunction* function;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after enum <em>FunctionType</em>, replace 1 line</div>
 <!--
@@ -1483,14 +1352,11 @@ When initializing a new Compiler, we capture the about-to-no-longer-be-current
 one in that pointer.
 -->
 <p>初始化新 Compiler 时，我们把即将不再是当前的那个，抓进那个指针。</p>
-<div class="codehilite"><pre class="insert-before">
-static void initCompiler(Compiler* compiler, FunctionType type) {
+<div class="codehilite"><pre class="insert-before">static void initCompiler(Compiler* compiler, FunctionType type) {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>initCompiler</em>()</div>
-<pre class="insert">
-  <span class="i">compiler</span>-&gt;<span class="i">enclosing</span> = <span class="i">current</span>;
-</pre><pre class="insert-after">
-  compiler-&gt;function = NULL;
+<pre class="insert">  <span class="i">compiler</span>-&gt;<span class="i">enclosing</span> = <span class="i">current</span>;
+</pre><pre class="insert-after">  compiler-&gt;function = NULL;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>initCompiler</em>()</div>
 <!--
@@ -1498,15 +1364,12 @@ Then when a Compiler finishes, it pops itself off the stack by restoring the
 previous compiler to be the new current one.
 -->
 <p>然后当一个 Compiler 结束时，它把自己从栈上弹出：把先前的编译器恢复为新的当前编译器。</p>
-<div class="codehilite"><pre class="insert-before">
-#endif
+<div class="codehilite"><pre class="insert-before">#endif
 
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>endCompiler</em>()</div>
-<pre class="insert">
-  <span class="i">current</span> = <span class="i">current</span>-&gt;<span class="i">enclosing</span>;
-</pre><pre class="insert-after">
-  return function;
+<pre class="insert">  <span class="i">current</span> = <span class="i">current</span>-&gt;<span class="i">enclosing</span>;
+</pre><pre class="insert-after">  return function;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>endCompiler</em>()</div>
 <!--
@@ -1530,17 +1393,15 @@ amount of function nesting it permits.
 </aside><!--
 -- Function parameters
 -->
-<h3><a href="#函数参数" name="函数参数"><small>24&#8202;.&#8202;4&#8202;.&#8202;2</small>函数参数</a></h3><!--
+<h3><a href="#函数参数" id="函数参数"><small>24&#8202;.&#8202;4&#8202;.&#8202;2</small>函数参数</a></h3><!--
 Functions aren't very useful if you can't pass arguments to them, so let's do
 parameters next.
 -->
 <p>若不能传实参，函数就没多大用，所以接下来做参数。</p>
-<div class="codehilite"><pre class="insert-before">
-  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after function name.&quot;);
+<div class="codehilite"><pre class="insert-before">  consume(TOKEN_LEFT_PAREN, &quot;Expect '(' after function name.&quot;);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>function</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (!<span class="i">check</span>(<span class="a">TOKEN_RIGHT_PAREN</span>)) {
+<pre class="insert">  <span class="k">if</span> (!<span class="i">check</span>(<span class="a">TOKEN_RIGHT_PAREN</span>)) {
     <span class="k">do</span> {
       <span class="i">current</span>-&gt;<span class="i">function</span>-&gt;<span class="i">arity</span>++;
       <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">function</span>-&gt;<span class="i">arity</span> &gt; <span class="n">255</span>) {
@@ -1550,8 +1411,7 @@ in <em>function</em>()</div>
       <span class="i">defineVariable</span>(<span class="i">constant</span>);
     } <span class="k">while</span> (<span class="i">match</span>(<span class="a">TOKEN_COMMA</span>));
   }
-</pre><pre class="insert-after">
-  consume(TOKEN_RIGHT_PAREN, &quot;Expect ')' after parameters.&quot;);
+</pre><pre class="insert-after">  consume(TOKEN_RIGHT_PAREN, &quot;Expect ')' after parameters.&quot;);
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>function</em>()</div>
 <!--
@@ -1570,12 +1430,10 @@ the function's name. That means we can grab the name right then from the
 previous token.
 -->
 <p>顺便，我们通过统计解析了多少参数来记下函数的 arity。与函数一起存放的另一块元数据是它的名字。编译函数声明时，我们在解析完函数名之后立刻调用 <code>initCompiler()</code>。这意味着我们当时就能从前一个 token 抓取名字。</p>
-<div class="codehilite"><pre class="insert-before">
-  current = compiler;
+<div class="codehilite"><pre class="insert-before">  current = compiler;
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>initCompiler</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">type</span> != <span class="a">TYPE_SCRIPT</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">type</span> != <span class="a">TYPE_SCRIPT</span>) {
     <span class="i">current</span>-&gt;<span class="i">function</span>-&gt;<span class="i">name</span> = <span class="i">copyString</span>(<span class="i">parser</span>.<span class="i">previous</span>.<span class="i">start</span>,
                                          <span class="i">parser</span>.<span class="i">previous</span>.<span class="i">length</span>);
   }
@@ -1595,8 +1453,7 @@ heap-allocated name string that it can keep around.
 Rad. Now we can compile function declarations, like this:
 -->
 <p>妙。现在我们可以编译函数声明了，比如：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">areWeHavingItYet</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">areWeHavingItYet</span>() {
   <span class="k">print</span> <span class="s">&quot;Yes we are!&quot;</span>;
 }
 
@@ -1612,7 +1469,7 @@ We can print them! I guess that's not very useful, though.
 </aside><!--
 -- Function Calls
 -->
-<h2><a href="#函数调用" name="函数调用"><small>24&#8202;.&#8202;5</small>函数调用</a></h2><!--
+<h2><a href="#函数调用" id="函数调用"><small>24&#8202;.&#8202;5</small>函数调用</a></h2><!--
 By the end of this section, we'll start to see some interesting behavior. The
 next step is calling functions. We don't usually think of it this way, but a
 function call expression is kind of an infix `(` operator. You have a
@@ -1625,15 +1482,12 @@ That odd grammatical perspective explains how to hook the syntax into our
 parsing table.
 -->
 <p>这个古怪的语法视角，解释了如何把该语法挂进我们的解析表。</p>
-<div class="codehilite"><pre class="insert-before">
-ParseRule rules[] = {
+<div class="codehilite"><pre class="insert-before">ParseRule rules[] = {
 </pre><div class="source-file"><em>compiler.c</em><br>
 add after <em>unary</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  [<span class="a">TOKEN_LEFT_PAREN</span>]    = {<span class="i">grouping</span>, <span class="i">call</span>,   <span class="a">PREC_CALL</span>},
-</pre><pre class="insert-after">
-  [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
+<pre class="insert">  [<span class="a">TOKEN_LEFT_PAREN</span>]    = {<span class="i">grouping</span>, <span class="i">call</span>,   <span class="a">PREC_CALL</span>},
+</pre><pre class="insert-after">  [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>unary</em>(), replace 1 line</div>
 <!--
@@ -1643,8 +1497,7 @@ dispatches to a new parser function.
 <p>当解析器在表达式之后遇到左括号时，它分派到一个新的解析函数。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>binary</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">call</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">call</span>(<span class="t">bool</span> <span class="i">canAssign</span>) {
   <span class="t">uint8_t</span> <span class="i">argCount</span> = <span class="i">argumentList</span>();
   <span class="i">emitBytes</span>(<span class="a">OP_CALL</span>, <span class="i">argCount</span>);
 }
@@ -1663,8 +1516,7 @@ We compile the arguments using this friend:
 <p>我们用这位朋友来编译实参：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>defineVariable</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">uint8_t</span> <span class="i">argumentList</span>() {
+<pre><span class="k">static</span> <span class="t">uint8_t</span> <span class="i">argumentList</span>() {
   <span class="t">uint8_t</span> <span class="i">argCount</span> = <span class="n">0</span>;
   <span class="k">if</span> (!<span class="i">check</span>(<span class="a">TOKEN_RIGHT_PAREN</span>)) {
     <span class="k">do</span> {
@@ -1690,16 +1542,13 @@ count into the bytecode as a single-byte operand, we can only go up to 255. We
 need to verify that in this compiler too.
 -->
 <p>差不多。早在 jlox 里，我们就加过编译期检查：一次调用不能传超过 255 个实参。当时我说，是因为 clox 也会需要类似限制。现在你能明白为什么了——我们把实参个数作为单字节操作数塞进字节码，最多只能到 255。这个编译器里也要验证这一点。</p>
-<div class="codehilite"><pre class="insert-before">
-      expression();
+<div class="codehilite"><pre class="insert-before">      expression();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>argumentList</em>()</div>
-<pre class="insert">
-      <span class="k">if</span> (<span class="i">argCount</span> == <span class="n">255</span>) {
+<pre class="insert">      <span class="k">if</span> (<span class="i">argCount</span> == <span class="n">255</span>) {
         <span class="i">error</span>(<span class="s">&quot;Can&#39;t have more than 255 arguments.&quot;</span>);
       }
-</pre><pre class="insert-after">
-      argCount++;
+</pre><pre class="insert-after">      argCount++;
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>argumentList</em>()</div>
 <!--
@@ -1707,28 +1556,24 @@ That's the front end. Let's skip over to the back end, with a quick stop in the
 middle to declare the new instruction.
 -->
 <p>前端到此为止。我们跳到后端，中途稍停，声明一下新指令。</p>
-<div class="codehilite"><pre class="insert-before">
-  OP_LOOP,
+<div class="codehilite"><pre class="insert-before">  OP_LOOP,
 </pre><div class="source-file"><em>chunk.h</em><br>
 in enum <em>OpCode</em></div>
-<pre class="insert">
-  <span class="a">OP_CALL</span>,
-</pre><pre class="insert-after">
-  OP_RETURN,
+<pre class="insert">  <span class="a">OP_CALL</span>,
+</pre><pre class="insert-after">  OP_RETURN,
 </pre></div>
 <div class="source-file-narrow"><em>chunk.h</em>, in enum <em>OpCode</em></div>
 <!--
 -- Binding arguments to parameters
 -->
-<h3><a href="#将实参绑定到形参" name="将实参绑定到形参"><small>24&#8202;.&#8202;5&#8202;.&#8202;1</small>将实参绑定到形参</a></h3><!--
+<h3><a href="#将实参绑定到形参" id="将实参绑定到形参"><small>24&#8202;.&#8202;5&#8202;.&#8202;1</small>将实参绑定到形参</a></h3><!--
 Before we get to the implementation, we should think about what the stack looks
 like at the point of a call and what we need to do from there. When we reach the
 call instruction, we have already executed the expression for the function being
 called, followed by its arguments. Say our program looks like this:
 -->
 <p>动手实现之前，我们应该想想调用那一刻栈长什么样，以及从那儿要做什么。到达调用指令时，我们已经执行了被调用函数的表达式，以及它的各个实参。假设程序是这样：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">sum</span>(<span class="i">a</span>, <span class="i">b</span>, <span class="i">c</span>) {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">sum</span>(<span class="i">a</span>, <span class="i">b</span>, <span class="i">c</span>) {
   <span class="k">return</span> <span class="i">a</span> + <span class="i">b</span> + <span class="i">c</span>;
 }
 
@@ -1783,20 +1628,17 @@ performance.
 Time to implement the call instruction.
 -->
 <p>该实现调用指令了。</p>
-<div class="codehilite"><pre class="insert-before">
-      }
+<div class="codehilite"><pre class="insert-before">      }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OP_CALL</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OP_CALL</span>: {
         <span class="t">int</span> <span class="i">argCount</span> = <span class="a">READ_BYTE</span>();
         <span class="k">if</span> (!<span class="i">callValue</span>(<span class="i">peek</span>(<span class="i">argCount</span>), <span class="i">argCount</span>)) {
           <span class="k">return</span> <span class="a">INTERPRET_RUNTIME_ERROR</span>;
         }
         <span class="k">break</span>;
       }
-</pre><pre class="insert-after">
-      case OP_RETURN: {
+</pre><pre class="insert-after">      case OP_RETURN: {
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1813,15 +1655,12 @@ for the called function. The `run()` function has its own cached pointer to the
 current frame, so we need to update that.
 -->
 <p>若 <code>callValue()</code> 成功，CallFrame 栈上会有一个给被调函数的新帧。<code>run()</code> 函数有自己缓存的当前帧指针，所以我们需要更新它。</p>
-<div class="codehilite"><pre class="insert-before">
-          return INTERPRET_RUNTIME_ERROR;
+<div class="codehilite"><pre class="insert-before">          return INTERPRET_RUNTIME_ERROR;
         }
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-        <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
-</pre><pre class="insert-after">
-        break;
+<pre class="insert">        <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
+</pre><pre class="insert-after">        break;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>()</div>
 <!--
@@ -1833,8 +1672,7 @@ call begins here:
 <p>由于字节码分派循环从那个 <code>frame</code> 变量读取，当虚拟机去执行下一条指令时，它会从新调用的函数的 CallFrame 读取 <code>ip</code>，并跳到它的代码。执行那次调用的工作从这里开始：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>peek</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">callValue</span>(<span class="t">Value</span> <span class="i">callee</span>, <span class="t">int</span> <span class="i">argCount</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">callValue</span>(<span class="t">Value</span> <span class="i">callee</span>, <span class="t">int</span> <span class="i">argCount</span>) {
   <span class="k">if</span> (<span class="a">IS_OBJ</span>(<span class="i">callee</span>)) {
     <span class="k">switch</span> (<span class="a">OBJ_TYPE</span>(<span class="i">callee</span>)) {
       <span class="k">case</span> <span class="a">OBJ_FUNCTION</span>:<span name="switch"> </span>
@@ -1860,8 +1698,7 @@ is dynamically typed, there's nothing to prevent a user from writing bad code
 like:
 -->
 <p>这里发生的不只是初始化一个新 CallFrame。因为 Lox 是动态类型的，没什么能阻止用户写出这种糟糕代码：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">notAFunction</span> = <span class="n">123</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">notAFunction</span> = <span class="n">123</span>;
 <span class="i">notAFunction</span>();
 </pre></div><!--
 If that happens, the runtime needs to safely report an error and halt. So the
@@ -1871,8 +1708,7 @@ it's not a function, we error out. Otherwise, the actual call happens here:
 <p>若发生这种事，运行时需要安全地报告错误并停下。所以我们先做的第一件事，是检查试图调用的那个值的类型。若不是函数，就报错退出。否则，真正的调用发生在这里：</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>peek</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">call</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>, <span class="t">int</span> <span class="i">argCount</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">call</span>(<span class="t">ObjFunction</span>* <span class="i">function</span>, <span class="t">int</span> <span class="i">argCount</span>) {
   <span class="t">CallFrame</span>* <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span>++];
   <span class="i">frame</span>-&gt;<span class="i">function</span> = <span class="i">function</span>;
   <span class="i">frame</span>-&gt;<span class="i">ip</span> = <span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">code</span>;
@@ -1897,15 +1733,12 @@ make the window start one slot earlier to align them with the arguments.
 Before we move on, let's add the new instruction to our disassembler.
 -->
 <p>继续之前，先把新指令加进反汇编器。</p>
-<div class="codehilite"><pre class="insert-before">
-      return jumpInstruction(&quot;OP_LOOP&quot;, -1, chunk, offset);
+<div class="codehilite"><pre class="insert-before">      return jumpInstruction(&quot;OP_LOOP&quot;, -1, chunk, offset);
 </pre><div class="source-file"><em>debug.c</em><br>
 in <em>disassembleInstruction</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OP_CALL</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OP_CALL</span>:
       <span class="k">return</span> <span class="i">byteInstruction</span>(<span class="s">&quot;OP_CALL&quot;</span>, <span class="i">chunk</span>, <span class="i">offset</span>);
-</pre><pre class="insert-after">
-    case OP_RETURN:
+</pre><pre class="insert-after">    case OP_RETURN:
 </pre></div>
 <div class="source-file-narrow"><em>debug.c</em>, in <em>disassembleInstruction</em>()</div>
 <!--
@@ -1914,13 +1747,11 @@ CallFrame, we may as well use it to set up the first frame for executing the
 top-level code.
 -->
 <p>再做一个小小的旁支。既然我们有了发起 CallFrame 的便利函数，不妨也用它来为执行顶层代码设置第一帧。</p>
-<div class="codehilite"><pre class="insert-before">
-  push(OBJ_VAL(function));
+<div class="codehilite"><pre class="insert-before">  push(OBJ_VAL(function));
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>interpret</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-  <span class="i">call</span>(<span class="i">function</span>, <span class="n">0</span>);
+<pre class="insert">  <span class="i">call</span>(<span class="i">function</span>, <span class="n">0</span>);
 </pre><pre class="insert-after">
 
   return run();
@@ -1932,7 +1763,7 @@ OK, now back to calls...
 <p>好，现在回到调用……</p><!--
 -- Runtime error checking
 -->
-<h3><a href="#运行时错误检查" name="运行时错误检查"><small>24&#8202;.&#8202;5&#8202;.&#8202;2</small>运行时错误检查</a></h3><!--
+<h3><a href="#运行时错误检查" id="运行时错误检查"><small>24&#8202;.&#8202;5&#8202;.&#8202;2</small>运行时错误检查</a></h3><!--
 The overlapping stack windows work based on the assumption that a call passes
 exactly one argument for each of the function's parameters. But, again, because
 Lox ain't statically typed, a foolish user could pass too many or too few
@@ -1940,19 +1771,16 @@ arguments. In Lox, we've defined that to be a runtime error, which we report
 like so:
 -->
 <p>重叠的栈窗口基于这样一个假设：一次调用为函数的每个形参恰好传一个实参。但同样，因为 Lox 不是静态类型的，愚蠢的用户可能传太多或太少。在 Lox 里，我们把这定义为运行时错误，报告方式如下：</p>
-<div class="codehilite"><pre class="insert-before">
-static bool call(ObjFunction* function, int argCount) {
+<div class="codehilite"><pre class="insert-before">static bool call(ObjFunction* function, int argCount) {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>call</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">argCount</span> != <span class="i">function</span>-&gt;<span class="i">arity</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">argCount</span> != <span class="i">function</span>-&gt;<span class="i">arity</span>) {
     <span class="i">runtimeError</span>(<span class="s">&quot;Expected %d arguments but got %d.&quot;</span>,
         <span class="i">function</span>-&gt;<span class="i">arity</span>, <span class="i">argCount</span>);
     <span class="k">return</span> <span class="k">false</span>;
   }
 
-</pre><pre class="insert-after">
-  CallFrame* frame = &amp;vm.frames[vm.frameCount++];
+</pre><pre class="insert-after">  CallFrame* frame = &amp;vm.frames[vm.frameCount++];
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>call</em>()</div>
 <!--
@@ -1965,19 +1793,16 @@ foolishness than our own. Because the CallFrame array has a fixed size, we need
 to ensure a deep call chain doesn't overflow it.
 -->
 <p>还有一个错误需要报告，与其说关乎用户的愚蠢，不如说关乎我们自己的局限。因为 CallFrame 数组大小固定，我们得确保很深的调用链不会溢出它。</p>
-<div class="codehilite"><pre class="insert-before">
-  }
+<div class="codehilite"><pre class="insert-before">  }
 
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>call</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">vm</span>.<span class="i">frameCount</span> == <span class="a">FRAMES_MAX</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">vm</span>.<span class="i">frameCount</span> == <span class="a">FRAMES_MAX</span>) {
     <span class="i">runtimeError</span>(<span class="s">&quot;Stack overflow.&quot;</span>);
     <span class="k">return</span> <span class="k">false</span>;
   }
 
-</pre><pre class="insert-after">
-  CallFrame* frame = &amp;vm.frames[vm.frameCount++];
+</pre><pre class="insert-after">  CallFrame* frame = &amp;vm.frames[vm.frameCount++];
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>call</em>()</div>
 <!--
@@ -1987,7 +1812,7 @@ a bug in some runaway recursive code.
 <p>实践中，若程序接近这个上限，多半是某段失控的递归代码里有 bug。</p><!--
 -- Printing stack traces
 -->
-<h3><a href="#打印栈回溯" name="打印栈回溯"><small>24&#8202;.&#8202;5&#8202;.&#8202;3</small>打印栈回溯</a></h3><!--
+<h3><a href="#打印栈回溯" id="打印栈回溯"><small>24&#8202;.&#8202;5&#8202;.&#8202;3</small>打印栈回溯</a></h3><!--
 While we're on the subject of runtime errors, let's spend a little time making
 them more useful. Stopping on a runtime error is important to prevent the VM
 from crashing and burning in some ill-defined way. But simply aborting doesn't
@@ -2002,14 +1827,12 @@ stack when a runtime error disrupts the harmony of the user's existence. It
 looks like this:
 -->
 <p>辅助调试运行时失败的经典工具是<strong>栈回溯</strong>——打印出程序死去时仍在执行的每个函数，以及死去那一刻执行到了哪里。如今我们有了调用栈，又方便地存下了每个函数的名字，当运行时错误搅乱用户存在的和谐时，我们就能展示整条栈。它看起来像这样：</p>
-<div class="codehilite"><pre class="insert-before">
-  fputs(&quot;\n&quot;, stderr);
+<div class="codehilite"><pre class="insert-before">  fputs(&quot;\n&quot;, stderr);
 
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>runtimeError</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-  <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>; <span class="i">i</span> &gt;= <span class="n">0</span>; <span class="i">i</span>--) {
+<pre class="insert">  <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>; <span class="i">i</span> &gt;= <span class="n">0</span>; <span class="i">i</span>--) {
     <span class="t">CallFrame</span>* <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">i</span>];
     <span class="t">ObjFunction</span>* <span class="i">function</span> = <span class="i">frame</span>-&gt;<span class="i">function</span>;
     <span class="t">size_t</span> <span class="i">instruction</span> = <span class="i">frame</span>-&gt;<span class="i">ip</span> - <span class="i">function</span>-&gt;<span class="i">chunk</span>.<span class="i">code</span> - <span class="n">1</span>;
@@ -2022,8 +1845,7 @@ replace 4 lines</div>
     }
   }
 
-</pre><pre class="insert-after">
-  resetStack();
+</pre><pre class="insert-after">  resetStack();
 }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>runtimeError</em>(), replace 4 lines</div>
@@ -2064,8 +1886,7 @@ do that.
 For example, if you run this broken program:
 -->
 <p>例如，若你运行这个坏掉的程序：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">a</span>() { <span class="i">b</span>(); }
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">a</span>() { <span class="i">b</span>(); }
 <span class="k">fun</span> <span class="i">b</span>() { <span class="i">c</span>(); }
 <span class="k">fun</span> <span class="i">c</span>() {
   <span class="i">c</span>(<span class="s">&quot;too&quot;</span>, <span class="s">&quot;many&quot;</span>);
@@ -2087,7 +1908,7 @@ That doesn't look too bad, does it?
 <p>看起来还不赖，对吧？</p><!--
 -- Returning from functions
 -->
-<h3><a href="#从函数返回" name="从函数返回"><small>24&#8202;.&#8202;5&#8202;.&#8202;4</small>从函数返回</a></h3><!--
+<h3><a href="#从函数返回" id="从函数返回"><small>24&#8202;.&#8202;5&#8202;.&#8202;4</small>从函数返回</a></h3><!--
 We're getting close. We can call functions, and the VM will execute them. But we
 can't *return* from them yet. We've had an `OP_RETURN` instruction for quite
 some time, but it's always had some kind of temporary code hanging out in it
@@ -2095,13 +1916,11 @@ just to get us out of the bytecode loop. The time has arrived for a real
 implementation.
 -->
 <p>我们接近了。我们可以调用函数，虚拟机也会执行它们。但还不能从它们<em>返回</em>。我们早就有了 <code>OP_RETURN</code> 指令，可里面一直挂着某种临时代码，只为让我们跳出字节码循环。真正实现的时候到了。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OP_RETURN: {
+<div class="codehilite"><pre class="insert-before">      case OP_RETURN: {
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>run</em>()<br>
 replace 2 lines</div>
-<pre class="insert">
-        <span class="t">Value</span> <span class="i">result</span> = <span class="i">pop</span>();
+<pre class="insert">        <span class="t">Value</span> <span class="i">result</span> = <span class="i">pop</span>();
         <span class="i">vm</span>.<span class="i">frameCount</span>--;
         <span class="k">if</span> (<span class="i">vm</span>.<span class="i">frameCount</span> == <span class="n">0</span>) {
           <span class="i">pop</span>();
@@ -2112,8 +1931,7 @@ replace 2 lines</div>
         <span class="i">push</span>(<span class="i">result</span>);
         <span class="i">frame</span> = &amp;<span class="i">vm</span>.<span class="i">frames</span>[<span class="i">vm</span>.<span class="i">frameCount</span> - <span class="n">1</span>];
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      }
+</pre><pre class="insert-after">      }
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 2 lines</div>
 <!--
@@ -2143,8 +1961,7 @@ Note that we assume here that the function *did* actually return a value, but
 a function can implicitly return by reaching the end of its body:
 -->
 <p>注意我们这里假定函数<em>确实</em>返回了一个值，但函数也可以通过到达函数体末尾而隐式返回：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">noReturn</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">noReturn</span>() {
   <span class="k">print</span> <span class="s">&quot;Do stuff&quot;</span>;
   <span class="c">// No return here.</span>
 }
@@ -2155,14 +1972,11 @@ We need to handle that correctly too. The language is specified to implicitly
 return `nil` in that case. To make that happen, we add this:
 -->
 <p>我们也得正确处理那种情况。语言规定此时隐式返回 <code>nil</code>。为此我们加上这段：</p>
-<div class="codehilite"><pre class="insert-before">
-static void emitReturn() {
+<div class="codehilite"><pre class="insert-before">static void emitReturn() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>emitReturn</em>()</div>
-<pre class="insert">
-  <span class="i">emitByte</span>(<span class="a">OP_NIL</span>);
-</pre><pre class="insert-after">
-  emitByte(OP_RETURN);
+<pre class="insert">  <span class="i">emitByte</span>(<span class="a">OP_NIL</span>);
+</pre><pre class="insert-after">  emitByte(OP_RETURN);
 }
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>emitReturn</em>()</div>
@@ -2175,20 +1989,17 @@ take parameters! It almost looks like we know what we're doing here.
 <p>编译器调用 <code>emitReturn()</code>，在函数体末尾写入 <code>OP_RETURN</code> 指令。如今在那之前，它会先发射一条把 <code>nil</code> 压栈的指令。至此，我们有了能工作的函数调用！它们甚至还能带参数！看起来我们几乎像是知道自己在干什么。</p><!--
 -- Return Statements
 -->
-<h2><a href="#return-语句" name="return-语句"><small>24&#8202;.&#8202;6</small>return 语句</a></h2><!--
+<h2><a href="#return-语句" id="return-语句"><small>24&#8202;.&#8202;6</small>return 语句</a></h2><!--
 If you want a function that returns something other than the implicit `nil`, you
 need a `return` statement. Let's get that working.
 -->
 <p>若想要一个返回值不是隐式 <code>nil</code> 的函数，就需要 <code>return</code> 语句。让我们把它做起来。</p>
-<div class="codehilite"><pre class="insert-before">
-    ifStatement();
+<div class="codehilite"><pre class="insert-before">    ifStatement();
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>statement</em>()</div>
-<pre class="insert">
-  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_RETURN</span>)) {
+<pre class="insert">  } <span class="k">else</span> <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_RETURN</span>)) {
     <span class="i">returnStatement</span>();
-</pre><pre class="insert-after">
-  } else if (match(TOKEN_WHILE)) {
+</pre><pre class="insert-after">  } else if (match(TOKEN_WHILE)) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>statement</em>()</div>
 <!--
@@ -2197,8 +2008,7 @@ When the compiler sees a `return` keyword, it goes here:
 <p>编译器看到 <code>return</code> 关键字时，转到这里：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 add after <em>printStatement</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">returnStatement</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">returnStatement</span>() {
   <span class="k">if</span> (<span class="i">match</span>(<span class="a">TOKEN_SEMICOLON</span>)) {
     <span class="i">emitReturn</span>();
   } <span class="k">else</span> {
@@ -2238,8 +2048,7 @@ but the top level of a Lox program is imperative code too. You shouldn't be able
 to <span name="worst">return</span> from there.
 -->
 <p>不过我们还没完全做完。新的 <code>return</code> 语句带来一个新的编译错误需要操心。<code>return</code> 对从函数返回很有用，但 Lox 程序的顶层也是命令式代码。你不该能从那里<span name="worst">返回</span>。</p>
-<div class="codehilite"><pre>
-<span class="k">return</span> <span class="s">&quot;What?!&quot;</span>;
+<div class="codehilite"><pre><span class="k">return</span> <span class="s">&quot;What?!&quot;</span>;
 </pre></div>
 <aside name="worst"><!--
 Allowing `return` at the top level isn't the worst idea in the world. It would
@@ -2252,17 +2061,14 @@ We've specified that it's a compile error to have a `return` statement outside
 of any function, which we implement like so:
 -->
 <p>我们已经规定：在任何函数之外出现 <code>return</code> 语句是编译错误，实现如下：</p>
-<div class="codehilite"><pre class="insert-before">
-static void returnStatement() {
+<div class="codehilite"><pre class="insert-before">static void returnStatement() {
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>returnStatement</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">type</span> == <span class="a">TYPE_SCRIPT</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">current</span>-&gt;<span class="i">type</span> == <span class="a">TYPE_SCRIPT</span>) {
     <span class="i">error</span>(<span class="s">&quot;Can&#39;t return from top-level code.&quot;</span>);
   }
 
-</pre><pre class="insert-after">
-  if (match(TOKEN_SEMICOLON)) {
+</pre><pre class="insert-after">  if (match(TOKEN_SEMICOLON)) {
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>returnStatement</em>()</div>
 <!--
@@ -2271,7 +2077,7 @@ This is one of the reasons we added that FunctionType enum to the compiler.
 <p>这正是我们给编译器加上 FunctionType 枚举的原因之一。</p><!--
 -- Native Functions
 -->
-<h2><a href="#原生函数" name="原生函数"><small>24&#8202;.&#8202;7</small>原生函数</a></h2><!--
+<h2><a href="#原生函数" id="原生函数"><small>24&#8202;.&#8202;7</small>原生函数</a></h2><!--
 Our VM is getting more powerful. We've got functions, calls, parameters,
 returns. You can define lots of different functions that can call each other in
 interesting ways. But, ultimately, they can't really *do* anything. The only
@@ -2311,8 +2117,7 @@ We handle this in clox by defining native functions as an entirely different
 object type.
 -->
 <p>在 clox 里，我们把原生函数定义为一种完全不同的对象类型来处理。</p>
-<div class="codehilite"><pre class="insert-before">
-} ObjFunction;
+<div class="codehilite"><pre class="insert-before">} ObjFunction;
 </pre><div class="source-file"><em>object.h</em><br>
 add after struct <em>ObjFunction</em></div>
 <pre class="insert">
@@ -2340,14 +2145,11 @@ As always, a new object type carries some accoutrements with it. To create an
 ObjNative, we declare a constructor-like function.
 -->
 <p>一如既往，新对象类型带着一些配套行头。要创建 ObjNative，我们声明一个类似构造函数的函数。</p>
-<div class="codehilite"><pre class="insert-before">
-ObjFunction* newFunction();
+<div class="codehilite"><pre class="insert-before">ObjFunction* newFunction();
 </pre><div class="source-file"><em>object.h</em><br>
 add after <em>newFunction</em>()</div>
-<pre class="insert">
-<span class="t">ObjNative</span>* <span class="i">newNative</span>(<span class="t">NativeFn</span> <span class="i">function</span>);
-</pre><pre class="insert-after">
-ObjString* takeString(char* chars, int length);
+<pre class="insert"><span class="t">ObjNative</span>* <span class="i">newNative</span>(<span class="t">NativeFn</span> <span class="i">function</span>);
+</pre><pre class="insert-after">ObjString* takeString(char* chars, int length);
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after <em>newFunction</em>()</div>
 <!--
@@ -2356,8 +2158,7 @@ We implement that like so:
 <p>实现如下：</p>
 <div class="codehilite"><div class="source-file"><em>object.c</em><br>
 add after <em>newFunction</em>()</div>
-<pre>
-<span class="t">ObjNative</span>* <span class="i">newNative</span>(<span class="t">NativeFn</span> <span class="i">function</span>) {
+<pre><span class="t">ObjNative</span>* <span class="i">newNative</span>(<span class="t">NativeFn</span> <span class="i">function</span>) {
   <span class="t">ObjNative</span>* <span class="i">native</span> = <span class="a">ALLOCATE_OBJ</span>(<span class="t">ObjNative</span>, <span class="a">OBJ_NATIVE</span>);
   <span class="i">native</span>-&gt;<span class="i">function</span> = <span class="i">function</span>;
   <span class="k">return</span> <span class="i">native</span>;
@@ -2370,15 +2171,12 @@ the object header and stores the function. For the header, we need a new object
 type.
 -->
 <p>构造函数接收一个要包进 ObjNative 的 C 函数指针。它设置对象头并存储该函数。对头而言，我们需要一个新的对象类型。</p>
-<div class="codehilite"><pre class="insert-before">
-typedef enum {
+<div class="codehilite"><pre class="insert-before">typedef enum {
   OBJ_FUNCTION,
 </pre><div class="source-file"><em>object.h</em><br>
 in enum <em>ObjType</em></div>
-<pre class="insert">
-  <span class="a">OBJ_NATIVE</span>,
-</pre><pre class="insert-after">
-  OBJ_STRING,
+<pre class="insert">  <span class="a">OBJ_NATIVE</span>,
+</pre><pre class="insert-after">  OBJ_STRING,
 } ObjType;
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in enum <em>ObjType</em></div>
@@ -2386,16 +2184,13 @@ in enum <em>ObjType</em></div>
 The VM also needs to know how to deallocate a native function object.
 -->
 <p>虚拟机还需要知道如何释放原生函数对象。</p>
-<div class="codehilite"><pre class="insert-before">
-    }
+<div class="codehilite"><pre class="insert-before">    }
 </pre><div class="source-file"><em>memory.c</em><br>
 in <em>freeObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_NATIVE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_NATIVE</span>:
       <span class="a">FREE</span>(<span class="t">ObjNative</span>, <span class="i">object</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_STRING: {
+</pre><pre class="insert-after">    case OBJ_STRING: {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, in <em>freeObject</em>()</div>
 <!--
@@ -2403,16 +2198,13 @@ There isn't much here since ObjNative doesn't own any extra memory. The other
 capability all Lox objects support is being printed.
 -->
 <p>这里没多少东西，因为 ObjNative 不拥有额外内存。所有 Lox 对象支持的另一项能力是被打印。</p>
-<div class="codehilite"><pre class="insert-before">
-      break;
+<div class="codehilite"><pre class="insert-before">      break;
 </pre><div class="source-file"><em>object.c</em><br>
 in <em>printObject</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="a">OBJ_NATIVE</span>:
+<pre class="insert">    <span class="k">case</span> <span class="a">OBJ_NATIVE</span>:
       <span class="i">printf</span>(<span class="s">&quot;&lt;native fn&gt;&quot;</span>);
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case OBJ_STRING:
+</pre><pre class="insert-after">    case OBJ_STRING:
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>printObject</em>()</div>
 <!--
@@ -2420,13 +2212,10 @@ In order to support dynamic typing, we have a macro to see if a value is a
 native function.
 -->
 <p>为支持动态类型，我们有一条宏来查看一个值是否是原生函数。</p>
-<div class="codehilite"><pre class="insert-before">
-#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
+<div class="codehilite"><pre class="insert-before">#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)</span>
-</pre><pre class="insert-after">
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
+<pre class="insert"><span class="a">#define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)</span>
+</pre><pre class="insert-after">#define IS_STRING(value)       isObjType(value, OBJ_STRING)
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
@@ -2434,14 +2223,11 @@ Assuming that returns true, this macro extracts the C function pointer from a
 Value representing a native function:
 -->
 <p>若它返回真，这条宏从表示原生函数的 Value 中提取 C 函数指针：</p>
-<div class="codehilite"><pre class="insert-before">
-#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
+<div class="codehilite"><pre class="insert-before">#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
 </pre><div class="source-file"><em>object.h</em></div>
-<pre class="insert">
-<span class="a">#define AS_NATIVE(value) \</span>
+<pre class="insert"><span class="a">#define AS_NATIVE(value) \</span>
 <span class="a">    (((ObjNative*)AS_OBJ(value))-&gt;function)</span>
-</pre><pre class="insert-after">
-#define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
+</pre><pre class="insert-after">#define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 <!--
@@ -2454,21 +2240,18 @@ one as the left-hand operand in a call expression.
 Over in `callValue()` we add another type case.
 -->
 <p>在 <code>callValue()</code> 里我们再加一个类型分支。</p>
-<div class="codehilite"><pre class="insert-before">
-      case OBJ_FUNCTION:<span name="switch"> </span>
+<div class="codehilite"><pre class="insert-before">      case OBJ_FUNCTION:<span name="switch"> </span>
         return call(AS_FUNCTION(callee), argCount);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>callValue</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="a">OBJ_NATIVE</span>: {
+<pre class="insert">      <span class="k">case</span> <span class="a">OBJ_NATIVE</span>: {
         <span class="t">NativeFn</span> <span class="i">native</span> = <span class="a">AS_NATIVE</span>(<span class="i">callee</span>);
         <span class="t">Value</span> <span class="i">result</span> = <span class="i">native</span>(<span class="i">argCount</span>, <span class="i">vm</span>.<span class="i">stackTop</span> - <span class="i">argCount</span>);
         <span class="i">vm</span>.<span class="i">stackTop</span> -= <span class="i">argCount</span> + <span class="n">1</span>;
         <span class="i">push</span>(<span class="i">result</span>);
         <span class="k">return</span> <span class="k">true</span>;
       }
-</pre><pre class="insert-after">
-      default:
+</pre><pre class="insert-after">      default:
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>callValue</em>()</div>
 <!--
@@ -2486,8 +2269,7 @@ a helper to define a new native function exposed to Lox programs.
 <p>有了这个，用户应该能调用原生函数了，可是还没有可调的。若没有类似外部函数接口的东西，用户无法定义自己的原生函数。那是我们作为虚拟机实现者的工作。我们先从一个辅助函数开始：定义一个暴露给 Lox 程序的新原生函数。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after <em>runtimeError</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">defineNative</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">NativeFn</span> <span class="i">function</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">defineNative</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">name</span>, <span class="t">NativeFn</span> <span class="i">function</span>) {
   <span class="i">push</span>(<span class="a">OBJ_VAL</span>(<span class="i">copyString</span>(<span class="i">name</span>, (<span class="t">int</span>)<span class="i">strlen</span>(<span class="i">name</span>))));
   <span class="i">push</span>(<span class="a">OBJ_VAL</span>(<span class="i">newNative</span>(<span class="i">function</span>)));
   <span class="i">tableSet</span>(&amp;<span class="i">vm</span>.<span class="i">globals</span>, <span class="a">AS_STRING</span>(<span class="i">vm</span>.<span class="i">stack</span>[<span class="n">0</span>]), <span class="i">vm</span>.<span class="i">stack</span>[<span class="n">1</span>]);
@@ -2526,8 +2308,7 @@ little native function.
 <p>感觉有点傻，但干完所有这些活之后，我们只加一个小小的原生函数。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 add after variable <em>vm</em></div>
-<pre>
-<span class="k">static</span> <span class="t">Value</span> <span class="i">clockNative</span>(<span class="t">int</span> <span class="i">argCount</span>, <span class="t">Value</span>* <span class="i">args</span>) {
+<pre><span class="k">static</span> <span class="t">Value</span> <span class="i">clockNative</span>(<span class="t">int</span> <span class="i">argCount</span>, <span class="t">Value</span>* <span class="i">args</span>) {
   <span class="k">return</span> <span class="a">NUMBER_VAL</span>((<span class="t">double</span>)<span class="i">clock</span>() / <span class="a">CLOCKS_PER_SEC</span>);
 }
 </pre></div>
@@ -2537,15 +2318,13 @@ This returns the elapsed time since the program started running, in seconds. It'
 handy for benchmarking Lox programs. In Lox, we'll name it `clock()`.
 -->
 <p>它返回自程序开始运行以来经过的时间，以秒计。对基准测试 Lox 程序很方便。在 Lox 里，我们把它叫做 <code>clock()</code>。</p>
-<div class="codehilite"><pre class="insert-before">
-  initTable(&amp;vm.strings);
+<div class="codehilite"><pre class="insert-before">  initTable(&amp;vm.strings);
 </pre><div class="source-file"><em>vm.c</em><br>
 in <em>initVM</em>()</div>
 <pre class="insert">
 
   <span class="i">defineNative</span>(<span class="s">&quot;clock&quot;</span>, <span class="i">clockNative</span>);
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
 <!--
@@ -2553,11 +2332,9 @@ To get to the C standard library `clock()` function, the "vm" module needs an
 include.
 -->
 <p>要访问 C 标准库的 <code>clock()</code> 函数，“vm” 模块需要一条 include。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &lt;string.h&gt;
+<div class="codehilite"><pre class="insert-before">#include &lt;string.h&gt;
 </pre><div class="source-file"><em>vm.c</em></div>
-<pre class="insert">
-<span class="a">#include &lt;time.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;time.h&gt;</span>
 </pre><pre class="insert-after">
 
 #include &quot;common.h&quot;
@@ -2568,8 +2345,7 @@ That was a lot of material to work through, but we did it! Type this in and try
 it out:
 -->
 <p>要啃的材料不少，但我们做到了！输入这段试试看：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">fib</span>(<span class="i">n</span>) {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">fib</span>(<span class="i">n</span>) {
   <span class="k">if</span> (<span class="i">n</span> &lt; <span class="n">2</span>) <span class="k">return</span> <span class="i">n</span>;
   <span class="k">return</span> <span class="i">fib</span>(<span class="i">n</span> - <span class="n">2</span>) + <span class="i">fib</span>(<span class="i">n</span> - <span class="n">1</span>);
 }
@@ -2596,7 +2372,7 @@ optimizations we can do in our VM.
 <div class="challenges"><!--
 ## Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>24&#8202;.&#8202;9</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>24&#8202;.&#8202;9</small>挑战</a></h2><!--
 1.  Reading and writing the `ip` field is one of the most frequent operations
     inside the bytecode loop. Right now, we access it through a pointer to the
     current CallFrame. That requires a pointer indirection which may force the
@@ -2657,7 +2433,7 @@ optimizations we can do in our VM.
 <a href="closures.html" class="next">
   Next Chapter: &ldquo;Closures&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

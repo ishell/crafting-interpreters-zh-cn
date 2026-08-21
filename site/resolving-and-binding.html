@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Resolving and Binding<small>11</small></a></h3>
 
 <ul>
@@ -55,7 +54,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="functions.html" title="Functions" class="prev">←</a>
 <a href="classes.html" title="Classes" class="next">→</a>
 </nav>
@@ -63,9 +62,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Resolving and Binding<small>11</small></a></h3>
 
 <ul>
@@ -92,35 +90,16 @@
   <div class="number">11</div>
   <h1>Resolving and Binding</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#解析与绑定" name="解析与绑定"><small>11&#8202;.&#8202;0</small>解析与绑定</a></h1>
+<h1><a href="#解析与绑定" id="解析与绑定"><small>11&#8202;.&#8202;0</small>解析与绑定</a></h1>
 <blockquote>
 <p>偶尔你会发现自己陷入某种奇特的境地。你是一步一步、以最自然的方式走进去的，但当你深陷其中之时，你却会突然惊讶不已，扪心自问这一切究竟是怎么发生的。</p>
 <p><cite>托尔·海尔达尔，<em>《孤筏重洋》</em></cite></p>
 </blockquote>
 <p>哦，糟了！我们的语言实现开始渗水了！早在我们<a href="statements-and-state.html">加入变量与块</a>那会儿，我们曾把作用域打理得严严实实。然而，当我们<a href="functions.html">后来加入闭包</a>之后，一道裂缝便在这台曾经滴水不漏的解释器身上悄然撕开。绝大多数真实程序大概不会从这道裂缝中漏出，但我们作为语言实现者，却曾郑重立下誓言——要去在意那些语义最深、最为幽暗的角落里的正确性。</p>
 <p>我们将花整整一章来探寻这道裂缝，然后小心翼翼地将其修补。在这一过程中，我们会对 Lox 及其它沿袭 C 传统的语言所采用的词法作用域获得一份更为严谨的理解。我们也将有机会一窥<strong>语义分析</strong>——这是一种强大的技术，它允许我们在<strong>不必</strong>运行代码的前提下，从用户的源代码中提炼出其含义。</p>
-<h2><a href="#静态作用域" name="静态作用域"><small>11&#8202;.&#8202;1</small>静态作用域</a></h2>
+<h2><a href="#静态作用域" id="静态作用域"><small>11&#8202;.&#8202;1</small>静态作用域</a></h2>
 <p>简单回顾一下：Lox 与大多数现代语言一样，使用的是<strong>词法</strong>作用域。这意味着，仅凭阅读程序的文本，你便能弄清一个变量名究竟指向哪一个声明。举例而言：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
 {
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;inner&quot;</span>;
   <span class="k">print</span> <span class="i">a</span>;
@@ -140,8 +119,7 @@
 </li>
 <li>
 <p>&ldquo;先于&rdquo; 指的是在<strong>程序文本</strong>中出现得<strong>更早</strong>。</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
 {
   <span class="k">print</span> <span class="i">a</span>;
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;inner&quot;</span>;
@@ -150,15 +128,13 @@
 <p>此处，那个被打印的 <code>a</code> 是外层的那一个，因为它出现在那条使用它的 <code>print</code> 语句<strong>之前</strong>。在大多数情况下，沿着笔直的代码往下走，文本上<strong>先于</strong>的声明，在时间上也<strong>先于</strong>这一用法。但并非总是如此。稍后我们便会看到，函数可以将一段代码<strong>延迟</strong>执行，使得其<strong>动态的时间</strong>上的执行顺序不再镜像<strong>静态的文本</strong>上的排列。</p>
 <aside name="hoisting">
 <p>在 JavaScript 中，使用 <code>var</code> 声明的变量会被隐式地&ldquo;提升&ldquo;到所在块的开头。该名字在块中的任何一次使用，即使出现在声明之前，也都会指向那条变量。当你写下 JavaScript 这样的代码：</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="i">console</span>.<span class="i">log</span>(<span class="i">a</span>);
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;value&quot;</span>;
 }
 </pre></div>
 <p>其行为等价于：</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span>; <span class="c">// 提升。</span>
   <span class="i">console</span>.<span class="i">log</span>(<span class="i">a</span>);
   <span class="i">a</span> = <span class="s">&quot;value&quot;</span>;
@@ -168,8 +144,7 @@
 </aside></li>
 <li>
 <p>&ldquo;最内层的&rdquo; 这一限定是为了照顾我们那位亦敌亦友的&ldquo;遮蔽&ldquo;。在多个外层作用域中，可能不止一个与该名字同名的变量：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
 {
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;inner&quot;</span>;
   <span class="k">print</span> <span class="i">a</span>;
@@ -179,8 +154,7 @@
 </li>
 </ul>
 <p>由于这条规则压根没有提及任何运行时行为，它便暗示了：在一个程序执行的整个过程中，一个变量表达式始终指向同一条声明。我们的解释器到目前为止<strong>大体上</strong>正确地实现了这一规则。但当我们加入闭包之后，一个错误便偷偷溜了进来。</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;global&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;global&quot;</span>;
 {
   <span class="k">fun</span> <span class="i">showA</span>() {
     <span class="k">print</span> <span class="i">a</span>;
@@ -201,7 +175,7 @@
 block
 </pre></div>
 <p>请允许我强调一下：这段程序从未对任何变量进行重新赋值，整个程序中也只有一条 <code>print</code> 语句。然而，那条针对一个从未被赋值的变量所进行的 <code>print</code>，竟在不同的时刻打印出了两个不同的值。我们肯定在某个地方搞砸了什么。</p>
-<h3><a href="#作用域与可变环境" name="作用域与可变环境"><small>11&#8202;.&#8202;1&#8202;.&#8202;1</small>作用域与可变环境</a></h3>
+<h3><a href="#作用域与可变环境" id="作用域与可变环境"><small>11&#8202;.&#8202;1&#8202;.&#8202;1</small>作用域与可变环境</a></h3>
 <p>在我们的解释器中，环境乃是静态作用域在动态层面的具象化呈现。两者大多彼此保持同步——我们进入新的作用域时创建一份新的环境，离开作用域时则丢弃之。我们对环境还有另一项操作：绑定一个变量。bug 便藏匿于此。</p>
 <p>让我们沿着那道反例一步步走一遍，看看在每一步中环境都长什么样。首先，我们在全局作用域中声明 <code>a</code>。</p><img src="image/resolving-and-binding/environment-1.png" alt="全局环境，其中定义了 'a'。" />
 <p>这便为我们带来了一份仅含单一变量的环境。随后我们进入那个块，并执行对 <code>showA()</code> 的声明。</p><img src="image/resolving-and-binding/environment-2.png" alt="一份指向全局环境的块环境。" />
@@ -214,8 +188,7 @@ block
 <p>我们为 <code>showA()</code> 的函数体再次创建了一份新的、空空如也的环境，将其连入那份闭包，然后执行函数体。当解释器沿着环境链查找 <code>a</code> 时，它<strong>这一次</strong>在那块环境中<strong>发现了那个新的 <code>a</code></strong>。糟了。</p>
 <p>我选择按一种我希望与你关于作用域的朴素直觉相吻合的方式来实现环境。我们倾向于将一个块内的所有代码视作处于同一作用域，因此我们的解释器使用一份单一的环境来表征这一点。每一份环境都是一个可变的哈希表。当一条新的局部变量被声明时，它便被添加至代表该作用域的那份既有环境之中。</p>
 <p>这一直觉——恰如生活中的许多直觉——并不完全正确。一个块<strong>未必</strong>始终是同一个作用域。想想看：</p>
-<div class="codehilite"><pre>
-{
+<div class="codehilite"><pre>{
   <span class="k">var</span> <span class="i">a</span>;
   <span class="c">// 1.</span>
   <span class="k">var</span> <span class="i">b</span>;
@@ -227,7 +200,7 @@ block
 <p>某些语言使这种&ldquo;分割&ldquo;变得显式。在 Scheme 与 ML 中，当你使用 <code>let</code> 声明一个局部变量时，你同时也划定了那段后续代码——在该范围内该变量位于作用域之内——的边界。并不存在隐式的&ldquo;块的余下部分&ldquo;。</p>
 </aside>
 <p>但在我们的实现中，环境<strong>倒是</strong>真的像是在说&ldquo;整个块就是一个作用域&ldquo;，只不过这个作用域会随时间而变化。闭包可不待见这一点。当一个函数被声明时，它会捕获对当前环境的一份引用。函数<strong>应当</strong>捕获的是<strong>该函数被声明的那一刻</strong>环境的一份冻结快照。但事实上，在 Java 代码中，它持有的乃是那个真实可变的环境对象的引用。当后续在该环境所对应的作用域中声明变量时，闭包便会看到那个新变量，即便那条声明<strong>其实</strong>并不先于该函数。</p>
-<h3><a href="#持久化的环境" name="持久化的环境"><small>11&#8202;.&#8202;1&#8202;.&#8202;2</small>持久化的环境</a></h3>
+<h3><a href="#持久化的环境" id="持久化的环境"><small>11&#8202;.&#8202;1&#8202;.&#8202;2</small>持久化的环境</a></h3>
 <p>有一种编程风格所使用的是所谓的<strong>持久化数据结构</strong>。与你所熟悉的那种命令式编程中松松垮垮、随用随改的数据结构不同，持久化数据结构<strong>永远不能</strong>被直接修改。取而代之的是，对既有结构的任何&ldquo;修改&ldquo;都会产出一份<span name="copy">崭新的</span>对象，其中囊括了原有数据<strong>以及</strong>那项新的修改。原始的那份则原封不动。</p>
 <aside name="copy">
 <p>你或许会觉得这听起来像是会对内存与时间造成巨大浪费——每执行一次操作都要拷贝整个结构。实则不然，持久化数据结构会在不同的&ldquo;拷贝&ldquo;之间共享绝大部分数据。</p>
@@ -236,7 +209,7 @@ block
 <p>闭包保留着一个对<strong>函数被声明之时</strong>那份 Environment 实例的引用。由于此后在该块中的任何声明都会产出全新的 Environment 对象，闭包便无从看到那些新的变量，我们这道 bug 也就随之烟消云散。</p>
 <p>这是一种切实可行的解决之道，也是 Scheme 解释器中实现环境的经典手法。我们本可以为 Lox 这么做，但那意味着要回头去修改一大堆既有代码。</p>
 <p>我不打算那样折腾你。我们将保持表示环境的方式不变。取而代之，我们不去让数据本身变得更具静态结构，而是把静态解析的工作烘焙进<strong>访问</strong> <strong>操作</strong>本身。</p>
-<h2><a href="#语义分析" name="语义分析"><small>11&#8202;.&#8202;2</small>语义分析</a></h2>
+<h2><a href="#语义分析" id="语义分析"><small>11&#8202;.&#8202;2</small>语义分析</a></h2>
 <p>我们的解释器每一次求值一个变量表达式时，都要<strong>解析</strong>那个变量——追踪它究竟指向哪一条声明。倘若那个变量被裹挟在一个跑上一千遍的循环之中，那么这个变量便会被反复解析一千遍。</p>
 <p>我们知道，静态作用域意味着变量的用法始终解析到同一条声明，这只需通过查阅文本即可确定。既然如此，我们又为何要在每一次求值时都<strong>动态地</strong>去解析它呢？这样做不仅打开了我们那道恼人的 bug 之门，而且还毫无必要地拖累性能。</p>
 <p>更优的方案是<strong>对每一种变量用法只解析一次</strong>。写一段代码去审视用户的程序，找出每一个被提及的变量，并弄清它究竟指向哪一条声明。这一过程便是<strong>语义分析</strong>的一个实例。当一个语法分析器只能判定一段程序在语法上是否正确（一种<strong>句法</strong>分析）之时，语义分析则更进一步，开始去琢磨程序的各个部分<strong>究竟</strong>意味着什么。在本例中，我们的分析将负责解析变量的绑定。我们不仅会知道一个表达式<strong>是</strong>一个变量，还会知道它<strong>是</strong>哪一个变量。</p>
@@ -246,7 +219,7 @@ block
 <p>下一次查找则沿着环境链前行，在<strong>第二份</strong>环境中找到 <code>a</code> 并就此止步。每一份环境都对应着一个单一的词法作用域——变量在其中被声明。倘若我们能够确保一次变量查找<strong>总是</strong>沿着环境链上的同一段距离——走过相同数量的环境——便能确保它每一次都找到同一作用域中的同一变量。</p>
 <p>要&ldquo;解析&ldquo;一处变量用法，我们<strong>只需要</strong>计算该被声明的变量在环境链上会出现在多少&ldquo;跳&ldquo;之后。真正有趣的问题是<strong>何时</strong>去进行这一计算——亦即，我们应当把它安插在解释器实现中的哪一处？</p>
 <p>既然我们是在根据源代码的结构来计算一项静态属性，那么显而易见的答案便是放在语法分析器中。这是传统的归宿，也是我们日后在 clox 中安放它的位置。在此处也未尝不可，但我想借机向你展示另一种技术。我们将把解析器写为独立的一趟 pass。</p>
-<h3><a href="#一趟变量解析-pass" name="一趟变量解析-pass"><small>11&#8202;.&#8202;2&#8202;.&#8202;1</small>一趟变量解析 pass</a></h3>
+<h3><a href="#一趟变量解析-pass" id="一趟变量解析-pass"><small>11&#8202;.&#8202;2&#8202;.&#8202;1</small>一趟变量解析 pass</a></h3>
 <p>在语法分析器产出语法树之后、解释器开始执行它之前，我们将对整棵树进行一次遍历，以解析它所包含的全部变量。在解析与执行之间安排额外的 pass 是很常见的做法。若 Lox 拥有静态类型，我本可以在那里塞入一个类型检查器。优化操作也常常以这样的独立 pass 来实现。基本上，任何<strong>不依赖</strong>那些只有运行时才有的状态的工作，都可以以这种方式完成。</p>
 <p>我们的变量解析 pass 有点像一座迷你解释器。它遍历这棵树，访问每一个节点，但静态分析与动态执行有所不同：</p>
 <ul>
@@ -260,12 +233,11 @@ block
 <aside name="fix">
 <p>变量解析会触及每个节点一次，故其性能为 <em>O(n)</em>，其中 <em>n</em> 为语法树节点的个数。更复杂的分析或许会呈现更高的复杂度，但大多数都被精心设计为线性或近似线性的。若你的编译器随着用户程序的规模增长而变得指数级地慢，那可真是一桩令人脸红的事故。</p>
 </aside>
-<h2><a href="#resolver-类" name="resolver-类"><small>11&#8202;.&#8202;3</small>Resolver 类</a></h2>
+<h2><a href="#resolver-类" id="resolver-类"><small>11&#8202;.&#8202;3</small>Resolver 类</a></h2>
 <p>正如 Java 中的一切那样，我们的变量解析 pass 也有一个类作为其化身。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 create new file</div>
-<pre>
-<span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
+<pre><span class="k">package</span> <span class="i">com.craftinginterpreters.lox</span>;
 
 <span class="k">import</span> <span class="i">java.util.HashMap</span>;
 <span class="k">import</span> <span class="i">java.util.List</span>;
@@ -298,12 +270,11 @@ create new file</div>
 </li>
 </ul>
 <p>剩下的节点并不会做什么特别的事，但我们仍需要为它们实现 visit 方法，以便递归地进入其子树。尽管一个 <code>+</code> 表达式<strong>本身</strong>并没有任何需要解析的变量，它的两个操作数<strong>未必</strong>没有。</p>
-<h3><a href="#解析块" name="解析块"><small>11&#8202;.&#8202;3&#8202;.&#8202;1</small>解析块</a></h3>
+<h3><a href="#解析块" id="解析块"><small>11&#8202;.&#8202;3&#8202;.&#8202;1</small>解析块</a></h3>
 <p>我们从块开始，因为它们正是魔法发生所在的那些局部作用域的缔造者。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>Resolver</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitBlockStmt</span>(<span class="t">Stmt</span>.<span class="t">Block</span> <span class="i">stmt</span>) {
     <span class="i">beginScope</span>();
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">statements</span>);
@@ -316,8 +287,7 @@ add after <em>Resolver</em>()</div>
 <p>它开启一个新的作用域，遍历块内的语句，随后丢弃该作用域。真正有趣的内容藏在那两个辅助方法里。我们先从那个简单的方法开始。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>Resolver</em>()</div>
-<pre>
-  <span class="t">void</span> <span class="i">resolve</span>(<span class="t">List</span>&lt;<span class="t">Stmt</span>&gt; <span class="i">statements</span>) {
+<pre>  <span class="t">void</span> <span class="i">resolve</span>(<span class="t">List</span>&lt;<span class="t">Stmt</span>&gt; <span class="i">statements</span>) {
     <span class="k">for</span> (<span class="t">Stmt</span> <span class="i">statement</span> : <span class="i">statements</span>) {
       <span class="i">resolve</span>(<span class="i">statement</span>);
     }
@@ -328,8 +298,7 @@ add after <em>Resolver</em>()</div>
 <p>该方法遍历一份语句列表，并对每一条进行解析。它进而调用：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitBlockStmt</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">resolve</span>(<span class="t">Stmt</span> <span class="i">stmt</span>) {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">resolve</span>(<span class="t">Stmt</span> <span class="i">stmt</span>) {
     <span class="i">stmt</span>.<span class="i">accept</span>(<span class="k">this</span>);
   }
 </pre></div>
@@ -338,8 +307,7 @@ add after <em>visitBlockStmt</em>()</div>
 <p>趁着还热乎，我们再添加一个重载版本，日后我们解析表达式时还会用到它。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>resolve</em>(Stmt stmt)</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">resolve</span>(<span class="t">Expr</span> <span class="i">expr</span>) {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">resolve</span>(<span class="t">Expr</span> <span class="i">expr</span>) {
     <span class="i">expr</span>.<span class="i">accept</span>(<span class="k">this</span>);
   }
 </pre></div>
@@ -349,20 +317,17 @@ add after <em>resolve</em>(Stmt stmt)</div>
 <p>真正有趣的行为围绕着作用域展开。一个新的块作用域是这样被创建的：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>resolve</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">beginScope</span>() {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">beginScope</span>() {
     <span class="i">scopes</span>.<span class="i">push</span>(<span class="k">new</span> <span class="t">HashMap</span>&lt;<span class="t">String</span>, <span class="t">Boolean</span>&gt;());
   }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>resolve</em>()</div>
 
 <p>词法作用域在解释器与解析器中都会嵌套。它们的行为犹如一座栈。解释器使用一条链表——即 Environment 对象的链接——来实现这座栈。而在解析器中，我们使用一座货真价实的 Java Stack。</p>
-<div class="codehilite"><pre class="insert-before">
-  private final Interpreter interpreter;
+<div class="codehilite"><pre class="insert-before">  private final Interpreter interpreter;
 </pre><div class="source-file"><em>lox/Resolver.java</em><br>
 in class <em>Resolver</em></div>
-<pre class="insert">
-  <span class="k">private</span> <span class="k">final</span> <span class="t">Stack</span>&lt;<span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">Boolean</span>&gt;&gt; <span class="i">scopes</span> = <span class="k">new</span> <span class="t">Stack</span>&lt;&gt;();
+<pre class="insert">  <span class="k">private</span> <span class="k">final</span> <span class="t">Stack</span>&lt;<span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">Boolean</span>&gt;&gt; <span class="i">scopes</span> = <span class="k">new</span> <span class="t">Stack</span>&lt;&gt;();
 </pre><pre class="insert-after">
 
   Resolver(Interpreter interpreter) {
@@ -374,20 +339,18 @@ in class <em>Resolver</em></div>
 <p>既然作用域被存储在一座显式的栈中，退出一个作用域便直截了当。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>beginScope</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">endScope</span>() {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">endScope</span>() {
     <span class="i">scopes</span>.<span class="i">pop</span>();
   }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>beginScope</em>()</div>
 
 <p>至此，我们便可以推入并弹出一座作用域栈了。下面，让我们往里塞些东西。</p>
-<h3><a href="#解析变量声明" name="解析变量声明"><small>11&#8202;.&#8202;3&#8202;.&#8202;2</small>解析变量声明</a></h3>
+<h3><a href="#解析变量声明" id="解析变量声明"><small>11&#8202;.&#8202;3&#8202;.&#8202;2</small>解析变量声明</a></h3>
 <p>解析变量声明会将一条新的条目添加至当前最内层作用域的 Map 中。表面上看去直白得很，但其中还有一处微妙的舞步需要我们来跳。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitBlockStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitVarStmt</span>(<span class="t">Stmt</span>.<span class="t">Var</span> <span class="i">stmt</span>) {
     <span class="i">declare</span>(<span class="i">stmt</span>.<span class="i">name</span>);
     <span class="k">if</span> (<span class="i">stmt</span>.<span class="i">initializer</span> != <span class="k">null</span>) {
@@ -400,8 +363,7 @@ add after <em>visitBlockStmt</em>()</div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>visitBlockStmt</em>()</div>
 
 <p>我们将绑定拆分为两步——先声明，再定义——以便处理如下这般古怪的边角情形：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
 {
   <span class="k">var</span> <span class="i">a</span> = <span class="i">a</span>;
 }
@@ -410,16 +372,14 @@ add after <em>visitBlockStmt</em>()</div>
 <ol>
 <li>
 <p><strong>先运行初始化器，再将新变量纳入作用域。<strong>此处，新建的局部 <code>a</code> 将会以</strong>全局</strong> <code>a</code> 的值 &ldquo;outer&rdquo; 来初始化。换言之，前一条声明将被脱糖为：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">temp</span> = <span class="i">a</span>; <span class="c">// 运行初始化器。</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">temp</span> = <span class="i">a</span>; <span class="c">// 运行初始化器。</span>
 <span class="k">var</span> <span class="i">a</span>;        <span class="c">// 声明该变量。</span>
 <span class="i">a</span> = <span class="i">temp</span>;     <span class="c">// 对其进行初始化。</span>
 </pre></div>
 </li>
 <li>
 <p><strong>先将新变量纳入作用域，再运行初始化器。<strong>这意味着你</strong>可能</strong>会在变量被初始化之前便观察到它的存在——因此我们需要琢磨那时它该取何值。很可能就是 <code>nil</code>。这意味着新建的局部 <code>a</code> 将会以它自己隐式初始化的那个值 <code>nil</code> 来重新初始化。现在脱糖后的样子便是：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span>; <span class="c">// 定义该变量。</span>
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span>; <span class="c">// 定义该变量。</span>
 <span class="i">a</span> = <span class="i">a</span>; <span class="c">// 运行初始化器。</span>
 </pre></div>
 </li>
@@ -433,8 +393,7 @@ add after <em>visitBlockStmt</em>()</div>
 <p>为此，当我们访问表达式时，我们需要知道自己是否身处某个变量的初始化器之中。我们通过把绑定拆分为两步来达到此目的。第一步是<strong>声明</strong>它。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>endScope</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">declare</span>(<span class="t">Token</span> <span class="i">name</span>) {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">declare</span>(<span class="t">Token</span> <span class="i">name</span>) {
     <span class="k">if</span> (<span class="i">scopes</span>.<span class="i">isEmpty</span>()) <span class="k">return</span>;
 
     <span class="t">Map</span>&lt;<span class="t">String</span>, <span class="t">Boolean</span>&gt; <span class="i">scope</span> = <span class="i">scopes</span>.<span class="i">peek</span>();
@@ -447,8 +406,7 @@ add after <em>endScope</em>()</div>
 <p>在声明了该变量之后，我们会在同一份作用域中——此时新变量已然存在但尚不可用——解析其初始化器表达式。一旦初始化器表达式求值完毕，该变量便准备就绪。我们通过<strong>定义</strong>来实现。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>declare</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">define</span>(<span class="t">Token</span> <span class="i">name</span>) {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">define</span>(<span class="t">Token</span> <span class="i">name</span>) {
     <span class="k">if</span> (<span class="i">scopes</span>.<span class="i">isEmpty</span>()) <span class="k">return</span>;
     <span class="i">scopes</span>.<span class="i">peek</span>().<span class="i">put</span>(<span class="i">name</span>.<span class="i">lexeme</span>, <span class="k">true</span>);
   }
@@ -456,12 +414,11 @@ add after <em>declare</em>()</div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>declare</em>()</div>
 
 <p>我们将作用域 Map 中该变量的值置为 <code>true</code>，以将其标记为已完全初始化并可供使用。它活过来了！</p>
-<h3><a href="#解析变量表达式" name="解析变量表达式"><small>11&#8202;.&#8202;3&#8202;.&#8202;3</small>解析变量表达式</a></h3>
+<h3><a href="#解析变量表达式" id="解析变量表达式"><small>11&#8202;.&#8202;3&#8202;.&#8202;3</small>解析变量表达式</a></h3>
 <p>变量声明——以及我们即将登场的函数声明——会向作用域 Map 中写入数据。而当我们解析变量表达式时，便会去读取这些 Map。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitVarStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitVariableExpr</span>(<span class="t">Expr</span>.<span class="t">Variable</span> <span class="i">expr</span>) {
     <span class="k">if</span> (!<span class="i">scopes</span>.<span class="i">isEmpty</span>() &amp;&amp;
         <span class="i">scopes</span>.<span class="i">peek</span>().<span class="i">get</span>(<span class="i">expr</span>.<span class="i">name</span>.<span class="i">lexeme</span>) == <span class="t">Boolean</span>.<span class="i">FALSE</span>) {
@@ -479,8 +436,7 @@ add after <em>visitVarStmt</em>()</div>
 <p>在那项检查之后，我们便实际地去解析该变量本身，所用的是如下的辅助方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>define</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">resolveLocal</span>(<span class="t">Expr</span> <span class="i">expr</span>, <span class="t">Token</span> <span class="i">name</span>) {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">resolveLocal</span>(<span class="t">Expr</span> <span class="i">expr</span>, <span class="t">Token</span> <span class="i">name</span>) {
     <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="i">scopes</span>.<span class="i">size</span>() - <span class="n">1</span>; <span class="i">i</span> &gt;= <span class="n">0</span>; <span class="i">i</span>--) {
       <span class="k">if</span> (<span class="i">scopes</span>.<span class="i">get</span>(<span class="i">i</span>).<span class="i">containsKey</span>(<span class="i">name</span>.<span class="i">lexeme</span>)) {
         <span class="i">interpreter</span>.<span class="i">resolve</span>(<span class="i">expr</span>, <span class="i">scopes</span>.<span class="i">size</span>() - <span class="n">1</span> - <span class="i">i</span>);
@@ -493,12 +449,11 @@ add after <em>define</em>()</div>
 
 <p>这段代码看起来——理由十足——与 Environment 中用于求值一个变量的代码颇为相似。我们从最内层的作用域起步，层层向外，对每一张 Map 进行查找，寻找一个匹配的名字。若我们找到了该变量，便去解析它，并向其中传入从当前最内层作用域至发现该变量的作用域之间的层数。因此，若该变量是在当前作用域中发现的，我们便传入 0；若它是在紧邻的外层作用域中发现的，则传入 1。依此类推。</p>
 <p>若我们遍历了所有块作用域，依然不曾找到该变量，我们便将其留作未解析，并假定它是全局的。<code>resolve()</code> 方法的实现我们稍后再讲。现在，让我们继续啃完其它语法节点。</p>
-<h3><a href="#解析赋值表达式" name="解析赋值表达式"><small>11&#8202;.&#8202;3&#8202;.&#8202;4</small>解析赋值表达式</a></h3>
+<h3><a href="#解析赋值表达式" id="解析赋值表达式"><small>11&#8202;.&#8202;3&#8202;.&#8202;4</small>解析赋值表达式</a></h3>
 <p>另一类引用变量的表达式是赋值。解析赋值的代码长这样：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitVarStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitAssignExpr</span>(<span class="t">Expr</span>.<span class="t">Assign</span> <span class="i">expr</span>) {
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">value</span>);
     <span class="i">resolveLocal</span>(<span class="i">expr</span>, <span class="i">expr</span>.<span class="i">name</span>);
@@ -508,12 +463,11 @@ add after <em>visitVarStmt</em>()</div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>visitVarStmt</em>()</div>
 
 <p>首先，我们求解那个被赋值的表达式——以防它本身便含有对其它变量的引用。随后，我们便复用既有的 <code>resolveLocal()</code> 方法来解析那个被赋值的变量。</p>
-<h3><a href="#解析函数声明" name="解析函数声明"><small>11&#8202;.&#8202;3&#8202;.&#8202;5</small>解析函数声明</a></h3>
+<h3><a href="#解析函数声明" id="解析函数声明"><small>11&#8202;.&#8202;3&#8202;.&#8202;5</small>解析函数声明</a></h3>
 <p>最后是函数。函数既会绑定名字，又会引入作用域。函数自身的名字是绑定在它被声明处所处的那份外层作用域之中。当我们踏入其函数体时，我们也会将其参数绑定到那个内层函数作用域中。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitBlockStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitFunctionStmt</span>(<span class="t">Stmt</span>.<span class="t">Function</span> <span class="i">stmt</span>) {
     <span class="i">declare</span>(<span class="i">stmt</span>.<span class="i">name</span>);
     <span class="i">define</span>(<span class="i">stmt</span>.<span class="i">name</span>);
@@ -528,8 +482,7 @@ add after <em>visitBlockStmt</em>()</div>
 <p>随后，我们用如下方法去解析该函数体：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>resolve</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">void</span> <span class="i">resolveFunction</span>(<span class="t">Stmt</span>.<span class="t">Function</span> <span class="i">function</span>) {
+<pre>  <span class="k">private</span> <span class="t">void</span> <span class="i">resolveFunction</span>(<span class="t">Stmt</span>.<span class="t">Function</span> <span class="i">function</span>) {
     <span class="i">beginScope</span>();
     <span class="k">for</span> (<span class="t">Token</span> <span class="i">param</span> : <span class="i">function</span>.<span class="i">params</span>) {
       <span class="i">declare</span>(<span class="i">param</span>);
@@ -543,7 +496,7 @@ add after <em>resolve</em>()</div>
 
 <p>它是一个独立的方法，因为我们在日后为 Lox 添加类时也会用它来解析方法。它为函数体创建一份新的作用域，并将每一个函数的参数各绑定为该作用域中的变量。</p>
 <p>一切就绪之后，它便在该作用域中解析函数体。这与解释器处理函数声明的方式有所不同。在<strong>运行时</strong>，声明一个函数并不会对函数体做任何事情。函数体直到函数被调用时才会被触及。而在<strong>静态</strong>分析中，我们则<strong>立即</strong>深入函数体，而不会等。</p>
-<h3><a href="#解析其它语法树节点" name="解析其它语法树节点"><small>11&#8202;.&#8202;3&#8202;.&#8202;6</small>解析其它语法树节点</a></h3>
+<h3><a href="#解析其它语法树节点" id="解析其它语法树节点"><small>11&#8202;.&#8202;3&#8202;.&#8202;6</small>解析其它语法树节点</a></h3>
 <p>到此为止，我们已经覆盖了文法中那些有趣的角落。我们处理了每一处声明、读取或写入变量的位置，以及每一处作用域创建或销毁的位置。即便它们<strong>本身</strong>并不受变量解析的影响，我们也仍需要为剩下的所有语法树节点实现 visit 方法，以便递归地进入它们的子树。<span name="boring">抱歉</span>这一部分稍显枯燥，但请再忍一忍。我们大致按照&ldquo;自顶向下&ldquo;的顺序开始，先从语句入手。</p>
 <aside name="boring">
 <p>我确实曾说过本书会为这两款解释器提供<strong>每一行</strong>代码。但我并没有说它们全都激动人心。</p>
@@ -551,8 +504,7 @@ add after <em>resolve</em>()</div>
 <p>一条表达式语句包含一个需要遍历的单一表达式。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitBlockStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitExpressionStmt</span>(<span class="t">Stmt</span>.<span class="t">Expression</span> <span class="i">stmt</span>) {
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">expression</span>);
     <span class="k">return</span> <span class="k">null</span>;
@@ -563,8 +515,7 @@ add after <em>visitBlockStmt</em>()</div>
 <p>一条 if 语句含有一个充当条件的表达式，以及一至两个作为分支的语句。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitFunctionStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitIfStmt</span>(<span class="t">Stmt</span>.<span class="t">If</span> <span class="i">stmt</span>) {
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">condition</span>);
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">thenBranch</span>);
@@ -578,8 +529,7 @@ add after <em>visitFunctionStmt</em>()</div>
 <p>正如表达式语句一样，<code>print</code> 语句包含一个单一的子表达式。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitIfStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitPrintStmt</span>(<span class="t">Stmt</span>.<span class="t">Print</span> <span class="i">stmt</span>) {
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">expression</span>);
     <span class="k">return</span> <span class="k">null</span>;
@@ -590,8 +540,7 @@ add after <em>visitIfStmt</em>()</div>
 <p>return 语句亦同。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitPrintStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitReturnStmt</span>(<span class="t">Stmt</span>.<span class="t">Return</span> <span class="i">stmt</span>) {
     <span class="k">if</span> (<span class="i">stmt</span>.<span class="i">value</span> != <span class="k">null</span>) {
       <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">value</span>);
@@ -605,8 +554,7 @@ add after <em>visitPrintStmt</em>()</div>
 <p>就像 <code>if</code> 语句那样，对于 <code>while</code> 语句，我们解析其条件并对函数体<strong>恰好</strong>解析一次。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitVarStmt</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitWhileStmt</span>(<span class="t">Stmt</span>.<span class="t">While</span> <span class="i">stmt</span>) {
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">condition</span>);
     <span class="i">resolve</span>(<span class="i">stmt</span>.<span class="i">body</span>);
@@ -619,8 +567,7 @@ add after <em>visitVarStmt</em>()</div>
 <p>我们那位老朋友——二元表达式。我们遍历它，并对两个操作数都进行解析。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitAssignExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitBinaryExpr</span>(<span class="t">Expr</span>.<span class="t">Binary</span> <span class="i">expr</span>) {
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">left</span>);
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">right</span>);
@@ -632,8 +579,7 @@ add after <em>visitAssignExpr</em>()</div>
 <p>调用也类似——我们遍历实参列表，将它们悉数解析。被调用者本身也是一个表达式（通常是一个变量表达式），因此它也会被一并解析。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitBinaryExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitCallExpr</span>(<span class="t">Expr</span>.<span class="t">Call</span> <span class="i">expr</span>) {
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">callee</span>);
 
@@ -649,8 +595,7 @@ add after <em>visitBinaryExpr</em>()</div>
 <p>括号表达式简单得很。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitCallExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitGroupingExpr</span>(<span class="t">Expr</span>.<span class="t">Grouping</span> <span class="i">expr</span>) {
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">expression</span>);
     <span class="k">return</span> <span class="k">null</span>;
@@ -661,8 +606,7 @@ add after <em>visitCallExpr</em>()</div>
 <p>字面量表达式则是最简单的。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitGroupingExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitLiteralExpr</span>(<span class="t">Expr</span>.<span class="t">Literal</span> <span class="i">expr</span>) {
     <span class="k">return</span> <span class="k">null</span>;
   }
@@ -673,8 +617,7 @@ add after <em>visitGroupingExpr</em>()</div>
 <p>由于静态分析既无控制流、也无短路求值，逻辑表达式与其他二元运算符别无二致。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitLiteralExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitLogicalExpr</span>(<span class="t">Expr</span>.<span class="t">Logical</span> <span class="i">expr</span>) {
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">left</span>);
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">right</span>);
@@ -686,8 +629,7 @@ add after <em>visitLiteralExpr</em>()</div>
 <p>最后，还剩下一个节点。我们解析它那唯一一个操作数。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>visitLogicalExpr</em>()</div>
-<pre>
-  <span class="a">@Override</span>
+<pre>  <span class="a">@Override</span>
   <span class="k">public</span> <span class="t">Void</span> <span class="i">visitUnaryExpr</span>(<span class="t">Expr</span>.<span class="t">Unary</span> <span class="i">expr</span>) {
     <span class="i">resolve</span>(<span class="i">expr</span>.<span class="i">right</span>);
     <span class="k">return</span> <span class="k">null</span>;
@@ -696,12 +638,11 @@ add after <em>visitLogicalExpr</em>()</div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>visitLogicalExpr</em>()</div>
 
 <p>有了所有这些 visit 方法，Java 编译器应当对 Resolver 完整地实现了 <code>Stmt.Visitor</code> 与 <code>Expr.Visitor</code> 这两套接口感到满意。现在是个稍事休息、吃点点心、甚至小憩片时的好时机。</p>
-<h2><a href="#解释已解析的变量" name="解释已解析的变量"><small>11&#8202;.&#8202;4</small>解释已解析的变量</a></h2>
+<h2><a href="#解释已解析的变量" id="解释已解析的变量"><small>11&#8202;.&#8202;4</small>解释已解析的变量</a></h2>
 <p>让我们看看我们这位解析器究竟有何能耐。每一次它访问一个变量时，它都会告诉解释器：在当前作用域与该变量被定义的作用域之间，存在着多少层作用域。运行时，这恰好对应于环境链中——从当前环境到那个解释器能够找到该变量值的环境之间——所包含的<strong>环境</strong>个数。解析器通过调用如下方法，将那个数字交予解释器：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>execute</em>()</div>
-<pre>
-  <span class="t">void</span> <span class="i">resolve</span>(<span class="t">Expr</span> <span class="i">expr</span>, <span class="t">int</span> <span class="i">depth</span>) {
+<pre>  <span class="t">void</span> <span class="i">resolve</span>(<span class="t">Expr</span> <span class="i">expr</span>, <span class="t">int</span> <span class="i">depth</span>) {
     <span class="i">locals</span>.<span class="i">put</span>(<span class="i">expr</span>, <span class="i">depth</span>);
   }
 </pre></div>
@@ -713,12 +654,10 @@ add after <em>execute</em>()</div>
 <p>我<strong>觉得</strong>我曾听过将这张映射称为&ldquo;侧表&ldquo;（side table），因为它是一张与所关联对象分离存放的表格化数据结构。但每当我试图用 Google 搜索这个词时，得到的却尽是些家具页面。</p>
 </aside>
 <p>诸如 IDE 这样的交互式工具通常会增量地重新分析并重新解析用户程序中的部分内容。当那些状态碎片被藏在语法树的枝叶之中时，要想找出哪些状态需要重算，便颇为困难。将这些数据存储于节点<strong>之外</strong>的一项好处在于，它使得<strong>丢弃</strong>这些数据变得轻而易举——只需清空那张映射。</p>
-<div class="codehilite"><pre class="insert-before">
-  private Environment environment = globals;
+<div class="codehilite"><pre class="insert-before">  private Environment environment = globals;
 </pre><div class="source-file"><em>lox/Interpreter.java</em><br>
 in class <em>Interpreter</em></div>
-<pre class="insert">
-  <span class="k">private</span> <span class="k">final</span> <span class="t">Map</span>&lt;<span class="t">Expr</span>, <span class="t">Integer</span>&gt; <span class="i">locals</span> = <span class="k">new</span> <span class="t">HashMap</span>&lt;&gt;();
+<pre class="insert">  <span class="k">private</span> <span class="k">final</span> <span class="t">Map</span>&lt;<span class="t">Expr</span>, <span class="t">Integer</span>&gt; <span class="i">locals</span> = <span class="k">new</span> <span class="t">HashMap</span>&lt;&gt;();
 </pre><pre class="insert-after">
 
   Interpreter() {
@@ -727,47 +666,38 @@ in class <em>Interpreter</em></div>
 
 <p>你或许会以为我们需要某种嵌套的树状结构，以免在有多个表达式引用同一个变量时混淆——但每个表达式节点都是其自身的 Java 对象，拥有自己独一无二的标识。一张扁平的、统一的映射，自然不会在区分它们时遇到任何麻烦。</p>
 <p>话说回来，使用集合又免不了要引入几个名字。</p>
-<div class="codehilite"><pre class="insert-before">
-import java.util.ArrayList;
+<div class="codehilite"><pre class="insert-before">import java.util.ArrayList;
 </pre><div class="source-file"><em>lox/Interpreter.java</em></div>
-<pre class="insert">
-<span class="k">import</span> <span class="i">java.util.HashMap</span>;
-</pre><pre class="insert-after">
-import java.util.List;
+<pre class="insert"><span class="k">import</span> <span class="i">java.util.HashMap</span>;
+</pre><pre class="insert-after">import java.util.List;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Interpreter.java</em></div>
 
 <p>以及：</p>
-<div class="codehilite"><pre class="insert-before">
-import java.util.List;
+<div class="codehilite"><pre class="insert-before">import java.util.List;
 </pre><div class="source-file"><em>lox/Interpreter.java</em></div>
-<pre class="insert">
-<span class="k">import</span> <span class="i">java.util.Map</span>;
+<pre class="insert"><span class="k">import</span> <span class="i">java.util.Map</span>;
 </pre><pre class="insert-after">
 
 class Interpreter implements Expr.Visitor&lt;Object&gt;,
 </pre></div>
 <div class="source-file-narrow"><em>lox/Interpreter.java</em></div>
 
-<h3><a href="#访问一个已解析的变量" name="访问一个已解析的变量"><small>11&#8202;.&#8202;4&#8202;.&#8202;1</small>访问一个已解析的变量</a></h3>
+<h3><a href="#访问一个已解析的变量" id="访问一个已解析的变量"><small>11&#8202;.&#8202;4&#8202;.&#8202;1</small>访问一个已解析的变量</a></h3>
 <p>我们的解释器如今得以访问每一个变量的解析位置。终于，我们到了可以好好利用这一信息的时候了。我们将变量表达式的 visit 方法替换为如下版本：</p>
-<div class="codehilite"><pre class="insert-before">
-  public Object visitVariableExpr(Expr.Variable expr) {
+<div class="codehilite"><pre class="insert-before">  public Object visitVariableExpr(Expr.Variable expr) {
 </pre><div class="source-file"><em>lox/Interpreter.java</em><br>
 in <em>visitVariableExpr</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="k">return</span> <span class="i">lookUpVariable</span>(<span class="i">expr</span>.<span class="i">name</span>, <span class="i">expr</span>);
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="k">return</span> <span class="i">lookUpVariable</span>(<span class="i">expr</span>.<span class="i">name</span>, <span class="i">expr</span>);
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Interpreter.java</em>, in <em>visitVariableExpr</em>(), replace 1 line</div>
 
 <p>它将工作委托给：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>visitVariableExpr</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="t">Object</span> <span class="i">lookUpVariable</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">Expr</span> <span class="i">expr</span>) {
+<pre>  <span class="k">private</span> <span class="t">Object</span> <span class="i">lookUpVariable</span>(<span class="t">Token</span> <span class="i">name</span>, <span class="t">Expr</span> <span class="i">expr</span>) {
     <span class="t">Integer</span> <span class="i">distance</span> = <span class="i">locals</span>.<span class="i">get</span>(<span class="i">expr</span>);
     <span class="k">if</span> (<span class="i">distance</span> != <span class="k">null</span>) {
       <span class="k">return</span> <span class="i">environment</span>.<span class="i">getAt</span>(<span class="i">distance</span>, <span class="i">name</span>.<span class="i">lexeme</span>);
@@ -782,8 +712,7 @@ add after <em>visitVariableExpr</em>()</div>
 <p>倘若我们<strong>确实</strong>获得了一个距离，那么这就是一个局部变量，我们便得以利用我们静态分析的结果。我们不再调用 <code>get()</code>，而是改而调用 Environment 上这个新方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Environment.java</em><br>
 add after <em>define</em>()</div>
-<pre>
-  <span class="t">Object</span> <span class="i">getAt</span>(<span class="t">int</span> <span class="i">distance</span>, <span class="t">String</span> <span class="i">name</span>) {
+<pre>  <span class="t">Object</span> <span class="i">getAt</span>(<span class="t">int</span> <span class="i">distance</span>, <span class="t">String</span> <span class="i">name</span>) {
     <span class="k">return</span> <span class="i">ancestor</span>(<span class="i">distance</span>).<span class="i">values</span>.<span class="i">get</span>(<span class="i">name</span>);
   }
 </pre></div>
@@ -792,8 +721,7 @@ add after <em>define</em>()</div>
 <p>旧版的 <code>get()</code> 方法会动态地遍历外层环境的链接，逐一筛检每一份，看变量是否藏在某处。但如今，我们已然清楚地知道环境链中<strong>哪一份</strong>环境会拥有该变量。我们借助如下这个辅助方法抵达它：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Environment.java</em><br>
 add after <em>define</em>()</div>
-<pre>
-  <span class="t">Environment</span> <span class="i">ancestor</span>(<span class="t">int</span> <span class="i">distance</span>) {
+<pre>  <span class="t">Environment</span> <span class="i">ancestor</span>(<span class="t">int</span> <span class="i">distance</span>) {
     <span class="t">Environment</span> <span class="i">environment</span> = <span class="k">this</span>;
     <span class="k">for</span> (<span class="t">int</span> <span class="i">i</span> = <span class="n">0</span>; <span class="i">i</span> &lt; <span class="i">distance</span>; <span class="i">i</span>++) {
       <span class="i">environment</span> = <span class="i">environment</span>.<span class="i">enclosing</span>;<span name="coupled"> </span>
@@ -809,10 +737,9 @@ add after <em>define</em>()</div>
 <p>解释器假设该变量<strong>一定</strong>就在那份 Map 之中，这种做法给人一种蒙眼飞行般的感觉。解释器的代码信任解析器已然尽职尽责、正确地解析了那处变量。这意味着这两个类之间存在着深深的耦合。在解析器中，每一行触及作用域的代码，都必须在解释器之中拥有一处<strong>精确</strong>对应的修改环境的代码。</p>
 <p>我在为本书编写代码的过程中，深切体会到了这种耦合——我曾撞上几处微妙的 bug，其根源在于解析器与解释器之间稍有那么一丝不同步。追踪这些 bug 实在是令人头疼。让这件事变得不那么痛苦的一个工具，是让解释器<strong>显式地</strong> ——通过 Java 的 assert 语句或其它某种校验工具——来断言它所期望解析器已经履行的契约。</p>
 </aside>
-<h3><a href="#对一个已解析的变量赋值" name="对一个已解析的变量赋值"><small>11&#8202;.&#8202;4&#8202;.&#8202;2</small>对一个已解析的变量赋值</a></h3>
+<h3><a href="#对一个已解析的变量赋值" id="对一个已解析的变量赋值"><small>11&#8202;.&#8202;4&#8202;.&#8202;2</small>对一个已解析的变量赋值</a></h3>
 <p>我们也可以通过对一个变量进行赋值来使用它。对赋值表达式 visit 方法的修改与之类似。</p>
-<div class="codehilite"><pre class="insert-before">
-  public Object visitAssignExpr(Expr.Assign expr) {
+<div class="codehilite"><pre class="insert-before">  public Object visitAssignExpr(Expr.Assign expr) {
     Object value = evaluate(expr.value);
 </pre><div class="source-file"><em>lox/Interpreter.java</em><br>
 in <em>visitAssignExpr</em>()<br>
@@ -826,16 +753,14 @@ replace 1 line</div>
       <span class="i">globals</span>.<span class="i">assign</span>(<span class="i">expr</span>.<span class="i">name</span>, <span class="i">value</span>);
     }
 
-</pre><pre class="insert-after">
-    return value;
+</pre><pre class="insert-after">    return value;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Interpreter.java</em>, in <em>visitAssignExpr</em>(), replace 1 line</div>
 
 <p>我们再一次去查找该变量的作用域距离。若未找到，我们便假定它是全局的，并以与之前相同的方式处理它。否则，我们便调用这个新方法：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Environment.java</em><br>
 add after <em>getAt</em>()</div>
-<pre>
-  <span class="t">void</span> <span class="i">assignAt</span>(<span class="t">int</span> <span class="i">distance</span>, <span class="t">Token</span> <span class="i">name</span>, <span class="t">Object</span> <span class="i">value</span>) {
+<pre>  <span class="t">void</span> <span class="i">assignAt</span>(<span class="t">int</span> <span class="i">distance</span>, <span class="t">Token</span> <span class="i">name</span>, <span class="t">Object</span> <span class="i">value</span>) {
     <span class="i">ancestor</span>(<span class="i">distance</span>).<span class="i">values</span>.<span class="i">put</span>(<span class="i">name</span>.<span class="i">lexeme</span>, <span class="i">value</span>);
   }
 </pre></div>
@@ -843,64 +768,54 @@ add after <em>getAt</em>()</div>
 
 <p>正如 <code>getAt()</code> 之与 <code>get()</code>，<code>assignAt()</code> 之与 <code>assign()</code>。它会沿着外层环境走上一段固定的距离，然后将新值塞入该 Map 之中。</p>
 <p>以上便是对 Interpreter 类所做的全部改动。这便是我之所以选择一种对既有代码影响最小的方式来表示解析数据的原因。剩下所有节点依然照旧工作，就连那些修改环境的代码也原封未动。</p>
-<h3><a href="#运行解析器" name="运行解析器"><small>11&#8202;.&#8202;4&#8202;.&#8202;3</small>运行解析器</a></h3>
+<h3><a href="#运行解析器" id="运行解析器"><small>11&#8202;.&#8202;4&#8202;.&#8202;3</small>运行解析器</a></h3>
 <p>不过，我们终究是需要<strong>实际运行</strong>解析器的。我们在解析器完成它的工作之后，便插入这趟新的 pass。</p>
-<div class="codehilite"><pre class="insert-before">
-    // Stop if there was a syntax error.
+<div class="codehilite"><pre class="insert-before">    // Stop if there was a syntax error.
     if (hadError) return;
 
 </pre><div class="source-file"><em>lox/Lox.java</em><br>
 in <em>run</em>()</div>
-<pre class="insert">
-    <span class="t">Resolver</span> <span class="i">resolver</span> = <span class="k">new</span> <span class="t">Resolver</span>(<span class="i">interpreter</span>);
+<pre class="insert">    <span class="t">Resolver</span> <span class="i">resolver</span> = <span class="k">new</span> <span class="t">Resolver</span>(<span class="i">interpreter</span>);
     <span class="i">resolver</span>.<span class="i">resolve</span>(<span class="i">statements</span>);
 
-</pre><pre class="insert-after">
-    interpreter.interpret(statements);
+</pre><pre class="insert-after">    interpreter.interpret(statements);
 </pre></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, in <em>run</em>()</div>
 
 <p>若是存在任何解析错误，我们便不会运行解析器。若代码存在语法错误，它<strong>永远</strong>都不会被运行，因此对之进行解析几乎毫无意义。若语法无误，我们便让解析器去大显身手。解析器持有一份对解释器的引用，并随着它遍历各变量，将解析数据直接塞入解释器之中。当解释器随后运行时，它便拥有了所需的一切。</p>
 <p>至少，在解析器<strong>成功</strong>时，情形确实如此。但若在解析过程中<strong>出现</strong>了错误呢？</p>
-<h2><a href="#解析错误" name="解析错误"><small>11&#8202;.&#8202;5</small>解析错误</a></h2>
+<h2><a href="#解析错误" id="解析错误"><small>11&#8202;.&#8202;5</small>解析错误</a></h2>
 <p>既然我们正在进行一趟语义分析 pass，我们便有了一个机会——使 Lox 的语义变得更加精确，并在代码运行之前帮助用户尽早地捕获 bug。请看看这段不讨喜的代码：</p>
-<div class="codehilite"><pre>
-<span class="k">fun</span> <span class="i">bad</span>() {
+<div class="codehilite"><pre><span class="k">fun</span> <span class="i">bad</span>() {
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;first&quot;</span>;
   <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;second&quot;</span>;
 }
 </pre></div>
 <p>我们<strong>确实</strong>允许在<strong>全局</strong>作用域中以相同的名字声明多条变量，但在局部作用域中这么做却很可能是个 bug。倘若他们知道该变量已然存在，他们会选择赋值而非 <code>var</code>。而倘若他们<strong>不知道</strong>该变量的存在，他们大概也不打算去覆盖前一条。</p>
 <p>我们可以在解析过程中静态地检测这一疏漏。</p>
-<div class="codehilite"><pre class="insert-before">
-    Map&lt;String, Boolean&gt; scope = scopes.peek();
+<div class="codehilite"><pre class="insert-before">    Map&lt;String, Boolean&gt; scope = scopes.peek();
 </pre><div class="source-file"><em>lox/Resolver.java</em><br>
 in <em>declare</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">scope</span>.<span class="i">containsKey</span>(<span class="i">name</span>.<span class="i">lexeme</span>)) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">scope</span>.<span class="i">containsKey</span>(<span class="i">name</span>.<span class="i">lexeme</span>)) {
       <span class="t">Lox</span>.<span class="i">error</span>(<span class="i">name</span>,
-          <span class="s">&quot;Already variable with this name in this scope.&quot;</span>);
+          <span class="s">&quot;Already a variable with this name in this scope.&quot;</span>);
     }
 
-</pre><pre class="insert-after">
-    scope.put(name.lexeme, false);
+</pre><pre class="insert-after">    scope.put(name.lexeme, false);
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, in <em>declare</em>()</div>
 
 <p>当我们在局部作用域中声明一个变量时，我们已然知晓该作用域内此前声明的每一个变量名。若我们发现冲突，便报告一个错误。</p>
-<h3><a href="#无效的-return-错误" name="无效的-return-错误"><small>11&#8202;.&#8202;5&#8202;.&#8202;1</small>无效的 return 错误</a></h3>
+<h3><a href="#无效的-return-错误" id="无效的-return-错误"><small>11&#8202;.&#8202;5&#8202;.&#8202;1</small>无效的 return 错误</a></h3>
 <p>再来看看另一段讨人厌的小脚本：</p>
-<div class="codehilite"><pre>
-<span class="k">return</span> <span class="s">&quot;at top level&quot;</span>;
+<div class="codehilite"><pre><span class="k">return</span> <span class="s">&quot;at top level&quot;</span>;
 </pre></div>
 <p>这执行了一条 <code>return</code> 语句，但它<strong>根本</strong>就不在任何函数之内。它是顶层代码。我不知道用户<strong>以为</strong>这会引发什么，但我并不希望 Lox 允许这种情况。</p>
 <p>我们可以将解析器延展至静态地检测这一情形。正如我们在遍历语法树时一路追踪作用域那般，我们也可以追踪<strong>我们眼下正在访问的</strong> <strong>代码</strong>究竟是否处于某条函数声明之中。</p>
-<div class="codehilite"><pre class="insert-before">
-  private final Stack&lt;Map&lt;String, Boolean&gt;&gt; scopes = new Stack&lt;&gt;();
+<div class="codehilite"><pre class="insert-before">  private final Stack&lt;Map&lt;String, Boolean&gt;&gt; scopes = new Stack&lt;&gt;();
 </pre><div class="source-file"><em>lox/Resolver.java</em><br>
 in class <em>Resolver</em></div>
-<pre class="insert">
-  <span class="k">private</span> <span class="t">FunctionType</span> <span class="i">currentFunction</span> = <span class="t">FunctionType</span>.<span class="i">NONE</span>;
+<pre class="insert">  <span class="k">private</span> <span class="t">FunctionType</span> <span class="i">currentFunction</span> = <span class="t">FunctionType</span>.<span class="i">NONE</span>;
 </pre><pre class="insert-after">
 
   Resolver(Interpreter interpreter) {
@@ -910,8 +825,7 @@ in class <em>Resolver</em></div>
 <p>我们没有使用一个裸的布尔值，而是用上了这个有些滑稽的枚举：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 add after <em>Resolver</em>()</div>
-<pre>
-  <span class="k">private</span> <span class="k">enum</span> <span class="t">FunctionType</span> {
+<pre>  <span class="k">private</span> <span class="k">enum</span> <span class="t">FunctionType</span> {
     <span class="i">NONE</span>,
     <span class="i">FUNCTION</span>
   }
@@ -919,16 +833,13 @@ add after <em>Resolver</em>()</div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, add after <em>Resolver</em>()</div>
 
 <p>它眼下看起来有些傻，但日后我们还会为它添上几种情形，届时它的意义便会显现。当我们解析一个函数声明时，我们将该值传入。</p>
-<div class="codehilite"><pre class="insert-before">
-    define(stmt.name);
+<div class="codehilite"><pre class="insert-before">    define(stmt.name);
 
 </pre><div class="source-file"><em>lox/Resolver.java</em><br>
 in <em>visitFunctionStmt</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-    <span class="i">resolveFunction</span>(<span class="i">stmt</span>, <span class="t">FunctionType</span>.<span class="i">FUNCTION</span>);
-</pre><pre class="insert-after">
-    return null;
+<pre class="insert">    <span class="i">resolveFunction</span>(<span class="i">stmt</span>, <span class="t">FunctionType</span>.<span class="i">FUNCTION</span>);
+</pre><pre class="insert-after">    return null;
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, in <em>visitFunctionStmt</em>(), replace 1 line</div>
 
@@ -936,50 +847,41 @@ replace 1 line</div>
 <div class="codehilite"><div class="source-file"><em>lox/Resolver.java</em><br>
 method <em>resolveFunction</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-  <span class="k">private</span> <span class="t">void</span> <span class="i">resolveFunction</span>(
+<pre class="insert">  <span class="k">private</span> <span class="t">void</span> <span class="i">resolveFunction</span>(
       <span class="t">Stmt</span>.<span class="t">Function</span> <span class="i">function</span>, <span class="t">FunctionType</span> <span class="i">type</span>) {
     <span class="t">FunctionType</span> <span class="i">enclosingFunction</span> = <span class="i">currentFunction</span>;
     <span class="i">currentFunction</span> = <span class="i">type</span>;
 
-</pre><pre class="insert-after">
-    beginScope();
+</pre><pre class="insert-after">    beginScope();
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, method <em>resolveFunction</em>(), replace 1 line</div>
 
 <p>我们先将这个字段的前一值存放于一个局部变量之中。记住，Lox 拥有局部函数，因此你可以将函数声明嵌套至任意深度。我们需要追踪的不只是&ldquo;我们身处一个函数之中&ldquo;，而是<strong>我们身处</strong> <strong>几层</strong>函数之中。</p>
 <p>我们本可以为它专门使用一座显式的 FunctionType 值栈，但我们不如借力于 JVM 那座现成的栈。我们将前一值存放在 Java 栈上的一个局部变量之中。当我们解析完函数体之后，我们将该字段恢复为那个值。</p>
-<div class="codehilite"><pre class="insert-before">
-    endScope();
+<div class="codehilite"><pre class="insert-before">    endScope();
 </pre><div class="source-file"><em>lox/Resolver.java</em><br>
 in <em>resolveFunction</em>()</div>
-<pre class="insert">
-    <span class="i">currentFunction</span> = <span class="i">enclosingFunction</span>;
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="i">currentFunction</span> = <span class="i">enclosingFunction</span>;
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, in <em>resolveFunction</em>()</div>
 
 <p>既然我们如今随时都能知道是否身处某条函数声明之中，我们便在解析一条 <code>return</code> 语句时加以检查。</p>
-<div class="codehilite"><pre class="insert-before">
-  public Void visitReturnStmt(Stmt.Return stmt) {
+<div class="codehilite"><pre class="insert-before">  public Void visitReturnStmt(Stmt.Return stmt) {
 </pre><div class="source-file"><em>lox/Resolver.java</em><br>
 in <em>visitReturnStmt</em>()</div>
-<pre class="insert">
-    <span class="k">if</span> (<span class="i">currentFunction</span> == <span class="t">FunctionType</span>.<span class="i">NONE</span>) {
+<pre class="insert">    <span class="k">if</span> (<span class="i">currentFunction</span> == <span class="t">FunctionType</span>.<span class="i">NONE</span>) {
       <span class="t">Lox</span>.<span class="i">error</span>(<span class="i">stmt</span>.<span class="i">keyword</span>, <span class="s">&quot;Can&#39;t return from top-level code.&quot;</span>);
     }
 
-</pre><pre class="insert-after">
-    if (stmt.value != null) {
+</pre><pre class="insert-after">    if (stmt.value != null) {
 </pre></div>
 <div class="source-file-narrow"><em>lox/Resolver.java</em>, in <em>visitReturnStmt</em>()</div>
 
 <p>利落吧？</p>
 <p>还有一处善后。在那个将各部分串接起来的主 Lox 类中，我们小心翼翼地确保在遇到任何解析错误时不去运行解释器。这项检查<strong>先于</strong>解析器运行，以免让我们去尝试解析那些语法有误的代码。</p>
 <p>但我们同样需要在存在解析错误时跳过解释器，因此我们再加<strong>一道</strong>检查。</p>
-<div class="codehilite"><pre class="insert-before">
-    resolver.resolve(statements);
+<div class="codehilite"><pre class="insert-before">    resolver.resolve(statements);
 </pre><div class="source-file"><em>lox/Lox.java</em><br>
 in <em>run</em>()</div>
 <pre class="insert">
@@ -999,15 +901,14 @@ in <em>run</em>()</div>
 </aside>
 <p>不过，眼下我们还是坚持这一小规模的分析。重要的是，我们修复了那处既古怪又恼人的边角情形中的 bug，尽管为了修复它竟花了这么多功夫，着实令人意外。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>11&#8202;.&#8202;6</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>11&#8202;.&#8202;6</small>挑战</a></h2>
 <ol>
 <li>
 <p>为什么当函数之名所绑定的变量可以急切地定义时，其它变量却必须等到初始化之后才能被使用？这是<strong>安全</strong>的。</p>
 </li>
 <li>
 <p>那些你所熟悉的语言是如何处理在其初始化器中引用了同名变量的局部变量的？比如：</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;outer&quot;</span>;
 {
   <span class="k">var</span> <span class="i">a</span> = <span class="i">a</span>;
 }
@@ -1027,7 +928,7 @@ in <em>run</em>()</div>
 <a href="classes.html" class="next">
   Next Chapter: &ldquo;Classes&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

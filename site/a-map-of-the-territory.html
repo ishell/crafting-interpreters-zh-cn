@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">A Map of the Territory<small>2</small></a></h3>
 
 <ul>
@@ -54,7 +53,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="introduction.html" title="Introduction" class="prev">←</a>
 <a href="the-lox-language.html" title="The Lox Language" class="next">→</a>
 </nav>
@@ -62,9 +61,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">A Map of the Territory<small>2</small></a></h3>
 
 <ul>
@@ -90,25 +88,7 @@
   <div class="number">2</div>
   <h1>A Map of the Territory</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#程序语言世界的地图" name="程序语言世界的地图"><small>2&#8202;.&#8202;0</small>程序语言世界的地图</a></h1><!--
+<h1><a href="#程序语言世界的地图" id="程序语言世界的地图"><small>2&#8202;.&#8202;0</small>程序语言世界的地图</a></h1><!--
 > You must have a map, no matter how rough. Otherwise you wander all over the
 > place. In *The Lord of the Rings* I never made anyone go farther than he could
 > on a given day.
@@ -140,7 +120,7 @@ implementation of it, or both, unless the distinction matters.
 <p>我们将在程序语言实现的具体细节上花上很多时间，如果我每次在提及到它的时候都严格写下“程序设计语言的实现”一词，那我的手指可真受不了（字符实在是太长啦）。所以，除非有严格区分的必要，我会直接使用“语言”一词指代程序语言或是程序语言的实现。</p><!--
 -- The Parts of a Language
 -->
-<h2><a href="#程序语言面面观" name="程序语言面面观"><small>2&#8202;.&#8202;1</small>程序语言面面观</a></h2><!--
+<h2><a href="#程序语言面面观" id="程序语言面面观"><small>2&#8202;.&#8202;1</small>程序语言面面观</a></h2><!--
 Engineers have been building programming languages since the Dark Ages of
 computing. As soon as we could talk to computers, we discovered doing so was too
 hard, and we enlisted their help. I find it fascinating that even though today's
@@ -182,7 +162,7 @@ Let's trace through each of those trails and points of interest. Our journey
 begins on the left with the bare text of the user's source code:
 -->
 <p>让我们通过一个实例来追踪程序编译的整个过程，看一看在每个编译阶段都会发生哪些有趣的事情。我们从下面这行用户程序源代码开始：</p><img src="image/a-map-of-the-territory/string.png" alt="var average = (min + max) / 2;" />
-<h3><a href="#词法扫描（scanning）" name="词法扫描（scanning）"><small>2&#8202;.&#8202;1&#8202;.&#8202;1</small>词法扫描（Scanning）</a></h3><!--
+<h3><a href="#词法扫描（scanning）" id="词法扫描（scanning）"><small>2&#8202;.&#8202;1&#8202;.&#8202;1</small>词法扫描（Scanning）</a></h3><!--
 The first step is **scanning**, also known as **lexing**, or (if you're trying
 to impress someone) **lexical analysis**. They all mean pretty much the same
 thing. I like "lexing" because it sounds like something an evil supervillain
@@ -216,7 +196,7 @@ tokens.
 <p>程序源代码中的某些字符通常不表达任何含义，比如：空白字符、注释。词法扫描器通常简单地忽略它们，仅保留那些有意义的词法单元。</p><img src="image/a-map-of-the-territory/tokens.png" alt="[var] [average] [=] [(] [min] [+] [max] [)] [/] [2] [;]" /><!--
 --- Parsing
 -->
-<h3><a href="#语法分析（parsing）" name="语法分析（parsing）"><small>2&#8202;.&#8202;1&#8202;.&#8202;2</small>语法分析（Parsing）</a></h3><!--
+<h3><a href="#语法分析（parsing）" id="语法分析（parsing）"><small>2&#8202;.&#8202;1&#8202;.&#8202;2</small>语法分析（Parsing）</a></h3><!--
 The next step is **parsing**. This is where our syntax gets a **grammar** -- the
 ability to compose larger expressions and statements out of smaller parts. Did
 you ever diagram sentences in English class? If so, you've done what a parser
@@ -247,7 +227,7 @@ do by reporting **syntax errors**.
 <p>后来，研究者们发现，人类所使用的语言实在太过复杂，仅能处理严谨语法的语法解析器处理不了如此复杂的人类语言。但是语法解析器非常适合用来处理语法严谨、毫无歧义的程序语言，毕竟，程序语言可比人类语言简单多了。但即使是使用语法如此简单的程序语言，我们程序员还是会在写代码时犯各式各样的语法错误。所以语法解析器的职责又多了一条：报告程序员们所犯的<strong>语法错误</strong>，让他们改正。</p><!--
 --- Static analysis
 -->
-<h3><a href="#静态分析（static-analysis）" name="静态分析（static-analysis）"><small>2&#8202;.&#8202;1&#8202;.&#8202;3</small>静态分析（Static analysis）</a></h3><!--
+<h3><a href="#静态分析（static-analysis）" id="静态分析（static-analysis）"><small>2&#8202;.&#8202;1&#8202;.&#8202;3</small>静态分析（Static analysis）</a></h3><!--
 The first two stages are pretty similar across all implementations. Now, the
 individual characteristics of each language start coming into play. At this
 point, we know the syntactic structure of the code -- things like which
@@ -317,7 +297,7 @@ company lumped those new phases into the charming but spatially paradoxical name
 <p>到目前为止，我们所讲的词法分析、语法分析、语义分析三阶段，通常被归类为编译 <strong>“前端（Front end）”</strong> 。你也许会想，那之后的流程都是编译 <strong>“后端（Back end）”</strong> 了，可惜不是。在过去那个只有“前端”和“后端”的年代，编译器比现在简单许多。后来，程序语言研究者们在“前端”和“后端”之间插入了几个新阶段。威廉·伍尔夫教授和一众大企业将这些新阶段汇总打包，遵照古老的命名习惯，起了个魅力十足但又稍显矛盾的名字：<strong>“中端（Middle end）”</strong> 。</p><!--
 --- Intermediate representations
 -->
-<h3><a href="#中间代码表示（intermediate-representations）" name="中间代码表示（intermediate-representations）"><small>2&#8202;.&#8202;1&#8202;.&#8202;4</small>中间代码表示（Intermediate representations）</a></h3><!--
+<h3><a href="#中间代码表示（intermediate-representations）" id="中间代码表示（intermediate-representations）"><small>2&#8202;.&#8202;1&#8202;.&#8202;4</small>中间代码表示（Intermediate representations）</a></h3><!--
 You can think of the compiler as a pipeline where each stage's job is to
 organize the data representing the user's code in a way that makes the next
 stage simpler to implement. The front end of the pipeline is specific to the
@@ -365,7 +345,7 @@ makes the semantics more apparent...
 <p>另一个促使我们将代码转化为 IR 中间代码表示的重要原因是：使用 IR 中间代码可以使程序语义变得更加清晰<span class="ellipse">&thinsp;.&thinsp;.&thinsp;.&nbsp;</span></p><!--
 --- Optimization
 -->
-<h3><a href="#代码优化（optimization）" name="代码优化（optimization）"><small>2&#8202;.&#8202;1&#8202;.&#8202;5</small>代码优化（Optimization）</a></h3><!--
+<h3><a href="#代码优化（optimization）" id="代码优化（optimization）"><small>2&#8202;.&#8202;1&#8202;.&#8202;5</small>代码优化（Optimization）</a></h3><!--
 Once we understand what the user's program means, we are free to swap it out
 with a different program that has the *same semantics* but implements them more
 efficiently -- we can **optimize** it.
@@ -376,14 +356,12 @@ the exact same value, we can do the evaluation at compile time and replace the
 code for the expression with its result. If the user typed in this:
 -->
 <p>一个简单的例子就是<strong>常量折叠（Constant Folding）</strong>：如果某些表达式求值始终为常量，我们便可以在编译时用常数值替换整个表达式。如以下用户代码：</p>
-<div class="codehilite"><pre>
-<span class="i">pennyArea</span> = <span class="n">3.14159</span> * (<span class="n">0.75</span> / <span class="n">2</span>) * (<span class="n">0.75</span> / <span class="n">2</span>);
+<div class="codehilite"><pre><span class="i">pennyArea</span> = <span class="n">3.14159</span> * (<span class="n">0.75</span> / <span class="n">2</span>) * (<span class="n">0.75</span> / <span class="n">2</span>);
 </pre></div><!--
 we could do all of that arithmetic in the compiler and change the code to:
 -->
 <p>我们可以在编译时完成整个表达式的算术运算，将代码替换为：</p>
-<div class="codehilite"><pre>
-<span class="i">pennyArea</span> = <span class="n">0.4417860938</span>;
+<div class="codehilite"><pre><span class="i">pennyArea</span> = <span class="n">0.4417860938</span>;
 </pre></div><!--
 Optimization is a huge part of the programming language business. Many language
 hackers spend their entire careers here, squeezing every drop of performance
@@ -407,7 +385,7 @@ replacement of aggregates", "dead code elimination", and "loop unrolling".
 </aside><!--
 --- Code generation
 -->
-<h3><a href="#代码生成（code-generation）" name="代码生成（code-generation）"><small>2&#8202;.&#8202;1&#8202;.&#8202;6</small>代码生成（Code generation）</a></h3><!--
+<h3><a href="#代码生成（code-generation）" id="代码生成（code-generation）"><small>2&#8202;.&#8202;1&#8202;.&#8202;6</small>代码生成（Code generation）</a></h3><!--
 We have applied all of the optimizations we can think of to the user's program.
 The last step is converting it to a form the machine can actually run. In other
 words, **generating code** (or **code gen**), where "code" here usually refers to
@@ -460,7 +438,7 @@ like a dense, binary encoding of the language's low-level operations.
 <p>虚拟字节码指令通常被设计为更加贴近程序语言语义，而不与任何一种计算机体系结构强绑定，这样一来就可以避开体系结构的历史遗留问题了。你可以将字节码想象成是程序语言基本操作的一种紧凑二进制编码形式。</p><!--
 --- Virtual machine
 -->
-<h3><a href="#虚拟机（virtual-machine）" name="虚拟机（virtual-machine）"><small>2&#8202;.&#8202;1&#8202;.&#8202;7</small>虚拟机（Virtual machine）</a></h3><!--
+<h3><a href="#虚拟机（virtual-machine）" id="虚拟机（virtual-machine）"><small>2&#8202;.&#8202;1&#8202;.&#8202;7</small>虚拟机（Virtual machine）</a></h3><!--
 If your compiler produces bytecode, your work isn't over once that's done. Since
 there is no chip that speaks that bytecode, it's your job to translate. Again,
 you have two options. You can write a little mini-compiler for each target
@@ -509,7 +487,7 @@ or **process virtual machines** if you want to be unambiguous.
 </aside><!--
 --- Runtime
 -->
-<h3><a href="#运行时（runtime）" name="运行时（runtime）"><small>2&#8202;.&#8202;1&#8202;.&#8202;8</small>运行时（Runtime）</a></h3><!--
+<h3><a href="#运行时（runtime）" id="运行时（runtime）"><small>2&#8202;.&#8202;1&#8202;.&#8202;8</small>运行时（Runtime）</a></h3><!--
 We have finally hammered the user's program into a form that we can execute. The
 last step is running it. If we compiled it to machine code, we simply tell the
 operating system to load the executable and off it goes. If we compiled it to
@@ -535,7 +513,7 @@ JavaScript work.
 <p>所有这些事情都会在程序运行的时候发生，所以被称为<strong>运行时（Runtime）</strong>。完全编译到二进制机器码的程序设计语言会将语言运行时的代码实现直接插入到编译后的可执行程序之中。Go 语言便是如此，每一个编译后的 Go 程序都被嵌入了一份完整的 Go 运行时拷贝。如果程序在解释器或虚拟机中运行，那么语言运行时就存在于解释器或虚拟机中，大部分虚拟机语言的具体实现都是如此：Java、Python、JavaScript。</p><!--
 -- Shortcuts and Alternate Routes
 -->
-<h2><a href="#捷径与可选道路" name="捷径与可选道路"><small>2&#8202;.&#8202;2</small>捷径与可选道路</a></h2><!--
+<h2><a href="#捷径与可选道路" id="捷径与可选道路"><small>2&#8202;.&#8202;2</small>捷径与可选道路</a></h2><!--
 That's the long path covering every possible phase you might implement. Many
 languages do walk the entire route, but there are a few shortcuts and alternate
 paths.
@@ -543,7 +521,7 @@ paths.
 <p>实现一门程序设计语言真是一条漫长的道路，你需要走过程序编译的每一个阶段。许多程序设计语言完完整整地走过了整条道路，但这其中也有些捷径和可选道路存在。</p><!--
 --- Single-pass compilers
 -->
-<h3><a href="#单遍扫描编译器（single-pass-compilers）" name="单遍扫描编译器（single-pass-compilers）"><small>2&#8202;.&#8202;2&#8202;.&#8202;1</small>单遍扫描编译器（Single-pass compilers）</a></h3><!--
+<h3><a href="#单遍扫描编译器（single-pass-compilers）" id="单遍扫描编译器（single-pass-compilers）"><small>2&#8202;.&#8202;2&#8202;.&#8202;1</small>单遍扫描编译器（Single-pass compilers）</a></h3><!--
 Some simple compilers interleave parsing, analysis, and code generation so that
 they produce output code directly in the parser, without ever allocating any
 syntax trees or other IRs. These <span name="sdt">**single-pass
@@ -573,7 +551,7 @@ call to the later function.
 <p>Pascal 语言与 C 语言就是采用了单遍扫描的设计方式。在 Pascal 与 C 诞生的那个年代，计算机内存极其宝贵，以至于编译器甚至都无法将一份<em>源代码文件</em>完整地载入到内存中，更不用说整支程序了。这就是为什么 Pascal 语法要求类型声明必须出现在程序块开头的位置。这也是为什么 C 语言无法调用代码下方定义的函数，除非做前向声明（forward declaration）显式告诉编译器此处调用函数的必要信息，编译器才能正确地生成出代码。</p><!--
 --- Tree-walk interpreters
 -->
-<h3><a href="#树遍历解释器（tree-walk-interpreters）" name="树遍历解释器（tree-walk-interpreters）"><small>2&#8202;.&#8202;2&#8202;.&#8202;2</small>树遍历解释器（Tree-walk interpreters）</a></h3><!--
+<h3><a href="#树遍历解释器（tree-walk-interpreters）" id="树遍历解释器（tree-walk-interpreters）"><small>2&#8202;.&#8202;2&#8202;.&#8202;2</small>树遍历解释器（Tree-walk interpreters）</a></h3><!--
 Some programming languages begin executing code right after parsing it to an AST
 (with maybe a bit of static analysis applied). To run the program, the
 interpreter traverses the syntax tree one branch and leaf at a time, evaluating
@@ -598,7 +576,7 @@ bytecode virtual machine.
 </aside><!--
 --- Transpilers
 -->
-<h3><a href="#转译器（transpilers）" name="转译器（transpilers）"><small>2&#8202;.&#8202;2&#8202;.&#8202;3</small>转译器（Transpilers）</a></h3><!--
+<h3><a href="#转译器（transpilers）" id="转译器（transpilers）"><small>2&#8202;.&#8202;2&#8202;.&#8202;3</small>转译器（Transpilers）</a></h3><!--
 <span name="gary">Writing</span> a complete back end for a language can be a lot
 of work. If you have some existing generic IR to target, you could bolt your
 front end onto that. Otherwise, it seems like you're stuck. But what if you
@@ -681,7 +659,7 @@ existing compilation pipeline, and you're good to go.
 <p>不管哪种方式，接下来，你就可以让转译器生成的目标语言代码走过目标语言已存在的编译流程，拿到最终的可执行程序。</p><!--
 --- Just-in-time compilation
 -->
-<h3><a href="#即时编译（just-in-time-compilation）" name="即时编译（just-in-time-compilation）"><small>2&#8202;.&#8202;2&#8202;.&#8202;4</small>即时编译（Just-in-time compilation）</a></h3><!--
+<h3><a href="#即时编译（just-in-time-compilation）" id="即时编译（just-in-time-compilation）"><small>2&#8202;.&#8202;2&#8202;.&#8202;4</small>即时编译（Just-in-time compilation）</a></h3><!--
 This last one is less a shortcut and more a dangerous alpine scramble best
 reserved for experts. The fastest way to execute code is by compiling it to
 machine code, but you might not know what architecture your end user's machine
@@ -710,7 +688,7 @@ This is, of course, exactly where the HotSpot JVM gets its name.
 </aside><!--
 -- Compilers and Interpreters
 -->
-<h2><a href="#编译器与解释器" name="编译器与解释器"><small>2&#8202;.&#8202;3</small>编译器与解释器</a></h2><!--
+<h2><a href="#编译器与解释器" id="编译器与解释器"><small>2&#8202;.&#8202;3</small>编译器与解释器</a></h2><!--
 Now that I've stuffed your head with a dictionary's worth of programming
 language jargon, we can finally address a question that's plagued coders since
 time immemorial: What's the difference between a compiler and an interpreter?
@@ -806,7 +784,7 @@ interpreters, we'll cover some compilation too.
 <p>我们的第二枚解释器也将位于图中交集区域。在内部将程序源代码编译为字节码，再通过虚拟机解释执行字节码。本书主要讲解解释器，但也会覆盖到部分编译相关的内容。</p><!--
 -- Our Journey
 -->
-<h2><a href="#我们的旅程" name="我们的旅程"><small>2&#8202;.&#8202;4</small>我们的旅程</a></h2><!--
+<h2><a href="#我们的旅程" id="我们的旅程"><small>2&#8202;.&#8202;4</small>我们的旅程</a></h2><!--
 That's a lot to take in all at once. Don't worry. This isn't the chapter where
 you're expected to *understand* all of these pieces and parts. I just want you
 to know that they are out there and roughly how they fit together.
@@ -830,7 +808,7 @@ Henceforth, I promise to tone down the whole mountain metaphor thing.
 <div class="challenges"><!--
 -- Challenges
 -->
-<h2><a href="#挑战" name="挑战"><small>2&#8202;.&#8202;5</small>挑战</a></h2><!--
+<h2><a href="#挑战" id="挑战"><small>2&#8202;.&#8202;5</small>挑战</a></h2><!--
 1. Pick an open source implementation of a language you like. Download the
    source code and poke around in it. Try to find the code that implements the
    scanner and parser. Are they handwritten, or generated using tools like
@@ -858,7 +836,7 @@ Henceforth, I promise to tone down the whole mountain metaphor thing.
 <a href="the-lox-language.html" class="next">
   Next Chapter: &ldquo;The Lox Language&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 

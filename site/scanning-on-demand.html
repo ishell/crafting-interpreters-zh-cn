@@ -32,9 +32,8 @@
 
 <!-- <div class="scrim"></div> -->
 <nav class="wide">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="contents">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Scanning on Demand<small>16</small></a></h3>
 
 <ul>
@@ -54,7 +53,7 @@
 </nav>
 
 <nav class="narrow">
-<a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+<a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
 <a href="a-virtual-machine.html" title="A Virtual Machine" class="prev">←</a>
 <a href="compiling-expressions.html" title="Compiling Expressions" class="next">→</a>
 </nav>
@@ -62,9 +61,8 @@
 <div class="page">
 <div class="nav-wrapper">
 <nav class="floating">
-  <a href="/"><img src="image/logotype-small.png" title="Crafting Interpreters"></a>
+  <a href="/"><img src="image/logotype.png" title="Crafting Interpreters"></a>
   <div class="expandable">
-<!-- If there is a part, it must be a chapter within a part. -->
 <h3><a href="#top">Scanning on Demand<small>16</small></a></h3>
 
 <ul>
@@ -90,42 +88,22 @@
   <div class="number">16</div>
   <h1>Scanning on Demand</h1>
 
-<div class="sign-up closable">
-  <h1>This book is a work in progress!</h1>
-    <span class="dismiss">&times;</span>
-    <p>If you see a mistake, find something unclear, or have a suggestion, please <a href="https://github.com/munificent/craftinginterpreters/issues" target="_blank">let me know</a>. To follow its progress, please join the mailing list:</p>
-
-  <!-- Begin MailChimp Signup Form -->
-  <div id="mc_embed_signup">
-  <form action="//gameprogrammingpatterns.us7.list-manage.com/subscribe/post?u=0952ca43ed2536d6717766b88&amp;id=6e96334109" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-    <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Your email address" required>
-    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_0952ca43ed2536d6717766b88_6e96334109" tabindex="-1" value=""></div>
-    <input type="submit" value="Sign me up!" name="subscribe" id="mc-embedded-subscribe" class="button">
-  </form>
-  </div>
-  <!--End mc_embed_signup-->
-  <p class="small">(I post about once a month. Don&#8217;t worry, I won&#8217;t spam you.)</p>
-</div>
-
-<h1><a href="#按需词法分析" name="按需词法分析"><small>16&#8202;.&#8202;0</small>按需词法分析</a></h1>
+<h1><a href="#按需词法分析" id="按需词法分析"><small>16&#8202;.&#8202;0</small>按需词法分析</a></h1>
 <blockquote>
 <p>文学，不过是仅凭二十六个语音符号、十个阿拉伯数字、以及约八个标点符号，所进行的别具一格的横向排列。</p>
 <p><cite>库尔特·冯内古特，<em>《与上帝握手：一场关于写作的对话》</em></cite></p>
 </blockquote>
 <p>我们这第二款解释器 clox 共有三个阶段——扫描器、编译器、虚拟机。一种数据结构将相邻两阶段衔接起来。token 从扫描器流向编译器，字节码块则从编译器流向 VM。我们先前从 <a href="chunks-of-bytecode.html">chunk</a> 与 <a href="a-virtual-machine.html">VM</a> 开始、从<strong>后面</strong>启程。现在，我们要折返至起点，打造一个能产出 token 的扫描器。在<a href="compiling-expressions.html">下一章</a>，我们则会用字节码编译器将这两端缝合起来。</p><img src="image/scanning-on-demand/pipeline.png" alt="源代码 → 扫描器 → token → 编译器 → 字节码块 → VM。" />
 <p>我承认，本章算不上本书里最精彩的一章。既然有了同一门语言的两种实现，免不了会有一些重复。我确实悄悄塞进了几处与 jlox 扫描器不尽相同的趣味差异。请继续读下去，看看它们具体是些什么。</p>
-<h2><a href="#启动解释器" name="启动解释器"><small>16&#8202;.&#8202;1</small>启动解释器</a></h2>
+<h2><a href="#启动解释器" id="启动解释器"><small>16&#8202;.&#8202;1</small>启动解释器</a></h2>
 <p>既然我们正在构建前端，clox 终于可以跑得像一款真正的解释器了。再也不用手工拼凑字节码块。是时候写一个 REPL 与脚本加载器了。拆掉 <code>main()</code> 中的大部分代码，换成下面的内容：</p>
-<div class="codehilite"><pre class="insert-before">
-int main(int argc, const char* argv[]) {
+<div class="codehilite"><pre class="insert-before">int main(int argc, const char* argv[]) {
   initVM();
 
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>main</em>()<br>
 replace 26 lines</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">argc</span> == <span class="n">1</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">argc</span> == <span class="n">1</span>) {
     <span class="i">repl</span>();
   } <span class="k">else</span> <span class="k">if</span> (<span class="i">argc</span> == <span class="n">2</span>) {
     <span class="i">runFile</span>(<span class="i">argv</span>[<span class="n">1</span>]);
@@ -135,8 +113,7 @@ replace 26 lines</div>
   }
 
   <span class="i">freeVM</span>();
-</pre><pre class="insert-after">
-  return 0;
+</pre><pre class="insert-after">  return 0;
 }
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>main</em>(), replace 26 lines</div>
@@ -148,19 +125,16 @@ replace 26 lines</div>
 <p>我们需要若干系统头文件，索性一次性都 include 进来。</p>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 add to top of file</div>
-<pre class="insert">
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre class="insert"><span class="a">#include &lt;stdio.h&gt;</span>
 <span class="a">#include &lt;stdlib.h&gt;</span>
 <span class="a">#include &lt;string.h&gt;</span>
 
-</pre><pre class="insert-after">
-#include &quot;common.h&quot;
+</pre><pre class="insert-after">#include &quot;common.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, add to top of file</div>
 
 <p>接下来，让 REPL 真正跑起来。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;vm.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;vm.h&quot;
 </pre><div class="source-file"><em>main.c</em></div>
 <pre class="insert">
 
@@ -184,8 +158,7 @@ add to top of file</div>
 <p>真正的工作发生在 <code>interpret()</code> 之中。我们很快就会谈到它，但先让我们处理一下脚本加载。</p>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 add after <em>repl</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">runFile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">path</span>) {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">runFile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">path</span>) {
   <span class="t">char</span>* <span class="i">source</span> = <span class="i">readFile</span>(<span class="i">path</span>);
   <span class="t">InterpretResult</span> <span class="i">result</span> = <span class="i">interpret</span>(<span class="i">source</span>);
   <span class="i">free</span>(<span class="i">source</span>);<span name="owner"> </span>
@@ -204,8 +177,7 @@ add after <em>repl</em>()</div>
 </aside>
 <div class="codehilite"><div class="source-file"><em>main.c</em><br>
 add after <em>repl</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">char</span>* <span class="i">readFile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">path</span>) {
+<pre><span class="k">static</span> <span class="t">char</span>* <span class="i">readFile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">path</span>) {
   <span class="a">FILE</span>* <span class="i">file</span> = <span class="i">fopen</span>(<span class="i">path</span>, <span class="s">&quot;rb&quot;</span>);
 
   <span class="i">fseek</span>(<span class="i">file</span>, <span class="n">0L</span>, <span class="a">SEEK_END</span>);
@@ -230,12 +202,10 @@ add after <em>repl</em>()</div>
 <p>这样便万事大吉了，对吧？还没完。C 标准库里的这些函数调用——与大多数一样——都有可能失败。若是 Java，那些失败会以异常的形式抛出，并自动一路展开栈，而我们的确<strong>并不</strong>真的需要处理它们。在 C 中，若我们不去检查它们，它们就会被悄无声息地忽略掉。</p>
 <p>本书<strong>其实</strong>并不是一本关于良好 C 编程实践的书，但我实在不愿助长坏习惯，所以咱们还是老老实实地处理一下错误吧。这对我们有好处，就像吃蔬菜或用牙线一样。</p>
 <p>幸运的是，如果真的发生了失败，我们也不需要搞什么特别精巧的花活儿。如果我们<strong>无法</strong>正确地读取用户的脚本，事实上我们也<strong>只能</strong>告诉用户一下，然后优雅地退出整个解释器。首先，我们可能会<strong>打不开</strong>文件。</p>
-<div class="codehilite"><pre class="insert-before">
-  FILE* file = fopen(path, &quot;rb&quot;);
+<div class="codehilite"><pre class="insert-before">  FILE* file = fopen(path, &quot;rb&quot;);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>readFile</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">file</span> == <span class="a">NULL</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">file</span> == <span class="a">NULL</span>) {
     <span class="i">fprintf</span>(<span class="i">stderr</span>, <span class="s">&quot;Could not open file </span><span class="e">\&quot;</span><span class="s">%s</span><span class="e">\&quot;</span><span class="s">.</span><span class="e">\n</span><span class="s">&quot;</span>, <span class="i">path</span>);
     <span class="i">exit</span>(<span class="n">74</span>);
   }
@@ -247,35 +217,29 @@ in <em>readFile</em>()</div>
 
 <p>这种情况在文件不存在或用户没有访问权限时便会发生。它相当常见——人总会输错路径。</p>
 <p>下面这种情况就更罕见了：</p>
-<div class="codehilite"><pre class="insert-before">
-  char* buffer = (char*)malloc(fileSize + 1);
+<div class="codehilite"><pre class="insert-before">  char* buffer = (char*)malloc(fileSize + 1);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>readFile</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">buffer</span> == <span class="a">NULL</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">buffer</span> == <span class="a">NULL</span>) {
     <span class="i">fprintf</span>(<span class="i">stderr</span>, <span class="s">&quot;Not enough memory to read </span><span class="e">\&quot;</span><span class="s">%s</span><span class="e">\&quot;</span><span class="s">.</span><span class="e">\n</span><span class="s">&quot;</span>, <span class="i">path</span>);
     <span class="i">exit</span>(<span class="n">74</span>);
   }
 
-</pre><pre class="insert-after">
-  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+</pre><pre class="insert-after">  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>readFile</em>()</div>
 
 <p>倘若我们<strong>连</strong>分配足够的内存以读取 Lox 脚本都做不到，那用户大概有更大的问题要头疼，但我们仍应尽自己所能通知一声。</p>
 <p>最后，读取本身<strong>也</strong>可能失败。</p>
-<div class="codehilite"><pre class="insert-before">
-  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+<div class="codehilite"><pre class="insert-before">  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
 </pre><div class="source-file"><em>main.c</em><br>
 in <em>readFile</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">bytesRead</span> &lt; <span class="i">fileSize</span>) {
+<pre class="insert">  <span class="k">if</span> (<span class="i">bytesRead</span> &lt; <span class="i">fileSize</span>) {
     <span class="i">fprintf</span>(<span class="i">stderr</span>, <span class="s">&quot;Could not read file </span><span class="e">\&quot;</span><span class="s">%s</span><span class="e">\&quot;</span><span class="s">.</span><span class="e">\n</span><span class="s">&quot;</span>, <span class="i">path</span>);
     <span class="i">exit</span>(<span class="n">74</span>);
   }
 
-</pre><pre class="insert-after">
-  buffer[bytesRead] = '\0';
+</pre><pre class="insert-after">  buffer[bytesRead] = '\0';
 </pre></div>
 <div class="source-file-narrow"><em>main.c</em>, in <em>readFile</em>()</div>
 
@@ -283,17 +247,14 @@ in <em>readFile</em>()</div>
 <aside name="printf">
 <p>哪怕是大名鼎鼎的 <code>printf()</code> <strong>也</strong>可能失败。对的。你<strong>几次</strong>处理过<strong>那个</strong>错误？</p>
 </aside>
-<h3><a href="#打开编译流水线" name="打开编译流水线"><small>16&#8202;.&#8202;1&#8202;.&#8202;1</small>打开编译流水线</a></h3>
+<h3><a href="#打开编译流水线" id="打开编译流水线"><small>16&#8202;.&#8202;1&#8202;.&#8202;1</small>打开编译流水线</a></h3>
 <p>我们已然拿到一份 Lox 源代码字符串，所以现在我们准备好搭建<strong>扫描—编译—执行</strong>流水线了。它由 <code>interpret()</code> 驱动。眼下，那个函数跑的还是我们硬编码的那段测试 chunk。让我们把它改写成更接近其最终形态的样子。</p>
-<div class="codehilite"><pre class="insert-before">
-void freeVM();
+<div class="codehilite"><pre class="insert-before">void freeVM();
 </pre><div class="source-file"><em>vm.h</em><br>
 function <em>interpret</em>()<br>
 replace 1 line</div>
-<pre class="insert">
-<span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>);
-</pre><pre class="insert-after">
-void push(Value value);
+<pre class="insert"><span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>);
+</pre><pre class="insert-after">void push(Value value);
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, function <em>interpret</em>(), replace 1 line</div>
 
@@ -301,31 +262,25 @@ void push(Value value);
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
 function <em>interpret</em>()<br>
 replace 4 lines</div>
-<pre class="insert">
-<span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>) {
+<pre class="insert"><span class="t">InterpretResult</span> <span class="i">interpret</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>) {
   <span class="i">compile</span>(<span class="i">source</span>);
   <span class="k">return</span> <span class="a">INTERPRET_OK</span>;
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, function <em>interpret</em>(), replace 4 lines</div>
 
 <p>我们<strong>还</strong>不会在本章中<strong>真正</strong>搭建编译器，但我们可以先勾勒出它的结构。它栖身于一个新的模块。</p>
-<div class="codehilite"><pre class="insert-before">
-#include &quot;common.h&quot;
+<div class="codehilite"><pre class="insert-before">#include &quot;common.h&quot;
 </pre><div class="source-file"><em>vm.c</em></div>
-<pre class="insert">
-<span class="a">#include &quot;compiler.h&quot;</span>
-</pre><pre class="insert-after">
-#include &quot;debug.h&quot;
+<pre class="insert"><span class="a">#include &quot;compiler.h&quot;</span>
+</pre><pre class="insert-after">#include &quot;debug.h&quot;
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
 <p>目前，该模块里只声明了一个函数：</p>
 <div class="codehilite"><div class="source-file"><em>compiler.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_compiler_h</span>
+<pre><span class="a">#ifndef clox_compiler_h</span>
 <span class="a">#define clox_compiler_h</span>
 
 <span class="t">void</span> <span class="i">compile</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>);
@@ -338,8 +293,7 @@ create new file</div>
 <p>编译的第一阶段是扫描——也就是我们本章<strong>正在</strong>做的事——所以眼下编译器所做的，不过是把这一切搭起来。</p>
 <div class="codehilite"><div class="source-file"><em>compiler.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre><span class="a">#include &lt;stdio.h&gt;</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
 <span class="a">#include &quot;compiler.h&quot;</span>
@@ -352,12 +306,11 @@ create new file</div>
 <div class="source-file-narrow"><em>compiler.c</em>, create new file</div>
 
 <p>这在后续章节里自然会逐渐成长。</p>
-<h3><a href="#扫描器扫描" name="扫描器扫描"><small>16&#8202;.&#8202;1&#8202;.&#8202;2</small>扫描器扫描</a></h3>
+<h3><a href="#扫描器扫描" id="扫描器扫描"><small>16&#8202;.&#8202;1&#8202;.&#8202;2</small>扫描器扫描</a></h3>
 <p>在我们开始着手写真正有用的代码之前，还剩几脚脚手架要搭。先来一个新头文件：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.h</em><br>
 create new file</div>
-<pre>
-<span class="a">#ifndef clox_scanner_h</span>
+<pre><span class="a">#ifndef clox_scanner_h</span>
 <span class="a">#define clox_scanner_h</span>
 
 <span class="t">void</span> <span class="i">initScanner</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>);
@@ -369,8 +322,7 @@ create new file</div>
 <p>以及它对应的实现：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 create new file</div>
-<pre>
-<span class="a">#include &lt;stdio.h&gt;</span>
+<pre><span class="a">#include &lt;stdio.h&gt;</span>
 <span class="a">#include &lt;string.h&gt;</span>
 
 <span class="a">#include &quot;common.h&quot;</span>
@@ -396,8 +348,7 @@ create new file</div>
 <p>既然我们有一些状态，便应该初始化它。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after variable <em>scanner</em></div>
-<pre>
-<span class="t">void</span> <span class="i">initScanner</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>) {
+<pre><span class="t">void</span> <span class="i">initScanner</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">source</span>) {
   <span class="i">scanner</span>.<span class="i">start</span> = <span class="i">source</span>;
   <span class="i">scanner</span>.<span class="i">current</span> = <span class="i">source</span>;
   <span class="i">scanner</span>.<span class="i">line</span> = <span class="n">1</span>;
@@ -406,16 +357,14 @@ add after variable <em>scanner</em></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after variable <em>scanner</em></div>
 
 <p>我们从第一行的第一个字符开始，正如赛跑选手蹲在起跑线上一般。</p>
-<h2><a href="#一次一个词法单元" name="一次一个词法单元"><small>16&#8202;.&#8202;2</small>一次一个词法单元</a></h2>
+<h2><a href="#一次一个词法单元" id="一次一个词法单元"><small>16&#8202;.&#8202;2</small>一次一个词法单元</a></h2>
 <p>在 jlox 中，开跑的枪声一响，扫描器便冲上前去，<strong>急切地</strong>将整个程序扫描一遍，返回一份 token 列表。在 clox 中这会是个挑战。我们需要某种可生长的数组或列表来存放 token。我们需要管理 token 的分配与释放，还有那一容器本身。代码量不少，内存的折腾也很多。</p>
 <p>在任何时刻，编译器<strong>仅</strong>需要一两个 token——记住我们的文法只需要一个 token 的前瞻——所以我们并不需要同时把<strong>所有</strong> token 都留在手边。最简单的解法是：不到编译器需要<strong>一个</strong> token 时，我们<strong>不</strong>扫描它。扫描器提供 token 时，以<strong>值</strong>返回——它<strong>无需</strong>动态分配任何东西——只需在 C 栈上传来传去即可。</p>
 <p>可惜，我们还没有一个能向扫描器索要 token 的编译器，所以扫描器此刻只能坐在一旁无所事事。为了让它动起来，我们就先写一点临时代码来驱动它。</p>
-<div class="codehilite"><pre class="insert-before">
-  initScanner(source);
+<div class="codehilite"><pre class="insert-before">  initScanner(source);
 </pre><div class="source-file"><em>compiler.c</em><br>
 in <em>compile</em>()</div>
-<pre class="insert">
-  <span class="t">int</span> <span class="i">line</span> = -<span class="n">1</span>;
+<pre class="insert">  <span class="t">int</span> <span class="i">line</span> = -<span class="n">1</span>;
   <span class="k">for</span> (;;) {
     <span class="t">Token</span> <span class="i">token</span> = <span class="i">scanToken</span>();
     <span class="k">if</span> (<span class="i">token</span>.<span class="i">line</span> != <span class="i">line</span>) {
@@ -428,8 +377,7 @@ in <em>compile</em>()</div>
 
     <span class="k">if</span> (<span class="i">token</span>.<span class="i">type</span> == <span class="a">TOKEN_EOF</span>) <span class="k">break</span>;
   }
-</pre><pre class="insert-after">
-}
+</pre><pre class="insert-after">}
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, in <em>compile</em>()</div>
 
@@ -437,8 +385,7 @@ in <em>compile</em>()</div>
 <p>格式串里那个 <code>%.*s</code> 是个小巧的特性。通常，你会在格式串里放一个数字，以设定输出精度——即要显示的字符数。使用 <code>*</code> 则允许你将精度作为参数传入。于是那一句 <code>printf()</code> 调用便打印出位于 <code>token.start</code> 的字符串的头 <code>token.length</code> 个字符。我们必须以这种方式限制长度，因为那个词素指向原始的源代码字符串，其末尾<strong>没有</strong>终止符。</p>
 </aside>
 <p>这会无限循环。每一轮循环，它都扫描一个 token 并将其打印出来。当它撞上一个特殊的&ldquo;文件末尾&rdquo; token 或一个错误时，它会停下来。举例而言，若我们让解释器跑这段程序：</p>
-<div class="codehilite"><pre>
-<span class="k">print</span> <span class="n">1</span> + <span class="n">2</span>;
+<div class="codehilite"><pre><span class="k">print</span> <span class="n">1</span> + <span class="n">2</span>;
 </pre></div>
 <p>它会打印出：</p>
 <div class="codehilite"><pre>   1 31 'print'
@@ -453,12 +400,10 @@ in <em>compile</em>()</div>
 <p>是啊，token 类型的原始索引<strong>并不</strong>怎么适合人类阅读，但 C 也就只能给我们这么多了。</p>
 </aside>
 <p>本章余下的目标，便是让那一坨代码真正跑起来——通过实现这个关键函数：</p>
-<div class="codehilite"><pre class="insert-before">
-void initScanner(const char* source);
+<div class="codehilite"><pre class="insert-before">void initScanner(const char* source);
 </pre><div class="source-file"><em>scanner.h</em><br>
 add after <em>initScanner</em>()</div>
-<pre class="insert">
-<span class="t">Token</span> <span class="i">scanToken</span>();
+<pre class="insert"><span class="t">Token</span> <span class="i">scanToken</span>();
 </pre><pre class="insert-after">
 
 #endif
@@ -466,8 +411,7 @@ add after <em>initScanner</em>()</div>
 <div class="source-file-narrow"><em>scanner.h</em>, add after <em>initScanner</em>()</div>
 
 <p>每次调用都会扫描并返回源代码中的下一个 token。一个 token 长这样：</p>
-<div class="codehilite"><pre class="insert-before">
-#define clox_scanner_h
+<div class="codehilite"><pre class="insert-before">#define clox_scanner_h
 </pre><div class="source-file"><em>scanner.h</em></div>
 <pre class="insert">
 
@@ -484,8 +428,7 @@ void initScanner(const char* source);
 <div class="source-file-narrow"><em>scanner.h</em></div>
 
 <p>它与 jlox 的 Token 类颇为相似。我们有一个枚举，用以识别 token 的种类——数字、标识符、<code>+</code> 运算符，等等。这个枚举与 jlox 中的那个几乎一模一样，所以我们就一口气把它敲完。</p>
-<div class="codehilite"><pre class="insert-before">
-#ifndef clox_scanner_h
+<div class="codehilite"><pre class="insert-before">#ifndef clox_scanner_h
 #define clox_scanner_h
 </pre><div class="source-file"><em>scanner.h</em></div>
 <pre class="insert">
@@ -524,12 +467,11 @@ typedef struct {
 <aside name="outlive">
 <p>我这么说并非要故作轻浮。我们确实需要考虑并确保那份源代码字符串——它诞生于遥远的 <code>main</code> 模块——拥有足够长的生命周期。这便是为何 <code>runFile()</code> 要等到 <code>interpret()</code> 执行完代码并返回<strong>之后</strong>才会释放那份字符串。</p>
 </aside>
-<h3><a href="#扫描-token" name="扫描-token"><small>16&#8202;.&#8202;2&#8202;.&#8202;1</small>扫描 token</a></h3>
+<h3><a href="#扫描-token" id="扫描-token"><small>16&#8202;.&#8202;2&#8202;.&#8202;1</small>扫描 token</a></h3>
 <p>我们已准备好去扫描一些 token 了。我们将一路搭出完整的实现，先从这段开始：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
-<pre>
-<span class="t">Token</span> <span class="i">scanToken</span>() {
+<pre><span class="t">Token</span> <span class="i">scanToken</span>() {
   <span class="i">scanner</span>.<span class="i">start</span> = <span class="i">scanner</span>.<span class="i">current</span>;
 
   <span class="k">if</span> (<span class="i">isAtEnd</span>()) <span class="k">return</span> <span class="i">makeToken</span>(<span class="a">TOKEN_EOF</span>);
@@ -545,8 +487,7 @@ add after <em>initScanner</em>()</div>
 <p>这个函数倚赖于几个辅助函数，其中大多数我们都已在 jlox 中见过。先是：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">isAtEnd</span>() {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">isAtEnd</span>() {
   <span class="k">return</span> *<span class="i">scanner</span>.<span class="i">current</span> == <span class="s">&#39;\0&#39;</span>;
 }
 </pre></div>
@@ -556,8 +497,7 @@ add after <em>initScanner</em>()</div>
 <p>为了创建一个 token，我们封装了一个类似构造器的小函数：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>isAtEnd</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Token</span> <span class="i">makeToken</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
+<pre><span class="k">static</span> <span class="t">Token</span> <span class="i">makeToken</span>(<span class="t">TokenType</span> <span class="i">type</span>) {
   <span class="t">Token</span> <span class="i">token</span>;
   <span class="i">token</span>.<span class="i">type</span> = <span class="i">type</span>;
   <span class="i">token</span>.<span class="i">start</span> = <span class="i">scanner</span>.<span class="i">start</span>;
@@ -571,8 +511,7 @@ add after <em>isAtEnd</em>()</div>
 <p>它借扫描器的 <code>start</code> 与 <code>current</code> 指针来截取 token 的词素。它设定几个其它显而易见的字段，然后返回该 token。它还有一个姐妹函数，用于返回错误 token。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>makeToken</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Token</span> <span class="i">errorToken</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
+<pre><span class="k">static</span> <span class="t">Token</span> <span class="i">errorToken</span>(<span class="k">const</span> <span class="t">char</span>* <span class="i">message</span>) {
   <span class="t">Token</span> <span class="i">token</span>;
   <span class="i">token</span>.<span class="i">type</span> = <span class="a">TOKEN_ERROR</span>;
   <span class="i">token</span>.<span class="i">start</span> = <span class="i">message</span>;
@@ -589,10 +528,9 @@ add after <em>makeToken</em>()</div>
 </aside>
 <p>两者之间唯一的区别在于，&ldquo;词素&ldquo;指向的是错误消息字符串本身，而非用户源代码中的位置。再说一遍，我们需要确保错误消息<strong>活得</strong>足够久，好让编译器能读到它。实际中，我们<strong>只</strong>会用 C 字符串字面量来调用这个函数。那些常量是永恒的，因此我们就安然无恙。</p>
 <p>至此，我们基本上拥有了一款针对<strong>词法文法为空</strong>的语言的扫描器。既然文法里没有任何产生式，那么<strong>每个</strong>字符都是错误。那可不是一款有趣的语言，所以我们来填充这些规则。</p>
-<h2><a href="#lox-的词法文法" name="lox-的词法文法"><small>16&#8202;.&#8202;3</small>Lox 的词法文法</a></h2>
+<h2><a href="#lox-的词法文法" id="lox-的词法文法"><small>16&#8202;.&#8202;3</small>Lox 的词法文法</a></h2>
 <p>最简单的 token 仅有一个字符。识别它们的方式如下：</p>
-<div class="codehilite"><pre class="insert-before">
-  if (isAtEnd()) return makeToken(TOKEN_EOF);
+<div class="codehilite"><pre class="insert-before">  if (isAtEnd()) return makeToken(TOKEN_EOF);
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>scanToken</em>()</div>
 <pre class="insert">
@@ -621,8 +559,7 @@ in <em>scanToken</em>()</div>
 <p>我们从源代码中读取下一个字符，然后老老实实地做一个 switch，看看它是否与 Lox 中的某个单字符词素匹配。为了读取下一个字符，我们使用一个<strong>新的</strong>辅助函数，它消费当下的字符并将其返回。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>isAtEnd</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">char</span> <span class="i">advance</span>() {
+<pre><span class="k">static</span> <span class="t">char</span> <span class="i">advance</span>() {
   <span class="i">scanner</span>.<span class="i">current</span>++;
   <span class="k">return</span> <span class="i">scanner</span>.<span class="i">current</span>[-<span class="n">1</span>];
 }
@@ -630,12 +567,10 @@ add after <em>isAtEnd</em>()</div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>isAtEnd</em>()</div>
 
 <p>接下来是那些双字符的标点 token，比如 <code>!=</code> 与 <code>&gt;=</code>。每个这样的 token 还各自对应一个单字符 token。这意味着，当我们看到像 <code>!</code> 这样的字符时，在我们看到下一个字符<strong>之前</strong>，我们并不知道我们是身处一个 <code>!</code> token 之中还是一个 <code>!=</code> 之中。我们处理这种情况的方式是：</p>
-<div class="codehilite"><pre class="insert-before">
-    case '*': return makeToken(TOKEN_STAR);
+<div class="codehilite"><pre class="insert-before">    case '*': return makeToken(TOKEN_STAR);
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>scanToken</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="s">&#39;!&#39;</span>:
+<pre class="insert">    <span class="k">case</span> <span class="s">&#39;!&#39;</span>:
       <span class="k">return</span> <span class="i">makeToken</span>(
           <span class="i">match</span>(<span class="s">&#39;=&#39;</span>) ? <span class="a">TOKEN_BANG_EQUAL</span> : <span class="a">TOKEN_BANG</span>);
     <span class="k">case</span> <span class="s">&#39;=&#39;</span>:
@@ -647,8 +582,7 @@ in <em>scanToken</em>()</div>
     <span class="k">case</span> <span class="s">&#39;&gt;&#39;</span>:
       <span class="k">return</span> <span class="i">makeToken</span>(
           <span class="i">match</span>(<span class="s">&#39;=&#39;</span>) ? <span class="a">TOKEN_GREATER_EQUAL</span> : <span class="a">TOKEN_GREATER</span>);
-</pre><pre class="insert-after">
-  }
+</pre><pre class="insert-after">  }
 
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
@@ -657,8 +591,7 @@ in <em>scanToken</em>()</div>
 <p>这种&ldquo;有条件地消费第二个字符&ldquo;的逻辑被安放在这里：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>advance</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">match</span>(<span class="t">char</span> <span class="i">expected</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">match</span>(<span class="t">char</span> <span class="i">expected</span>) {
   <span class="k">if</span> (<span class="i">isAtEnd</span>()) <span class="k">return</span> <span class="k">false</span>;
   <span class="k">if</span> (*<span class="i">scanner</span>.<span class="i">current</span> != <span class="i">expected</span>) <span class="k">return</span> <span class="k">false</span>;
   <span class="i">scanner</span>.<span class="i">current</span>++;
@@ -669,25 +602,21 @@ add after <em>advance</em>()</div>
 
 <p>若当前字符正是所期望的那一个，我们便前移并返回 <code>true</code>。否则，我们返回 <code>false</code>，以表示并未匹配成功。</p>
 <p>至此，我们的扫描器支持<strong>所有</strong>类标点 token。在我们讨到那些更长的 token 之前，让我们先走一小段岔路，处理那些<strong>不属于</strong>任何 token 的字符。</p>
-<h3><a href="#空白" name="空白"><small>16&#8202;.&#8202;3&#8202;.&#8202;1</small>空白</a></h3>
+<h3><a href="#空白" id="空白"><small>16&#8202;.&#8202;3&#8202;.&#8202;1</small>空白</a></h3>
 <p>我们的扫描器需要处理空格、Tab 与换行，但这些字符<strong>不会</strong>成为任何 token 词素的一部分。我们<strong>本可以</strong>在 <code>scanToken()</code> 中那个主字符 switch 里检查它们，但要想让该函数在被调用时<strong>仍然</strong>能在跳过了空白之后正确地找到下一个 token，就会有点儿棘手。我们得把整个函数体裹在一个循环里，或诸如此类。</p>
 <p>取而代之，我们另设一个函数，在<strong>开始</strong>扫描 token 之前，先将它打发走。</p>
-<div class="codehilite"><pre class="insert-before">
-Token scanToken() {
+<div class="codehilite"><pre class="insert-before">Token scanToken() {
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>scanToken</em>()</div>
-<pre class="insert">
-  <span class="i">skipWhitespace</span>();
-</pre><pre class="insert-after">
-  scanner.start = scanner.current;
+<pre class="insert">  <span class="i">skipWhitespace</span>();
+</pre><pre class="insert-after">  scanner.start = scanner.current;
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
 <p>这将使扫描器前移过任何前导的空白。一旦这次调用返回，我们便知道下一字符<strong>或者</strong>是个有意义的字符，<strong>或者</strong>是源代码的末尾。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>errorToken</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">void</span> <span class="i">skipWhitespace</span>() {
+<pre><span class="k">static</span> <span class="t">void</span> <span class="i">skipWhitespace</span>() {
   <span class="k">for</span> (;;) {
     <span class="t">char</span> <span class="i">c</span> = <span class="i">peek</span>();
     <span class="k">switch</span> (<span class="i">c</span>) {
@@ -707,38 +636,32 @@ add after <em>errorToken</em>()</div>
 <p>它就像一个独立的小型扫描器。它不断循环，凡遇空白字符便一律消费。我们需要小心的是，它<strong>不可</strong>消费任何<strong>非</strong>空白字符。为满足这一点，我们使用：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>advance</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">char</span> <span class="i">peek</span>() {
+<pre><span class="k">static</span> <span class="t">char</span> <span class="i">peek</span>() {
   <span class="k">return</span> *<span class="i">scanner</span>.<span class="i">current</span>;
 }
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>advance</em>()</div>
 
 <p>这<strong>只是</strong>返回当前字符，但<strong>不</strong>消费它。前面那段代码处理了除换行符之外的所有空白字符。</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>skipWhitespace</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="s">&#39;\n&#39;</span>:
+<pre class="insert">      <span class="k">case</span> <span class="s">&#39;\n&#39;</span>:
         <span class="i">scanner</span>.<span class="i">line</span>++;
         <span class="i">advance</span>();
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      default:
+</pre><pre class="insert-after">      default:
         return;
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>skipWhitespace</em>()</div>
 
 <p>当我们消费一个换行符时，还要顺手把当前行号加一。</p>
-<h3><a href="#注释" name="注释"><small>16&#8202;.&#8202;3&#8202;.&#8202;2</small>注释</a></h3>
+<h3><a href="#注释" id="注释"><small>16&#8202;.&#8202;3&#8202;.&#8202;2</small>注释</a></h3>
 <p>注释<strong>严格地</strong>说<strong>不是</strong> &ldquo;空白&ldquo;，但就 Lox 而言，它们<strong>等同于</strong>空白，所以我们也一并跳过它们。</p>
-<div class="codehilite"><pre class="insert-before">
-        break;
+<div class="codehilite"><pre class="insert-before">        break;
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>skipWhitespace</em>()</div>
-<pre class="insert">
-      <span class="k">case</span> <span class="s">&#39;/&#39;</span>:
+<pre class="insert">      <span class="k">case</span> <span class="s">&#39;/&#39;</span>:
         <span class="k">if</span> (<span class="i">peekNext</span>() == <span class="s">&#39;/&#39;</span>) {
           <span class="c">// A comment goes until the end of the line.</span>
           <span class="k">while</span> (<span class="i">peek</span>() != <span class="s">&#39;\n&#39;</span> &amp;&amp; !<span class="i">isAtEnd</span>()) <span class="i">advance</span>();
@@ -746,8 +669,7 @@ in <em>skipWhitespace</em>()</div>
           <span class="k">return</span>;
         }
         <span class="k">break</span>;
-</pre><pre class="insert-after">
-      default:
+</pre><pre class="insert-after">      default:
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>skipWhitespace</em>()</div>
 
@@ -755,8 +677,7 @@ in <em>skipWhitespace</em>()</div>
 <p>为处理这一点，我们再添：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>peek</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">char</span> <span class="i">peekNext</span>() {
+<pre><span class="k">static</span> <span class="t">char</span> <span class="i">peekNext</span>() {
   <span class="k">if</span> (<span class="i">isAtEnd</span>()) <span class="k">return</span> <span class="s">&#39;\0&#39;</span>;
   <span class="k">return</span> <span class="i">scanner</span>.<span class="i">current</span>[<span class="n">1</span>];
 }
@@ -765,24 +686,20 @@ add after <em>peek</em>()</div>
 
 <p>这与 <code>peek()</code> 类似，但窥的是当前字符<strong>之后</strong>的一个字符。若当前字符与下一个字符<strong>都</strong>是 <code>/</code>，我们便把它们以及后续任何字符统统消费，直至撞上下一个换行或源文件的末尾。</p>
 <p>我们用 <code>peek()</code> 来检查换行符，但<strong>不</strong>消费它。如此一来，那个换行符便会成为下一轮 <code>skipWhitespace()</code> 外层循环的当下字符，我们便会识别它并递增 <code>scanner.line</code>。</p>
-<h3><a href="#字面量词法单元" name="字面量词法单元"><small>16&#8202;.&#8202;3&#8202;.&#8202;3</small>字面量词法单元</a></h3>
+<h3><a href="#字面量词法单元" id="字面量词法单元"><small>16&#8202;.&#8202;3&#8202;.&#8202;3</small>字面量词法单元</a></h3>
 <p>数字与字符串 token 很特殊，因为它们各与一个<strong>运行时值</strong>相关联。我们先来搞字符串，因为它们容易识别——它们<strong>总是</strong>以一个双引号打头。</p>
-<div class="codehilite"><pre class="insert-before">
-          match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+<div class="codehilite"><pre class="insert-before">          match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>scanToken</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="s">&#39;&quot;&#39;</span>: <span class="k">return</span> <span class="i">string</span>();
-</pre><pre class="insert-after">
-  }
+<pre class="insert">    <span class="k">case</span> <span class="s">&#39;&quot;&#39;</span>: <span class="k">return</span> <span class="i">string</span>();
+</pre><pre class="insert-after">  }
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
 <p>它调用一个新函数。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Token</span> <span class="i">string</span>() {
+<pre><span class="k">static</span> <span class="t">Token</span> <span class="i">string</span>() {
   <span class="k">while</span> (<span class="i">peek</span>() != <span class="s">&#39;&quot;&#39;</span> &amp;&amp; !<span class="i">isAtEnd</span>()) {
     <span class="k">if</span> (<span class="i">peek</span>() == <span class="s">&#39;\n&#39;</span>) <span class="i">scanner</span>.<span class="i">line</span>++;
     <span class="i">advance</span>();
@@ -805,12 +722,10 @@ add after <em>skipWhitespace</em>()</div>
 <p>把&ldquo;词素到值&ldquo;的转换放在编译器中<strong>确实</strong>引入了一些冗余。扫描一个数字字面量所做的工作，与把一串数字字符转换为一个数字值所需的工作，实在颇为相似。但<strong>冗余</strong>并不算多，又<strong>不</strong>落在任何性能要害之上，并且它让我们的扫描器更简洁。</p>
 </aside>
 <p>接下来是数字。与其为每一个可能作为数字开头的十进制数字各加一个 switch 分支，我们不如在这里统一处理：</p>
-<div class="codehilite"><pre class="insert-before">
-  char c = advance();
+<div class="codehilite"><pre class="insert-before">  char c = advance();
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>scanToken</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">isDigit</span>(<span class="i">c</span>)) <span class="k">return</span> <span class="i">number</span>();
+<pre class="insert">  <span class="k">if</span> (<span class="i">isDigit</span>(<span class="i">c</span>)) <span class="k">return</span> <span class="i">number</span>();
 </pre><pre class="insert-after">
 
   switch (c) {
@@ -820,8 +735,7 @@ in <em>scanToken</em>()</div>
 <p>它用到了这个显然的小工具函数：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">isDigit</span>(<span class="t">char</span> <span class="i">c</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">isDigit</span>(<span class="t">char</span> <span class="i">c</span>) {
   <span class="k">return</span> <span class="i">c</span> &gt;= <span class="s">&#39;0&#39;</span> &amp;&amp; <span class="i">c</span> &lt;= <span class="s">&#39;9&#39;</span>;
 }
 </pre></div>
@@ -830,8 +744,7 @@ add after <em>initScanner</em>()</div>
 <p>我们用这个来完成数字的扫描：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Token</span> <span class="i">number</span>() {
+<pre><span class="k">static</span> <span class="t">Token</span> <span class="i">number</span>() {
   <span class="k">while</span> (<span class="i">isDigit</span>(<span class="i">peek</span>())) <span class="i">advance</span>();
 
   <span class="c">// Look for a fractional part.</span>
@@ -848,25 +761,21 @@ add after <em>skipWhitespace</em>()</div>
 <div class="source-file-narrow"><em>scanner.c</em>, add after <em>skipWhitespace</em>()</div>
 
 <p>除了又<strong>不</strong>立即把词素转换为 double 之外，这几乎与 jlox 的版本一模一样。</p>
-<h2><a href="#标识符与关键字" name="标识符与关键字"><small>16&#8202;.&#8202;4</small>标识符与关键字</a></h2>
+<h2><a href="#标识符与关键字" id="标识符与关键字"><small>16&#8202;.&#8202;4</small>标识符与关键字</a></h2>
 <p>最后一批 token 是标识符，既有用户自定义的，也有保留的。本节应当挺有意思——在 clox 中识别关键字的方式与 jlox 中的截然不同，涉及到一些重要的数据结构。</p>
 <p>不过，首先我们得扫描词素。名字以一个字母或下划线打头。</p>
-<div class="codehilite"><pre class="insert-before">
-  char c = advance();
+<div class="codehilite"><pre class="insert-before">  char c = advance();
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>scanToken</em>()</div>
-<pre class="insert">
-  <span class="k">if</span> (<span class="i">isAlpha</span>(<span class="i">c</span>)) <span class="k">return</span> <span class="i">identifier</span>();
-</pre><pre class="insert-after">
-  if (isDigit(c)) return number();
+<pre class="insert">  <span class="k">if</span> (<span class="i">isAlpha</span>(<span class="i">c</span>)) <span class="k">return</span> <span class="i">identifier</span>();
+</pre><pre class="insert-after">  if (isDigit(c)) return number();
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>scanToken</em>()</div>
 
 <p>我们借这个函数来识别这些字符：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>initScanner</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">bool</span> <span class="i">isAlpha</span>(<span class="t">char</span> <span class="i">c</span>) {
+<pre><span class="k">static</span> <span class="t">bool</span> <span class="i">isAlpha</span>(<span class="t">char</span> <span class="i">c</span>) {
   <span class="k">return</span> (<span class="i">c</span> &gt;= <span class="s">&#39;a&#39;</span> &amp;&amp; <span class="i">c</span> &lt;= <span class="s">&#39;z&#39;</span>) ||
          (<span class="i">c</span> &gt;= <span class="s">&#39;A&#39;</span> &amp;&amp; <span class="i">c</span> &lt;= <span class="s">&#39;Z&#39;</span>) ||
           <span class="i">c</span> == <span class="s">&#39;_&#39;</span>;
@@ -877,8 +786,7 @@ add after <em>initScanner</em>()</div>
 <p>一旦我们找到了一个标识符，我们便在这里扫描它的剩余部分：</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">Token</span> <span class="i">identifier</span>() {
+<pre><span class="k">static</span> <span class="t">Token</span> <span class="i">identifier</span>() {
   <span class="k">while</span> (<span class="i">isAlpha</span>(<span class="i">peek</span>()) || <span class="i">isDigit</span>(<span class="i">peek</span>())) <span class="i">advance</span>();
   <span class="k">return</span> <span class="i">makeToken</span>(<span class="i">identifierType</span>());
 }
@@ -888,8 +796,7 @@ add after <em>skipWhitespace</em>()</div>
 <p>在第一个字母之后，我们<strong>也</strong>允许数字，并不断地消费字母与数字，直至它们耗尽为止。然后我们用恰当的类型产出一个 token。敲定那个&ldquo;恰当&ldquo;的类型，则是本章<strong>独有</strong>的内容。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">TokenType</span> <span class="i">identifierType</span>() {
+<pre><span class="k">static</span> <span class="t">TokenType</span> <span class="i">identifierType</span>() {
   <span class="k">return</span> <span class="a">TOKEN_IDENTIFIER</span>;
 }
 </pre></div>
@@ -908,7 +815,7 @@ add after <em>skipWhitespace</em>()</div>
 <p>沿着每一串节点自上而下读下来，你便会看见 Lox 的关键字浮现出来。</p>
 </aside>
 <p>我们从根节点起步。若有一个子节点所对应的字符与词素的第一个字符匹配，我们便移至那个子节点。然后对词素的下一个字符重复此过程，依此类推。若在词素中前<strong>某</strong>个字符已无法与子节点匹配，那么该标识符<strong>一定</strong>不是关键字，我们便<strong>打住</strong>。若我们抵达一个双线框的节点且我们<strong>恰好</strong>处在词素的最后一个字符处，那我们就找到了一个关键字。</p>
-<h3><a href="#trie-与状态机" name="trie-与状态机"><small>16&#8202;.&#8202;4&#8202;.&#8202;1</small>Trie 与状态机</a></h3>
+<h3><a href="#trie-与状态机" id="trie-与状态机"><small>16&#8202;.&#8202;4&#8202;.&#8202;1</small>Trie 与状态机</a></h3>
 <p>这张树形图示意了一个名为 <span name="trie"><a href="https://en.wikipedia.org/wiki/Trie"><strong>trie</strong></a></span> 的数据结构。trie 用于存储一组字符串。多数其它用于存储字符串的数据结构，都将原始的字符数组<strong>放在</strong>内部，外面再裹上一层更大的构造物来帮你加快搜索。trie 则<strong>不同</strong>。在 trie 中，你<strong>找不到</strong>一段完整的字符串。</p>
 <aside name="trie">
 <p>&ldquo;Trie&rdquo; 是计算机科学里最令人困惑的名字之一。Edward Fredkin 把它从单词 &ldquo;retrieval&rdquo; 的中间抠了出来，按理应读作 &ldquo;tree&rdquo;。但<strong>呃</strong>，我们已经有一个读作 &ldquo;tree&rdquo; 的相当重要的数据结构了——trie 正是其<strong>一个</strong>特例——所以除非你从不开口谈论这些概念，否则没人能搞得清你到底在指哪一个。于是，如今人们常常读作 &ldquo;try&rdquo;，以避免这一头疼。</p>
@@ -933,12 +840,10 @@ add after <em>skipWhitespace</em>()</div>
 <aside name="v8">
 <p>简单<strong>并不</strong>等于愚蠢。同样的思路，恰恰是 <a href="https://github.com/v8/v8/blob/e77eebfe3b747fb315bd3baad09bec0953e53e68/src/parsing/scanner.cc#L1643">V8 引擎所采用的做法</a>，而它<strong>眼下</strong>便是世界上最精密、最快的语言实现之一。</p>
 </aside>
-<div class="codehilite"><pre class="insert-before">
-static TokenType identifierType() {
+<div class="codehilite"><pre class="insert-before">static TokenType identifierType() {
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>identifierType</em>()</div>
-<pre class="insert">
-  <span class="k">switch</span> (<span class="i">scanner</span>.<span class="i">start</span>[<span class="n">0</span>]) {
+<pre class="insert">  <span class="k">switch</span> (<span class="i">scanner</span>.<span class="i">start</span>[<span class="n">0</span>]) {
     <span class="k">case</span> <span class="s">&#39;a&#39;</span>: <span class="k">return</span> <span class="i">checkKeyword</span>(<span class="n">1</span>, <span class="n">2</span>, <span class="s">&quot;nd&quot;</span>, <span class="a">TOKEN_AND</span>);
     <span class="k">case</span> <span class="s">&#39;c&#39;</span>: <span class="k">return</span> <span class="i">checkKeyword</span>(<span class="n">1</span>, <span class="n">4</span>, <span class="s">&quot;lass&quot;</span>, <span class="a">TOKEN_CLASS</span>);
     <span class="k">case</span> <span class="s">&#39;e&#39;</span>: <span class="k">return</span> <span class="i">checkKeyword</span>(<span class="n">1</span>, <span class="n">3</span>, <span class="s">&quot;lse&quot;</span>, <span class="a">TOKEN_ELSE</span>);
@@ -952,8 +857,7 @@ in <em>identifierType</em>()</div>
     <span class="k">case</span> <span class="s">&#39;w&#39;</span>: <span class="k">return</span> <span class="i">checkKeyword</span>(<span class="n">1</span>, <span class="n">4</span>, <span class="s">&quot;hile&quot;</span>, <span class="a">TOKEN_WHILE</span>);
   }
 
-</pre><pre class="insert-after">
-  return TOKEN_IDENTIFIER;
+</pre><pre class="insert-after">  return TOKEN_IDENTIFIER;
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>identifierType</em>()</div>
 
@@ -961,8 +865,7 @@ in <em>identifierType</em>()</div>
 <p>我们<strong>不</strong>会为<strong>那些</strong>节点各写一个 switch。取而代之，我们有一个小工具函数，用于检测某条<strong>潜在</strong>关键字词素余下的部分。</p>
 <div class="codehilite"><div class="source-file"><em>scanner.c</em><br>
 add after <em>skipWhitespace</em>()</div>
-<pre>
-<span class="k">static</span> <span class="t">TokenType</span> <span class="i">checkKeyword</span>(<span class="t">int</span> <span class="i">start</span>, <span class="t">int</span> <span class="i">length</span>,
+<pre><span class="k">static</span> <span class="t">TokenType</span> <span class="i">checkKeyword</span>(<span class="t">int</span> <span class="i">start</span>, <span class="t">int</span> <span class="i">length</span>,
     <span class="k">const</span> <span class="t">char</span>* <span class="i">rest</span>, <span class="t">TokenType</span> <span class="i">type</span>) {
   <span class="k">if</span> (<span class="i">scanner</span>.<span class="i">current</span> - <span class="i">scanner</span>.<span class="i">start</span> == <span class="i">start</span> + <span class="i">length</span> &amp;&amp;
       <span class="i">memcmp</span>(<span class="i">scanner</span>.<span class="i">start</span> + <span class="i">start</span>, <span class="i">rest</span>, <span class="i">length</span>) == <span class="n">0</span>) {
@@ -977,12 +880,10 @@ add after <em>skipWhitespace</em>()</div>
 <p>我们用它来处理树中所有<strong>没有分支</strong>的路径。一旦我们找到了一个<strong>只能</strong>通往一个保留字的前缀，我们需要核验两件事。词素的长度<strong>必须</strong>恰好等于该关键字。若首字母是 &ldquo;s&rdquo;，那么词素<strong>仍</strong>可能是 &ldquo;sup&rdquo; 或 &ldquo;superb&rdquo;。并且余下的字符<strong>必须</strong>严格匹配——&ldquo;supar&rdquo; 是不行的。</p>
 <p>若我们的长度恰好吻合，且字符如我们所愿，那么它<strong>就是</strong>一个关键字，于是我们返回与之对应的 token 类型。否则，它<strong>一定</strong>是一个普通的标识符。</p>
 <p>我们有几条关键字，在第一个字符之后，那棵树<strong>又</strong>分叉了。若词素以 &ldquo;f&rdquo; 开头，它既可能是 <code>false</code>、<code>for</code>、也可能是 <code>fun</code>。因此我们为从 &ldquo;f&rdquo; 节点引出的那些分支再添一个 switch。</p>
-<div class="codehilite"><pre class="insert-before">
-    case 'e': return checkKeyword(1, 3, &quot;lse&quot;, TOKEN_ELSE);
+<div class="codehilite"><pre class="insert-before">    case 'e': return checkKeyword(1, 3, &quot;lse&quot;, TOKEN_ELSE);
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>identifierType</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="s">&#39;f&#39;</span>:
+<pre class="insert">    <span class="k">case</span> <span class="s">&#39;f&#39;</span>:
       <span class="k">if</span> (<span class="i">scanner</span>.<span class="i">current</span> - <span class="i">scanner</span>.<span class="i">start</span> &gt; <span class="n">1</span>) {
         <span class="k">switch</span> (<span class="i">scanner</span>.<span class="i">start</span>[<span class="n">1</span>]) {
           <span class="k">case</span> <span class="s">&#39;a&#39;</span>: <span class="k">return</span> <span class="i">checkKeyword</span>(<span class="n">2</span>, <span class="n">3</span>, <span class="s">&quot;lse&quot;</span>, <span class="a">TOKEN_FALSE</span>);
@@ -991,18 +892,15 @@ in <em>identifierType</em>()</div>
         }
       }
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case 'i': return checkKeyword(1, 1, &quot;f&quot;, TOKEN_IF);
+</pre><pre class="insert-after">    case 'i': return checkKeyword(1, 1, &quot;f&quot;, TOKEN_IF);
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>identifierType</em>()</div>
 
 <p>在切换之前，我们需要先检查一下<strong>到底</strong>有没有第二个字母。孤零零的 &ldquo;f&rdquo; <strong>本身</strong>亦是一个合法的标识符。另一处分叉的字母是 &ldquo;t&rdquo;。</p>
-<div class="codehilite"><pre class="insert-before">
-    case 's': return checkKeyword(1, 4, &quot;uper&quot;, TOKEN_SUPER);
+<div class="codehilite"><pre class="insert-before">    case 's': return checkKeyword(1, 4, &quot;uper&quot;, TOKEN_SUPER);
 </pre><div class="source-file"><em>scanner.c</em><br>
 in <em>identifierType</em>()</div>
-<pre class="insert">
-    <span class="k">case</span> <span class="s">&#39;t&#39;</span>:
+<pre class="insert">    <span class="k">case</span> <span class="s">&#39;t&#39;</span>:
       <span class="k">if</span> (<span class="i">scanner</span>.<span class="i">current</span> - <span class="i">scanner</span>.<span class="i">start</span> &gt; <span class="n">1</span>) {
         <span class="k">switch</span> (<span class="i">scanner</span>.<span class="i">start</span>[<span class="n">1</span>]) {
           <span class="k">case</span> <span class="s">&#39;h&#39;</span>: <span class="k">return</span> <span class="i">checkKeyword</span>(<span class="n">2</span>, <span class="n">2</span>, <span class="s">&quot;is&quot;</span>, <span class="a">TOKEN_THIS</span>);
@@ -1010,8 +908,7 @@ in <em>identifierType</em>()</div>
         }
       }
       <span class="k">break</span>;
-</pre><pre class="insert-after">
-    case 'v': return checkKeyword(1, 2, &quot;ar&quot;, TOKEN_VAR);
+</pre><pre class="insert-after">    case 'v': return checkKeyword(1, 2, &quot;ar&quot;, TOKEN_VAR);
 </pre></div>
 <div class="source-file-narrow"><em>scanner.c</em>, in <em>identifierType</em>()</div>
 
@@ -1021,13 +918,12 @@ in <em>identifierType</em>()</div>
 <p>我们偶尔会陷入一种思维陷阱，以为性能来自于复杂的数据结构、一层又一层的缓存，以及种种酷炫的优化。但很多时候，所需的<strong>不过</strong>是少做一点工作；而我常常发现，<strong>就</strong>写我能想到的最简代码，便足以达成此目标。</p>
 </aside>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>16&#8202;.&#8202;5</small>挑战</a></h2>
+<h2><a href="#挑战" id="挑战"><small>16&#8202;.&#8202;5</small>挑战</a></h2>
 <ol>
 <li>
 <p>许多较新的语言都支持 <a href="https://en.wikipedia.org/wiki/String_interpolation"><strong>字符串内插</strong></a>。在字符串字面量内部，会有某种特殊的分隔符——最常见的是开头 <code>${</code> 与结尾 <code>}</code>。在那些分隔符之间，可以出现任意表达式。当字符串字面量被执行时，里头的表达式被求值，转换为字符串，再与周围的字符串字面量合并。</p>
 <p>举例而言，若 Lox 支持字符串内插，那么下面这段……</p>
-<div class="codehilite"><pre>
-<span class="k">var</span> <span class="i">drink</span> = <span class="s">&quot;Tea&quot;</span>;
+<div class="codehilite"><pre><span class="k">var</span> <span class="i">drink</span> = <span class="s">&quot;Tea&quot;</span>;
 <span class="k">var</span> <span class="i">steep</span> = <span class="n">4</span>;
 <span class="k">var</span> <span class="i">cool</span> = <span class="n">2</span>;
 <span class="k">print</span> <span class="s">&quot;${drink} will be ready in ${steep + cool} minutes.&quot;</span>;
@@ -1043,8 +939,7 @@ in <em>identifierType</em>()</div>
 </li>
 <li>
 <p>不少语言使用尖括号来表示泛型，同时又有一个 <code>&gt;&gt;</code> 右移运算符。这在早期版本的 C++ 中曾引发过一个经典的问题：</p>
-<div class="codehilite"><pre>
-<span class="t">vector</span>&lt;<span class="t">vector</span>&lt;<span class="t">string</span>&gt;&gt; <span class="i">nestedVectors</span>;
+<div class="codehilite"><pre><span class="t">vector</span>&lt;<span class="t">vector</span>&lt;<span class="t">string</span>&gt;&gt; <span class="i">nestedVectors</span>;
 </pre></div>
 <p>这<strong>会</strong>产生一个编译错误，因为 <code>&gt;&gt;</code> 被词法分析成了<strong>一</strong>个右移 token，而非两个 <code>&gt;</code> token。用户被迫在两个右尖括号之间加一个空格来绕过这一问题。</p>
 <p>后续版本的 C++ 更为聪明，能够处理上述代码。Java 与 C# <strong>从未</strong>遇到过这个问题。这些语言<strong>是</strong>如何规约与实现这一切的？</p>
@@ -1060,7 +955,7 @@ in <em>identifierType</em>()</div>
 <a href="compiling-expressions.html" class="next">
   Next Chapter: &ldquo;Compiling Expressions&rdquo; &rarr;
 </a>
-Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2020</a>
+Handcrafted by Robert Nystrom&ensp;&mdash;&ensp;<a href="https://github.com/munificent/craftinginterpreters/blob/master/LICENSE" target="_blank">&copy; 2015&hairsp;&ndash;&hairsp;2021</a>
 </footer>
 </article>
 
