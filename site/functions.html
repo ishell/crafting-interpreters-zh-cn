@@ -202,7 +202,7 @@ add after <em>unary</em>()</div>
 
 <p>这段代码与文法规则并未严丝合缝地一一对应。我把一些细节挪动了位置以让代码更为清爽——这可是手写解析器所享有的特权之一。不过，它大体上仍与我们解析中缀运算符的思路相似。首先，我们解析一个一级表达式，作为本次调用的&ldquo;左操作数&ldquo;。之后，每当我们看到一个 <code>(</code>，我们便调用 <code>finishCall()</code> 来以此前解析出的那个表达式作为被调用方来解析这次调用。所返回的表达式成为新的 <code>expr</code>，我们再回头看看这个结果是否自身又一次被调用。</p>
 <aside name="while-true">
-<p>如果改用 <code>while (match(LEFT**PAREN))</code> 来代替那个有些滑稽的 <code>while (true)</code> 加 <code>break</code>，这段代码会更简洁一些。别担心，当我们日后扩展语法分析器以处理对象的属性时，它的意义便会显现出来。</p>
+<p>如果改用 <code>while (match(LEFT_PAREN))</code> 来代替那个有些滑稽的 <code>while (true)</code> 加 <code>break</code>，这段代码会更简洁一些。别担心，当我们日后扩展语法分析器以处理对象的属性时，它的意义便会显现出来。</p>
 </aside>
 <p>解析实参列表的代码被安放于下面这个辅助方法之中：</p>
 <div class="codehilite"><div class="source-file"><em>lox/Parser.java</em><br>
@@ -334,7 +334,7 @@ in <em>visitCallExpr</em>()</div>
 <span class="i">add</span>(<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>); <span class="c">// 太多。</span>
 <span class="i">add</span>(<span class="n">1</span>, <span class="n">2</span>);       <span class="c">// 太少。</span>
 </pre></div>
-<p>对于这一问题，不同的语言各有不同的应对之策。当然，大多数静态类型语言会在编译期就加以检查——若实参个数与函数的元数不符，编译器便会拒绝编译这段代码。JavaScript 则会默默丢弃你多传入的任何实参。若你传入的实参不够，它会用那个有点像 null 但又<strong>并非</strong>真正的 null 的魔法值 <code>undefined</code> 来补足那些缺失的参数。则比 Python 严格一些——它会在实参列表过长或过短时抛出一个运行时错误。</p>
+<p>对于这一问题，不同的语言各有不同的应对之策。当然，大多数静态类型语言会在编译期就加以检查——若实参个数与函数的元数不符，编译器便会拒绝编译这段代码。JavaScript 则会默默丢弃你多传入的任何实参。若你传入的实参不够，它会用那个有点像 null 但又<strong>并非</strong>真正的 null 的魔法值 <code>undefined</code> 来补足那些缺失的参数。<strong>Python</strong> 则更严格一些——它会在实参列表过长或过短时抛出一个运行时错误。</p>
 <p>我认为后者是更好的选择。传入错误数量的实参几乎总是一个 bug，而我自己也的确会犯这种错。既然如此，实现越早提醒我犯错，这件事就越好。因此，就 Lox 而言，我们采用 Python 的路线。在调用 callable 之前，我们检查实参列表的长度是否与 callable 的元数相符。</p>
 <div class="codehilite"><pre class="insert-before">
     LoxCallable function = (LoxCallable)callee;
@@ -367,7 +367,7 @@ in interface <em>LoxCallable</em></div>
 <p>我们<strong>本可以</strong>将元数检查推入到 <code>call()</code> 的具体实现之中。但既然日后会有多个类实现 LoxCallable，这种做法就会让冗余的校验散落在几个类中。将其上提至 visit 方法之中，便能将校验集中在一处。</p>
 <h2><a href="#原生函数" name="原生函数"><small>10&#8202;.&#8202;2</small>原生函数</a></h2>
 <p>理论上，我们已经可以调用函数了，但我们手头尚无可以调用的函数。在我们着手用户自定义函数之前，眼下是个介绍语言实现中一个至关重要、却常常被忽视的层面的绝佳时机——<span name="native"><strong>原生函数</strong></span>。这些函数由解释器向用户代码开放，但实现在宿主语言（我们这里是 Java）之中，而非被实现的语言（Lox）之中。</p>
-<p>这些函数有时也叫做<strong>原语</strong>、<strong>外部函数</strong>或<strong>外部函数</strong>。由于这些函数会在用户程序运行的过程中被调用，因此它们构成了实现运行时的一部分。许多程序设计语言的书对它们一笔带过，因为它们在概念上并不有趣。它们大多是些苦力活。</p>
+<p>这些函数有时也叫做<strong>原语</strong>、<strong>外部函数</strong>或<strong>外来函数</strong>。由于这些函数会在用户程序运行的过程中被调用，因此它们构成了实现运行时的一部分。许多程序设计语言的书对它们一笔带过，因为它们在概念上并不有趣。它们大多是些苦力活。</p>
 <aside name="native">
 <p>有趣的是，这些函数的两套名字——&ldquo;native&rdquo;（原生）与&ldquo;foreign&rdquo;（外部）——其实是反义词。也许这取决于选词者的视角。倘若你将自身视作&ldquo;栖身于&ldquo;运行时实现之中（在我们这里，即 Java），那么用那种语言写就的函数便是&ldquo;native&rdquo;。但若你以这门语言的<strong>用户</strong>视角来看，那么运行时便是由某种&ldquo;foreign&rdquo;（外部的）语言所实现的。</p>
 <p>又或者，&ldquo;native&rdquo;指的是底层硬件的机器码语言。在 Java 中，所谓&ldquo;native&rdquo;方法，便是指那些用 C 或 C++ 写成、编译为原生机器码的方法。</p><img src="image/functions/foreign.png" class="above" alt="全凭视角而定。" />
@@ -586,7 +586,7 @@ add after <em>LoxFunction</em>()</div>
 
 <p>这寥寥数行代码，是我们这款解释器中最为基础、也最为强大的几块拼图之一。正如我们在<a href="statements-and-state.html">关于语句与<span name="env">状态</span>的那一章</a>中所见到的，管理名字的环境是语言实现的核心一环。函数则与这一点紧密缠绕。</p>
 <aside name="env">
-<p>我们将在[下一章][]中更为深入地探讨环境。</p>
+<p>我们将在<a href="resolving-and-binding.html">下一章</a>中更为深入地探讨环境。</p>
 </aside>
 <p>参数是函数的核心，尤其是这一事实——函数<strong>封装</strong>了它的参数：在函数体之外的任何代码都无法看见它们。这意味着每一个函数都拥有属于自己的环境，用以存放这些变量。</p>
 <p>更进一步地，这份环境必须是动态创建的。每一次函数<strong>调用</strong>都获得属于自己的环境。否则，递归便将失灵。若同时存在对同一函数的多个调用，那么每一个调用都需要其<strong>自己的</strong>环境，即便它们都是对同一函数的调用。</p>
@@ -842,10 +842,10 @@ replace 1 line</div>
 <p>正如你所见，答案是&ldquo;不够快&ldquo;。这没关系。我们用 C 写的那一款解释器会更快。</p>
 </aside>
 <h2><a href="#局部函数与闭包" name="局部函数与闭包"><small>10&#8202;.&#8202;6</small>局部函数与闭包</a></h2>
-<p>我们的函数虽然功能已算齐备，但还有一处空缺需要填补。事实上，这道缺口相当之大，我们将在[下一章][]中花绝大部分篇幅去封堵它，但眼下我们便可以先开个场。</p>
-<p>LoxFunction 的 <code>call()</code> 实现会创建一份新的环境，将其中的参数与实参绑定起来。当我向你展示那段代码时，我曾一笔带过了一个重要细节：那份环境的**父_ 环境究竟是什么？</p>
+<p>我们的函数虽然功能已算齐备，但还有一处空缺需要填补。事实上，这道缺口相当之大，我们将在<a href="resolving-and-binding.html">下一章</a>中花绝大部分篇幅去封堵它，但眼下我们便可以先开个场。</p>
+<p>LoxFunction 的 <code>call()</code> 实现会创建一份新的环境，将其中的参数与实参绑定起来。当我向你展示那段代码时，我曾一笔带过了一个重要细节：那份环境的<em>父</em>环境究竟是什么？</p>
 <p>眼下，它始终是 <code>globals</code>——那个最顶层的全局环境。如此一来，若某个标识符并非在函数体内部被定义，解释器便可以跳出函数本身，去全局作用域中寻找它。在那个斐波那契的例子中，解释器之所以能够在函数体内查找到那个对 <code>fib</code> 的递归调用，正是因为——<code>fib</code> 本身便是一个全局变量。</p>
-<p>但请记住，在 Lox 中，函数声明<strong>任何</strong>名字可以绑定的地方都被允许。这包括 Lox 脚本的顶层，但也包括其它函数或块的内部。Lox 支持<strong>局部函数</strong>——它们定义于另一个函数之内，或嵌套于一个块之中。</p>
+<p>但请记住，在 Lox 中，函数声明在<strong>任何</strong>可以绑定名字的地方都被允许。这包括 Lox 脚本的顶层，但也包括其它函数或块的内部。Lox 支持<strong>局部函数</strong>——它们定义于另一个函数之内，或嵌套于一个块之中。</p>
 <p>请考虑下面这道经典示例：</p>
 <div class="codehilite"><pre>
 <span class="k">fun</span> <span class="i">makeCounter</span>() {

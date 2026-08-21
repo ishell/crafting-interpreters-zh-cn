@@ -517,7 +517,7 @@ typedef struct {
 </pre></div>
 <div class="source-file-narrow"><em>scanner.h</em></div>
 
-<p>除了在所有名字前加一个 <code>TOKEN**</code> 前缀外（C 语言的枚举名统统位于顶层命名空间），唯一的区别就是那个额外的 <code>TOKEN**ERROR</code> 类型。那是怎么回事？</p>
+<p>除了在所有名字前加一个 <code>TOKEN_</code> 前缀外（C 语言的枚举名统统位于顶层命名空间），唯一的区别就是那个额外的 <code>TOKEN_ERROR</code> 类型。那是怎么回事？</p>
 <p>扫描阶段能检测到的错误寥寥无几——未闭合的字符串、以及无法识别的字符。在 jlox 中，扫描器<strong>自己</strong>报告这些错误。在 clox 中，扫描器会为那个错误产出一条合成的&ldquo;错误&ldquo;token，并将其传递给编译器。如此一来，编译器便会得知发生了错误，并能在报告之前先启动错误恢复。</p>
 <p>clox 中 Token 类型的创新之处在于它对词素的表示方式。在 jlox 中，每个 Token 都把词素作为自己独有的一小段 Java 字符串存储起来。若我们在 clox 中也这样干，我们就必须想办法管理那些字符串的内存。这<strong>特别</strong>棘手，因为我们按值传递 token——多个 token 完全可能指向同一段词素字符串。所有权关系会变得扑朔迷离。</p>
 <p>取而代之，我们使用原始的源代码字符串作为我们的字符存储。我们以一个指向其首字符的指针与字符数来表示一段词素。这意味着我们根本不必操心为词素管理内存，便可以随意地四处拷贝 token。只要这份主源代码字符串<strong>活得</strong>比所有 token 都久，一切便<strong>都</strong>能正常工作。</p>
@@ -914,19 +914,19 @@ add after <em>skipWhitespace</em>()</div>
 <p>&ldquo;Trie&rdquo; 是计算机科学里最令人困惑的名字之一。Edward Fredkin 把它从单词 &ldquo;retrieval&rdquo; 的中间抠了出来，按理应读作 &ldquo;tree&rdquo;。但<strong>呃</strong>，我们已经有一个读作 &ldquo;tree&rdquo; 的相当重要的数据结构了——trie 正是其<strong>一个</strong>特例——所以除非你从不开口谈论这些概念，否则没人能搞得清你到底在指哪一个。于是，如今人们常常读作 &ldquo;try&rdquo;，以避免这一头疼。</p>
 </aside>
 <p>取而代之的是，trie &ldquo;容纳&ldquo;的每一字符串都被表示为一条<strong>穿越</strong>字符节点树的<strong>路径</strong>，正如我们上面那张遍历图所示。匹配某字符串末字符的那些节点带有一个特殊的标记——图中的双线框。如此一来，譬如<strong>既</strong>含有 &ldquo;banquet&rdquo; <strong>又</strong>含有 &ldquo;ban&rdquo; 的 trie，你<strong>便能</strong>知道它<strong>不</strong>含有 &ldquo;banque&rdquo;——&ldquo;e&rdquo; 节点<strong>没有</strong>那个标记，而 &ldquo;n&rdquo; 与 &ldquo;t&rdquo; 节点<strong>都</strong>有。</p>
-<p>trie 是一种更为基础的数据结构——<a href="https://en.wikipedia.org/wiki/Deterministic_finite**automaton"><strong>确定性有限状态自动机</strong></a>（<strong>DFA</strong>）——的特殊情形。你<strong>或许</strong>也听过它的另一些名字：<strong>有限状态机</strong>，或干脆叫<strong>状态机</strong>。状态机真是太酷了。它们在<a href="http://gameprogrammingpatterns.com/state.html">游戏编程</a>乃至网络协议的实现中都颇有用武之地。</p>
+<p>trie 是一种更为基础的数据结构——<a href="https://en.wikipedia.org/wiki/Deterministic_finite_automaton"><strong>确定性有限状态自动机</strong></a>（<strong>DFA</strong>）——的特殊情形。你<strong>或许</strong>也听过它的另一些名字：<strong>有限状态机</strong>，或干脆叫<strong>状态机</strong>。状态机真是太酷了。它们在<a href="http://gameprogrammingpatterns.com/state.html">游戏编程</a>乃至网络协议的实现中都颇有用武之地。</p>
 <p>在一台 DFA 中，你拥有<strong>一组</strong>状态，以及状态<strong>之间</strong>的若干转移，构成一张图。在<strong>任一</strong>时刻，机器恰好&ldquo;处于&ldquo;某一状态。它通过沿转移行走来到达其它状态。当你将 DFA 用于词法分析时，每一次转移便是字符串中<strong>被匹配的</strong>一个字符。每一个状态都代表一组被允许的字符。</p>
 <p>我们的关键字树<strong>恰好</strong>就是一台识别 Lox 关键字的 DFA。但 DFA <strong>比</strong>单纯的树<strong>更</strong>强大，因为它们可以是任意<strong>的</strong>图。转移之间可以形成回路。这使得一台 DFA 能够识别任意<strong>长</strong>的字符串。例如，下面便是这样一台识别数字字面量的 DFA：</p>
 <p><span name="railroad"></span></p><img src="image/scanning-on-demand/numbers.png" alt="一张识别整数与浮点字面量的语法图。" />
 <aside name="railroad">
-<p>这种风格的图被称为一张 <a href="https://en.wikipedia.org/wiki/Syntax**diagram"><strong>语法图</strong></a>，或更俏皮的<strong>铁路图</strong>（railroad diagram）。后者之名，是因为它看起来颇像火车的调车场。</p>
+<p>这种风格的图被称为一张 <a href="https://en.wikipedia.org/wiki/Syntax_diagram"><strong>语法图</strong></a>，或更俏皮的<strong>铁路图</strong>（railroad diagram）。后者之名，是因为它看起来颇像火车的调车场。</p>
 <p>在巴科斯-诺尔范式问世之前，这是记述语言文法的主流方式之一。如今我们大多用文字，但一门<strong>文本语言</strong>的正式规范<strong>竟然</strong>倚赖于一张<strong>图像</strong>，这事儿总归有几分令人愉悦。</p>
 </aside>
 <p>我已经把十种数字节点合并了起来以使它更可读，但基本流程一样——你沿着路径前进，每当消费词素中一个相应的字符时便进入下一个节点。倘若我们真<strong>那么</strong>乐意，我们<strong>可以</strong>构造一台巨大的 DFA 来完成 Lox 的<strong>全部</strong>词法分析——一台单一的状态机，识别并吐出我们所需要的所有 token。</p>
-<p>然而，<span name="regex">手工</span>雕琢这样一台巨型 DFA 是件颇具挑战的事。这也是 <a href="https://en.wikipedia.org/wiki/Lex**(software)">Lex</a> 之所以被创造的原因。你只需喂给它一份<strong>你的</strong>词法法法的简单文本描述——一堆正则表达式——它便会自动为你生成一台 DFA，并伴生一大坨实现它的 C 代码。</p>
+<p>然而，<span name="regex">手工</span>雕琢这样一台巨型 DFA 是件颇具挑战的事。这也是 <a href="https://en.wikipedia.org/wiki/Lex_(software)">Lex</a> 之所以被创造的原因。你只需喂给它一份<strong>你的</strong>词法的简单文本描述——一堆正则表达式——它便会自动为你生成一台 DFA，并伴生一大坨实现它的 C 代码。</p>
 <aside name="regex">
 <p>这也是大多数程序设计语言与文本编辑器中的正则表达式引擎在底层的工作方式。它们<strong>拿</strong>你的正则表达式字符串，把它转换为一台 DFA，然后再用后者去匹配字符串。</p>
-<p>倘若你想学习把正则表达式转换为 DFA 的算法，<a href="https://en.wikipedia.org/wiki/Compilers:**Principles,_Techniques,_and**Tools">龙书</a>已然包揽。</p>
+<p>倘若你想学习把正则表达式转换为 DFA 的算法，<a href="https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools">龙书</a>已然包揽。</p>
 </aside>
 <p>我们<strong>不</strong>打算走那条路。我们<strong>已经</strong>拥有了一款<strong>足够</strong>能用的手写扫描器。我们<strong>只</strong>需要一个不起眼的小 trie 用来识别关键字。我们<strong>该</strong>如何将那张图映射到代码中？</p>
 <p>最<span name="v8">简单</span>的方案是：每个节点都使用一个 switch 语句，每个分支对应一条边。我们从根节点出发，先处理那些<strong>只有</strong>一条路径的关键字。</p>
@@ -1051,7 +1051,7 @@ in <em>identifierType</em>()</div>
 </li>
 <li>
 <p>许多语言——尤其是<strong>在</strong>演进<strong>后</strong>期的语言——定义了&ldquo;上下文关键字&ldquo;。这类标识符在<strong>某些</strong>语境中是关键字，但在<strong>其它</strong>语境中可以是普通的用户自定义标识符。</p>
-<p>举例而言，<code>await</code> 在 C# 的 <code>async</code> 方法<strong>内</strong>是个关键字，但在其它方法中，你<strong>可以</strong>把 `await**当作自己的标识符。</p>
+<p>举例而言，<code>await</code> 在 C# 的 <code>async</code> 方法<strong>内</strong>是个关键字，但在其它方法中，你<strong>可以</strong>把 <code>await</code> 当作自己的标识符。</p>
 <p>请列举几个其它语言中的上下文关键字，以及它们所对应的语境。上下文关键字的利弊各是什么？若你的语言前端<strong>需要</strong>上下文关键字，你会如何实现它们？</p>
 </li>
 </ol>

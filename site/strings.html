@@ -115,21 +115,21 @@
 <h1><a href="#字符串" name="字符串"><small>19&#8202;.&#8202;0</small>字符串</a></h1>
 <blockquote>
 <p>&ldquo;啊？是对苦活儿的小小厌恶？&ldquo;医生挑了挑眉。
-&ldquo;可以理解，但大可不必。倒是应当珍视那些乏味至极的差事 <em>—</em> 它们让身体忙碌， 却让心灵得以解脱**。&ldquo;</p>
+&ldquo;可以理解，但大可不必。倒是应当珍视那些乏味至极的差事——它们让身体忙碌， 却让心灵得以解脱。&ldquo;</p>
 <p><cite>泰德·威廉斯，<em>《龙骨椅》</em></cite></p>
 </blockquote>
-<p>我们**的_ 小 VM 眼下能表示三种值类型：数字、 布尔与 <code>nil</code>。这些类型有两个重要的共性： 它们都不可变， 而且它们都很小。数字是其中最大的， 也只占两个 64 位字。即使对于那些本不需要如此多空间的布尔与 <code>nil</code>， 我们也付得起这一点开销_。</p>
-<p>然而， 字符串却不那么纤巧。它没有长度上限。即使我们人为地在某个人为设定的上**限（ 比如 <span name="pascal"> 255 </span> **个_ 字符） 上画上一道线， 那也太浪费内存了， 根本不能对每一个值都这样花费_。</p>
+<p>我们的小 VM 眼下能表示三种值类型：数字、 布尔与 <code>nil</code>。这些类型有两个重要的共性： 它们都不可变， 而且它们都很小。数字是其中最大的， 也只占两个 64 位字。即使对于那些本不需要如此多空间的布尔与 <code>nil</code>， 我们也付得起这一点开销。</p>
+<p>然而， 字符串却不那么纤巧。它没有长度上限。即使我们人为地在某个人为设定的上限（ 比如 <span name="pascal"> 255 </span> 个字符） 上画上一道线， 那也太浪费内存了， 根本不能对每一个值都这样花费。</p>
 <aside name="pascal">
 <p>UCSD Pascal，Pascal 的早期实现之一， 就采用了这种上限。它不像 C 那样用一个终止空节来标记字符串的末尾， 而是在字符串开头放一个长度值。由于 UCSD 只用一个字节存放长度， 字符串就不能超过 255 个字符长。</p><img src="image/strings/pstring.png" alt="Pascal 字符串 'hello'， 前面有一个长度字节 5。" />
 </aside>
-<p>我们需要一种支持大小不一的值的方法， 有时其大小的跨度还非常巨大。这正是堆上动态分配的存在意义。我们可以分配任意多少字节， 并收到一个指针_， 之后就凭这个指针来在 VM 中追踪该值的流动。</p>
+<p>我们需要一种支持大小不一的值的方法， 有时其大小的跨度还非常巨大。这正是堆上动态分配的存在意义。我们可以分配任意多少字节， 并收到一个指针， 之后就凭这个指针来在 VM 中追踪该值的流动。</p>
 <h2><a href="#值与对象" name="值与对象"><small>19&#8202;.&#8202;1</small>值与对象</a></h2>
-<p>大值、 大小不一的值用堆来存放_， 小的、 原子型的值用栈来存放—— 这便形成了一个两级的表示法。你能存入某个变量或者从某条表达式返回的每一个 Lox 值， 都会是一个 Value。对于数字这种小而定长的类型而言， 其载荷_ 直接存放于 Value 结构体本身之中_。</p>
-<p>若该对象较大， 其数据则栖身于堆上。于是 <em>Value</em> 的载荷变成了一个指向那团_ 内存的<strong>指针</strong>。我们最终会在 clox 中拥有若干种堆分配的类型： 字符串、 实例、 函数_， 总而言之你能想到的都算。每一种类型有其各自独有的数据_， 但也有一些 <a href="garbage-collection.html"> 我们未来的垃圾回收器 </a> 会用于管理它们的内存的共同状态_。</p><img src="image/strings/value.png" class="wide" alt=" 数字与 obj 值的字段布局_。" />
-<p>我们将这一共同表示称作 <span name="short">&ldquo;Obj&rdquo;</span>。每一个状态栖身于堆上的 Lox 值都是一枚 Obj。于是我们可以用一个新的 ValueType 分支来涵盖所有堆分配的类型_。</p>
+<p>大值、 大小不一的值用堆来存放， 小的、 原子型的值用栈来存放—— 这便形成了一个两级的表示法。你能存入某个变量或者从某条表达式返回的每一个 Lox 值， 都会是一个 Value。对于数字这种小而定长的类型而言， 其载荷 直接存放于 Value 结构体本身之中。</p>
+<p>若该对象较大， 其数据则栖身于堆上。于是 <em>Value</em> 的载荷变成了一个指向那团内存的<strong>指针</strong>。我们最终会在 clox 中拥有若干种堆分配的类型： 字符串、 实例、 函数， 总而言之你能想到的都算。每一种类型有其各自独有的数据， 但也有一些 <a href="garbage-collection.html">我们未来的垃圾回收器</a> 会用于管理它们的内存的共同状态。</p><img src="image/strings/value.png" class="wide" alt=" 数字与 obj 值的字段布局。" />
+<p>我们将这一共同表示称作 <span name="short">&ldquo;Obj&rdquo;</span>。每一个状态栖身于堆上的 Lox 值都是一枚 Obj。于是我们可以用一个新的 ValueType 分支来涵盖所有堆分配的类型。</p>
 <aside name="short">
-<p>&ldquo;Obj&rdquo; 是 &ldquo;object&rdquo; 的缩写， 这自然不用多费口舌_。</p>
+<p>&ldquo;Obj&rdquo; 是 &ldquo;object&rdquo; 的缩写， 这自然不用多费口舌。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
   VAL_NUMBER,
@@ -142,7 +142,7 @@ in enum <em>ValueType</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em>, in enum <em>ValueType</em></div>
 
-<p>当一枚 Value 的类型为 <code>VAL_OBJ</code> 时， 其载荷为一个指向堆内存的指针_， 于是我们再向联合中添上一个相应的分支_。</p>
+<p>当一枚 Value 的类型为 <code>VAL_OBJ</code> 时， 其载荷为一个指向堆内存的指针， 于是我们再向联合中添上一个相应的分支。</p>
 <div class="codehilite"><pre class="insert-before">
     double number;
 </pre><div class="source-file"><em>value.h</em><br>
@@ -154,7 +154,7 @@ in struct <em>Value</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em>, in struct <em>Value</em></div>
 
-<p>与对待其他值类型一样， 我们封装了几个便利的宏来处理 Obj 值_。</p>
+<p>与对待其他值类型一样， 我们封装了几个便利的宏来处理 Obj 值。</p>
 <div class="codehilite"><pre class="insert-before">
 #define IS_NUMBER(value)  ((value).type == VAL_NUMBER)
 </pre><div class="source-file"><em>value.h</em><br>
@@ -167,7 +167,7 @@ add after struct <em>Value</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em>, add after struct <em>Value</em></div>
 
-<p>若所给 Value 为一枚 Obj， 这段代码求值为 <code>true</code>。若如此， 我们便可以使用这个_：</p>
+<p>若所给 Value 为一枚 Obj， 这段代码求值为 <code>true</code>。若如此， 我们便可以使用这个：</p>
 <div class="codehilite"><pre class="insert-before">
 #define IS_OBJ(value)     ((value).type == VAL_OBJ)
 
@@ -179,7 +179,7 @@ add after struct <em>Value</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 
-<p>它从 Value 中抽出 Obj 指针_。 我们也可以反向操作_。</p>
+<p>它从 Value 中抽出 Obj 指针。 我们也可以反向操作。</p>
 <div class="codehilite"><pre class="insert-before">
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 </pre><div class="source-file"><em>value.h</em></div>
@@ -191,15 +191,15 @@ typedef struct {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 
-<p>它接受一个裸 Obj 指针， 并将其包入一枚完整的 Value 之中**。</p>
+<p>它接受一个裸 Obj 指针， 并将其包入一枚完整的 Value 之中。</p>
 <h2><a href="#结构体继承" name="结构体继承"><small>19&#8202;.&#8202;2</small>结构体继承</a></h2>
-<p>每一个堆分配的值**都_ 是一枚 Obj， 但 <span name="objs"> 这些 Obj</span> 并不全都一样。对于字符串， 我们需要字符数组。等到实例的时候， 它们又需要自己的数据字段_。一个函数对象则需要它的字节码块。那么， 对于这些各不相同的载荷与大小， 我们该如何应对_？由于各种类型的大小参不齐， 我们无法再像 Value 那样使用联合_。</p>
+<p>每一个堆分配的值都是一枚 Obj， 但 <span name="objs"> 这些 Obj</span> 并不全都一样。对于字符串， 我们需要字符数组。等到实例的时候， 它们又需要自己的数据字段。一个函数对象则需要它的字节码块。那么， 对于这些各不相同的载荷与大小， 我们该如何应对？由于各种类型的大小参不齐， 我们无法再像 Value 那样使用联合。</p>
 <aside name="objs">
 <p>不， 我也不知道 &ldquo;objs&rdquo; 该怎样发音才好。总感觉里面应该有个元音才对。</p>
 </aside>
-<p>取而代之， 我们将使用另一种技巧。它已经存在了很久之久， 久到了 C 标准的规范都为它刻意开了一道门， 但我不知道它有没有一个权威的名字。它是 <a href="https://en.wikipedia.org/wiki/Type_punning>">类型双关_ </a> 的一个例子， 但这个词义太宽泛了。在没有更好主意的情况<strong>下， 我们</strong>将_ 其称作结构体<strong>继承</strong>（struct inheritance）， 因为它倚赖于结构体， 并且大致沿着面向对象语言中单继承状态的运作方式_。</p>
-<p>与标签联合类似， 每一枚 Obj 都以一个标签字段开头， 用于标识它是哪一种对象—— 字符串、 实例等等。在那之后便是各自的载荷字段。我们没有为每一种类型使用带各分支的联合， 而是让每一种类型各自成为一个独立的结构体。其中的难点在于， 由于 C 本身并没有继承或多态的概念， 我们如何统一地对待这些结构体_。我很快就会解释这一点， 但先让我们把那些铺垫性的事情搞定。</p>
-<p>&ldquo;Obj&rdquo; 这个名字本身指向一个结构体， 该结构体包含了所有对象类型共用的状态_。它有点类似对象的 &rdquo; 基类&ldquo;。由于 value 与 object 之间存在某些循环依赖_， 我们在 &ldquo;value&rdquo; 模块中对它作了前置声明_。</p>
+<p>取而代之， 我们将使用另一种技巧。它已经存在了很久很久， 久到了 C 标准的规范都为它刻意开了一道门， 但我不知道它有没有一个权威的名字。它是 <a href="https://en.wikipedia.org/wiki/Type_punning">类型双关</a> 的一个例子， 但这个词义太宽泛了。在没有更好主意的情况下， 我们将<em>其</em>称作结构体<strong>继承</strong>（struct inheritance）， 因为它倚赖于结构体， 并且大致沿着面向对象语言中单继承状态的运作方式。</p>
+<p>与标签联合类似， 每一枚 Obj 都以一个标签字段开头， 用于标识它是哪一种对象—— 字符串、 实例等等。在那之后便是各自的载荷字段。我们没有为每一种类型使用带各分支的联合， 而是让每一种类型各自成为一个独立的结构体。其中的难点在于， 由于 C 本身并没有继承或多态的概念， 我们如何统一地对待这些结构体。我很快就会解释这一点， 但先让我们把那些铺垫性的事情搞定。</p>
+<p>&ldquo;Obj&rdquo; 这个名字本身指向一个结构体， 该结构体包含了所有对象类型共用的状态。它有点类似对象的 &rdquo; 基类&ldquo;。由于 value 与 object 之间存在某些循环依赖， 我们在 &ldquo;value&rdquo; 模块中对它作了前置声明。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;common.h&quot;
 
@@ -212,7 +212,7 @@ typedef enum {
 </pre></div>
 <div class="source-file-narrow"><em>value.h</em></div>
 
-<p>而其本体的定义_ 则栖身_ 于一个新模块中。</p>
+<p>而其本体的定义 则栖身 于一个新模块中。</p>
 <div class="codehilite"><div class="source-file"><em>object.h</em><br>
 create new file</div>
 <pre>
@@ -230,7 +230,7 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, create new file</div>
 
-<p>眼下， 它只装有一个类型标签。很快， 我们会向其中添加其他用于内存管理的登记信息。那个类型枚举是这样_ 的：</p>
+<p>眼下， 它只装有一个类型标签。很快， 我们会向其中添加其他用于内存管理的登记信息。那个类型枚举是这样 的：</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;value.h&quot;
 </pre><div class="source-file"><em>object.h</em></div>
@@ -245,7 +245,7 @@ struct Obj {
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 
-<p>显然， 在之后我们添加更多堆分配的类型之后， 这会变得更为有用。由于我们会频繁访问这些标签类型， 值得封装一个小宏来从给定的 Value 中抽出对象类型标签_。</p>
+<p>显然， 在之后我们添加更多堆分配的类型之后， 这会变得更为有用。由于我们会频繁访问这些标签类型， 值得封装一个小宏来从给定的 Value 中抽出对象类型标签。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;value.h&quot;
 </pre><div class="source-file"><em>object.h</em></div>
@@ -259,7 +259,7 @@ typedef enum {
 <div class="source-file-narrow"><em>object.h</em></div>
 
 <p>这便是我们的基础了。</p>
-<p>现在， 我们在其之上搭起字符串。字符串的载荷于一个单独的结构体中定义_。 同样地， 我们需要对它作前置声明_。</p>
+<p>现在， 我们在其之上搭起字符串。字符串的载荷于一个单独的结构体中定义。 同样地， 我们需要对它作前置声明。</p>
 <div class="codehilite"><pre class="insert-before">
 typedef struct Obj Obj;
 </pre><div class="source-file"><em>value.h</em></div>
@@ -289,18 +289,18 @@ add after struct <em>Obj</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>Obj</em></div>
 
-<p>一个字符串对象含有一个字符数组。这些字符被存放于一个单独的、 堆分配的数组之中_， 这样我们就可以仅为每条字符串开辟所需要的空间。我们同时也存储了该数组中字节的数量。这并不完全必需_， 但这样我们就可以在不用一路遍历字符数组以寻找那个空终止字节的前提下， 知道这条字符串分配了多少内存_。</p>
-<p>由于 ObjString 是一枚 Obj， 它也需要所有 Obj 共用的那些状态_。 它通过将一个 Obj 作为它的第一个字段来达到这一点。C 规定结构体的字段在内存中按其声明顺序排列。此外， 当你嵌套结构体时， 内层结构体的字段会就地展开。于是 Obj 与 ObjString 的内存看起来如此：</p><img src="image/strings/obj.png" alt="Obj 与 ObjString 字段的内存布局_。" />
-<p>请注意 ObjString 的前几个字节与 Obj 如出一辙地对齐。这并不是巧合——C <span name="spec"> 规定</span> 如此_。这一点为一种精明的模式创造了可能**性： **你_ 可以拿一个指向某个结构体的指针_， 并安全地将它转换为指向其第一个字段的_ 指针_， 反之亦然_。</p>
+<p>一个字符串对象含有一个字符数组。这些字符被存放于一个单独的、 堆分配的数组之中， 这样我们就可以仅为每条字符串开辟所需要的空间。我们同时也存储了该数组中字节的数量。这并不完全必需， 但这样我们就可以在不用一路遍历字符数组以寻找那个空终止字节的前提下， 知道这条字符串分配了多少内存。</p>
+<p>由于 ObjString 是一枚 Obj， 它也需要所有 Obj 共用的那些状态。 它通过将一个 Obj 作为它的第一个字段来达到这一点。C 规定结构体的字段在内存中按其声明顺序排列。此外， 当你嵌套结构体时， 内层结构体的字段会就地展开。于是 Obj 与 ObjString 的内存看起来如此：</p><img src="image/strings/obj.png" alt="Obj 与 ObjString 字段的内存布局。" />
+<p>请注意 ObjString 的前几个字节与 Obj 如出一辙地对齐。这并不是巧合——C <span name="spec"> 规定</span> 如此。这一点为一种精明的模式创造了可能性：你可以拿一个指向某个结构体的指针， 并安全地将它转换为指向其第一个字段的指针， 反之亦然。</p>
 <aside name="spec">
 <p>该规范的关键部分如下：</p>
 <blockquote>
 <p>&sect; 6.7.2.1 13</p>
-<p>在一个结构对象内部， 那些非位字段的成员与位字段所栖身的单位， 其地址按其声明顺序递增_。一个合适转换后的结构对象指针指向其起始成员（ 或若那一成员是一个位字段， 则指向它所栖身的那个单位）， 反之亦然_。在一个结构对象内部可以存在未命名的填充， 但其开头不允许出现填充_。</p>
+<p>在一个结构对象内部， 那些非位字段的成员与位字段所栖身的单位， 其地址按其声明顺序递增。一个合适转换后的结构对象指针指向其起始成员（ 或若那一成员是一个位字段， 则指向它所栖身的那个单位）， 反之亦然。在一个结构对象内部可以存在未命名的填充， 但其开头不允许出现填充。</p>
 </blockquote>
 </aside>
-<p>对于一个 <code>ObjString*</code>， 你可以安全地将其转换为 <code>Obj*</code>， 并然后从其中访问 <code>type</code> 字段_。每一个 ObjString 在面向对象编程的意义上 &rdquo; 是 &rdquo; 一枚 Obj。等到之后我们添加其他对象类型时， 每一个结构体都会将一个 Obj 作为它的第一个字段。 任何想要统一处理所有对象的代码都可以将它们视为基类 <code>Obj*</code>， 并对其之后可能存在的其他字段视而不见_。</p>
-<p>你也_ 可以往反方向走： 对于一个 <code>Obj*</code>， 你可以将它 &rdquo; 下转型&rdquo; 为 <code>ObjString*</code>。 当然， 你需要确保手里那个 <code>Obj*</code> 指针确实指向的是一个 ObjString 的 <code>obj</code> 字段。否则， 你就是在不安全地重新诠释内存中的随机比特了。为了检测这一下转型是否安全_， 我们再添一个宏。</p>
+<p>对于一个 <code>ObjString*</code>， 你可以安全地将其转换为 <code>Obj*</code>， 并然后从其中访问 <code>type</code> 字段。每一个 ObjString 在面向对象编程的意义上 &rdquo; 是 &rdquo; 一枚 Obj。等到之后我们添加其他对象类型时， 每一个结构体都会将一个 Obj 作为它的第一个字段。 任何想要统一处理所有对象的代码都可以将它们视为基类 <code>Obj*</code>， 并对其之后可能存在的其他字段视而不见。</p>
+<p>你也 可以往反方向走： 对于一个 <code>Obj*</code>， 你可以将它 &rdquo; 下转型&rdquo; 为 <code>ObjString*</code>。 当然， 你需要确保手里那个 <code>Obj*</code> 指针确实指向的是一个 ObjString 的 <code>obj</code> 字段。否则， 你就是在不安全地重新诠释内存中的随机比特了。为了检测这一下转型是否安全， 我们再添一个宏。</p>
 <div class="codehilite"><pre class="insert-before">
 #define OBJ_TYPE(value)        (AS_OBJ(value)-&gt;type)
 </pre><div class="source-file"><em>object.h</em></div>
@@ -313,7 +313,7 @@ typedef enum {
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 
-<p>它接受的是 Value 而不是裸 <code>Obj*</code>， 因为 VM 中大多数代码都是在与 Values 打交道_。它倚赖于这个内联函数：</p>
+<p>它接受的是 Value 而不是裸 <code>Obj*</code>， 因为 VM 中大多数代码都是在与 Values 打交道。它倚赖于这个内联函数：</p>
 <div class="codehilite"><pre class="insert-before">
 };
 
@@ -329,13 +329,13 @@ add after struct <em>ObjString</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, add after struct <em>ObjString</em></div>
 
-<p>小测_ 试： 为什么不直接将这个函数的函体放进宏里？它与其他那些有什么不同？对了， 这是因为该函体使用 <code>value</code> 了两次。宏的展开方式是将参数表达式插_ 入每一次参数名出现的位置。若一个宏在多处使用了同一个参数， 那个表达式会_ 被求值多次_。</p>
+<p>小测 试： 为什么不直接将这个函数的函体放进宏里？它与其他那些有什么不同？对了， 这是因为该函体使用 <code>value</code> 了两次。宏的展开方式是将参数表达式插 入每一次参数名出现的位置。若一个宏在多处使用了同一个参数， 那个表达式会 被求值多次。</p>
 <p>若表达式带有副作用， 那就糟了。如果我们把 <code>isObjType()</code> 的函体塞进宏里， 然后你写了这样一句：</p>
 <div class="codehilite"><pre>
 <span class="a">IS_STRING</span>(<span class="a">POP</span>())
 </pre></div>
 <p>它就会从栈顶弹出两个值！使用一个函数就能修复这一点。</p>
-<p>只要我们在每次创建某种类型的 Obj 时都正确地设定类型标签_， 这个宏就会告诉_ 我们何时可以安全地将一枚 Value 转换为某种具体的对象类型_。 我们可以这样去做：</p>
+<p>只要我们在每次创建某种类型的 Obj 时都正确地设定类型标签， 这个宏就会告诉 我们何时可以安全地将一枚 Value 转换为某种具体的对象类型。 我们可以这样去做：</p>
 <div class="codehilite"><pre class="insert-before">
 #define IS_STRING(value)       isObjType(value, OBJ_STRING)
 </pre><div class="source-file"><em>object.h</em></div>
@@ -349,9 +349,9 @@ typedef enum {
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em></div>
 
-<p>这两个宏接受的是一枚预期装有一个有效 ObjString 的 Value。第一个返回 <code>ObjString*</code> 指针_。第二个则走过那个对象返回其字符数组本身_， 因为那通常正是我们最终会需要的那个东西**。</p>
+<p>这两个宏接受的是一枚预期装有一个有效 ObjString 的 Value。第一个返回 <code>ObjString*</code> 指针。第二个则走过那个对象返回其字符数组本身， 因为那通常正是我们最终会需要的那个东西。</p>
 <h2><a href="#字符串" name="字符串"><small>19&#8202;.&#8202;3</small>字符串</a></h2>
-<p>**好_， 我们的 VM 现在能够表示字符串值了。是时候把字符串本身纳入这门语言了。 照例， 我们从前端开始_。词法分析器已经会产生字符串字面量的 token 了， 于是接下来该解析器上场_。</p>
+<p>好， 我们的 VM 现在能够表示字符串值了。是时候把字符串本身纳入这门语言了。 照例， 我们从前端开始。词法分析器已经会产生字符串字面量的 token 了， 于是接下来该解析器上场。</p>
 <div class="codehilite"><pre class="insert-before">
   [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
 </pre><div class="source-file"><em>compiler.c</em><br>
@@ -374,9 +374,9 @@ add after <em>number</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>compiler.c</em>, add after <em>number</em>()</div>
 
-<p>它直接从词素 <span name="escape"> 中取</span> 出那些字符。<code>+ 1</code> 与 <code>- 2</code> 两段是为了去掉前后的引号。接着它创建一个字符串对象， 将其包入一枚 Value 之中_， 再塞入常量表里。</p>
+<p>它直接从词素 <span name="escape"> 中取</span> 出那些字符。<code>+ 1</code> 与 <code>- 2</code> 两段是为了去掉前后的引号。接着它创建一个字符串对象， 将其包入一枚 Value 之中， 再塞入常量表里。</p>
 <aside name="escape">
-<p>若 Lox 支持字符串转义序列比如 <code>\n</code>， 我们会在此处翻译它们。由于 Lox 并不支持， 我们便可以原样取走那些字符_。</p>
+<p>若 Lox 支持字符串转义序列比如 <code>\n</code>， 我们会在此处翻译它们。由于 Lox 并不支持， 我们便可以原样取走那些字符。</p>
 </aside>
 <p>为了创建该字符串， 我们使用 <code>copyString()</code>， 它声明于 <code>object.h</code> 中。</p>
 <div class="codehilite"><pre class="insert-before">
@@ -441,11 +441,11 @@ create new file</div>
 
 <p>一旦我们有了这个数组， 我们将词素中的字符复制过去并为其加上终止符。</p>
 <aside name="terminator" class="bottom">
-<p>我们需要自己为这条字符串添上终止符， 因为那段词素指向的是整段源码字符串中间的一段范围_， 本身并不带终止符。</p>
+<p>我们需要自己为这条字符串添上终止符， 因为那段词素指向的是整段源码字符串中间的一段范围， 本身并不带终止符。</p>
 <p>由于 ObjString 显式存储了长度， 我们本可以让字符数组不带终止符， 但在末尾补上一个终止符只花我们一个字节， 却让我们可以将这段字符数组直接交给那些期待字符串以终止符结尾的 C 标准库函数。</p>
 </aside>
-<p>你或许会_ 奇怪， 为什么 ObjString 不能仅仅回指到源字符串中的那些原始字符。一些 ObjString 会在运行时作为字符串运算的结果被动态创建_， 比如拼接。那些字符串显然需要在堆上动态分配内存来装那些字符_， 这意味着当该字符串不再被需要时， 它需要释放那些内存_。</p>
-<p>若我们为一条字符串字面量也弄一枚 ObjString， 并试图去释放它的那段指向源码字符串中间的字符数组， 糟糕的事情就会发生。所以， 对于字面量， 我们抢先将那些字符复制到堆上。这样， 每一枚 ObjString 都可靠地拥有自己的字符数组， 并可以将其释放_。</p>
+<p>你或许会 奇怪， 为什么 ObjString 不能仅仅回指到源字符串中的那些原始字符。一些 ObjString 会在运行时作为字符串运算的结果被动态创建， 比如拼接。那些字符串显然需要在堆上动态分配内存来装那些字符， 这意味着当该字符串不再被需要时， 它需要释放那些内存。</p>
+<p>若我们为一条字符串字面量也弄一枚 ObjString， 并试图去释放它的那段指向源码字符串中间的字符数组， 糟糕的事情就会发生。所以， 对于字面量， 我们抢先将那些字符复制到堆上。这样， 每一枚 ObjString 都可靠地拥有自己的字符数组， 并可以将其释放。</p>
 <p>创建一枚字符串对象的真正工作发生于这个函数中：</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;vm.h&quot;
@@ -461,7 +461,7 @@ create new file</div>
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em></div>
 
-<p>它在堆上_ 创建一枚 ObjString， 接着初始化其各字段_。它有些类似面向对象编程语言中的构造器。由于这一点， 它首先会调用 &rdquo; 基类&rdquo; 构造器来初始化 Obj 的状态_， 所用的是一个新宏。</p>
+<p>它在堆上 创建一枚 ObjString， 接着初始化其各字段。它有些类似面向对象编程语言中的构造器。由于这一点， 它首先会调用 &rdquo; 基类&rdquo; 构造器来初始化 Obj 的状态， 所用的是一个新宏。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;vm.h&quot;
 </pre><div class="source-file"><em>object.c</em></div>
@@ -475,9 +475,9 @@ static ObjString* allocateString(char* chars, int length) {
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em></div>
 
-<p><span name="factored"> 与之前那个宏一样， 它主要是为了避免冗余地把 <code>void*</code> 强转回所需的类型而设的。 真正的功能在这里_：</span></p>
+<p><span name="factored"> 与之前那个宏一样， 它主要是为了避免冗余地把 <code>void*</code> 强转回所需的类型而设的。 真正的功能在这里：</span></p>
 <aside name="factored">
-<p>我承认本章有一大片辅助函数与宏需要去穿越。我力图让代码的分拆优雅， 但这会导致许多小小的函数四散分布。它们在之后被复用时便会回本_。</p>
+<p>我承认本章有一大片辅助函数与宏需要去穿越。我力图让代码的分拆优雅， 但这会导致许多小小的函数四散分布。它们在之后被复用时便会回本。</p>
 </aside>
 <div class="codehilite"><pre class="insert-before">
 #define ALLOCATE_OBJ(type, objectType) \
@@ -496,13 +496,13 @@ static ObjString* allocateString(char* chars, int length) {
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em></div>
 
-<p>它在堆上分配一个大小为所给字节数的对象。请注意该大小并不只是 Obj 本身的大小。调用方传入的字节数包括了那些由所创建的具体对象类型所需要的额外载荷字段_。</p>
-<p>然后它初始化 Obj 的状态_—— 眼下那只是类型标签_。这个函数返回给 <code>allocateString()</code>， 由后者完成 ObjString 的其他字段的初始化。<span name="viola"><em>Voilà</em></span>， 我们现在能够编译并执行字符串字面量了**。</p>
-<aside name="viola"><img src="image/strings/viola.png" class="above" alt="一把中提琴**。" />
-<p>千万别把 &ldquo;voilà&rdquo; 与 &ldquo;viola&rdquo; 弄混了。一个意思是 &rdquo; 就这样 &ldquo;， 另一个是一件弦乐器—— 小提琴与大提琴之间的中间孩。 对了， 为了提一嘴这个， 我确实花了两个小时来画一把中提琴**。</p>
+<p>它在堆上分配一个大小为所给字节数的对象。请注意该大小并不只是 Obj 本身的大小。调用方传入的字节数包括了那些由所创建的具体对象类型所需要的额外载荷字段。</p>
+<p>然后它初始化 Obj 的状态——眼下那只是类型标签。这个函数返回给 <code>allocateString()</code>， 由后者完成 ObjString 的其他字段的初始化。<span name="viola"><em>Voilà</em></span>， 我们现在能够编译并执行字符串字面量了。</p>
+<aside name="viola"><img src="image/strings/viola.png" class="above" alt="一把中提琴。" />
+<p>千万别把 &ldquo;voilà&rdquo; 与 &ldquo;viola&rdquo; 弄混了。一个意思是 &rdquo; 就这样 &ldquo;， 另一个是一件弦乐器—— 小提琴与大提琴之间的中间孩。 对了， 为了提一嘴这个， 我确实花了两个小时来画一把中提琴。</p>
 </aside>
 <h2><a href="#字符串上的运算" name="字符串上的运算"><small>19&#8202;.&#8202;4</small>字符串上的运算</a></h2>
-<p>我们那些花哨**的_ 字符串就在那里， 但它们还不怎么能干什么。一个良好的起点是让现有的打印代码不在碰上新的值类型时崩溃_。</p>
+<p>我们那些花哨的字符串就在那里， 但它们还不怎么能干什么。一个良好的起点是让现有的打印代码不在碰上新的值类型时崩溃。</p>
 <div class="codehilite"><pre class="insert-before">
     case VAL_NUMBER: printf(&quot;%g&quot;, AS_NUMBER(value)); break;
 </pre><div class="source-file"><em>value.c</em><br>
@@ -514,7 +514,7 @@ in <em>printValue</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>printValue</em>()</div>
 
-<p>若值是一个堆分配的对象， 它会将工作转交给 &ldquo;object&rdquo; 模块中的一个辅助函数_。</p>
+<p>若值是一个堆分配的对象， 它会将工作转交给 &ldquo;object&rdquo; 模块中的一个辅助函数。</p>
 <div class="codehilite"><pre class="insert-before">
 ObjString* copyString(const char* chars, int length);
 </pre><div class="source-file"><em>object.h</em><br>
@@ -541,15 +541,15 @@ add after <em>copyString</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, add after <em>copyString</em>()</div>
 
-<p>眼下我们只有一种对象类型， 但这个函数在之后的几章里会长出更多的 switch 分支_。对于字符串对象， 它只是 <span name="term-2"> 简单地<strong>把</span> 字符数组</strong>作_ 为一条 C 字符串打印出来_。</p>
+<p>眼下我们只有一种对象类型， 但这个函数在之后的几章里会长出更多的 switch 分支。对于字符串对象， 它只是 <span name="term-2">简单地</span>把字符数组作为一条 C 字符串打印出来。</p>
 <aside name="term-2">
-<p>看吧_， 给字符串添加终止符终于派上用场了。</p>
+<p>看吧， 给字符串添加终止符终于派上用场了。</p>
 </aside>
 <p>相等性运算符也需要从容地应对字符串。试想一下：</p>
 <div class="codehilite"><pre>
 <span class="s">&quot;string&quot;</span> == <span class="s">&quot;string&quot;</span>
 </pre></div>
-<p>这是两个相同的字符串字面量。编译器会进行两次各自的 <code>copyString()</code> 调用， 创建两个各不相同的 ObjString 对象， 并将其作为两条常量存进 chunk。它们是堆中两个不同的对象_。但我们的用户（ 从而也是我们自己） 期待字符串具有值相等性。 上述表达式应该求值为 <code>true</code>。这需要一点特殊的支持_。</p>
+<p>这是两个相同的字符串字面量。编译器会进行两次各自的 <code>copyString()</code> 调用， 创建两个各不相同的 ObjString 对象， 并将其作为两条常量存进 chunk。它们是堆中两个不同的对象。但我们的用户（ 从而也是我们自己） 期待字符串具有值相等性。 上述表达式应该求值为 <code>true</code>。这需要一点特殊的支持。</p>
 <div class="codehilite"><pre class="insert-before">
     case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
 </pre><div class="source-file"><em>value.c</em><br>
@@ -567,8 +567,8 @@ in <em>valuesEqual</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>value.c</em>, in <em>valuesEqual</em>()</div>
 
-<p>若两个值都是字符串， 它们相等当且仅当_ 它们的字符数组包含同样的字符_， 与它们是两个各自独立的对象还是_ 完全同一个毫无关系。这意味_ 着字符串的相等比较比其他类型要慢， 因为它必须走遍整条字符串。我们会 <a href="hash-tables.html"> 之后 </a> 对这一点加以改进， 但眼下这种做法给了我们_ 正确的语义。</p>
-<p>最后， 为了能使用 <code>memcmp()</code> 以及 &ldquo;object&rdquo; 模块中的新东西_， 我们需要几个 include。这里：</p>
+<p>若两个值都是字符串， 它们相等当且仅当 它们的字符数组包含同样的字符， 与它们是两个各自独立的对象还是 完全同一个毫无关系。这意味 着字符串的相等比较比其他类型要慢， 因为它必须走遍整条字符串。我们会 <a href="hash-tables.html"> 之后 </a> 对这一点加以改进， 但眼下这种做法给了我们 正确的语义。</p>
+<p>最后， 为了能使用 <code>memcmp()</code> 以及 &ldquo;object&rdquo; 模块中的新东西， 我们需要几个 include。这里：</p>
 <div class="codehilite"><pre class="insert-before">
 #include &lt;stdio.h&gt;
 </pre><div class="source-file"><em>value.c</em></div>
@@ -594,8 +594,8 @@ in <em>valuesEqual</em>()</div>
 <div class="source-file-narrow"><em>value.c</em></div>
 
 <h3><a href="#拼接" name="拼接"><small>19&#8202;.&#8202;4&#8202;.&#8202;1</small>拼接</a></h3>
-<p>功能齐备的语言为字符串提供了一大堆操**作—— **对_ 单个字符的访问_、字符串的长度_、大小写转换_、 分隔_、拼接_、搜索等等。当你实现自己的语言时_， 你大概都会需要。但对于本书， 我们保持极简。</p>
-<p>我们对字符串支持的唯一一项有意思的_ 运算是 <code>+</code>。若你用这个运算符对两个字符串进行操作， 它会产出一条由两个操作数拼接而成的新字符串。由于 Lox 是动态类型的， 我们无法在编译期知道应该采用哪种行为， 因为我们要到运行时才知道操作数的_ 类型_。于是 <code>OP_ADD</code> 指令会在运行时动态检查操作**数， **并_ 选择正确的操作。</p>
+<p>功能齐备的语言为字符串提供了一大堆操作——对单个字符的访问、字符串的长度、大小写转换、 分隔、拼接、搜索等等。当你实现自己的语言时， 你大概都会需要。但对于本书， 我们保持极简。</p>
+<p>我们对字符串支持的唯一一项有意思的运算是 <code>+</code>。若你用这个运算符对两个字符串进行操作， 它会产出一条由两个操作数拼接而成的新字符串。由于 Lox 是动态类型的， 我们无法在编译期知道应该采用哪种行为， 因为我们要到运行时才知道操作数的类型。于是 <code>OP_ADD</code> 指令会在运行时动态检查操作数，并选择正确的操作。</p>
 <div class="codehilite"><pre class="insert-before">
       case OP_LESS:     BINARY_OP(BOOL_VAL, &lt;); break;
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -621,10 +621,10 @@ replace 1 line</div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>run</em>(), replace 1 line</div>
 
-<p>若两个操作数都是字符串， 它就拼接。若它们都是数字， 它们相加。其他 <span name="convert"> 类型</span> 的操作数搭配都是运行时错误_。</p>
+<p>若两个操作数都是字符串， 它就拼接。若它们都是数字， 它们相加。其他 <span name="convert"> 类型</span> 的操作数搭配都是运行时错误。</p>
 <aside name="convert" class="bottom">
 <p>这比大多数其他语言都要保守。在其他语言中， 如果一个操作数是字符串， 另一个可以是任意类型， 并会被隐式转换为字符串之后再拼接。</p>
-<p>我认为那是一项不错的特性， 但那会需要为每一种类型编写烦琐的 &rdquo; 转换为字符**串&rdquo; 代码， 所以我在 Lox **中_ 省略了它_。</p>
+<p>我认为那是一项不错的特性， 但那会需要为每一种类型编写烦琐的 &ldquo;转换为字符串&rdquo; 代码， 所以我在 Lox 中省略了它。</p>
 </aside>
 <p>为了拼接字符串， 我们定义了一个新函数。</p>
 <div class="codehilite"><div class="source-file"><em>vm.c</em><br>
@@ -646,7 +646,7 @@ add after <em>isFalsey</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, add after <em>isFalsey</em>()</div>
 
-<p>它有些冗长， 这便是与字符串打交道的 C 代码的一贯作风_。首先， 我们根据两个操作数的长度计算出结果字符串的长度。接着我们为结果分配一段字符数组， 再将那两半分别拷贝进去_。一如既往， 我们慎重地确保字符串已被终止_。</p>
+<p>它有些冗长， 这便是与字符串打交道的 C 代码的一贯作风。首先， 我们根据两个操作数的长度计算出结果字符串的长度。接着我们为结果分配一段字符数组， 再将那两半分别拷贝进去。一如既往， 我们慎重地确保字符串已被终止。</p>
 <p>为能调用 <code>memcpy()</code>，VM 需要一个 include。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &lt;stdio.h&gt;
@@ -659,7 +659,7 @@ add after <em>isFalsey</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
-<p>最后， 我们产出一枚 ObjString 来装那些字符_。 这一次我们使用了一个新函数， <code>takeString()</code>。</p>
+<p>最后， 我们产出一枚 ObjString 来装那些字符。 这一次我们使用了一个新函数， <code>takeString()</code>。</p>
 <div class="codehilite"><pre class="insert-before">
 };
 
@@ -682,8 +682,8 @@ add after <em>allocateString</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>object.c</em>, add after <em>allocateString</em>()</div>
 
-<p>之前那个 <code>copyString()</code> 函数假设它_ 不能取得你传给它的那些_ 字符的所有权。取而代之， 它会保守地在堆上创建一份字符的拷贝_， 由 ObjString 去拥有_。对于那些传入的字符位于源字符串中间的字面量而**言， **这_ 是正确的做法_。</p>
-<p>但对于拼接， 我们已经在堆上动态分配了一段字符数组_。在其上再复制一份会是冗余的（ 而且意味着 <code>concatenate()</code> 必须记得去释放它的那一份拷贝）。取而代之， 这个函数会主动接管你给它的那条字符串的所有权。</p>
+<p>之前那个 <code>copyString()</code> 函数假设它 不能取得你传给它的那些 字符的所有权。取而代之， 它会保守地在堆上创建一份字符的拷贝， 由 ObjString 去拥有。对于那些传入的字符位于源字符串中间的字面量而言，这是正确的做法。</p>
+<p>但对于拼接， 我们已经在堆上动态分配了一段字符数组。在其上再复制一份会是冗余的（ 而且意味着 <code>concatenate()</code> 必须记得去释放它的那一份拷贝）。取而代之， 这个函数会主动接管你给它的那条字符串的所有权。</p>
 <p>一如既往， 要把这些功能拼在一起， 还需要几个 include。</p>
 <div class="codehilite"><pre class="insert-before">
 #include &quot;debug.h&quot;
@@ -697,13 +697,13 @@ add after <em>allocateString</em>()</div>
 <div class="source-file-narrow"><em>vm.c</em></div>
 
 <h2><a href="#释放对象" name="释放对象"><small>19&#8202;.&#8202;5</small>释放对象</a></h2>
-<p>请看这条看似人畜无害的表达**式：</p>
+<p>请看这条看似人畜无害的表达式：</p>
 <div class="codehilite"><pre>
 <span class="s">&quot;st&quot;</span> + <span class="s">&quot;ri&quot;</span> + <span class="s">&quot;ng&quot;</span>
 </pre></div>
-<p>当编译器咬碎这条表达**式_ 时， 它会为那三个字符串字面量各自分配一个 ObjString， 将它们存_ 入 chunk 的常量表中， 并生成这段 <span name="stack"> 字节码</span>：</p>
+<p>当编译器咬碎这条表达式时， 它会为那三个字符串字面量各自分配一个 ObjString， 将它们存入 chunk 的常量表中， 并生成这段 <span name="stack"> 字节码</span>：</p>
 <aside name="stack">
-<p>这里是每条指令执行之后栈的状态_：</p><img src="image/strings/stack.png" alt=" 每条指令处栈的状态_。" />
+<p>这里是每条指令执行之后栈的状态：</p><img src="image/strings/stack.png" alt=" 每条指令处栈的状态。" />
 </aside>
 <div class="codehilite"><pre>0000    OP_CONSTANT         0 &quot;st&quot;
 0002    OP_CONSTANT         1 &quot;ri&quot;
@@ -712,18 +712,18 @@ add after <em>allocateString</em>()</div>
 0007    OP_ADD
 0008    OP_RETURN
 </pre></div>
-<p>前两条指令将 <code>"st"</code> 与 <code>"ri"</code> 推上了栈。接着 <code>OP_ADD</code> 弹出它们并对其进行拼接_。这会在堆上动态分配一个新的 <code>"stri"</code> 字符串。VM 将其推上栈， 接着再推上 <code>"ng"</code> 常量。最后那条 <code>OP_ADD</code> 弹出 <code>"stri"</code> 与 <code>"ng"</code>， 对其进行拼接， 并将结果推回栈中：<code>"string"</code>。妙啊， 正是我们所期待的。</p>
-<p>但， 等等。那条 <code>"stri"</code> 字符串后来怎样了？我们动态分配了它_， 接着 VM 在将其与 <code>"ng"</code> 拼接之后便将其抛弃了。我们从栈上弹出了它， 也不再拥有对它的任何引用， 但我们从未释放过它所占用的_ 内存_。我们自己惹上了一桩经典的内存泄漏_。</p>
-<p>当然， 对于 Lox 程序而言， 完全可以忘记那些中间字符串， 并不去担心释放它们的事情_。Lox 会代用户自动管理内存_。管理内存的责任并不会消失， 它只是转移到了我们这些 VM 实现者的肩上。</p>
-<p>完整 <span name="borrowed"> 的</span> 解决方案是一个 <a href="garbage-collection.html"> 垃圾回收器 </a>， 它会在程序运行期间回收不再使用的内存_。 在我们准备就绪去攻克这个工程之前， 还有一些别的事情得先安排好。在那之前， 我们一直活在借来的时间里。等待收集器的时间越久， 日后就越难做。</p>
+<p>前两条指令将 <code>"st"</code> 与 <code>"ri"</code> 推上了栈。接着 <code>OP_ADD</code> 弹出它们并对其进行拼接。这会在堆上动态分配一个新的 <code>"stri"</code> 字符串。VM 将其推上栈， 接着再推上 <code>"ng"</code> 常量。最后那条 <code>OP_ADD</code> 弹出 <code>"stri"</code> 与 <code>"ng"</code>， 对其进行拼接， 并将结果推回栈中：<code>"string"</code>。妙啊， 正是我们所期待的。</p>
+<p>但， 等等。那条 <code>"stri"</code> 字符串后来怎样了？我们动态分配了它， 接着 VM 在将其与 <code>"ng"</code> 拼接之后便将其抛弃了。我们从栈上弹出了它， 也不再拥有对它的任何引用， 但我们从未释放过它所占用的 内存。我们自己惹上了一桩经典的内存泄漏。</p>
+<p>当然， 对于 Lox 程序而言， 完全可以忘记那些中间字符串， 并不去担心释放它们的事情。Lox 会代用户自动管理内存。管理内存的责任并不会消失， 它只是转移到了我们这些 VM 实现者的肩上。</p>
+<p>完整 <span name="borrowed"> 的</span> 解决方案是一个 <a href="garbage-collection.html"> 垃圾回收器 </a>， 它会在程序运行期间回收不再使用的内存。 在我们准备就绪去攻克这个工程之前， 还有一些别的事情得先安排好。在那之前， 我们一直活在借来的时间里。等待收集器的时间越久， 日后就越难做。</p>
 <aside name="borrowed">
-<p>我见过不少人在开始捣鼓他们的语言之_ 前， 先把大块的功能都实现了。对于那些在语言开发过程中_ 通常会跑的那些小玩意儿程序， 其实你在它跑完之前并不会耗尽内存， 于是这种做法出乎意料地可以跑很久。</p>
-<p>但这低估了之后要加入垃圾回收器的难度_。回收器必须确保它能找到每一点仍然在被使用的内存， 从而不会把仍然活着的数据回收掉。在一门语言的实现之中， 藏匿一处对某个对象的引用可以有上百个地方_。若你没有把它们全找到， 就会碰上噩梦般的_ bug。</p>
-<p>我见过有语言实现死于把垃圾回收器_ 以后才加上。如果你的语言需要垃圾回<strong>收， 越早</strong>上_ 场越_ 好。 它是一项贯穿整个代码库的_ 横切关注点。</p>
+<p>我见过不少人在开始捣鼓他们的语言之 前， 先把大块的功能都实现了。对于那些在语言开发过程中 通常会跑的那些小玩意儿程序， 其实你在它跑完之前并不会耗尽内存， 于是这种做法出乎意料地可以跑很久。</p>
+<p>但这低估了之后要加入垃圾回收器的难度。回收器必须确保它能找到每一点仍然在被使用的内存， 从而不会把仍然活着的数据回收掉。在一门语言的实现之中， 藏匿一处对某个对象的引用可以有上百个地方。若你没有把它们全找到， 就会碰上噩梦般的 bug。</p>
+<p>我见过有语言实现死于把垃圾回收器 以后才加上。如果你的语言需要垃圾回收，越早上场越好。 它是一项贯穿整个代码库的横切关注点。</p>
 </aside>
-<p>今天， 我们至少应该做一件最低限度的_ 事： 避免泄漏内存_—— 确保 VM 能找到每一个已经分配的对象， 即便是 Lox 程序本身已不再引用它们的情况_。 有许多复杂的方法可以被高级内存管理器用于追踪对象的分配与状态_。 我们将采取最简而实用的做法_。</p>
-<p>我们会创建一条存储所有 Obj 的链表_。VM 可以遍历这条链表_， 以找到每一个已在堆上分配的对象_， 无视是否仍然有程序或栈上的引用指向它们_。</p>
-<p>我们本可以单独定义一个链表节点的结构体， 但那样我们就也必须为它分配空间。取而代之， 我们将使用侵入式链表—— Obj 结构本身即充当链表节点。每一个 Obj 都拥有一个指向链表中下一个 Obj 的指针_。</p>
+<p>今天， 我们至少应该做一件最低限度的 事： 避免泄漏内存——确保 VM 能找到每一个已经分配的对象， 即便是 Lox 程序本身已不再引用它们的情况。 有许多复杂的方法可以被高级内存管理器用于追踪对象的分配与状态。 我们将采取最简而实用的做法。</p>
+<p>我们会创建一条存储所有 Obj 的链表。VM 可以遍历这条链表， 以找到每一个已在堆上分配的对象， 无视是否仍然有程序或栈上的引用指向它们。</p>
+<p>我们本可以单独定义一个链表节点的结构体， 但那样我们就也必须为它分配空间。取而代之， 我们将使用侵入式链表—— Obj 结构本身即充当链表节点。每一个 Obj 都拥有一个指向链表中下一个 Obj 的指针。</p>
 <div class="codehilite"><pre class="insert-before">
 struct Obj {
   ObjType type;
@@ -736,7 +736,7 @@ in struct <em>Obj</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>object.h</em>, in struct <em>Obj</em></div>
 
-<p>VM 存了一个指向链表头部的指针_。</p>
+<p>VM 存了一个指向链表头部的指针。</p>
 <div class="codehilite"><pre class="insert-before">
   Value* stackTop;
 </pre><div class="source-file"><em>vm.h</em><br>
@@ -748,7 +748,7 @@ in struct <em>VM</em></div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, in struct <em>VM</em></div>
 
-<p>当我们首次初始化 VM 时， 还没有任何已分配的对象_。</p>
+<p>当我们首次初始化 VM 时， 还没有任何已分配的对象。</p>
 <div class="codehilite"><pre class="insert-before">
   resetStack();
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -760,7 +760,7 @@ in <em>initVM</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>vm.c</em>, in <em>initVM</em>()</div>
 
-<p>每当我们分配一枚 Obj 时， 我们会将它插入链表_。</p>
+<p>每当我们分配一枚 Obj 时， 我们会将它插入链表。</p>
 <div class="codehilite"><pre class="insert-before">
   object-&gt;type = type;
 </pre><div class="source-file"><em>object.c</em><br>
@@ -775,7 +775,7 @@ in <em>allocateObject</em>()</div>
 <div class="source-file-narrow"><em>object.c</em>, in <em>allocateObject</em>()</div>
 
 <p>由于这是一条单链表， 最容易插入的位置是头部。这样， 我们就不需要同时存一个指向尾部的指针并不断更新它。</p>
-<p>&ldquo;object&rdquo; 模块正在直接使用来自 &ldquo;vm&rdquo; 模块的全局 <code>vm</code> 变量， 于是我们需要将该变量对外暴露_。</p>
+<p>&ldquo;object&rdquo; 模块正在直接使用来自 &ldquo;vm&rdquo; 模块的全局 <code>vm</code> 变量， 于是我们需要将该变量对外暴露。</p>
 <div class="codehilite"><pre class="insert-before">
 } InterpretResult;
 
@@ -789,8 +789,8 @@ void initVM();
 </pre></div>
 <div class="source-file-narrow"><em>vm.h</em>, add after enum <em>InterpretResult</em></div>
 
-<p>最终， 垃圾回收器会在 VM 还在运行的_ 时候就去释放内存_。但即使如此， 当用户的程序完成时， 仍会有许多不再使用的对象滞留在内存中。VM 也应_ 当把它们一并清理掉。</p>
-<p>其中并不存在什么精巧的逻辑_。一旦程序跑完， 我们便可以把<strong>所有</strong>的_ 对象都释放掉。 我们现在就可以_ 也应该把这件事落到实处。</p>
+<p>最终， 垃圾回收器会在 VM 还在运行的 时候就去释放内存。但即使如此， 当用户的程序完成时， 仍会有许多不再使用的对象滞留在内存中。VM 也应 当把它们一并清理掉。</p>
+<p>其中并不存在什么精巧的逻辑。一旦程序跑完， 我们便可以把<strong>所有</strong>的对象都释放掉。 我们现在就可以 也应该把这件事落到实处。</p>
 <div class="codehilite"><pre class="insert-before">
 void freeVM() {
 </pre><div class="source-file"><em>vm.c</em><br>
@@ -815,7 +815,7 @@ add after <em>reallocate</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em>, add after <em>reallocate</em>()</div>
 
-<p>这样就释放了_ 那些对象_：</p>
+<p>这样就释放了 那些对象：</p>
 <div class="codehilite"><div class="source-file"><em>memory.c</em><br>
 add after <em>reallocate</em>()</div>
 <pre>
@@ -847,7 +847,7 @@ add after <em>reallocate</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em>, add after <em>reallocate</em>()</div>
 
-<p>我们并不只是在释放 Obj 本身_。由于某些对象类型还会分配其他由自己拥有的内存， 我们也需要一些面向特定类型的代码来处理每种对象类型的特殊需要_。这里， 那意味着我们先释放字符数组， 再释放 ObjString。这两步都使用了最后一个内存管理宏。</p>
+<p>我们并不只是在释放 Obj 本身。由于某些对象类型还会分配其他由自己拥有的内存， 我们也需要一些面向特定类型的代码来处理每种对象类型的特殊需要。这里， 那意味着我们先释放字符数组， 再释放 ObjString。这两步都使用了最后一个内存管理宏。</p>
 <div class="codehilite"><pre class="insert-before">
     (type*)reallocate(NULL, 0, sizeof(type) * (count))
 </pre><div class="source-file"><em>memory.h</em></div>
@@ -860,9 +860,9 @@ add after <em>reallocate</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>memory.h</em></div>
 
-<p>它是一个围绕 <code>reallocate()</code> 的 <span name="free"> 小小的封装</span>， 通过将一块分配的大小缩减到零字节来 &rdquo; 释放&rdquo; 内存_。</p>
+<p>它是一个围绕 <code>reallocate()</code> 的 <span name="free"> 小小的封装</span>， 通过将一块分配的大小缩减到零字节来 &rdquo; 释放&rdquo; 内存。</p>
 <aside name="free">
-<p>用 <code>reallocate()</code> 来释放内存看起来或许有些多余。 为什么不直接调用 <code>free()</code>？之后， 这会帮助 VM 追踪至今仍在被使用的内存有多少。若所有的分配与释放都经过 <code>reallocate()</code>， 就很容易维护一个对于已分配字节数的持续累加_。</p>
+<p>用 <code>reallocate()</code> 来释放内存看起来或许有些多余。 为什么不直接调用 <code>free()</code>？之后， 这会帮助 VM 追踪至今仍在被使用的内存有多少。若所有的分配与释放都经过 <code>reallocate()</code>， 就很容易维护一个对于已分配字节数的持续累加。</p>
 </aside>
 <p>一如既往， 我们需要一个 include 来把一切串在一起。</p>
 <div class="codehilite"><pre class="insert-before">
@@ -888,17 +888,17 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </pre></div>
 <div class="source-file-narrow"><em>memory.c</em></div>
 
-<p>有了这一切， 我们的 VM 不再泄漏内存了。像一段良好的 C 程序那样， 它在退出之前清理了自己的一切残局_。但在 VM 运行期间， 它仍不会释放任何对象_。之后， 当有必要去写一些运行更久的 Lox 程序时，VM 会一边跑一边吃掉越来越多的内存， 直到整个程序跑完之前都不会归还一字一节_。</p>
-<p>我们要到添上 <a href="garbage-collection.html"> 一个真正的垃圾回收器_ </a> 之后才会去解决这一问题_， 但如此一来我们已经迈出了不小的一步。我们现在已经搭起了可以支持多种各不相同的动态分配对象的基础设施_。 我们用它来为 clox 加上了_ 字符串， 一种在大多数程序设计语言中使用最频繁的_ 类型_。而字符串又使我们能够去构造另一种基本的数据类型， 尤其在动态语言中：那位 <a href="hash-tables.html"> 声望卓著的哈希表_ </a>。但那就留给下一章吧 ……</p>
+<p>有了这一切， 我们的 VM 不再泄漏内存了。像一段良好的 C 程序那样， 它在退出之前清理了自己的一切残局。但在 VM 运行期间， 它仍不会释放任何对象。之后， 当有必要去写一些运行更久的 Lox 程序时，VM 会一边跑一边吃掉越来越多的内存， 直到整个程序跑完之前都不会归还一字一节。</p>
+<p>我们要到添上 <a href="garbage-collection.html">一个真正的垃圾回收器</a> 之后才会去解决这一问题， 但如此一来我们已经迈出了不小的一步。我们现在已经搭起了可以支持多种各不相同的动态分配对象的基础设施。 我们用它来为 clox 加上了字符串， 一种在大多数程序设计语言中使用最频繁的类型。而字符串又使我们能够去构造另一种基本的数据类型， 尤其在动态语言中：那位 <a href="hash-tables.html">声望卓著的哈希表</a>。但那就留给下一章吧 ……</p>
 <div class="challenges">
 <h2><a href="#挑战" name="挑战"><small>19&#8202;.&#8202;6</small>挑战</a></h2>
 <ol>
 <li>
-<p>每条字符串都需要两个各自独立的动态分配——一个用于 ObjString， 另一个用于字符数组。从一个值中访问那些字符需要两次指针间接， 这对性能可能不利。一个更高效的解决方案倚赖于一项叫<strong>做 [柔性数组成员</strong> ]<a href="https://en.wikipedia.org/wiki/Flexible_array**member">flexible array members</a>_ 的技巧。使用它将 ObjString 与其字符数组存放于一次连续的分配中。</p>
+<p>每条字符串都需要两个各自独立的动态分配——一个用于 ObjString， 另一个用于字符数组。从一个值中访问那些字符需要两次指针间接， 这对性能可能不利。一个更高效的解决方案倚赖于一项叫做 <a href="https://en.wikipedia.org/wiki/Flexible_array_member">柔性数组成员</a> 的技巧。使用它将 ObjString 与其字符数组存放于一次连续的分配中。</p>
 </li>
 <li>
 <p>当我们为每个字符串字面量创建 ObjString 时， 我们会将字符复制到堆上。这样， 当之后该字符串被释放时， 我们便可以安全地也把字符释放掉。</p>
-<p>这是一种更简单的_ 做法， 但浪费了一些内存， 在极其受限的设备上可能会是一个问题。取而代之， 我们可以跟踪哪些 ObjString 拥有它们的字符数组， 哪些是 &rdquo; 常量字符串&rdquo; 只回指到原始源字符串或其他某些不可释放的位置。为这一情形添加支持_。</p>
+<p>这是一种更简单的 做法， 但浪费了一些内存， 在极其受限的设备上可能会是一个问题。取而代之， 我们可以跟踪哪些 ObjString 拥有它们的字符数组， 哪些是 &rdquo; 常量字符串&rdquo; 只回指到原始源字符串或其他某些不可释放的位置。为这一情形添加支持。</p>
 </li>
 <li>
 <p>若 Lox 是你的语言， 当用户尝试将 <code>+</code> 用于一个字符串操作数与另一个其他类型时， 你会让它做什么？为你的选择给出理由。其他语言又是怎样的？</p>
@@ -907,45 +907,45 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 </div>
 <div class="design-note">
 <h2><a href="#设计笔记：字符串编码" name="设计笔记：字符串编码"><small>19&#8202;.&#8202;7</small>设计笔记：字符串编码</a></h2>
-<p>**在_ 本书中， 我不试图躲避那些你在一门真正的语言实现中_ 会碰到的那些棘手问题_。我们可能不总是采用最精致的解决方案—— 毕竟这是一本入门书 <em>—</em> 但我不认为假装问题完全不存在是一种诚实的态度_。然而， 我确实绕过了一个极其难缠的问题： 抉择如何表示字符串。</p>
-<p>字符串的编码有两个侧面**：</p>
+<p>在本书中， 我不试图躲避那些你在一门真正的语言实现中会碰到的那些棘手问题。我们可能不总是采用最精致的解决方案——毕竟这是一本入门书——但我不认为假装问题完全不存在是一种诚实的态度。然而， 我确实绕过了一个极其难缠的问题： 抉择如何表示字符串。</p>
+<p>字符串的编码有两个侧面：</p>
 <ul>
 <li>
-<p>什么是_ 字符串中的一个_ <strong>&ldquo;字</strong>符&ldquo;？**有多少种不同的值， 它们分别代表什么？最早被广泛接纳的标准答案是 <a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a>。 它给出了 127 种不同的字符值并规定了它们的含义。对于只关心英语的场景， 那棒极了—— 但其中不含任何元音变音符或锐音与钝音的_ 字符_。它无法表示_ &ldquo;jalapeño&rdquo;、 &ldquo;naïve&rdquo;、 <span name="gruyere">&ldquo;Gruyère&rdquo;</span> 或 &ldquo;Mötley Crüe&rdquo;。</p>
+<p>什么是字符串中的一个**&ldquo;字符&ldquo;**？有多少种不同的值， 它们分别代表什么？最早被广泛接纳的标准答案是 <a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a>。 它给出了 127 种不同的字符值并规定了它们的含义。对于只关心英语的场景， 那棒极了—— 但其中不含任何元音变音符或锐音与钝音的字符。它无法表示 &ldquo;jalapeño&rdquo;、 &ldquo;naïve&rdquo;、 <span name="gruyere">&ldquo;Gruyère&rdquo;</span> 或 &ldquo;Mötley Crüe&rdquo;。</p>
 <aside name="gruyere">
 <p>不用多说， 一门不能让人讨论 Gruyère 或 Mötley Crüe 的语言， 乃是一门不值得使用的语言。</p>
 </aside>
-<p>接下来出现的是 <a href="https://en.wikipedia.org/wiki/Unicode>">Unicode</a>。 最初， 它支持 16,384 种不同的字符（码点**）， 恰巧**能_ 装进 16 位还多出两位。之后这个数字不断膨胀， 到如今已经有十几万个码点了—— 甚至包括像 💩（Unicode 字符 &lsquo;PILE OF POO&rsquo;，<code>U+1F4A9</code>） 这样的人类交流必需工具_。</p>
-<p>即使那么长的码点列表仍不足以代表每种可能的可见字形_， 为此 Unicode 还拥有结合字符_， 它们会修改前面那个码点。比如， &ldquo;a&rdquo; 接上结合字符 &ldquo;¨&rdquo; 会得到 &ldquo;ä&ldquo;。（ 为了更混乱起來， Unicode 同时也有一个单个看起来就像 &ldquo;ä&rdquo; 的码点_。<em>）</em></p>
-<p>如果用户访问 &ldquo;naïve&rdquo; 中的第四个 &ldquo;字<strong>符&ldquo;， 他们</strong>期_ 望得到 &ldquo;v&rdquo; 还是 &ldquo;¨&ldquo;？前者意味着他们认为每个码点与其结合字符构成了一个整体——Unicode 称之为扩展字形簇—— 而后者意味着他们是在按单个码点思考。你的用户期望的是哪一种？</p>
+<p>接下来出现的是 <a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a>。 最初， 它支持 16,384 种不同的字符（码点），恰巧能装进 16 位还多出两位。之后这个数字不断膨胀， 到如今已经有十几万个码点了—— 甚至包括像 💩（Unicode 字符 &lsquo;PILE OF POO&rsquo;，<code>U+1F4A9</code>） 这样的人类交流必需工具。</p>
+<p>即使那么长的码点列表仍不足以代表每种可能的可见字形， 为此 Unicode 还拥有结合字符， 它们会修改前面那个码点。比如， &ldquo;a&rdquo; 接上结合字符 &ldquo;¨&rdquo; 会得到 &ldquo;ä&ldquo;。（为了更混乱起來， Unicode 同时也有一个单个看起来就像 &ldquo;ä&rdquo; 的码点。）</p>
+<p>如果用户访问 &ldquo;naïve&rdquo; 中的第四个**&ldquo;字符&ldquo;**，他们期望得到 &ldquo;v&rdquo; 还是 &ldquo;¨&ldquo;？前者意味着他们认为每个码点与其结合字符构成了一个整体——Unicode 称之为扩展字形簇—— 而后者意味着他们是在按单个码点思考。你的用户期望的是哪一种？</p>
 </li>
 <li>
-<p>一个**单元在内存中是如何表示的？**大多数使用 ASCII 的系统会为每个字符分配一个字节， 并把高位空着不用。Unicode 有若干常见的编码方式。UTF-16 将大多数码点装入 16 位之中_。 那在所有码点都能塞进 16 位的_ 时候棒极了_。当这个上限被突破之后， 它们引入了代理对来用多个 16 位代理单元表示单个码点。UTF-32 是 UTF-16 的下一代—— 它为每一个码点都提供了完整的 32 位。</p>
-<p>UTF-8 比其中任何一种都更复杂。它使用一个可变长度的字节序列来编码一个码点。 较小的码点装在更少的字节里。 由于每个字符可能占用不同数量的字节， 你不能直接在字符串中下标定位以找到某特定码点。如果你想要第 10 个码点， 在不走遍并解码其之前所有码点的前提下， 你不知道那距离字符串开头有_ 多远字节_。</p>
+<p>一个**单元在内存中是如何表示的？**大多数使用 ASCII 的系统会为每个字符分配一个字节， 并把高位空着不用。Unicode 有若干常见的编码方式。UTF-16 将大多数码点装入 16 位之中。 那在所有码点都能塞进 16 位的时候棒极了。当这个上限被突破之后， 它们引入了代理对来用多个 16 位代理单元表示单个码点。UTF-32 是 UTF-16 的下一代—— 它为每一个码点都提供了完整的 32 位。</p>
+<p>UTF-8 比其中任何一种都更复杂。它使用一个可变长度的字节序列来编码一个码点。 较小的码点装在更少的字节里。 由于每个字符可能占用不同数量的字节， 你不能直接在字符串中下标定位以找到某特定码点。如果你想要第 10 个码点， 在不走遍并解码其之前所有码点的前提下， 你不知道那距离字符串开头有多远字节。</p>
 </li>
 </ul>
-<p>与许许多多工程上_ 的问题一样， 字符的表示与编码的抉择背后没有 <span name="python"> 完美</span> 的答案_：</p>
+<p>与许许多多工程上的问题一样， 字符的表示与编码的抉择背后没有 <span name="python"> 完美</span> 的答案：</p>
 <aside name="python">
-<p>这个问题究竟有多难， 一个例子是 Python 从 2 到 3 那段漫长而痛苦的迁移之旅， 其中大多数痛苦都来自其对字符串编码的改动_。</p>
+<p>这个问题究竟有多难， 一个例子是 Python 从 2 到 3 那段漫长而痛苦的迁移之旅， 其中大多数痛苦都来自其对字符串编码的改动。</p>
 </aside>
 <ul>
 <li>
-<p>ASCII 节省内存且快速_， 但却把非拉丁语系的语言踢_ 到了一边_。</p>
+<p>ASCII 节省内存且快速， 但却把非拉丁语系的语言踢到了一边。</p>
 </li>
 <li>
-<p>UTF-32 快且支持整个 Unicode 范围， 但对内存极其浪费_， 因为大多数码点确实落在较低的值范围， 那里用不上完整的 32 位。</p>
+<p>UTF-32 快且支持整个 Unicode 范围， 但对内存极其浪费， 因为大多数码点确实落在较低的值范围， 那里用不上完整的 32 位。</p>
 </li>
 <li>
-<p>UTF-8 节省内存且支持整个 Unicode 范围， 但其可变长编码使得随机访问码点变得缓慢_。</p>
+<p>UTF-8 节省内存且支持整个 Unicode 范围， 但其可变长编码使得随机访问码点变得缓慢。</p>
 </li>
 <li>
-<p>UTF-16 比上面那些_ 都糟糕_ ——Unicode 超越其早<strong>期 16 位范</strong>围后所留下的丑陋后果_。它比 UTF-8 更费内存， 却因代理对的存在仍是一种可变长编码_。 若能避免就避免它。可惜， 如果你的语言需要在_ 浏览器、JVM 或 CLR 上运行或与它们交互_， 你大概得与它们_ 为伍， 因为那些都使用 UTF-16 作为它们的字符串表示_， 而你不想每次把一条字符串交给底层系统时都去转一遍编码_。</p>
+<p>UTF-16 比上面那些都糟糕——Unicode 超越其早期 16 位范围后所留下的丑陋后果。它比 UTF-8 更费内存， 却因代理对的存在仍是一种可变长编码。 若能避免就避免它。可惜， 如果你的语言需要在浏览器、JVM 或 CLR 上运行或与它们交互， 你大概得与它们为伍， 因为那些都使用 UTF-16 作为它们的字符串表示， 而你不想每次把一条字符串交给底层系统时都去转一遍编码。</p>
 </li>
 </ul>
-<p>一种选择是走极端路线， 做最 &rdquo; 正 &rdquo; 的事。支持整个 Unicode 码点。在内部， 根据字符串的内容为它挑选一种编码—— 若每个码点都能装进一个字节， 就使用_ ASCII；若没有代理对， 就用 UTF-16；以此类推_。提供一套 API 让用户能分别按码点与扩展字形簇进行遍历_。</p>
-<p>这覆盖了你的所有场景_， 但实在太复杂了。实现_、调试与优化都不容易。在字符串序列化或与其他系统交互的时候_， 你得应对所有那些_ 编码_。用户需要了解两套索引 API 并知道在何时该用哪一套_。这便是那些较新且功能强大的语**言—— **比_ 如 Raku 与 Swift—— 所采取的做法_。</p>
-<p>一个更简单的折衷是始终使用 UTF-8 进行编码_， 并只暴露一套面向码点的 API。对于那些想要处理字形簇的用户， 让他们自己去用第三方库解决_。这比 ASCII 更不拉丁中心化， 但并不复杂太多_。你失去了直接按码点下标的快速访问_， 但你大概没那么在乎那些_， 或者你可以接受将它变成 <em>O(n)</em> 而不是 <em>O(1)</em>。</p>
-<p>若我正在为面向大型应用的_ 使用者设计一门重量级的语言， 我大概会走极端路线。对于我那门小巧的嵌入式脚本语<strong>言 <a href="http://wren.io">Wren</a>， 我选</strong>的_ 是 UTF-8 加码点。</p>
+<p>一种选择是走极端路线， 做最 &rdquo; 正 &rdquo; 的事。支持整个 Unicode 码点。在内部， 根据字符串的内容为它挑选一种编码—— 若每个码点都能装进一个字节， 就使用 ASCII；若没有代理对， 就用 UTF-16；以此类推。提供一套 API 让用户能分别按码点与扩展字形簇进行遍历。</p>
+<p>这覆盖了你的所有场景， 但实在太复杂了。实现、调试与优化都不容易。在字符串序列化或与其他系统交互的时候， 你得应对所有那些编码。用户需要了解两套索引 API 并知道在何时该用哪一套。这便是那些较新且功能强大的语言——比如 Raku 与 Swift——所采取的做法。</p>
+<p>一个更简单的折衷是始终使用 UTF-8 进行编码， 并只暴露一套面向码点的 API。对于那些想要处理字形簇的用户， 让他们自己去用第三方库解决。这比 ASCII 更不拉丁中心化， 但并不复杂太多。你失去了直接按码点下标的快速访问， 但你大概没那么在乎那些， 或者你可以接受将它变成 <em>O(n)</em> 而不是 <em>O(1)</em>。</p>
+<p>若我正在为面向大型应用的使用者设计一门重量级的语言， 我大概会走极端路线。对于我那门小巧的嵌入式脚本语言 <a href="http://wren.io">Wren</a>，我选的是 UTF-8 加码点。</p>
 </div>
 
 <footer>

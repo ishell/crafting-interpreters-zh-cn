@@ -258,7 +258,7 @@ block
 </li>
 </ul>
 <aside name="fix">
-<p>变量解析会触及每个节点一次，故其性能为 <em>O(n)<strong>，其中</strong>n</em> 为语法树节点的个数。更复杂的分析或许会呈现更高的复杂度，但大多数都被精心设计为线性或近似线性的。若你的编译器随着用户程序的规模增长而变得指数级地慢，那可真是一桩令人脸红的事故。</p>
+<p>变量解析会触及每个节点一次，故其性能为 <em>O(n)</em>，其中 <em>n</em> 为语法树节点的个数。更复杂的分析或许会呈现更高的复杂度，但大多数都被精心设计为线性或近似线性的。若你的编译器随着用户程序的规模增长而变得指数级地慢，那可真是一桩令人脸红的事故。</p>
 </aside>
 <h2><a href="#resolver-类" name="resolver-类"><small>11&#8202;.&#8202;3</small>Resolver 类</a></h2>
 <p>正如 Java 中的一切那样，我们的变量解析 pass 也有一个类作为其化身。</p>
@@ -712,7 +712,7 @@ add after <em>execute</em>()</div>
 <aside name="side">
 <p>我<strong>觉得</strong>我曾听过将这张映射称为&ldquo;侧表&ldquo;（side table），因为它是一张与所关联对象分离存放的表格化数据结构。但每当我试图用 Google 搜索这个词时，得到的却尽是些家具页面。</p>
 </aside>
-<p>诸如 IDE 这样的交互式工具通常会增量地重新解析并重新解析用户程序中的部分内容。当那些状态碎片被藏在语法树的枝叶之中时，要想找出哪些状态需要重算，便颇为困难。将这些数据存储于节点<strong>之外</strong>的一项好处在于，它使得<strong>丢弃</strong>这些数据变得轻而易举——只需清空那张映射。</p>
+<p>诸如 IDE 这样的交互式工具通常会增量地重新分析并重新解析用户程序中的部分内容。当那些状态碎片被藏在语法树的枝叶之中时，要想找出哪些状态需要重算，便颇为困难。将这些数据存储于节点<strong>之外</strong>的一项好处在于，它使得<strong>丢弃</strong>这些数据变得轻而易举——只需清空那张映射。</p>
 <div class="codehilite"><pre class="insert-before">
   private Environment environment = globals;
 </pre><div class="source-file"><em>lox/Interpreter.java</em><br>

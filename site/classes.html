@@ -127,9 +127,9 @@
 <p>不过，若你<strong>当真</strong>反感类，大可跳过这两章。它们与本书的其余部分相当独立。说来有趣的是，我个人倒是觉得多去了解那些自己不喜欢的事物是一件好事。远观时事物看似简单，但当真走近，细节便会浮现而出，而你便会获得一份更为细腻的认知。</p>
 </aside>
 <h2><a href="#oop-与类" name="oop-与类"><small>12&#8202;.&#8202;1</small>OOP 与类</a></h2>
-<p>通往面向对象编程的道路大抵有三条：类、<span name="multimethods"><a href="http://gameprogrammingpatterns.com/prototype.html">原型</a></span>、以及<span name="multimethods">多重分派<a href="https://en.wikipedia.org/wiki/Multiple**dispatch">multimethods</a></span>。类最先出现，也是最为流行的风格。伴随着 JavaScript 的崛起（以及在较小范围内的 <a href="https://www.lua.org/pil/13.4.1.html">Lua</a>），原型也变得比以往更广为人知。关于原型，我会在<a href="#design-note">稍后</a>再谈。就 Lox 而言，我们——咳咳——采取了经典路线。</p>
+<p>通往面向对象编程的道路大抵有三条：类、<a href="http://gameprogrammingpatterns.com/prototype.html">原型</a>、以及<span name="multimethods"><a href="https://en.wikipedia.org/wiki/Multiple_dispatch">多重分派</a></span>。类最先出现，也是最为流行的风格。伴随着 JavaScript 的崛起（以及在较小范围内的 <a href="https://www.lua.org/pil/13.4.1.html">Lua</a>），原型也变得比以往更广为人知。关于原型，我会在<a href="#design-note">稍后</a>再谈。就 Lox 而言，我们——咳咳——采取了经典路线。</p>
 <aside name="multimethods">
-<p>多重分派大概是你最不熟悉的一种。我很乐意再多聊几句——我曾围绕它设计过<a href="http://magpie-lang.org/">一门业余爱好语言</a>，那种体验<strong>简直妙不可言</strong> ——但本书的篇幅毕竟有限。若你意欲了解更多，不妨看看 <a href="https://en.wikipedia.org/wiki/Common**Lisp_Object**System">CLOS</a>（Common Lisp 中的对象系统）、<a href="https://opendylan.org/">Dylan</a>、<a href="https://julialang.org/">Julia</a>，或 <a href="https://docs.raku.org/language/functions#Multi-dispatch">Raku</a>。</p>
+<p>多重分派大概是你最不熟悉的一种。我很乐意再多聊几句——我曾围绕它设计过<a href="http://magpie-lang.org/">一门业余爱好语言</a>，那种体验<strong>简直妙不可言</strong> ——但本书的篇幅毕竟有限。若你意欲了解更多，不妨看看 <a href="https://en.wikipedia.org/wiki/Common_Lisp_Object_System">CLOS</a>（Common Lisp 中的对象系统）、<a href="https://opendylan.org/">Dylan</a>、<a href="https://julialang.org/">Julia</a>，或 <a href="https://docs.raku.org/language/functions#Multi-dispatch">Raku</a>。</p>
 </aside>
 <p>既然你已与我共同书写了大约一千行 Java 代码，我便假定你不必再需要一份关于面向对象的详尽介绍。其主要目的在于将数据与作用于其上的代码捆绑在一起。用户通过声明<strong>类</strong>来达成此目的，而类则：</p>
 <p><span name="circle"></span></p>
@@ -500,9 +500,9 @@ add after <em>LoxInstance</em>()</div>
 <p>在文法的世界里，我们将 assignment 规则扩展为允许在左侧出现以点号连接的标识符。</p>
 <div class="codehilite"><pre>
 <span class="i">assignment</span>     → ( <span class="i">call</span> <span class="s">&quot;.&quot;</span> )? <span class="t">IDENTIFIER</span> <span class="s">&quot;=&quot;</span> <span class="i">assignment</span>
-               | <span class="i">logic</span>**<span class="i">or</span> ;
+               | <span class="i">logic_or</span> ;
 </pre></div>
-<p>与 getter 不同，setter 并不串联。然而，规则中对 <code>call</code> 的引用，允许在最后一个点号之前出现任意高优先级的表达式，其中包括任意数量的 _getter**，例如：</p><img src="image/classes/setter.png" alt="breakfast.omelette.filling.meat = ham" />
+<p>与 getter 不同，setter 并不串联。然而，规则中对 <code>call</code> 的引用，允许在最后一个点号之前出现任意高优先级的表达式，其中包括任意数量的 <em>getter</em>，例如：</p><img src="image/classes/setter.png" alt="breakfast.omelette.filling.meat = ham" />
 <p>请注意，此处<strong>只有</strong>最后一部分——即 <code>.meat</code> 那部分——是<strong>setter</strong>。<code>.omelette</code> 与 <code>.filling</code> 两部分都是<strong>get</strong>表达式。</p>
 <p>正如我们对变量访问与变量赋值各自拥有独立的 AST 节点一样，我们也需要一个<span name="set-ast">独立的 setter 节点</span>，与我们先前的 getter 节点相互呼应。</p>
 <div class="codehilite"><pre class="insert-before">
@@ -814,7 +814,7 @@ add after <em>LoxClass</em>()</div>
 <aside name="i">
 <p>&ldquo;I&rdquo; 倒是个绝佳选择，但将 &ldquo;i&rdquo; 用作循环变量这一惯例早在 OOP 出现之前便已存在，它一路可以追溯到 Fortran。我们都是前辈们那些偶然选择之下的受害者。</p>
 </aside>
-<p>就 Lox 而言，由于我们大体上沿袭 Java 风格，因此我们也选用 &ldquo;this&rdquo;。在一个方法体内部，一个 <code>this</code> 表达式会求值为那个方法被调用时所<strong>针对</strong>的实例。或者，更准确地说——由于方法先是<strong>被访问</strong>，然后再被<strong>调用</strong>这两个步骤——它所指的将是那个方法<strong>被访问时所</strong>****针对**的对象。</p>
+<p>就 Lox 而言，由于我们大体上沿袭 Java 风格，因此我们也选用 &ldquo;this&rdquo;。在一个方法体内部，一个 <code>this</code> 表达式会求值为那个方法被调用时所<strong>针对</strong>的实例。或者，更准确地说——由于方法先是<strong>被访问</strong>，然后再被<strong>调用</strong>这两个步骤——它所指的将是那个方法<strong>被访问时</strong>所<strong>针对</strong>的对象。</p>
 <p>这让我们的工作变得更为棘手。请看一眼：</p>
 <div class="codehilite"><pre>
 <span class="k">class</span> <span class="t">Egotist</span> {
@@ -963,7 +963,7 @@ add after <em>LoxFunction</em>()</div>
 <div class="source-file-narrow"><em>lox/LoxFunction.java</em>, add after <em>LoxFunction</em>()</div>
 
 <p>内容并不多。我们创建了一份新的环境，嵌于该方法原有的闭包之内。可以视为&ldquo;闭包中的闭包&ldquo;。当该方法被调用时，这将成为方法体环境的父环境。</p>
-<p>我们将 &ldquo;this&rdquo; 声明为该环境中的一个变量，并将其绑定到给定的实例——即那个方法<strong>被访问时所</strong>****针对**的实例。<strong>Voilà</strong>，所返回的 <code>LoxFunction</code> 如今便随身携带着它自己那一小片持久化的天地，其中 &ldquo;this&rdquo; 已被绑定到那个对象。</p>
+<p>我们将 &ldquo;this&rdquo; 声明为该环境中的一个变量，并将其绑定到给定的实例——即那个方法<strong>被访问时</strong>所<strong>针对</strong>的实例。<strong>Voilà</strong>，所返回的 <code>LoxFunction</code> 如今便随身携带着它自己那一小片持久化的天地，其中 &ldquo;this&rdquo; 已被绑定到那个对象。</p>
 <p>剩下的任务便是解释那些 <code>this</code> 表达式。与解析器类似，这完全同于解释一个变量表达式。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>visitSetExpr</em>()</div>
@@ -1065,7 +1065,7 @@ in <em>visitThisExpr</em>()</div>
 <li>
 <p>运行时为一份崭新的实例<span name="allocate"><strong>分配</strong></span>其所需的内存。在大多数语言中，这项操作处于用户代码所能触及的层面<strong>之下</strong>。</p>
 <aside name="allocate">
-<p>C++ 的&ldquo;<a href="https://en.wikipedia.org/wiki/Placement**syntax">placement new</a>&ldquo;是少数几个将分配的肠肚裸露出来供程序员戳弄的例子之一。</p>
+<p>C++ 的&ldquo;<a href="https://en.wikipedia.org/wiki/Placement_syntax">placement new</a>&ldquo;是少数几个将分配的肠肚裸露出来供程序员戳弄的例子之一。</p>
 </aside></li>
 <li>
 <p>随后，一段由用户提供的代码段被调用，对那份尚未成形的对象进行<strong>初始化</strong>。</p>
@@ -1316,9 +1316,9 @@ in <em>call</em>()</div>
 <div class="design-note">
 <h2><a href="#设计笔记：原型与威力" name="设计笔记：原型与威力"><small>12&#8202;.&#8202;9</small>设计笔记：原型与威力</a></h2>
 <p>在本章中，我们引入了两种新的运行时实体——<code>LoxClass</code> 与 <code>LoxInstance</code>。前者用于存放对象的行为，后者用于存放状态。倘若你能够直接在某一份 <code>LoxInstance</code> 上定义方法，会怎样？那样的话，我们便根本不需要 <code>LoxClass</code>。<code>LoxInstance</code> 自身便会是一份定义对象行为与状态的完整包。</p>
-<p>我们仍会希望有某种方式——不借助类——在多个实例之间复用行为。我们可以让一份 <code>LoxInstance</code> <em>直接</em> <strong>委托</strong>给另一份 <code>LoxInstance**</code>，以复用其后者的字段与方法，多少有一点像继承的味道。</p>
+<p>我们仍会希望有某种方式——不借助类——在多个实例之间复用行为。我们可以让一份 <code>LoxInstance</code> <em>直接</em> <a href="https://en.wikipedia.org/wiki/Prototype-based_programming#Delegation"><em>委托</em></a>给另一份 <code>LoxInstance</code>，以复用其后者的字段与方法，多少有一点像继承的味道。</p>
 <p>用户便可以将其程序建模为一片由对象组成的星座，其中某些对象彼此委托，以反映它们之间的共性。那些被当作委托目标的对象，便是代表&ldquo;规范的&ldquo;或&ldquo;原型的&ldquo;对象，供其他对象去精炼。其结果是一个更为简单的运行时，仅有 <code>LoxInstance</code> 这一个内部构件。</p>
-<p>这种范式之所以被称作<strong>原型</strong><a href="http://gameprogrammingpatterns.com/prototype.html">prototypes</a>，便是因为此故。它由 David Ungar 与 Randall Smith 在一门名为 <a href="http://selflanguage.org/">Self</a> 的语言中发明。他们通过从 Smalltalk 出发，沿着上述思路反复推演，问自己：究竟能砍到多简？</p>
+<p>这种范式之所以被称作**<a href="https://en.wikipedia.org/wiki/Prototype-based_programming">原型</a>**，便是因为此故。它由 David Ungar 与 Randall Smith 在一门名为 <a href="http://selflanguage.org/">Self</a> 的语言中发明。他们通过从 Smalltalk 出发，沿着上述思路反复推演，问自己：究竟能砍到多简？</p>
 <p>原型曾长期停留在学术圈子的冷门处——的确有趣，也催生了不少研究，但并未对更广阔的程序设计世界有多大影响。直到 Brendan Eich 将原型硬塞进 JavaScript，而 JavaScript 又旋即席卷了整个世界。关于 JavaScript 中的原型，已有（海量）<span name="words">著作</span>面世。这究竟证明原型是天才还是令人困惑——抑或两者兼而有之——依然是一个悬而未决的问题。</p>
 <aside name="words">
 <p>其中也包括<a href="http://gameprogrammingpatterns.com/prototype.html">你眼前这位的几篇</a>。</p>

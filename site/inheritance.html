@@ -301,7 +301,7 @@ in class <em>LoxClass</em></div>
 <h2><a href="#继承方法" name="继承方法"><small>13&#8202;.&#8202;2</small>继承方法</a></h2>
 <p>从另一个类继承，意味着父类<strong>为真</strong>的一切，在子类身上大体上也应为<strong>真</strong>。在静态类型语言中，这一点牵连甚广。子<strong>类</strong>必须同时也是子<strong>类型</strong>，内存布局也须得到控制，以便你能够将一个子类的实例传给一个期待父类的函数，且该函数依然能够正确地访问那些被继承的字段。</p>
 <aside name="liskov">
-<p>这条拍脑袋式的指引有一个更显赫的名字——<a href="https://en.wikipedia.org/wiki/Liskov_substitution**principle"><em>Liskov 替换原则</em></a>。Barbara Liskov 在面向对象编程的奠基时期的一次主旨演讲中提出了它。</p>
+<p>这条拍脑袋式的指引有一个更显赫的名字——<a href="https://en.wikipedia.org/wiki/Liskov_substitution_principle"><em>Liskov 替换原则</em></a>。Barbara Liskov 在面向对象编程的奠基时期的一次主旨演讲中提出了它。</p>
 </aside>
 <p>Lox 是一门动态类型语言，因此我们的要求要简单得多。基本上，它意味着：若你能够在父类的一个实例上调用某个方法，那么当传入一个子类的实例时，你也应该能够调用该方法。换言之，方法从父类继承而来。</p>
 <p>这与继承的目标之一——为用户提供一种跨类复用代码的方式——不谋而合。在我们的解释器中实现这一点，竟<strong>匪夷所思</strong>般简单。</p>
@@ -561,7 +561,7 @@ add after <em>visitSetExpr</em>()</div>
 <div class="source-file-narrow"><em>lox/Interpreter.java</em>, add after <em>visitSetExpr</em>()</div>
 
 <p>首先，是我们一直铺垫到这一步的工作。我们通过在恰当的环境之中查找 &ldquo;super&rdquo;，来寻找外层类的父类。</p>
-<p>当我们访问一个方法时，我们还需要将 <code>this</code> 绑定到那个方法<strong>被访问时所</strong><strong><strong>针对<strong>的对象之上。在诸如 <code>doughnut.cook</code> 这样的表达式中，那个对象便是我们求值 <code>doughnut</code> 所得到的结果。在一处 <code>super</code> 表达式（譬如 <code>super.cook</code>）中，那个当前对象隐式地便与</strong>我们正在使用的<strong>当前对象是</strong>同<strong>一位——换言之，便是 <code>this</code>。即便我们是在</strong>父类<strong>上查找</strong>方法</strong>，那个</strong>实例**仍为 <code>this</code>。</p>
+<p>当我们访问一个方法时，我们还需要将 <code>this</code> 绑定到那个方法<strong>被访问时</strong>所<strong>针对</strong>的对象之上。在诸如 <code>doughnut.cook</code> 这样的表达式中，那个对象便是我们求值 <code>doughnut</code> 所得到的结果。在一处 <code>super</code> 表达式（譬如 <code>super.cook</code>）中，那个当前对象隐式地便与<strong>我们正在使用的</strong>当前对象是<strong>同</strong>一位——换言之，便是 <code>this</code>。即便我们是在<strong>父类</strong>上查找<strong>方法</strong>，那个<strong>实例</strong>仍为 <code>this</code>。</p>
 <p>然而，遗憾的是，在 <code>super</code> 表达式内部，我们并没有一个方便的节点可供解析器挂载通往 <code>this</code> 的步数。幸运的是，我们<strong>的确</strong>掌控着环境链的布局。<code>this</code> 所绑定的环境，恰好位于我们存储 &ldquo;super&rdquo; 之环境的<strong>内侧</strong>。</p>
 <div class="codehilite"><pre class="insert-before">
     LoxClass superclass = (LoxClass)environment.getAt(

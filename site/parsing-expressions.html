@@ -120,9 +120,9 @@
 <p>&ldquo;Parse&rdquo;一词进入英语，源自古法语中的 &ldquo;pars&rdquo;，意为&ldquo;词类&ldquo;。它的意思是将一段文本逐一映射到该语言的语法之上。我们在此沿用这一层含义，只不过我们所面向的语言比古法语稍稍&ldquo;时髦&ldquo;一些罢了。</p>
 </aside>
 <aside name="attain">
-<p>如同许多&ldquo;通过的仪式&ldquo;一样，你大概会发现：等你翻过这座山头再回首，它其实并不像耸立在前路时那般高耸、那般吓人。</p>
+<p>如同许多&ldquo;通过仪式&ldquo;一样，你大概会发现：等你翻过这座山头再回首，它其实并不像耸立在前路时那般高耸、那般吓人。</p>
 </aside>
-<p>它并不像你想象中那么难，部分原因在于，我们已在[上一章][]里将大量艰难的工作前置完成了。你已经熟悉形式文法的套路，也已经对语法树有所了解，我们甚至还准备好了若干 Java 类来表征它们。眼下唯一缺失的那块拼图，便是解析——也就是把一串词法单元蜕变为某一棵语法树的过程。</p>
+<p>它并不像你想象中那么难，部分原因在于，我们已在<a href="representing-code.html">上一章</a>里将大量艰难的工作前置完成了。你已经熟悉形式文法的套路，也已经对语法树有所了解，我们甚至还准备好了若干 Java 类来表征它们。眼下唯一缺失的那块拼图，便是解析——也就是把一串词法单元蜕变为某一棵语法树的过程。</p>
 <p>某些计算机科学的教科书把语法分析器捧上了天。1960 年代，那些计算机科学家们——完全可以理解，他们对使用汇编语言编程早已不胜其烦——开始着手设计更加精致、<span name="human">更亲近人类</span>的程序设计语言，譬如 Fortran 与 ALGOL。可惜的是，这些语言对当时的那些原始计算机而言，远没有那么<strong>亲近机器</strong>。</p>
 <aside name="human">
 <p>试想一下，那时候的汇编编程得是何等令人发指，竟至于他们将 <em>Fortran</em> 都视作一种进步。</p>
@@ -165,7 +165,7 @@
 <li>对于右侧的 <code>expression</code>，挑选 <code>NUMBER</code>，并取 <code>1</code>。</li>
 </ol>
 <p>这两种方式所生成的是相同的<strong>字符串</strong>，却不是相同的<strong>语法树</strong>：</p><img src="image/parsing-expressions/syntax-trees.png" alt="两棵合法的语法树：(6 / 3) - 1 与 6 / (3 - 1)" />
-<p>换言之，这条文法允许我们将该表达式解读为 <code>(6 / 3) - 1</code>，亦允许将其解读为 <code>6 / (3 - 1)</code>。<code>binary</code> 规则允许操作数彼此以任意方式嵌套。这一来便影响了被解析树求值后所得的结果。数学家们自黑板诞生之日起，便以定义<strong>优先级</strong>与<strong>结合性</strong>的规则来消除此类歧义。</p>
+<p>换言之，这条文法允许我们将该表达式解读为 <code>(6 / 3) - 1</code>，亦允许将其解读为 <code>6 / (3 - 1)</code>。<code>binary</code> 规则允许操作数彼此以任意方式嵌套。这一来便影响了语法树日后求值所得的结果。数学家们自黑板诞生之日起，便以定义<strong>优先级</strong>与<strong>结合性</strong>的规则来消除此类歧义。</p>
 <ul>
 <li>
 <p><span name="nonassociative"><strong>优先级</strong></span> 决定了在一个含有多种不同运算符的表达式中，哪一个运算符会先行求值。优先级规则告诉我们，在上面这个例子中，<code>/</code> 要先于 <code>-</code> 求值。优先级较高的运算符会先于优先级较低的运算符求值。等价地说，优先级较高的运算符被说成是&ldquo;绑定得更紧&ldquo;。</p>
@@ -281,7 +281,7 @@
 <span class="k">print</span> <span class="n">0.1</span> * (<span class="n">0.2</span> * <span class="n">0.3</span>);
 <span class="k">print</span> (<span class="n">0.1</span> * <span class="n">0.2</span>) * <span class="n">0.3</span>;
 </pre></div>
-<p>在诸如 Lox 这类采用 <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format">IEEE 754</a> 双精度浮点数的语言中，前者求值为 <code>0.006</code>，而后者则给出 <code>0.006000000000000001</code>。有时，这细微的差别也会牵动大局。<a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg**goldberg.html">这篇文章</a> 是不错的学习起点。</p>
+<p>在诸如 Lox 这类采用 <a href="https://en.wikipedia.org/wiki/Double-precision_floating-point_format">IEEE 754</a> 双精度浮点数的语言中，前者求值为 <code>0.006</code>，而后者则给出 <code>0.006000000000000001</code>。有时，这细微的差别也会牵动大局。<a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html">这篇文章</a> 是不错的学习起点。</p>
 </aside>
 <p>这一切都没有错，但由于规则右部的第一个符号与该规则的左部完全相同，这一产生式是<strong>左递归</strong>的。某些解析技术——包括我们即将采用的那一种——会在左递归面前栽跟头。（别处的递归则无此虞，比如我们在 <code>unary</code> 中以及 <code>primary</code> 中为括号表达式设立的间接递归，都不构成问题。）</p>
 <p>能够定义出描述同一语言的文法有很多种。对某门特定语言的建模选择，部分关乎个人品味，部分则是出于务实考量。这条规则虽然正确，但对于我们打算采用的解析方式而言却并非最优。与其使用一条左递归规则，不如换用另一种：</p>
@@ -302,7 +302,7 @@
 </pre></div>
 <p>这条文法虽说比之前那条更为繁复，但作为回报，我们已然将之前那条文法的歧义扫除殆尽。它恰恰是我们用以打造一款语法分析器所必需的东西。</p>
 <h2><a href="#递归下降解析" name="递归下降解析"><small>6&#8202;.&#8202;2</small>递归下降解析</a></h2>
-<p>解析技术的大家族中，有着种种名字大多以&ldquo;L&rdquo;和&ldquo;R&rdquo;组合而成的成员——<a href="https://en.wikipedia.org/wiki/LL**parser">LL(k)</a>、<a href="https://en.wikipedia.org/wiki/LR_parser">LR(1)</a>、<a href="https://en.wikipedia.org/wiki/LALR_parser">LALR</a>——再加上一些更为光怪陆离的异兽，诸如<a href="https://en.wikipedia.org/wiki/Parser_combinator">语法分析器组合子</a>、<a href="https://en.wikipedia.org/wiki/Earley_parser">Earley 解析器</a>、<a href="https://en.wikipedia.org/wiki/Shunting-yard_algorithm">调度场算法</a>以及<a href="https://en.wikipedia.org/wiki/Parsing_expression**grammar">Packrat 解析</a>。对我们这第一款解释器而言，有一种技术便已绰绰有余：<strong>递归下降</strong>。</p>
+<p>解析技术的大家族中，有着种种名字大多以&ldquo;L&rdquo;和&ldquo;R&rdquo;组合而成的成员——<a href="https://en.wikipedia.org/wiki/LL_parser">LL(k)</a>、<a href="https://en.wikipedia.org/wiki/LR_parser">LR(1)</a>、<a href="https://en.wikipedia.org/wiki/LALR_parser">LALR</a>——再加上一些更为光怪陆离的异兽，诸如<a href="https://en.wikipedia.org/wiki/Parser_combinator">语法分析器组合子</a>、<a href="https://en.wikipedia.org/wiki/Earley_parser">Earley 解析器</a>、<a href="https://en.wikipedia.org/wiki/Shunting-yard_algorithm">调度场算法</a>以及<a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">Packrat 解析</a>。对我们这第一款解释器而言，有一种技术便已绰绰有余：<strong>递归下降</strong>。</p>
 <p>递归下降是构造语法分析器最简明的方式，且无需借助 Yacc、Bison 或 ANTLR 这般复杂的语法分析器生成工具。你所需要的，仅仅是直截了当的手写代码。不过，可别被它的简洁所迷惑。递归下降语法分析器既快、又稳，且能支持复杂的错误处理。事实上，GCC、V8（Chrome 中的 JavaScript 虚拟机）、Roslyn（用 C# 编写的 C# 编译器）以及众多其它赫赫有名的工业级语言实现，采用的都是递归下降。它确实很赞。</p>
 <p>递归下降被视为一种<strong>自顶向下</strong>（top-down）语法分析器，因为它从最顶层或者说最外层的文法规则（这里是 <code>expression</code>）启程，逐步深入嵌套的子表达式，最终抵达语法树的叶节点。这与 LR 这类自底向上的语法分析器形成了鲜明对比——后者从一级表达式起步，再将它们逐级组合成越来越大的语法块。</p>
 <aside name="descent">
@@ -597,7 +597,7 @@ add after <em>unary</em>()</div>
 <p><strong>报告出尽可能多的独立错误。<strong>在第一个错误出现时便匆匆中止，固然易于实现，但对于用户而言却颇为恼人——每修复一个他们以为是</strong>唯一</strong>的错误，紧接着便又冒出一个新的错误。他们希望一次性地把所有错误都揪出来。</p>
 </li>
 <li>
-<p><strong>将</strong>级联**错误降到最少。**一旦首个错误被发现，语法分析器便不再真正清楚眼下的状况。它会试图将自己拉回正轨、继续前进；但倘若它乱了阵脚，便可能接连报告出一连串&ldquo;幽灵&ldquo;般的错误——这些错误并非源自代码中的其他真实问题。一旦首个错误得以修复，这些幻影便会随之消失，因为它们所折射的不过是语法分析器自身的困惑而已。级联错误之恼人，在于它会让用户误以为自己的代码比实际情况更为糟糕。</p>
+<p>**将<em>级联</em>错误降到最少。**一旦首个错误被发现，语法分析器便不再真正清楚眼下的状况。它会试图将自己拉回正轨、继续前进；但倘若它乱了阵脚，便可能接连报告出一连串&ldquo;幽灵&ldquo;般的错误——这些错误并非源自代码中的其他真实问题。一旦首个错误得以修复，这些幻影便会随之消失，因为它们所折射的不过是语法分析器自身的困惑而已。级联错误之恼人，在于它会让用户误以为自己的代码比实际情况更为糟糕。</p>
 </li>
 </ul>
 <p>最后两点之间存在着张力。我们既希望尽可能多地报告独立的错误，又不希望报告那些仅仅源自先前错误的副作用。</p>
@@ -713,7 +713,7 @@ add after <em>error</em>()</div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, add after <em>error</em>()</div>
 
 <p>它会丢弃词法单元，直至自认为已找到一条语句的边界。在捕获到一个 ParseError 之后，我们便会调用这个方法，然后便有望重新回到同步状态。当它运行良好之时，我们便已丢弃了那些原本很可能引发级联错误的词法单元，如此一来，我们便可以从下一条语句开始，继续解析文件的剩余部分。</p>
-<p>可惜，我们暂时还无法亲眼见证这个方法的实际效果——我们毕竟还没有语句。这一<a href="statements-and-state.html">几章之后</a>我们便会讲到。眼下，如果错误发生，我们便会进入紧急模式并一路展开到最顶层，从而停止解析。鉴于我们眼下只能解析单一表达式，这倒也没什么大不了的。</p>
+<p>可惜，我们暂时还无法亲眼见证这个方法的实际效果——我们毕竟还没有语句。这事<a href="statements-and-state.html">几章之后</a>我们便会讲到。眼下，如果错误发生，我们便会进入紧急模式并一路展开到最顶层，从而停止解析。鉴于我们眼下只能解析单一表达式，这倒也没什么大不了的。</p>
 <h2><a href="#把语法分析器接入系统" name="把语法分析器接入系统"><small>6&#8202;.&#8202;4</small>把语法分析器接入系统</a></h2>
 <p>至此，表达式解析的工作已几近完工。还有一处地方需要我们再添加一点错误处理。当语法分析器沿着每条文法规则所对应的解析方法一路下沉时，它终将抵达 <code>primary()</code>。倘若其中的所有分支都不匹配，那便意味着我们脚下所踩的，是一个无法作为表达式开头的词法单元。我们同样需要对这个错误加以处理。</p>
 <div class="codehilite"><pre class="insert-before">
@@ -778,7 +778,7 @@ replace 5 lines</div>
 <h2><a href="#挑战" name="挑战"><small>6&#8202;.&#8202;5</small>挑战</a></h2>
 <ol>
 <li>
-<p>在 C 语言中，代码块是一种语句形式，它允许你将一连串语句塞进原本只期望出现一条语句的位置。<a href="https://en.wikipedia.org/wiki/Comma**operator">逗号运算符</a>则是表达式层面的一种类似语法。一连串以逗号分隔的表达式，可以出现在原本只期望出现单一表达式的地方（除了函数调用的参数列表内部）。在运行时，逗号运算符会对左侧操作数求值并丢弃其结果。然后，它会对右侧操作数求值，并将其结果返回。</p>
+<p>在 C 语言中，代码块是一种语句形式，它允许你将一连串语句塞进原本只期望出现一条语句的位置。<a href="https://en.wikipedia.org/wiki/Comma_operator">逗号运算符</a>则是表达式层面的一种类似语法。一连串以逗号分隔的表达式，可以出现在原本只期望出现单一表达式的地方（除了函数调用的参数列表内部）。在运行时，逗号运算符会对左侧操作数求值并丢弃其结果。然后，它会对右侧操作数求值，并将其结果返回。</p>
 <p>请为逗号表达式添加支持。沿用 C 语言中逗号运算符的优先级与结合性。请写出文法，再实现相应的解析代码。</p>
 </li>
 <li>
@@ -793,12 +793,12 @@ replace 5 lines</div>
 <h2><a href="#设计笔记：逻辑与历史" name="设计笔记：逻辑与历史"><small>6&#8202;.&#8202;6</small>设计笔记：逻辑与历史</a></h2>
 <p>假设我们决定为 Lox 添上一对按位运算符 <code>&amp;</code> 与 <code>|</code>。那么，它们究竟应当被放在优先级层级的哪一档呢？C 语言——以及大多数沿袭 C 之路的语言——将它们放在 <code>==</code> 之下。这被广泛视为一个错误，因为这意味着那些常见的运算——譬如检测一个标志位——都不得不借助一对括号：</p>
 <div class="codehilite"><pre>
-<span class="k">if</span> (<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span> == <span class="a">SOME</span>**<span class="a">FLAG</span>) { ... } <span class="c">// 错。</span>
-<span class="k">if</span> ((<span class="i">flags</span> &amp; <span class="a">FLAG</span>**<span class="a">MASK</span>) == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 对。</span>
+<span class="k">if</span> (<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span> == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 错。</span>
+<span class="k">if</span> ((<span class="i">flags</span> &amp; <span class="a">FLAG_MASK</span>) == <span class="a">SOME_FLAG</span>) { ... } <span class="c">// 对。</span>
 </pre></div>
 <p>我们究竟要不要破一破 C 语言的成规，将按位运算符在优先级层级中抬得更高一些？对于这个问题，我们可以采取以下两种策略中的一种。</p>
 <p>几乎没有人会想拿一个 <code>==</code> 表达式的结果去作为按位运算符的操作数。通过让按位运算符绑定得更紧，用户便不再那么频繁地需要加上括号。因此，倘若我们这样做，而用户又天真地以为&ldquo;运算符优先级是按照&rsquo;尽量少打括号&rsquo;的逻辑来确定的&ldquo;，那么他们多半会蒙对。</p>
-<p>这种内在的一致性能够使一门语言更易于学习——毕竟，用户需要去记挂、并在实践中一一撞上的边边角角与例外情况也就更少了。这可是件好事，因为在用户能够使用我们的语言之前，他们必须先将所有这些语法与语义的细节一股脑儿塞进自己的脑袋里。一门更简洁、更有理性的语言<strong>自有其道理</strong>。</p>
+<p>这种内在的一致性能够使一门语言更易于学习——毕竟，用户需要去记挂、并在实践中一一撞上的边边角角与例外情况也就更少了。这可是件好事，因为在用户能够使用我们的语言之前，他们必须先将所有这些语法与语义的细节一股脑儿塞进自己的脑袋里。一门更简洁、更有理性的语言，<strong>更说得通</strong>。</p>
 <p>然而，对许多用户而言，还有一条更为迅捷的捷径—— <strong>借用户早已了然于胸的东西为我所用</strong>。许多初来乍到的用户都会从其它某一门或多门语言转投而来。倘若我们的语言能够在语法或语义上与它们<strong>有几分相似</strong>，那么用户需要去学习（乃至去<strong>忘却</strong>）的东西便会少得多。</p>
 <p>这一点在语法上尤为受用。你今天或许已记不太真切，但回想当年你学习<strong>第一门</strong>程序设计语言之时，代码看上去大概曾像是某种全然陌生的、拒人于千里之外的语言。你只有通过千辛万苦，才能学会阅读并接纳它。倘若你为自己这门全新的语言设计出一套全新的语法，那么你便是在强迫用户将那一整套痛苦的学习过程从头再走一遍。</p>
 <p>充分利用用户早已了然于胸的东西，乃是你所能倚仗的、最为强大的工具之一，用以助推这门语言的普及。它的价值，无论如何高估都不为过。但它也令你面临一个棘手的问题：当用户<strong>全都了然</strong>的那件东西<strong>多少有些糟糕</strong>时，又当如何呢？C 语言的按位运算符优先级便是一个错误，一个毫无道理的错误。但它同时也是一个<strong>众人皆知</strong>的错误——无数人早已习以为常、与之共处。</p>

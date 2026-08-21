@@ -160,7 +160,7 @@ create new file</div>
 
 <aside name="64">
 <p>关于退出码，我使用的是 UNIX 中
-<a href="https://www.freebsd.org/cgi/man.cgi?query=sysexits&amp;apropos=0&amp;sektion=0&amp;manpath=FreeBSD+4.3-RELEASE&amp;format=html">&ldquo;sysexits.h&rdquo;</a>
+<a href="https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropos=0&sektion=0&manpath=FreeBSD+4.3-RELEASE&format=html">&ldquo;sysexits.h&rdquo;</a>
 头文件里定义的惯例。这已是我所能找到的、距离&ldquo;标准&ldquo;最近的东西了。</p>
 </aside>
 <p>把它放进一个文本文件里，然后去折腾你的 IDE 或者 Makefile，无论你用什么方式都好。我在这里等你。搞定了？好的！</p>
@@ -380,13 +380,13 @@ create new file</div>
 <p>所谓&ldquo;词法小鳄鱼&ldquo;（Lexical analygator）。</p>
 </aside>
 <p>这个循环里需要窥视少数几个字符以判断它&ldquo;匹配&ldquo;的是哪一类词素的部分，听起来或许并不陌生。如果你熟悉正则表达式，你大概会琢磨：能否为每一类词素定义一条正则，然后让它们来匹配字符？比如，Lox 的标识符（变量名以及类似的东西）与 C 有着同样的规则。下列正则便可匹配一个标识符：</p>
-<div class="codehilite"><pre>[a-zA-Z_][a-zA-Z**0-9]*
+<div class="codehilite"><pre>[a-zA-Z_][a-zA-Z_0-9]*
 </pre></div>
-<p>如果你确实想到了正则表达式，那你的直觉相当深刻。决定某门程序设计语言如何将字符归组为词素的那些规则，我们称之为它的<span name="theory"><strong>词法文法</strong></span>。在 Lox 中，正如在大多数程序设计语言中一样，该文法的规则足够简单，以至于这门语言可以被归类为一种<strong>正则语言</strong>（regular language）。这里的&ldquo;正则&ldquo;与正则表达式中的&ldquo;正则&ldquo;含义相同。</p>
+<p>如果你确实想到了正则表达式，那你的直觉相当深刻。决定某门程序设计语言如何将字符归组为词素的那些规则，我们称之为它的<span name="theory"><strong>词法文法</strong></span>。在 Lox 中，正如在大多数程序设计语言中一样，该文法的规则足够简单，以至于这门语言可以被归类为一种**<a href="https://en.wikipedia.org/wiki/Regular_language">正则语言</a>**。这里的&ldquo;正则&ldquo;与正则表达式中的&ldquo;正则&ldquo;含义相同。</p>
 <aside name="theory">
-<p>我对不得不在书中对理论部分如此一笔带过感到十分痛心——尤其是当我个人也觉得<a href="https://en.wikipedia.org/wiki/Chomsky_hierarchy">乔姆斯基谱系</a>以及<a href="https://en.wikipedia.org/wiki/Finite-state**machine">有限状态机</a>饶有趣味时。但实情是，其他书籍对这些内容的论述会比我要好得多。<a href="https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools"><em>编译原理</em></a>（人称&ldquo;龙书&ldquo;）便是这方面公认的权威之作。</p>
+<p>我对不得不在书中对理论部分如此一笔带过感到十分痛心——尤其是当我个人也觉得<a href="https://en.wikipedia.org/wiki/Chomsky_hierarchy">乔姆斯基谱系</a>以及<a href="https://en.wikipedia.org/wiki/Finite-state_machine">有限状态机</a>饶有趣味时。但实情是，其他书籍对这些内容的论述会比我要好得多。<a href="https://en.wikipedia.org/wiki/Compilers:_Principles,_Techniques,_and_Tools"><em>编译原理</em></a>（人称&ldquo;龙书&ldquo;）便是这方面公认的权威之作。</p>
 </aside>
-<p>你确实可以——如果你愿意的话——使用正则表达式来精确地识别 Lox 中所有不同种类的词素；其背后还蕴含着一大堆饶有趣味的理论，解释着为什么这是可行的，以及它的深层含义。像 <a href="http://dinosaur.compilertools.net/lex/">Lex</a> 或 <a href="https://github.com/westes/flex">Flex</a> 这样的工具，正是为此而生——向它们投喂一把正则表达式，它们便会回馈给你一枚完整的扫描器<span name="lex">回来</span>。</p>
+<p>你确实可以——如果你愿意的话——使用正则表达式来精确地识别 Lox 中所有不同种类的词素；其背后还蕴含着一大堆饶有趣味的理论，解释着为什么这是可行的，以及它的深层含义。像 <span name="lex"><a href="http://dinosaur.compilertools.net/lex/">Lex</a></span> 或 <a href="https://github.com/westes/flex">Flex</a> 这样的工具，正是为此而生——向它们投喂一把正则表达式，它们便会回馈给你一枚完整的扫描器。</p>
 <aside name="lex">
 <p>Lex 由 Mike Lesk 与 Eric Schmidt 共同打造。是的，就是那位曾任 Google 执行董事长的 Eric Schmidt。我倒不是说程序设计语言是通往财富与名声的必由之路，但我们之中确确实实诞生过亿万富翁。</p>
 </aside>
@@ -944,7 +944,7 @@ replace 1 line</div>
 <p>这究竟是 <code>first - second</code>——一个中缀减法表达式，还是两个表达式语句——一个是 <code>first</code>，另一个是对 <code>second</code> 取负？</p>
 </li>
 </ul>
-<p>在上述所有情形中，无论将换行符视作分隔符与否，都能生成合法的代码，但所得到的未必是用户真正想要的代码。纵观各种语言，用于判定&ldquo;哪些换行符算作分隔符&ldquo;的规则可谓形形色色、五花八门。以下略举两例：</p>
+<p>在上述所有情形中，无论将换行符视作分隔符与否，都能生成合法的代码，但所得到的未必是用户真正想要的代码。纵观各种语言，用于判定&ldquo;哪些换行符算作分隔符&ldquo;的规则可谓形形色色、五花八门。以下略举几例：</p>
 <ul>
 <li>
 <p><a href="https://www.lua.org/pil/1.1.html">Lua</a> 完全忽略换行符，但通过精心控制其文法，使得在大多数情况下语句之间根本不
@@ -965,7 +965,7 @@ replace 1 line</div>
 这便保证了符合惯用风格的代码能够与这条简单规则和谐共处。</p>
 </li>
 <li>
-<p><a href="https://docs.python.org/3.5/reference/lexical**analysis.html#implicit-line-joining">Python</a> 默认将所有换行符都视作有意义的，除非在行末显式地使用反斜杠来
+<p><a href="https://docs.python.org/3.5/reference/lexical_analysis.html#implicit-line-joining">Python</a> 默认将所有换行符都视作有意义的，除非在行末显式地使用反斜杠来
 延续至下一行。然而，任何位于一对括号（<code>()</code>, <code>[]</code> 或 <code>{}</code>）之中的换行符
 均会被忽略。Python 的惯用风格强烈地倾向于后者。</p>
 <p>这条规则之所以能在 Python 中运作良好，是因为 Python 是一门高度语句导向
@@ -986,7 +986,7 @@ replace 1 line</div>
 </li>
 </ul>
 <aside name="lambda">
-<p>这下你就明白了，为什么 Python 的 <code>lambda</code> 只能拥有一个表达式体的原因。</p>
+<p>这下你就明白了，Python 的 <code>lambda</code> 为什么只能拥有一个表达式体。</p>
 </aside>
 <ul>
 <li>

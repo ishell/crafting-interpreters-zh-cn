@@ -120,13 +120,13 @@
 <p>与<a href="statements-and-state.html">上一章</a>那场令人精疲力竭的马拉松相比，今天更像是一次轻快的雏菊田间漫步。但虽说工作来得轻松，回报却令人喜出望外。</p>
 <p>眼下，我们的解释器充其量不过是一台计算器。一段 Lox 程序在跑完之前所能完成的工作量是固定的。要想让它的运行时间翻倍，你只能把源代码也写长一倍。我们马上要来修正这一点。在本章中，我们的解释器将向着程序设计语言的&ldquo;大联盟&ldquo;迈出一大步：<em>图灵完备</em>。</p>
 <h2><a href="#图灵机（简述）" name="图灵机（简述）"><small>9&#8202;.&#8202;1</small>图灵机（简述）</a></h2>
-<p>上世纪初，数学家们一头撞上了一连串令人困惑的<span name="paradox">悖论</span>，这让他们开始怀疑自己工作所赖以建立的那块根基是否稳固。为了应对这场<a href="https://en.wikipedia.org/wiki/Foundations_of_mathematics#Foundational**crisis">危机</a>，他们回到了一切的起点。从寥寥几条公理、逻辑与集合论出发，他们希望能够将数学重建在一片坚不可摧的基石之上。</p>
+<p>上世纪初，数学家们一头撞上了一连串令人困惑的<span name="paradox">悖论</span>，这让他们开始怀疑自己工作所赖以建立的那块根基是否稳固。为了应对这场<a href="https://en.wikipedia.org/wiki/Foundations_of_mathematics#Foundational_crisis">危机</a>，他们回到了一切的起点。从寥寥几条公理、逻辑与集合论出发，他们希望能够将数学重建在一片坚不可摧的基石之上。</p>
 <aside name="paradox">
-<p>其中最著名的便是<a href="https://en.wikipedia.org/wiki/Russell%27s**paradox"><strong>罗素悖论</strong></a>。起初，集合论允许你定义任意一种集合——只要你能用英语描述出来，它便是合法的。数学家们天生偏爱自指，集合之中自然又可以包含集合。于是罗素——这个不按常理出牌的家伙——抛出了这么一句：</p>
+<p>其中最著名的便是<a href="https://en.wikipedia.org/wiki/Russell%27s_paradox"><strong>罗素悖论</strong></a>。起初，集合论允许你定义任意一种集合——只要你能用英语描述出来，它便是合法的。数学家们天生偏爱自指，集合之中自然又可以包含集合。于是罗素——这个不按常理出牌的家伙——抛出了这么一句：</p>
 <p><em>R 是所有<strong>不</strong>包含自身的集合所构成的集合。</em></p>
 <p>请问 R 究竟包不包含它自身？若不包含，那么按照定义的后半段，它<strong>应当</strong>包含自身；可若它包含了自身，那它又不再满足定义。准备好，脑浆要爆了。</p>
 </aside>
-<p>他们渴望对这样一些问题给出严丝合缝的答案：&ldquo;一切真的命题皆可被证明吗？&ldquo;&ldquo;我们能够<a href="https://en.wikipedia.org/wiki/Computable**function">计算</a>所有可被定义的函数吗？&ldquo;甚至更为一般性的那个问题：&ldquo;当我们声称一个函数是<strong>可计算的</strong>时，我们究竟指的是什么？&ldquo;</p>
+<p>他们渴望对这样一些问题给出严丝合缝的答案：&ldquo;一切真的命题皆可被证明吗？&ldquo;&ldquo;我们能够<a href="https://en.wikipedia.org/wiki/Computable_function">计算</a>所有可被定义的函数吗？&ldquo;甚至更为一般性的那个问题：&ldquo;当我们声称一个函数是<strong>可计算的</strong>时，我们究竟指的是什么？&ldquo;</p>
 <p>他们原本以为，对前两个问题的答案会是&ldquo;是&ldquo;。剩下的不过是去证明它罢了。然而结果证明，两个问题的答案都是&ldquo;否&ldquo;，而令人惊讶的是，这两个问题之间又彼此深刻地纠缠在一起。这是一处极为迷人的数学疆域，它触及了关于大脑究竟能做什么、以及宇宙究竟如何运作的诸多根本问题。我无法在此将它们讲透。</p>
 <p>我所想要指出的，乃是在证明&ldquo;前两个问题的答案均为否&ldquo;的过程中，Alan Turing 与 Alonzo Church 共同为最后一个问题给出了一份精确的答案——即对&ldquo;<span name="uncomputable">可计算</span>&ldquo;函数这一概念的清晰定义。他们各自打造了一套极简的系统，所用机制虽少，却足以计算出任何（相当）一大类函数。</p>
 <aside name="uncomputable">
@@ -136,7 +136,7 @@
 <aside name="turing">
 <p>Turing 曾经将自己的发明称为&ldquo;a-machines&rdquo;——automatic（自动机）的缩写。他本人倒并没有那么自恋，非要把自己的名字贴上去。后来是数学家们替他这么干了。想青史留名而又不失谦逊，个中门道大抵如此。</p>
 </aside><img src="image/control-flow/turing-machine.png" alt="一台图灵机。" />
-<p>图灵机的名气无疑要大得多——毕竟至今还没有一部关于 Alonzo Church 的好莱坞电影——但这两种形式化体系在表达能力上却是<a href="https://en.wikipedia.org/wiki/Church%E2%80%93Turing**thesis">等价的</a>。事实上，任何一门具备一定程度表达能力的程序设计语言，都足以计算<strong>任何</strong>可计算函数。</p>
+<p>图灵机的名气无疑要大得多——毕竟至今还没有一部关于 Alonzo Church 的好莱坞电影——但这两种形式化体系在表达能力上却是<a href="https://en.wikipedia.org/wiki/Church%E2%80%93Turing_thesis">等价的</a>。事实上，任何一门具备一定程度表达能力的程序设计语言，都足以计算<strong>任何</strong>可计算函数。</p>
 <p>你可以用你的语言编写一个图灵机模拟器来对此加以证明。鉴于 Turing 已证明他的机器能计算任何可计算函数，依此类推，这便意味着你的语言亦能胜任。你所需要做的，不过是先把那个函数翻译成图灵机，再让它在你的模拟器上运行而已。</p>
 <p>若你的语言具备足够的表达能力来达成此事，那么它便被称作是<strong>图灵完备</strong>的。图灵机本身简单得令人发指，因此要做到这一点并不需要太大的威力。你基本上只需要算术、一点点控制流，以及分配并使用（理论上）任意数量内存的能力。前者我们已然具备；至于<span name="memory">后者</span>，待到本章结束时，我们将同样收入囊中。</p>
 <aside name="memory">
@@ -232,7 +232,7 @@ add after <em>statement</em>()</div>
 <li>若我们将 else 归属于第一条 <code>if</code> 语句，那么只要 <code>first</code> 为假值，便会调用 <code>whenFalse()</code>，而与 <code>second</code> 的值无关。</li>
 <li>若我们将它归属于第二条 <code>if</code> 语句，那么只有当 <code>first</code> 为真值<strong>且</strong> <code>second</code> 为假值时，才会调用 <code>whenFalse()</code>。</li>
 </ul>
-<p>由于 else 子句是可选的，并且又没有显式的分隔符来标记 <code>if</code> 语句的结束，当你以这种方式嵌套 <code>if</code> 时，文法便会出现歧义。这种经典的语法陷阱被称为<a href="https://en.wikipedia.org/wiki/Dangling**else"><strong>悬空 else</strong></a>问题。</p>
+<p>由于 else 子句是可选的，并且又没有显式的分隔符来标记 <code>if</code> 语句的结束，当你以这种方式嵌套 <code>if</code> 时，文法便会出现歧义。这种经典的语法陷阱被称为<a href="https://en.wikipedia.org/wiki/Dangling_else"><strong>悬空 else</strong></a>问题。</p>
 <p><span name="else"></span></p><img class="above" src="image/control-flow/dangling-else.png" alt="两种 else 的解读方式。" />
 <aside name="else">
 <p>此处，格式化突出展示了两种 else 可以被解读的方式。但请注意，由于空白字符会被语法分析器所忽略，这种格式化不过是给人类读者的一份参考罢了。</p>
@@ -272,11 +272,11 @@ add after <em>visitExpressionStmt</em>()</div>
 <div class="codehilite"><pre>
 <span class="i">expression</span>     → <span class="i">assignment</span> ;
 <span class="i">assignment</span>     → <span class="t">IDENTIFIER</span> <span class="s">&quot;=&quot;</span> <span class="i">assignment</span>
-               | <span class="i">logic</span>**<span class="i">or</span> ;
+               | <span class="i">logic_or</span> ;
 <span class="i">logic_or</span>       → <span class="i">logic_and</span> ( <span class="s">&quot;or&quot;</span> <span class="i">logic_and</span> )* ;
-<span class="i">logic</span>**<span class="i">and</span>      → <span class="i">equality</span> ( <span class="s">&quot;and&quot;</span> <span class="i">equality</span> )* ;
+<span class="i">logic_and</span>      → <span class="i">equality</span> ( <span class="s">&quot;and&quot;</span> <span class="i">equality</span> )* ;
 </pre></div>
-<p><code>assignment</code> 不再直接落到 <code>equality</code>，而是级联到 <code>logic**or</code>。这两条新规则 <code>logic**or</code> 与 <code>logic**and</code>，<span name="same">与</span>其它二元运算符颇为相似。而 <code>logic**and</code> 则调用 <code>equality</code> 以解析其操作数，于是这条链便重新接回了表达式的其余规则。</p>
+<p><code>assignment</code> 不再直接落到 <code>equality</code>，而是级联到 <code>logic_or</code>。这两条新规则 <code>logic_or</code> 与 <code>logic_and</code>，<span name="same">与</span>其它二元运算符颇为相似。而 <code>logic_and</code> 则调用 <code>equality</code> 以解析其操作数，于是这条链便重新接回了表达式的其余规则。</p>
 <aside name="same">
 <p>它们的<strong>语法</strong>与短路求值毫无瓜葛；那是语义层面的考量。</p>
 </aside>
@@ -663,7 +663,7 @@ in <em>forStatement</em>()</div>
 </pre></div>
 <div class="source-file-narrow"><em>lox/Parser.java</em>, in <em>forStatement</em>()</div>
 
-<p>最后，若存在初始化器，它会在整个循环开始之前先行执行一次。我们又一次通过将整条语句替换为一个块来达成目的——该块先执行初始化器，再执行循环循环。</p>
+<p>最后，若存在初始化器，它会在整个循环开始之前先行执行一次。我们又一次通过将整条语句替换为一个块来达成目的——该块先执行初始化器，再执行循环。</p>
 <p>至此，我们的解释器已然支持 C 风格的 <code>for</code> 循环，而我们却<strong>无需</strong>改动 Interpreter 类。因为我们已经将之脱糖为解释器已然懂得如何访问的那些节点，所以无须再做更多的工作。</p>
 <p>Lox 终于强大到足以让我们乐上一阵子了。下面这段小程序会打印斐波那契数列的前 21 项：</p>
 <div class="codehilite"><pre>
@@ -687,18 +687,18 @@ in <em>forStatement</em>()</div>
 </li>
 <li>
 <p>与 Lox 不同，大多数其它 C 风格的语言同时支持循环内部的 <code>break</code> 与 <code>continue</code> 语句。请为 <code>break</code> 语句添加支持。</p>
-<p>其语法为一个 <code>break</code> 关键字后跟随一个分号。<code>break</code> 语句出现在任何外层循环之外时，都应是一个语法错误。在运行时，<code>break</code> 语句会使执行跳转到最近的外层循环的末尾，并从从处开始继续。请注意，<code>break</code> 可能会被嵌套于其它块与 <code>if</code> 语句之中，那些外层的结构同样需要被一并退出。</p>
+<p>其语法为一个 <code>break</code> 关键字后跟随一个分号。<code>break</code> 语句出现在任何外层循环之外时，都应是一个语法错误。在运行时，<code>break</code> 语句会使执行跳转到最近的外层循环的末尾，并从该处开始继续。请注意，<code>break</code> 可能会被嵌套于其它块与 <code>if</code> 语句之中，那些外层的结构同样需要被一并退出。</p>
 </li>
 </ol>
 </div>
 <div class="design-note">
 <h2><a href="#设计笔记：撒入语法糖" name="设计笔记：撒入语法糖"><small>9&#8202;.&#8202;7</small>设计笔记：撒入语法糖</a></h2>
 <p>当你设计自己的语言时，你便要决定往文法里撒入多少语法糖。你是要做一款无糖的健康食品——每一种语义操作都恰好对应一个语法单元？还是要做一款奢华的甜点——每一种行为都各有十种表达方式？成功的语言在这条连续光谱上各有其所居。</p>
-<p>处于极端**苦_ 那一端的，是那些语法被精简到近乎苛刻的语言，诸如 Lisp、Forth 与 Smalltalk。Lisp 的拥趸们常以自豪的口吻宣称，他们的语言&ldquo;没有语法&ldquo;；而 Smalltalk 玩家则骄傲地展示，他们能将整套文法塞进一张索引卡片之中。这一族群秉持的理念是：<em>语言</em>本身并不需要语法糖。其所提供的极简语法与语义已然足够强大，足令库代码能够表现得仿佛它本就是语言的一部分一般。</p>
+<p>处于极端<strong>苦</strong>那一端的，是那些语法被精简到近乎苛刻的语言，诸如 Lisp、Forth 与 Smalltalk。Lisp 的拥趸们常以自豪的口吻宣称，他们的语言&ldquo;没有语法&ldquo;；而 Smalltalk 玩家则骄傲地展示，他们能将整套文法塞进一张索引卡片之中。这一族群秉持的理念是：<em>语言</em>本身并不需要语法糖。其所提供的极简语法与语义已然足够强大，足令库代码能够表现得仿佛它本就是语言的一部分一般。</p>
 <p>靠近它们的，是 C、Lua 与 Go 这一类语言。它们追求的是简洁明了，而非极简主义。其中某些语言——比如 Go——刻意回避了语法糖，也回避了前一类语言所具有的那种语法可扩展性。它们希望语法能够为语义让路，因此它们专注于让文法与库二者皆保持简洁。代码应当<strong>清晰明了</strong>，甚于<strong>优美</strong>。</p>
 <p>介于二者之间的，是 Java、C# 与 Python 这一类语言。再往前走，便到了 Ruby、C++、Perl 与 D——这些语言在文法里塞进了太多的语法，以至于键盘上的标点符号都不够用了。</p>
 <p>某种程度上，所处位置与语言年龄相关。在后续的版本中添加些许语法糖，是一件相对容易的事。新语法总能取悦用户，并且比起动语义来，它也不太会破坏既有程序。一旦加入，便再也拿不掉了——因此语言往往会随着时间而愈发甜蜜。从零开始设计一门新语言的一大主要好处，便是它给予你一次机会，可以将那些年深日久所累积的糖霜统统刮去、重新来过。</p>
-<p>语法糖在程序设计语言的知识精英圈子里名声不佳。那圈子里确实存在着一种对极简主义的迷恋。这倒也并非毫无道理。设计拙劣、且无必要的语法，会徒然抬升认知负担，却又无法换来足够的表达能力来扛起自己的分量。既然将新特性塞进语言的压力总是如影随形，那么避免臃肿便需要纪律与对简洁的执着。一旦你添加了某项语法，你便被它套牢了，因此所以<strong>吝啬</strong>一些总归是聪明的做法。</p>
+<p>语法糖在程序设计语言的知识精英圈子里名声不佳。那圈子里确实存在着一种对极简主义的迷恋。这倒也并非毫无道理。设计拙劣、且无必要的语法，会徒然抬升认知负担，却又无法换来足够的表达能力来扛起自己的分量。既然将新特性塞进语言的压力总是如影随形，那么避免臃肿便需要纪律与对简洁的执着。一旦你添加了某项语法，你便被它套牢了，因此<strong>吝啬</strong>一些总归是聪明的做法。</p>
 <p>另一方面，大多数成功的语言确实拥有相当复杂的文法，至少在被广泛使用的时候是这样。程序员会在他们所选择的语言上耗费大量时间，而语言中偶尔点缀的那几处体贴，真的可以提升他们工作的舒适度与效率。</p>
 <p>要在两者之间觅得恰到好处的平衡——为你这门语言选定合适的甜度——最终还是要靠你自己的品味。</p>
 </div>

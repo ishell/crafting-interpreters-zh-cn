@@ -122,7 +122,7 @@
 <div class="codehilite"><pre>
 <span class="n">1</span> + <span class="n">2</span> * <span class="n">3</span> - <span class="n">4</span>
 </pre></div>
-<p>由于你理解运算的先后顺序——也就是那条古老的&ldquo;请原谅我亲爱的姑姑萨莉&ldquo;——你便知道乘法要先于加减运算进行求值。将这种优先级可视化的方法之一，便是借助一棵树。叶节点是数字，内部节点则是运算符，每个内部节点都带有一根通往其每个操作数的枝条。</p>
+<p>由于你理解运算的先后顺序——也就是那条古老的&ldquo;<a href="https://en.wikipedia.org/wiki/Order_of_operations#Mnemonics">请原谅我亲爱的姑姑萨莉</a>&ldquo;——你便知道乘法要先于加减运算进行求值。将这种优先级可视化的方法之一，便是借助一棵树。叶节点是数字，内部节点则是运算符，每个内部节点都带有一根通往其每个操作数的枝条。</p>
 <p>为了对一个算术节点求值，你需要先知道其各个子树的数值，因此你必须自底向上地工作——这是一次 <em>后序遍历</em>：</p>
 <p><span name="tree-steps"></span></p><img src="image/representing-code/tree-evaluate.png" alt="自底向上地对树求值。" />
 <aside name="tree-steps">
@@ -135,10 +135,10 @@
 <aside name="only">
 <p>这并不是说树便是代码<strong>唯一</strong>可能的表示形式。在<a href="a-bytecode-virtual-machine.html">第三部分</a>中，我们将生成字节码——那是另一种不那么亲近人类、却更亲近机器的表示形式。</p>
 </aside>
-<p>那么，我们便需要更精确地界定这种&ldquo;文法&ldquo;究竟是什么。正如上一章中我们所见，词法文法背后有着一整套理论；句法文法的理论更是如此。在句法这一层，我们对理论的涉入会比扫描器那部分稍多一些——事实证明，它将贯穿解释器开发的许多环节。我们先从<a href="https://en.wikipedia.org/wiki/Chomsky**hierarchy">乔姆斯基谱系</a>往上攀升一级开始……</p>
+<p>那么，我们便需要更精确地界定这种&ldquo;文法&ldquo;究竟是什么。正如上一章中我们所见，词法文法背后有着一整套理论；句法文法的理论更是如此。在句法这一层，我们对理论的涉入会比扫描器那部分稍多一些——事实证明，它将贯穿解释器开发的许多环节。我们先从<a href="https://en.wikipedia.org/wiki/Chomsky_hierarchy">乔姆斯基谱系</a>往上攀升一级开始……</p>
 <h2><a href="#上下文无关文法" name="上下文无关文法"><small>5&#8202;.&#8202;1</small>上下文无关文法</a></h2>
 <p>在上一章中，我们用来定义词法文法的形式化工具——也就是字符如何归组为词法单元的那些规则——被称为 <em>正则语言</em>。对于我们的扫描器而言这已然够用，毕竟它只需要产出一条扁平的词法单元序列。然而，正则语言不足以应对那些可以任意深度嵌套的表达式。</p>
-<p>我们需要一柄更重的锤子。这柄锤子便是<strong>上下文无关文法</strong>（<strong>Context-Free Grammar</strong>，简称<strong>CFG</strong>）。它是**<a href="https://en.wikipedia.org/wiki/Formal**grammar">形式文法</a>**工具箱中仅次于正则文法的那柄更重的锤子。一种形式文法以一组它称之为&ldquo;字母表&ldquo;的原子元素作为起点，进而定义出该字母表上（通常是无穷多的）一组合法的&ldquo;符号串&ldquo;。每一段符号串都是字母表中&ldquo;字母&ldquo;的一个序列。</p>
+<p>我们需要一柄更重的锤子。这柄锤子便是<strong>上下文无关文法</strong>（<strong>Context-Free Grammar</strong>，简称<strong>CFG</strong>）。它是**<a href="https://en.wikipedia.org/wiki/Formal_grammar">形式文法</a>**工具箱中仅次于正则文法的那柄更重的锤子。一种形式文法以一组它称之为&ldquo;字母表&ldquo;的原子元素作为起点，进而定义出该字母表上（通常是无穷多的）一组合法的&ldquo;符号串&ldquo;。每一段符号串都是字母表中&ldquo;字母&ldquo;的一个序列。</p>
 <p>我之所以在所有这些词上都打上了引号，是因为当我们从词法文法过渡到句法文法时，这些术语多少会变得有些令人困惑。在扫描器的文法中，字母表由一个个字符构成，而符号串则是合法的词素——大致相当于&ldquo;单词&ldquo;。在眼下我们讨论的句法文法中，我们所处的粒度已截然不同：此时，字母表中的每一个&ldquo;字母&ldquo;都是一个完整的词法单元，而一段&ldquo;符号串&ldquo;则是<strong>词法单元</strong>的一个序列——一整个表达式。</p>
 <p>哎哟——也许一张表格能帮你厘清思路：</p><table>
 <thead>
@@ -176,7 +176,7 @@
 <p>若从规则出发，你可以用它们<strong>生成</strong>属于该文法的符号串。如此生成的符号串被称为<strong>推导</strong>（derivation），因为每一条都是从该文法的规则中<strong>推导</strong>而来的。在游戏的每一步中，你挑出一条规则，并依照其指示行事。围绕形式文法的大部分行话，都源自以这种方式进行的游戏。规则之所以被称为<strong>产生式</strong>（production），便是因为它们<strong>产生</strong>了属于该文法的符号串。</p>
 <p>上下文无关文法中每一条产生式都拥有一个<strong>左部</strong>（head）——也就是它的<span name="name">名字</span>——以及一个<strong>右部</strong>（body），用以描述它所生成的内容。在其纯粹的形式中，右部不过是符号的一个列表。符号有两种赏心悦目的风味：</p>
 <aside name="name">
-<p>将左部限制为一个单一符号，正是上下文无关文法的定义性特征。更为强大的形式化体系——譬如**<a href="https://en.wikipedia.org/wiki/Unrestricted**grammar">非受限文法</a>**——则允许左部与右部同为符号序列。</p>
+<p>将左部限制为一个单一符号，正是上下文无关文法的定义性特征。更为强大的形式化体系——譬如**<a href="https://en.wikipedia.org/wiki/Unrestricted_grammar">非受限文法</a>**——则允许左部与右部同为符号序列。</p>
 </aside>
 <ul>
 <li>
@@ -188,7 +188,7 @@
 </li>
 </ul>
 <p>还有最后一点打磨：你可以为同一个名字编写多条规则。当你抵达一个具有该名字的非终结符时，你被允许从这些规则中任挑一条——挑哪条都行。</p>
-<p>为了将这一切落到实处，我们需要一种<span name="turtles">方式</span>来写下这些产生式规则。早在几千年前，波你尼（Pāṇini）的《八章书》（<em>Ashtadhyayi</em>）便已将梵语文法加以系统化，自那时起，人们便一直在尝试将&ldquo;文法&ldquo;这件事梳理得清清楚楚。然而在接下来的漫长岁月里，文法记法几乎再无实质进展。直到 John Backus 及其同事需要一种记法来描述 ALGOL 58 之时，他们才发明了<a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur**form"><strong>巴科斯-诺尔形式</strong></a>（<strong>Backus-Naur form</strong>，简称<strong>BNF</strong>）。自那以后，几乎每个人都在使用某种风味的 BNF，并按照自己的喜好加以调校。</p>
+<p>为了将这一切落到实处，我们需要一种<span name="turtles">方式</span>来写下这些产生式规则。早在几千年前，波你尼（Pāṇini）的《八章书》（<em>Ashtadhyayi</em>）便已将梵语文法加以系统化，自那时起，人们便一直在尝试将&ldquo;文法&ldquo;这件事梳理得清清楚楚。然而在接下来的漫长岁月里，文法记法几乎再无实质进展。直到 John Backus 及其同事需要一种记法来描述 ALGOL 58 之时，他们才发明了<a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form"><strong>巴科斯-诺尔形式</strong></a>（<strong>Backus-Naur form</strong>，简称<strong>BNF</strong>）。自那以后，几乎每个人都在使用某种风味的 BNF，并按照自己的喜好加以调校。</p>
 <p>我也曾试图想出一种清爽的记法。每条规则都由一个名字、一个箭头（<code>→</code>）、一串符号，并以一个分号（<code>;</code>）收尾。终结符用引号引起来的字符串表示，非终结符则是小写的单词。</p>
 <aside name="turtles">
 <p>没错，要描述我们用以定义<strong>语法</strong>的那些规则，我们又得先定义一种<strong>语法</strong>。要不要把这一层元语法（metasyntax）也一并形式化？那又要用什么记法去描述<strong>它</strong>呢？这可是&ldquo;语言之上还有语言&ldquo;，层层相套，永无止境！</p>
@@ -285,8 +285,8 @@
 
 <span class="i">bread</span>     → <span class="s">&quot;toast&quot;</span> | <span class="s">&quot;biscuits&quot;</span> | <span class="s">&quot;English muffin&quot;</span> ;
 </pre></div>
-<p>希望读起来还不算太糟。如果你对 grep 或文本编辑器中的<a href="https://en.wikipedia.org/wiki/Regular**expression#Standards">正则表达式</a>早已驾轻就熟，那么这里出现的那些标点符号大多应能令你感到亲切。它们之间最主要的差别在于：此处的符号代表的是完整的词法单元，而非单个字符。</p>
-<p>在本书的余下章节中，我们都将沿用这一记法来精确地描述 Lox 的文法。当你投身于程序设计语言的设计工作时，你会发现：上下文无关文法（无论是采用这种记法、<a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur**form">EBNF</a>，还是某种其它记法）能够帮助你将脑海中那些尚处于萌芽状态的、非形式化的语法设计想法结晶成形。它也是你与其它语言黑客就语法问题彼此交流时颇为趁手的媒介。</p>
+<p>希望读起来还不算太糟。如果你对 grep 或文本编辑器中的<a href="https://en.wikipedia.org/wiki/Regular_expression#Standards">正则表达式</a>早已驾轻就熟，那么这里出现的那些标点符号大多应能令你感到亲切。它们之间最主要的差别在于：此处的符号代表的是完整的词法单元，而非单个字符。</p>
+<p>在本书的余下章节中，我们都将沿用这一记法来精确地描述 Lox 的文法。当你投身于程序设计语言的设计工作时，你会发现：上下文无关文法（无论是采用这种记法、<a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a>，还是某种其它记法）能够帮助你将脑海中那些尚处于萌芽状态的、非形式化的语法设计想法结晶成形。它也是你与其它语言黑客就语法问题彼此交流时颇为趁手的媒介。</p>
 <p>我们为 Lox 所定义的这些规则与产生式，同样也是我们接下来打算实现的、用以在内存中表示代码的那棵树形数据结构的指引。在我们真正动手之前，我们还需要一条关于 Lox 的文法——至少先有一条够用的，好让我们得以起步。</p>
 <h3><a href="#lox-表达式的文法" name="lox-表达式的文法"><small>5&#8202;.&#8202;1&#8202;.&#8202;3</small>Lox 表达式的文法</a></h3>
 <p>在上一章中，我们一口气搞定了 Lox 全部的词法文法。每一个关键字、每一处标点符号都已悉数收录。句法文法则更为庞大，要在我们的解释器真正跑起来之前便将其通盘研磨一遍，那实在是一件煞风景的事。</p>
@@ -501,7 +501,7 @@ add after <em>defineAst</em>()</div>
 <p>至此，大功告成。所有那些光辉灿烂的 Java 样板代码都被我们悉数搞定。它在类体中声明了每一个字段，为类定义了一个构造函数——其参数与各个字段一一对应——并在函数体中将它们一一初始化。</p>
 <p>现在便编译并运行这段 Java 程序，它便会<span name="longer">倾泻</span>出一个新的 &rdquo;.java&rdquo; 文件，其中包含了区区数十行代码。很快，这个文件还会变得更长。</p>
 <aside name="longer">
-<p>[附录 II][] 中收录了这段脚本在我们完成 jlox 的实现、定义完所有的语法树节点之后所生成的代码。</p>
+<p><a href="appendix-ii.html">附录 II</a> 中收录了这段脚本在我们完成 jlox 的实现、定义完所有的语法树节点之后所生成的代码。</p>
 </aside>
 <h2><a href="#与树共事" name="与树共事"><small>5&#8202;.&#8202;3</small>与树共事</a></h2>
 <p>先请戴上一顶想象的帽子。尽管眼下我们还远远没到那一步，不妨先来琢磨一下解释器将会如何使用这些语法树。Lox 中的每一种表达式在运行时都有着不同的行为。这意味着解释器需要为每一种表达式类型挑选出不同的代码块来处理。对于词法单元，我们仅需简单地对 TokenType 进行 switch 分支即可。但对于语法树，我们可没有这么一个&ldquo;类型&ldquo;枚举——我们只有一个个相互独立的 Java 类。</p>
@@ -513,13 +513,13 @@ add after <em>defineAst</em>()</div>
   <span class="c">// ...</span>
 } <span class="k">else</span> <span class="c">// ...</span>
 </pre></div>
-<p>但所有这些串联起来的类型测试既慢又低效。那些名字按字母序排在靠后的表达式类型，由于需要经历更多次的 <code>if</code> 分支兜底，其执行时间反而更长。这可算不上什么优雅的解决方案。</p>
+<p>但所有这些串联起来的类型测试既慢又低效。那些名字按字母序排在靠后的表达式类型，由于要一路跌过更多的 <code>if</code> 分支才能命中正确类型，其执行时间反而更长。这可算不上什么优雅的解决方案。</p>
 <p>我们手头有一族类，而我们需要将一段行为与每一个类关联起来。在 Java 这类面向对象的语言中，最自然的解法便是将那些行为以方法的形式植入到类自身之中。我们本可以在 Expr 上添加一个抽象的 <span name="interpreter-pattern"><code>interpret()</code></span> 方法，再由各个子类各自实现它来解释自身。</p>
 <aside name="interpreter-pattern">
-<p>这正是 Erich Gamma 等人所著的《设计模式：可复用面向对象软件的基础》中所称的<a href="https://en.wikipedia.org/wiki/Interpreter**pattern">&ldquo;解释器模式&ldquo;</a>。</p>
+<p>这正是 Erich Gamma 等人所著的《设计模式：可复用面向对象软件的基础》中所称的<a href="https://en.wikipedia.org/wiki/Interpreter_pattern">&ldquo;解释器模式&ldquo;</a>。</p>
 </aside>
 <p>对于小型项目而言，这么做还算过得去，但其扩展性糟糕得很。正如我前面所指出的，这些树类横跨着数个领域。至少，语法分析器与解释器都会对它们动手。而正如<a href="resolving-and-binding.html">你日后将看到</a>的，我们还需要对它们进行名称解析。若我们的语言是静态类型的，我们还得再加上一遍类型检查。</p>
-<p>若我们针对每一项这样的操作都向表达式类中添加实例方法，那便是把一干彼此并不相干的领域硬生生地揉到了一起。这有违<a href="https://en.wikipedia.org/wiki/Separation_of**concerns">关注点分离</a>原则，并终将致使代码难以维护。</p>
+<p>若我们针对每一项这样的操作都向表达式类中添加实例方法，那便是把一干彼此并不相干的领域硬生生地揉到了一起。这有违<a href="https://en.wikipedia.org/wiki/Separation_of_concerns">关注点分离</a>原则，并终将致使代码难以维护。</p>
 <h3><a href="#表达式问题" name="表达式问题"><small>5&#8202;.&#8202;3&#8202;.&#8202;1</small>表达式问题</a></h3>
 <p>这个问题看似平常，实则远比初见时深刻。我们手头攥着寥寥几种类型，以及寥寥几种高层操作，譬如&ldquo;interpret&rdquo;。对于每一种&ldquo;类型-操作&ldquo;的组合，我们都需要一份独特的实现。请想象一张表格：</p><img src="image/representing-code/table.png" alt="一张表格，其中行以表达式类命名，列以函数名命名。" />
 <p>行是类型，列是操作。表格中的每一格都代表为了在该类型上实现该操作而必须编写的那段独此一份的代码。</p>
@@ -611,7 +611,7 @@ add after <em>defineAst</em>()</div>
 <h3><a href="#为表达式引入访问者模式" name="为表达式引入访问者模式"><small>5&#8202;.&#8202;3&#8202;.&#8202;3</small>为表达式引入访问者模式</a></h3>
 <p>好了，让我们把它织入我们的表达式类中。我们也顺便<span name="context">打磨</span>一下这一模式。在糕点的那个例子中，visit 与 <code>accept()</code> 方法皆无返回值。实际应用中，访问者常常需要定义能够产出值的操作。但 <code>accept()</code> 应该使用什么返回类型呢？我们不能假定每一位访问者都希望产出同一类型，因此我们将借助于泛型，让每一份实现各自填上一个返回类型。</p>
 <aside name="context">
-<p>另一种常见的打磨，是额外引入一个&ldquo;上下文&ldquo;参数——它先被传递给 visit 方法，再由后者原路回传给 <code>accept()</code>。这便允许操作携带额外的参数。本书中我们将要定义的访问者并不需要这一手，所以我将其略去。</p>
+<p>另一种常见的打磨，是额外引入一个&ldquo;上下文&ldquo;参数——它经由 <code>accept()</code> 传入，再转交给各个 visit 方法。这便允许操作携带额外的参数。本书中我们将要定义的访问者并不需要这一手，所以我将其略去。</p>
 </aside>
 <p>首先，我们定义访问者接口。同样地，我们将其嵌套于基类之中，以便将所有内容都收纳于同一个文件里。</p>
 <div class="codehilite"><pre class="insert-before">
@@ -809,7 +809,7 @@ add after <em>parenthesize</em>()</div>
 <p>（SML 或 Haskell 是完成这一练习的理想选择，但 Scheme 或其它 Lisp 方言同样可以。）</p>
 </li>
 <li>
-<p>在<a href="https://en.wikipedia.org/wiki/Reverse**Polish_notation">逆波兰表示法</a>（Reverse Polish Notation，RPN）中，算术运算符的两个操作数都置于运算符<strong>之前</strong>，因此 <code>1 + 2</code> 会写作 <code>1 2 +</code>。其求值过程自左向右进行：数字被压入一个隐式的栈中；算术运算符则弹出栈顶的两个数字，对其执行相应的运算，并将结果压回栈中。因此：</p>
+<p>在<a href="https://en.wikipedia.org/wiki/Reverse_Polish_notation">逆波兰表示法</a>（Reverse Polish Notation，RPN）中，算术运算符的两个操作数都置于运算符<strong>之前</strong>，因此 <code>1 + 2</code> 会写作 <code>1 2 +</code>。其求值过程自左向右进行：数字被压入一个隐式的栈中；算术运算符则弹出栈顶的两个数字，对其执行相应的运算，并将结果压回栈中。因此：</p>
 <div class="codehilite"><pre>
 (<span class="n">1</span> + <span class="n">2</span>) * (<span class="n">4</span> - <span class="n">3</span>)
 </pre></div>

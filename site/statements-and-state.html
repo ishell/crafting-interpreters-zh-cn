@@ -41,11 +41,10 @@
     <li><a href="#语句"><small>8.1</small> 语句</a></li>
     <li><a href="#全局变量"><small>8.2</small> 全局变量</a></li>
     <li><a href="#环境"><small>8.3</small> 环境</a></li>
-    <li><a href="#解释全局变量"><small>8.4</small> 解释全局变量</a></li>
-    <li><a href="#赋值"><small>8.5</small> 赋值</a></li>
-    <li><a href="#作用域"><small>8.6</small> 作用域</a></li>
-    <li><a href="#挑战"><small>8.7</small> 挑战</a></li>
-    <li><a href="#设计笔记：隐式变量声明"><small>8.8</small> 设计笔记：隐式变量声明</a></li>
+    <li><a href="#赋值"><small>8.4</small> 赋值</a></li>
+    <li><a href="#作用域"><small>8.5</small> 作用域</a></li>
+    <li><a href="#挑战"><small>8.6</small> 挑战</a></li>
+    <li><a href="#设计笔记：隐式变量声明"><small>8.7</small> 设计笔记：隐式变量声明</a></li>
 </ul>
 
 
@@ -74,11 +73,10 @@
     <li><a href="#语句"><small>8.1</small> 语句</a></li>
     <li><a href="#全局变量"><small>8.2</small> 全局变量</a></li>
     <li><a href="#环境"><small>8.3</small> 环境</a></li>
-    <li><a href="#解释全局变量"><small>8.4</small> 解释全局变量</a></li>
-    <li><a href="#赋值"><small>8.5</small> 赋值</a></li>
-    <li><a href="#作用域"><small>8.6</small> 作用域</a></li>
-    <li><a href="#挑战"><small>8.7</small> 挑战</a></li>
-    <li><a href="#设计笔记：隐式变量声明"><small>8.8</small> 设计笔记：隐式变量声明</a></li>
+    <li><a href="#赋值"><small>8.4</small> 赋值</a></li>
+    <li><a href="#作用域"><small>8.5</small> 作用域</a></li>
+    <li><a href="#挑战"><small>8.6</small> 挑战</a></li>
+    <li><a href="#设计笔记：隐式变量声明"><small>8.7</small> 设计笔记：隐式变量声明</a></li>
 </ul>
 
 
@@ -654,7 +652,7 @@ in class <em>Environment</em></div>
 <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;too late!&quot;</span>;
 </pre></div>
 <p>一如我们在表达式求值代码中处理类型错误那般，我们通过抛出一个异常来报告运行时错误。该异常携带该变量的词法单元，从而我们能够告诉用户他们的代码到底是在哪里出了岔子。</p>
-<h2><a href="#解释全局变量" name="解释全局变量"><small>8&#8202;.&#8202;4</small>解释全局变量</a></h2>
+<h3><a href="#解释全局变量" name="解释全局变量"><small>8&#8202;.&#8202;3&#8202;.&#8202;1</small>解释全局变量</a></h3>
 <p>Interpreter 类得到一个新增的 Environment 类实例。</p>
 <div class="codehilite"><pre class="insert-before">
 class Interpreter implements Expr.Visitor&lt;Object&gt;,
@@ -712,14 +710,14 @@ add after <em>visitUnaryExpr</em>()</div>
 <span class="k">print</span> <span class="i">a</span> + <span class="i">b</span>;
 </pre></div>
 <p>我们尚无法复用<strong>代码</strong>，但我们已然可以着手构建那些能够复用<strong>数据</strong>的程序了。</p>
-<h2><a href="#赋值" name="赋值"><small>8&#8202;.&#8202;5</small>赋值</a></h2>
+<h2><a href="#赋值" name="赋值"><small>8&#8202;.&#8202;4</small>赋值</a></h2>
 <p>我们可以创造出那样一门语言——它拥有变量，却不允许你<strong>重新赋值</strong>，也就是<strong>变更</strong>（mutate）它们。Haskell 便是一例。SML 则仅支持可变的引用与数组——变量本身并不能被重新赋值。Rust 则通过要求一个 <code>mut</code> 修饰符来启用赋值，从而引导你远离变更。</p>
 <p>变更一个变量是一种副作用——正所谓顾名思义，一些程序语言的拥趸认为副作用是<span name="pure">肮脏</span>而不优雅的。代码理应是纯粹的数学运算，产出其值——晶莹剔�、亘古不变的——宛如神明创世的伟业。而不该是一台邋遢不堪的自动机，每一道命令式指令都伴随着一声沉闷的呻吟，将数据敲打成型。</p>
 <aside name="pure">
 <p>令我感到饶有趣味的是，偏偏是同一群人——他们以冷静理性的逻辑为傲——却也偏偏无法抗拒用那些情感色彩浓烈的词汇来描绘自己的工作：&ldquo;pure&rdquo;（纯粹）、&ldquo;side effect&rdquo;（副作用）、&ldquo;lazy&rdquo;（惰性）、&ldquo;persistent&rdquo;（持久化）、&ldquo;first-class&rdquo;（一等）、&ldquo;higher-order&rdquo;（高阶）。</p>
 </aside>
 <p>Lox 倒没那么严苛。Lox 是一门命令式语言，变更乃是其与生俱来的本性。为其加入赋值支持并不需要大动干戈。全局变量已然支持重新定义，因此绝大部分机制已然齐备。我们所欠缺的，主要只是一个显式的赋值记号罢了。</p>
-<h3><a href="#赋值语法" name="赋值语法"><small>8&#8202;.&#8202;5&#8202;.&#8202;1</small>赋值语法</a></h3>
+<h3><a href="#赋值语法" name="赋值语法"><small>8&#8202;.&#8202;4&#8202;.&#8202;1</small>赋值语法</a></h3>
 <p>那个小小的 <code>=</code> 语法其实比它乍看之下要复杂得多。与大多数源自 C 的语言一样，赋值是一个<span name="assign">表达式</span>，而非一条语句。如同 C 一样，它是优先级最低的一种表达式形式。这意味着该规则被安插在 <code>expression</code> 与 <code>equality</code>（次低优先级的表达式）之间。</p>
 <aside name="assign">
 <p>某些其它语言——比如 Pascal、Python 与 Go——则将赋值视作语句。</p>
@@ -767,7 +765,7 @@ replace 1 line</div>
 <span class="k">var</span> <span class="i">a</span> = <span class="s">&quot;before&quot;</span>;
 <span class="i">a</span> = <span class="s">&quot;value&quot;</span>;
 </pre></div>
-<p>在第二行，我们并<strong>不</strong>对 <code>a</code> 进行<strong>求值</strong>（那会返回字符串 &ldquo;before&rdquo;）。我们去弄明白 <code>a</code> 所指的是哪个变量，从而知晓应当将右侧表达式的值存放在何处。<a href="https://en.wikipedia.org/wiki/Value_(computer**science)#lrvalue">经典的术语</a> 将这两种<span name="l-value">结构</span>分别称为<strong>左值</strong>（l-value）与<strong>右值</strong>（r-value）。迄今为止我们所见识过的所有产出值的表达式，皆为右值。一个左值则&ldquo;求值&ldquo;为一个可供赋值的存储位置。</p>
+<p>在第二行，我们并<strong>不</strong>对 <code>a</code> 进行<strong>求值</strong>（那会返回字符串 &ldquo;before&rdquo;）。我们去弄明白 <code>a</code> 所指的是哪个变量，从而知晓应当将右侧表达式的值存放在何处。<a href="https://en.wikipedia.org/wiki/Value_(computer_science)#lrvalue">经典的术语</a> 将这两种<span name="l-value">结构</span>分别称为<strong>左值</strong>（l-value）与<strong>右值</strong>（r-value）。迄今为止我们所见识过的所有产出值的表达式，皆为右值。一个左值则&ldquo;求值&ldquo;为一个可供赋值的存储位置。</p>
 <aside name="l-value">
 <p>事实上，这些名字便是源自赋值表达式：<em>l</em>-value 出现在赋值 <code>=</code> 的<strong>左侧</strong>，而 <em>r</em>-value 则出现在<strong>右侧</strong>。</p>
 </aside>
@@ -832,7 +830,7 @@ add after <em>expressionStatement</em>()</div>
 </pre></div>
 </aside>
 <p>眼下，唯一的合法赋值目标便是简单的变量表达式，但日后我们还会加入字段。这一把戏的最终成果，便是一个赋值表达式树节点——它既清楚自己正在赋给什么，又含有一个用于表示所赋之值的表达式子树。所有这一切，都仅凭一词前瞻、毫无回溯便能达成。</p>
-<h3><a href="#赋值语义" name="赋值语义"><small>8&#8202;.&#8202;5&#8202;.&#8202;2</small>赋值语义</a></h3>
+<h3><a href="#赋值语义" name="赋值语义"><small>8&#8202;.&#8202;4&#8202;.&#8202;2</small>赋值语义</a></h3>
 <p>我们有了一个新的语法树节点，于是我们的解释器也相应地获得了一个新的 visit 方法。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
 add after <em>visitVarStmt</em>()</div>
@@ -875,7 +873,7 @@ add after <em>get</em>()</div>
 <aside name="basic">
 <p>或许还稍胜一筹。与某些老旧的 BASIC 不同，Lox 能够处理长于两个字符的变量名。</p>
 </aside>
-<h2><a href="#作用域" name="作用域"><small>8&#8202;.&#8202;6</small>作用域</a></h2>
+<h2><a href="#作用域" name="作用域"><small>8&#8202;.&#8202;5</small>作用域</a></h2>
 <p><strong>作用域</strong>界定了一个名字映射到某一实体的区域。多重作用域使得同一个名字能够在不同的语境中指代不同的事物。在我家中，&ldquo;Bob&rdquo;通常指的是我本人。但在你所居住的城镇里，你或许认识另一个 Bob。同一个名字，但<strong>是谁</strong>取决于你在哪里说出它。</p>
 <p><span name="lexical"><strong>词法作用域</strong></span>（或较少听到的<strong>静态作用域</strong>）是一种特定的作用域风格，由程序自身的文本来界定一个作用域的起止。在 Lox 中，正如在大多数现代语言中一样，变量采用的是词法作用域。当你看到某个使用某个变量的表达式时，你只需静态地阅读代码，便能弄清它所指的是哪一个变量声明。</p>
 <aside name="lexical">
@@ -923,7 +921,7 @@ add after <em>get</em>()</div>
 <span class="k">print</span> <span class="i">a</span>; <span class="c">// 错误！此处再无 &quot;a&quot;。</span>
 </pre></div>
 <p>一个块的开头引入了一个新的局部作用域，而当执行越过作为结尾的 <code>}</code> 时，该作用域便告终结。任何在该块内部声明的变量，都将随之消失。</p>
-<h3><a href="#嵌套与遮蔽" name="嵌套与遮蔽"><small>8&#8202;.&#8202;6&#8202;.&#8202;1</small>嵌套与遮蔽</a></h3>
+<h3><a href="#嵌套与遮蔽" name="嵌套与遮蔽"><small>8&#8202;.&#8202;5&#8202;.&#8202;1</small>嵌套与遮蔽</a></h3>
 <p>实现块作用域的第一刀，或许可以这么做：</p>
 <ol>
 <li>当我们访问该块内部的每一条语句时，记下任何被声明的变量。</li>
@@ -1027,7 +1025,7 @@ in <em>assign</em>()</div>
 <div class="source-file-narrow"><em>lox/Environment.java</em>, in <em>assign</em>()</div>
 
 <p>同样地，若该变量并不存在于当前环境之中，它便会去检查外层的那一个，并以此递归下去。</p>
-<h3><a href="#块语法与语义" name="块语法与语义"><small>8&#8202;.&#8202;6&#8202;.&#8202;2</small>块语法与语义</a></h3>
+<h3><a href="#块语法与语义" name="块语法与语义"><small>8&#8202;.&#8202;5&#8202;.&#8202;2</small>块语法与语义</a></h3>
 <p>既然 Environment 已经能够嵌套，我们便可以着手为语言引入块了。请看文法：</p>
 <div class="codehilite"><pre>
 <span class="i">statement</span>      → <span class="i">exprStmt</span>
@@ -1150,7 +1148,7 @@ add after <em>execute</em>()</div>
 </pre></div>
 <p>我们这款小小的解释器如今已然<strong>能够记忆</strong>。我们正在一步步地靠近某种与功能齐备的程序设计语言相像的东西。</p>
 <div class="challenges">
-<h2><a href="#挑战" name="挑战"><small>8&#8202;.&#8202;7</small>挑战</a></h2>
+<h2><a href="#挑战" name="挑战"><small>8&#8202;.&#8202;6</small>挑战</a></h2>
 <ol>
 <li>
 <p>REPL 如今已不再支持输入一个单一表达式并自动打印其结果值。这多少有些不便。请为 REPL 增添支持，使其允许用户同时输入语句与表达式。若用户输入的是一条语句，便执行之；若用户输入的是一个表达式，便对其求值并展示其结果值。</p>
@@ -1182,7 +1180,7 @@ add after <em>execute</em>()</div>
 </ol>
 </div>
 <div class="design-note">
-<h2><a href="#设计笔记：隐式变量声明" name="设计笔记：隐式变量声明"><small>8&#8202;.&#8202;8</small>设计笔记：隐式变量声明</a></h2>
+<h2><a href="#设计笔记：隐式变量声明" name="设计笔记：隐式变量声明"><small>8&#8202;.&#8202;7</small>设计笔记：隐式变量声明</a></h2>
 <p>Lox 拥有截然不同的语法，分别用于声明一条新变量与对一个既有变量进行赋值。某些语言则将这两者合并为仅仅一种赋值语法。对一个不存在的变量进行赋值会自动将其引入世间。这被称为<strong>隐式变量声明</strong>，它存在于 Python、Ruby、CoffeeScript 等等语言之中。JavaScript 拥有用于声明变量的显式语法，但也能够在赋值时创建新的变量。Visual Basic 则提供了<a href="https://msdn.microsoft.com/en-us/library/xe53dz5w(v=vs.100).aspx">一个选项</a>，用以启用或禁用隐式变量。</p>
 <p>当同一种语法既可能用于赋值又可能用于声明变量时，每一门语言都必须就用户意图不甚明朗时究竟应当如何处置作出抉择。具体而言，每一门语言都必须就隐式声明如何与遮蔽相互作用、以及一个被隐式声明的变量究竟归入哪一个作用域作出抉择。</p>
 <ul>

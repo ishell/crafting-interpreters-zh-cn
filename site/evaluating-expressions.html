@@ -128,7 +128,7 @@
 </ol>
 <p>我们逐一来过。</p>
 <h2><a href="#表示值" name="表示值"><small>7&#8202;.&#8202;1</small>表示值</a></h2>
-<p>在 Lox 中，<span name="value">值</span>由字面量所创建，由表达式所计算，并被存放在变量之中。从用户视角看去，它们是 _Lox**对象；但它们实际是由我们解释器所使用的底层语言来实现的。这意味着我们要在 Lox 动态类型的世界与 Java 静态类型的世界之间架起一座桥梁。Lox 中的一个变量能够存放任何（Lox）类型的值，甚至能在不同的时间点存放不同类型的值。我们究竟可以使用哪一种 Java 类型来表征这一切呢？</p>
+<p>在 Lox 中，<span name="value">值</span>由字面量所创建，由表达式所计算，并被存放在变量之中。从用户视角看去，它们是 <em>Lox</em> 对象；但它们实际是由我们解释器所使用的底层语言来实现的。这意味着我们要在 Lox 动态类型的世界与 Java 静态类型的世界之间架起一座桥梁。Lox 中的一个变量能够存放任何（Lox）类型的值，甚至能在不同的时间点存放不同类型的值。我们究竟可以使用哪一种 Java 类型来表征这一切呢？</p>
 <aside name="value">
 <p>此处，我将&ldquo;值&ldquo;与&ldquo;对象&ldquo;两词基本上是混用的。</p>
 <p>等日后到用 C 编写的解释器中，我们会在这两者之间作一细微的区分，但那主要是为了给实现中两个不同角落——就地存储的数据与堆上分配的数据——各自起一个独一无二的术语。从用户的视角出发，这两个词则是同义的。</p>
@@ -169,7 +169,7 @@
 <p>另一件我们需要对值去做的事情是管理其内存，而 Java 也替我们包办了这件事。一个趁手的对象表示形式，外加一款相当不错的垃圾收集器，便是我们选用 Java 来编写这第一款解释器的主要原因。</p>
 </aside>
 <h2><a href="#求值表达式" name="求值表达式"><small>7&#8202;.&#8202;2</small>求值表达式</a></h2>
-<p>接下来，我们需要为每一种我们能够解析的表达式编写实现其求值逻辑的代码片段。我们本可以将那些代码塞进语法树类中的某个类似 <code>interpret()</code> 的方法里。事实上，我们本可以告诉每一个语法树节点：&ldquo;自己解释自己&ldquo;。这便是&ldquo;四人帮&ldquo;所著的<a href="https://en.wikipedia.org/wiki/Interpreter**pattern">《设计模式》</a>中所说的<strong>Interpreter 模式</strong>。这是一种相当精巧的模式，但正如我先前所指出的，若把各式各样的逻辑都硬塞进那些树类之中，事情便会变得一团糟。</p>
+<p>接下来，我们需要为每一种我们能够解析的表达式编写实现其求值逻辑的代码片段。我们本可以将那些代码塞进语法树类中的某个类似 <code>interpret()</code> 的方法里。事实上，我们本可以告诉每一个语法树节点：&ldquo;自己解释自己&ldquo;。这便是&ldquo;四人帮&ldquo;所著的<a href="https://en.wikipedia.org/wiki/Interpreter_pattern">《设计模式》</a>中所说的<strong>Interpreter 模式</strong>。这是一种相当精巧的模式，但正如我先前所指出的，若把各式各样的逻辑都硬塞进那些树类之中，事情便会变得一团糟。</p>
 <p>我们将转而复用我们已然驾轻就熟的<a href="representing-code.html#the-visitor-pattern">访问者模式</a>。在上一章中，我们创建了 AstPrinter 这个类。它接受一棵语法树，对其进行递归遍历，并最终拼出一段字符串返回。那与我们一款货真价实的解释器所做的事情几乎如出一辙——区别仅在于，我们不再是去拼接字符串，而是去计算<strong>值</strong>。</p>
 <p>我们先来新建一个类。</p>
 <div class="codehilite"><div class="source-file"><em>lox/Interpreter.java</em><br>
@@ -398,7 +398,7 @@ add after <em>isTruthy</em>()</div>
 <div class="codehilite"><pre>
 (<span class="n">0</span> / <span class="n">0</span>) == (<span class="n">0</span> / <span class="n">0</span>)
 </pre></div>
-<p>根据 <a href="https://en.wikipedia.org/wiki/IEEE**754">IEEE 754</a>——它规定了双精度浮点数的种种行为——将零除以零会得到那个特殊的<strong>NaN</strong>（&ldquo;非数字&ldquo;，Not a Number）值。颇为吊诡的是，NaN 居然<strong>不等于</strong>它自身。</p>
+<p>根据 <a href="https://en.wikipedia.org/wiki/IEEE_754">IEEE 754</a>——它规定了双精度浮点数的种种行为——将零除以零会得到那个特殊的<strong>NaN</strong>（&ldquo;非数字&ldquo;，Not a Number）值。颇为吊诡的是，NaN 居然<strong>不等于</strong>它自身。</p>
 <p>在 Java 中，对原生类型 double 使用 <code>==</code> 运算符时会保留这一行为，但 Double 类上的 <code>equals()</code> 方法却并非如此。Lox 采用的是后者，因此并未遵循 IEEE。这类细微的不兼容性占据了语言实现者生活中令人沮丧的相当一部分时间。</p>
 </aside>
 <p>至此，大功告成！这便是一切所需的代码，用来正确地解释一条合法的 Lox 表达式。然而，对于一条<strong>非法</strong>的表达式呢？尤其是，当某个子表达式求值的结果对于正在执行的运算而言类型不符时，又会发生什么？</p>
@@ -409,7 +409,7 @@ add after <em>isTruthy</em>()</div>
 <p>鲜有现代语言会容忍这种不安全的操作。相反，它们大多是<strong>内存安全</strong>的，并通过静态检查与运行时检查的双重手段，确保一段程序永远不会错误地解读某一内存位置所存储的值。</p>
 </aside>
 <p>如今，是时候让我们好好聊聊<strong>运行时错误</strong>了。我在前面几章里洋洋洒洒地挥洒了大量笔墨来谈论错误处理，但那些统统是 <em>语法</em> 错误或 <em>静态</em> 错误——它们会在<strong>任何</strong>代码被执行之前就被检测并报告出来。运行时错误则是那些语言语义要求我们在程序运行过程中（这便是其名字的由来）去检测并报告的失败。</p>
-<p>眼下，倘苦一个操作数的类型与正在执行的运算不相匹配，Java 的类型转换便会失败，JVM 也便会抛出一个 ClassCastException。这会一路展开整个调用栈，并退出应用程序，将一串 Java 栈跟踪一股脑儿地吐到用户脸上。这多半不是我们想要的。Lox 是由 Java 实现的这件事实，理应作为一个隐藏在幕后的细节。相反，我们希望用户能够明白：这是一条<strong>Lox 的</strong>运行时错误，并给出一条与我们的语言及其程序息息相关的错误消息。</p>
+<p>眼下，倘若一个操作数的类型与正在执行的运算不相匹配，Java 的类型转换便会失败，JVM 也便会抛出一个 ClassCastException。这会一路展开整个调用栈，并退出应用程序，将一串 Java 栈跟踪一股脑儿地吐到用户脸上。这多半不是我们想要的。Lox 是由 Java 实现的这件事实，理应作为一个隐藏在幕后的细节。相反，我们希望用户能够明白：这是一条<strong>Lox 的</strong>运行时错误，并给出一条与我们的语言及其程序息息相关的错误消息。</p>
 <p>不过，Java 的行为倒也有一处可取之处：它能够正确地在错误发生时停止执行任何代码。假设用户输入了下面这样的表达式：</p>
 <div class="codehilite"><pre>
 <span class="n">2</span> * (<span class="n">3</span> / -<span class="s">&quot;muffin&quot;</span>)
@@ -691,7 +691,7 @@ in class <em>Lox</em></div>
 <div class="source-file-narrow"><em>lox/Lox.java</em>, in class <em>Lox</em></div>
 
 <p>我们将该字段设为 static，以便 REPL 会话中一次次对 <code>run()</code> 的调用能够复用同一个解释器。眼下这么做并不会产生什么差别，但日后当解释器需要存放全局变量时，这种做法便会显出它的意义——这些变量理应贯穿整个 REPL 会话的始终。</p>
-<p>最后，我们把[上一章][]里那段用于打印语法树的临时代码删去，换成下面这段：</p>
+<p>最后，我们把<a href="parsing-expressions.html">上一章</a>里那段用于打印语法树的临时代码删去，换成下面这段：</p>
 <div class="codehilite"><pre class="insert-before">
     // Stop if there was a syntax error.
     if (hadError) return;
@@ -729,13 +729,13 @@ replace 1 line</div>
 <p>某些语言——例如 Java——是静态类型的，这意味着类型错误会在编译期——任何代码运行之前——便被检测并报告出来。另一些语言——例如 Lox——则是动态类型的，它们会将类型错误的检查推迟到运行时——也就是在某个运算即将被执行的前一刻。我们往往将这种选择视作非此即彼、非黑即白，但事实上，在这两者之间还存在着一个连续的光谱。</p>
 <p>结果是，即便是大多数静态类型语言，也确实会在运行时做一些类型检查。其类型系统会在静态层面校验大部分类型规则，但会在所产生的代码中为某些运算插入运行时的检查。</p>
 <p>举例而言，在 Java 中，<em>静态的</em> 类型系统假设一次类型转换表达式总是能够安全地完成。一旦你对某个值作了类型转换，你便可以静态地将其视作目标类型而不会招致任何编译错误。然而向下转型显然是有可能失败的。静态检查器之所以能够假定类型转换必然成功、而不会违反语言所承诺的可靠性，唯一的原因便在于：该类型转换会在<strong>运行时</strong>接受校验，并在失败时抛出一个异常。</p>
-<p>一个更为微妙的例子是 Java 与 C# 中的<a href="https://en.wikipedia.org/wiki/Covariance**and_contravariance_(computer_science)#Covariant_arrays_in_Java_and**C.23">协变数组</a>。其数组的静态子类型规则允许一些其实并不安全的操作。试看：</p>
+<p>一个更为微妙的例子是 Java 与 C# 中的<a href="https://en.wikipedia.org/wiki/Covariance_and_contravariance_(computer_science)#Covariant_arrays_in_Java_and_C.23">协变数组</a>。其数组的静态子类型规则允许一些其实并不安全的操作。试看：</p>
 <div class="codehilite"><pre>
 <span class="t">Object</span>[] <span class="i">stuff</span> = <span class="k">new</span> <span class="t">Integer</span>[<span class="n">1</span>];
 <span class="i">stuff</span>[<span class="n">0</span>] = <span class="s">&quot;not an int!&quot;</span>;
 </pre></div>
 <p>这段代码编译起来毫无差错。第一行将 Integer 数组向上转型，并将其存入一个 Object 数组类型的变量。第二行则在它的一个槽位里存入了一个字符串。从静态的角度来看，Object 数组类型是允许这样做的——字符串<strong>确实</strong>是 Object——但 <code>stuff</code> 在运行时所实际指向的那个 Integer 数组中，<strong>理应</strong>永远不存放字符串！为了避免这场灾难，当你向数组中存入一个值时，JVM 会做一次<strong>运行时</strong>的检查，以确保所存入的值是允许的类型。若不是，它便会抛出一个 ArrayStoreException。</p>
-<p>Java 本可以通过禁止第一行的那种转型来规避这一运行时的检查。它本可以使数组成为<strong>不变的</strong>，从而一个 Integer 数组<strong>便不再</strong>是一个 Object 数组。从静态的角度来说这是稳妥的，但它会禁止那些仅从数组中读取元素的常见而安全的代码模式。倘若你从不对数组执行**写_ 操作，那么协变便是安全的。这些模式在 Java 1.0 那个还不支持泛型的年代，对可用性而言尤为重要。James Gosling 以及其他的 Java 设计者们牺牲了一点点静态安全性与性能——那些数组存储检查毕竟要耗时——以换取一定的灵活性。</p>
+<p>Java 本可以通过禁止第一行的那种转型来规避这一运行时的检查。它本可以使数组成为<strong>不变的</strong>，从而一个 Integer 数组<strong>便不再</strong>是一个 Object 数组。从静态的角度来说这是稳妥的，但它会禁止那些仅从数组中读取元素的常见而安全的代码模式。倘若你从不对数组执行<em>写</em>操作，那么协变便是安全的。这些模式在 Java 1.0 那个还不支持泛型的年代，对可用性而言尤为重要。James Gosling 以及其他的 Java 设计者们牺牲了一点点静态安全性与性能——那些数组存储检查毕竟要耗时——以换取一定的灵活性。</p>
 <p>鲜有现代的静态类型语言不在某处做出这一<strong>取舍</strong>。即便是 Haskell 也允许你运行那些并未穷尽所有情况的模式匹配代码。倘若你正在着手设计一门静态类型语言，请务必牢记：你常常能够通过将一部分类型检查推迟到运行时，来赋予用户更多的灵活性，而又不必过多地牺牲静态安全性所提供的好处。</p>
 <p>而另一方面，用户之所以选择静态类型语言，一个关键原因便是：这类语言能够带给他们一种笃定——某些类型的错误<strong>永远不会</strong>在程序运行时出现。倘若你把过多的类型检查都推迟到运行时，便会侵蚀这份笃定。</p>
 </div>

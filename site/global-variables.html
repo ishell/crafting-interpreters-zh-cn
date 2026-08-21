@@ -138,7 +138,7 @@ because we used the same implementation technique for all variables. We built a
 chain of environments, one for each scope, all the way up to the top. That was a
 simple, clean way to learn how to manage state.
 -->
-<p>实际上，它支持的<em>仅仅</em>是<strong>全局</strong>变量。局部变量留到[下一章][]。在 jlox 里，我们把两者塞进同一章，因为对各类变量用的是同一套实现技巧：搭建一条环境链，每个作用域一层，一路延伸到顶层。那是学习如何管理状态的一种简洁干净的方式。</p><!--
+<p>实际上，它支持的<em>仅仅</em>是<strong>全局</strong>变量。局部变量留到<a href="local-variables.html">下一章</a>。在 jlox 里，我们把两者塞进同一章，因为对各类变量用的是同一套实现技巧：搭建一条环境链，每个作用域一层，一路延伸到顶层。那是学习如何管理状态的一种简洁干净的方式。</p><!--
 But it's also *slow*. Allocating a new hash table each time you enter a block or
 call a function is not the road to a fast VM. Given how much code is concerned
 with using variables, if variables go slow, everything goes slow. For clox,
